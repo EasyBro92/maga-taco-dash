@@ -1,2 +1,4 @@
 node_modules/
 *.blend1
+blender/_tmp/
+blender/__pycache__/

@@ -1,6 +1,7 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
+import { modelo, hayModelo, medidas } from "./models.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -374,6 +375,19 @@ export function createWorld(scene) {
       }
       g.add(mesh);
     }
+  }
+  // D.C.: el obelisco de Blender, fijo al fondo como el horizonte. Material
+  // propio sin niebla (a esa distancia la niebla lo dejaria blanco del todo)
+  // y algo lavado hacia el cielo, como el resto de esta capa.
+  const obelisco = modelo("dc/monumento");
+  if (obelisco) {
+    const malla = obelisco.children[0];
+    malla.material = malla.material.clone();
+    malla.material.fog = false;
+    malla.material.color.set(0xffffff).lerp(new THREE.Color(BIOME_COLORS.dc.sky), 0.2);
+    obelisco.scale.setScalar(1.7);
+    obelisco.position.set(-24, 0, -64);
+    midLayerGroups.dc.add(obelisco);
   }
   function showMidLayer(zone) {
     for (const z in midLayerGroups) midLayerGroups[z].visible = z === zone;
@@ -1520,6 +1534,17 @@ export function createWorld(scene) {
     town: [makeHouse, makeFenceSegment, makeMailbox, makeStreetTree],
     dc: [makeWhiteHouse, makeWashingtonMonument, makeCapitol, makeGovBuilding, makeCherryBlossomTree, makePentagon],
   };
+  // D.C. hecho en Blender (blender/dc.py, 20/10/2026). Si los modelos no han
+  // cargado se queda la version de primitivas de arriba.
+  const DC_PIEZAS = ["casa_blanca", "capitolio", "lincoln", "federal", "georgetown", "cerezo", "farola"];
+  const DC_BLENDER = DC_PIEZAS.every((n) => hayModelo("dc/" + n));
+  if (DC_BLENDER) {
+    BIOME_PROP_FACTORIES.dc = DC_PIEZAS.map((n) => () => {
+      const g = modelo("dc/" + n);
+      g.userData.fachada = DC_PIEZAS.indexOf(n) <= 4;
+      return g;
+    });
+  }
   const outerPools = {};
   for (const biome in BIOME_PROP_FACTORIES) {
     outerPools[biome] = BIOME_PROP_FACTORIES[biome].map((factory) => makePool(factory));
@@ -1536,6 +1561,10 @@ export function createWorld(scene) {
   // el edificio generico(3). Monumento(1), cerezos(4) y Pentagono(5) quedan
   // como relleno cercano.
   const BIOME_FRONTAGE_IDX = { city: [0], town: [0], dc: [0, 0, 2, 2, 3], desert: [] };
+  // Con Blender: los monumentos (Casa Blanca, Capitolio, Lincoln) salen menos
+  // que el relleno (edificio federal y casas de Georgetown), para que no haya
+  // tres Casas Blancas seguidas.
+  if (DC_BLENDER) BIOME_FRONTAGE_IDX.dc = [0, 1, 2, 3, 3, 3, 4, 4, 4];
   // D.C. usa un retranqueo mayor: sus monumentos son mucho mas anchos que un
   // edificio corriente (la Casa Blanca escalada mide ~8 de ancho), asi que
   // con la linea comun se meterian encima de la acera.
@@ -1545,6 +1574,9 @@ export function createWorld(scene) {
   // miden 3.4-5.6 de ancho y van 2 por grupo, o sea uno cada 5.5, asi que la
   // fachada sigue siendo continua con bastante menos coste.
   const OUTER_SPACING = 11;
+  const DC_FRONT_LINE = 9.2;
+  const dcCursor = { "-1": null, "1": null };
+  const dcLast = { "-1": -1, "1": -1 };
 
   function spawnOuterCluster(z) {
     // Un prop spawneado ahora en z (negativo) sera alcanzado tras recorrer
@@ -1564,11 +1596,37 @@ export function createWorld(scene) {
     function place(idx, x, pz, ry) {
       const mesh = pools[idx].acquire();
       mesh.visible = true;
-      const faceZ = mesh.userData.frontZ ? (x < 0 ? -Math.PI / 2 : Math.PI / 2) : ry;
+      // Piezas de Blender: la fachada mira a +Z local; girada +90 grados mira a
+      // +X (calle a la izquierda) y -90 a -X (calle a la derecha).
+      const faceZ = mesh.userData.fachada ? (x < 0 ? Math.PI / 2 : -Math.PI / 2)
+        : mesh.userData.frontZ ? (x < 0 ? -Math.PI / 2 : Math.PI / 2) : ry;
       mesh.rotation.set(0, faceZ, 0);
       mesh.position.set(x, 0, pz);
       if (!mesh.parent) group.add(mesh);
       outerProps.push({ mesh, biome, poolIndex: idx });
+    }
+
+    // D.C. de Blender: manzana continua. Cada lado lleva un cursor que avanza
+    // lo que mide de ancho cada edificio, asi el Capitolio (16 de ancho) no se
+    // monta encima del vecino. Todos alinean su parte delantera (cesped o
+    // escalinata) en la misma linea, detras de la acera.
+    if (biome === "dc" && DC_BLENDER) {
+      for (const side of [-1, 1]) {
+        if (dcCursor[side] === null || Math.abs(dcCursor[side] - z) > 40) dcCursor[side] = z + OUTER_SPACING / 2;
+        while (dcCursor[side] > z - OUTER_SPACING / 2) {
+          let idx = frontIdx[Math.floor(Math.random() * frontIdx.length)];
+          for (let t = 0; t < 4 && idx === dcLast[side]; t++) idx = frontIdx[Math.floor(Math.random() * frontIdx.length)];
+          dcLast[side] = idx;
+          const m = medidas("dc/" + DC_PIEZAS[idx]);
+          place(idx, side * (DC_FRONT_LINE + m.frente), dcCursor[side] - m.ancho / 2, 0);
+          dcCursor[side] -= m.ancho + 0.5 + Math.random() * 1.5;
+        }
+        // Acera: cerezos y farolas alternos
+        for (let k = 0; k < 2; k++) {
+          place(k === 0 ? 5 : 6, side * (7.6 + Math.random() * 0.5), z - k * (OUTER_SPACING / 2) + (Math.random() - 0.5), Math.random() * Math.PI * 2);
+        }
+      }
+      return;
     }
 
     // Desierto: disperso y con orientacion libre, como antes.
@@ -2036,6 +2094,8 @@ export function createWorld(scene) {
     }
 
     lastOuterZ += dz;
+    if (dcCursor[-1] !== null) dcCursor[-1] += dz;
+    if (dcCursor[1] !== null) dcCursor[1] += dz;
     ensureOuterProps();
     for (let i = outerProps.length - 1; i >= 0; i--) {
       const p = outerProps[i];
@@ -2152,6 +2212,7 @@ export function createWorld(scene) {
     activeSparkles.forEach((s) => sparklePool.release(s.mesh));
     citySigns.forEach((s) => disposeCitySign(s));
     outerProps.forEach((p) => outerPools[p.biome][p.poolIndex].release(p.mesh));
+    dcCursor[-1] = dcCursor[1] = null;
     obstacles.length = 0; tacos.length = 0; powerups.length = 0; activeSparkles.length = 0; citySigns.length = 0; outerProps.length = 0;
     cityIndex = 0;
     nextSignAt = 260;

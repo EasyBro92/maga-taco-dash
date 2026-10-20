@@ -600,3 +600,14 @@ Respuestas del usuario a una ronda de 10 preguntas sobre calidad visual/estétic
 **Fase 3 — Publicación**
 26. Revisión final de contenido (riesgo político asumido conscientemente — tener listo un plan B de assets/copy más suaves por si Apple/Google piden cambios en revisión).
 27. Submission a Google Play y App Store.
+
+### Trigésimo cuarta ronda: Washington D.C. rehecho en Blender (2026-10-20)
+
+Isidro pidió hacer con este juego lo mismo que con AlienZ: rehacer los mapas en Blender con texturas. Decidió: estilo **dibujo animado mejorado** (no realista), **zona a zona empezando por D.C.**, y el personaje y los tacos **después**.
+
+- `blender/comun.py` + `blender/dc.py`: cada pieza se modela por separado y sale como un solo objeto con una textura donde van horneados colores, ladrillo/sillería y la sombra de los rincones. Se genera con `blender -b -P blender/dc.py` (minuto y medio; `--rapido` para probar).
+- Piezas: Casa Blanca (con verja y jardín), Capitolio (cúpula con columnas y nervios), Lincoln Memorial (con Lincoln sentado), edificio federal, casas de Georgetown, cerezo, farola y el obelisco (fijo al fondo). El Pentágono se quita: no pega en una calle.
+- `www/src/models.js` las carga al arrancar; si alguna falla, se usan las piezas antiguas. `?sinblender` en la dirección arranca con las antiguas para comparar.
+- Fachadas colocadas una detrás de otra según su ancho real (antes a distancia fija y se pisaban) y alineadas por delante en una misma línea.
+- Medido en D.C.: 3.262 llamadas de dibujo por fotograma (antes 4.431) y 437.000 triángulos (antes 349.000).
+- El juego no tenía copia: repositorio git solo local, etiqueta `antes-de-blender`.

@@ -10,6 +10,7 @@ import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetPr
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
+import { loadZoneModels } from "./models.js";
 
 initErrorReporting();
 
@@ -154,6 +155,20 @@ sunGlare.position.set(9, 16, -35);
 sunGlare.renderOrder = -1;
 scene.add(sunGlare);
 
+// Las piezas de Blender tienen que estar antes de crear el mundo (los pools
+// de decorado se llenan al crearlo). Si alguna falla, world.js usa la antigua.
+{
+  const barra = document.querySelector(".loadingBarFill");
+  let hechas = 0;
+  try {
+    await loadZoneModels(() => {
+      hechas++;
+      if (barra) barra.style.width = `${Math.min(100, 20 + hechas * 9)}%`;
+    });
+  } catch (e) {
+    console.warn("Modelos de Blender no cargados", e);
+  }
+}
 const world = createWorld(scene);
 
 const character = createCharacter(getSave().equipped);
