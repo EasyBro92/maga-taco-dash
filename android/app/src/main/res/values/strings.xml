@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MAGA Taco Dash</string>
+    <string name="title_activity_main">MAGA Taco Dash</string>
+    <string name="package_name">com.magatacodash.app</string>
+    <string name="custom_url_scheme">com.magatacodash.app</string>
+</resources>

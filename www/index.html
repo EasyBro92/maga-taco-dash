@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>MAGA Taco Dash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#c99a2e" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Taco Dash" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icons/icon.svg" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="loadingScreen">
+  <div class="loadingLogo">🌮</div>
+  <div class="loadingBar"><div class="loadingBarFill"></div></div>
+  <div class="loadingText" data-i18n="loading">Cargando...</div>
+</div>
+<div id="webglError" class="hidden">
+  <div class="loadingLogo">⚠️</div>
+  <p data-i18n="webglUnsupported">Tu dispositivo no soporta este juego (falta WebGL).</p>
+</div>
+<div id="stage">
+  <canvas id="game"></canvas>
+  <div id="speedLines"></div>
+
+  <div id="hud" class="hidden">
+    <div id="hudTacos"><span class="icon">🌮</span><span id="hudTacoCount">0</span><span id="hudStreak" class="hidden"></span></div>
+    <div id="hudScore"><span id="hudScoreValue">0</span> m</div>
+    <button id="langToggle" class="smallBtn">EN</button>
+  </div>
+
+  <div id="powerupBadge" class="hidden"></div>
+  <div id="speechBubble" class="hidden"></div>
+  <div id="confettiLayer"></div>
+
+  <div id="startScreen" class="overlay">
+    <div class="card">
+      <h1 class="title">MAGA<br/>TACO DASH</h1>
+      <p class="subtitle" data-i18n="tapToStart">Toca para correr</p>
+      <div class="zonePicker">
+        <div class="zoneLabel" data-i18n="zone">Zona</div>
+        <div class="row" id="zoneButtons">
+          <button class="smallBtn zoneBtn" data-zone="auto" data-i18n="zoneAuto">🎲 Auto</button>
+          <button class="smallBtn zoneBtn" data-zone="city" data-i18n="zoneCity">🏙️ Ciudad</button>
+          <button class="smallBtn zoneBtn" data-zone="desert" data-i18n="zoneDesert">🌵 Desierto</button>
+          <button class="smallBtn zoneBtn" data-zone="town" data-i18n="zoneTown">🏘️ Pueblo</button>
+          <button class="smallBtn zoneBtn" data-zone="dc" data-i18n="zoneDc">🏛️ Washington D.C.</button>
+        </div>
+      </div>
+      <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
+      <div class="row">
+        <button id="startShopBtn" class="smallBtn" data-i18n="shop">🛒 Tienda</button>
+        <button id="startRankBtn" class="smallBtn" data-i18n="ranking">🌍 Ranking</button>
+        <button id="startLangBtn" class="smallBtn">ES/EN</button>
+        <button id="startSettingsBtn" class="smallBtn">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small">⚙️ <span data-i18n="settings">Ajustes</span></div>
+
+      <div class="settingRow">
+        <label data-i18n="music">Música</label>
+        <input id="musicVolRange" type="range" min="0" max="100" value="80" />
+        <button id="musicMuteBtn" class="smallBtn">🔊</button>
+      </div>
+      <div class="settingRow">
+        <label data-i18n="sfx">Sonido</label>
+        <input id="sfxVolRange" type="range" min="0" max="100" value="80" />
+        <button id="sfxMuteBtn" class="smallBtn">🔊</button>
+      </div>
+      <div class="settingRow">
+        <label data-i18n="sensitivity">Sensibilidad</label>
+        <input id="sensitivityRange" type="range" min="15" max="45" value="28" />
+      </div>
+      <div class="settingRow">
+        <label data-i18n="language">Idioma</label>
+        <div class="row">
+          <button id="settingsLangEs" class="smallBtn">Español</button>
+          <button id="settingsLangEn" class="smallBtn">English</button>
+        </div>
+      </div>
+      <div class="settingRow">
+        <label data-i18n="quality">Gráficos</label>
+        <div class="row">
+          <button id="qualityLow" class="smallBtn" data-i18n="qualityLow">Baja</button>
+          <button id="qualityMedium" class="smallBtn" data-i18n="qualityMedium">Media</button>
+          <button id="qualityHigh" class="smallBtn" data-i18n="qualityHigh">Alta</button>
+        </div>
+      </div>
+
+      <button id="resetProgressBtn" class="smallBtn danger" data-i18n="resetProgress">Borrar progreso</button>
+      <button id="settingsClose" class="bigBtn" data-i18n="close" style="margin-top:14px;">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="gameOverScreen" class="overlay hidden">
+    <div class="card">
+      <h2 class="title small" data-i18n="gameOver">¡Te atraparon!</h2>
+      <p class="statLine"><span data-i18n="distance">Distancia</span>: <span id="finalScore">0</span> m</p>
+      <p class="statLine"><span class="icon">🌮</span> <span id="finalTacos">0</span></p>
+      <p class="statLine best" id="bestLine"></p>
+      <button id="retryBtn" class="bigBtn" data-i18n="retry">REINTENTAR</button>
+      <button id="menuBtn" class="smallBtn" data-i18n="menu">Menú</button>
+    </div>
+  </div>
+
+  <div id="nameOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small">🎉 <span data-i18n="newRecord">¡Nuevo récord!</span></div>
+      <p class="subtitle" data-i18n="whatsYourName">¿Cómo te llamas?</p>
+      <input id="nameInput" type="text" maxlength="12" autocomplete="off" placeholder="Tu nombre" />
+      <button id="nameSubmit" class="bigBtn" data-i18n="save">Guardar</button>
+    </div>
+  </div>
+
+  <div id="leaderboardOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small">🌍 <span data-i18n="worldRanking">Ranking mundial</span></div>
+      <ol id="leaderboardList" class="lbList"><li class="lbEmpty">…</li></ol>
+      <button id="leaderboardClose" class="smallBtn" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="shopOverlay" class="overlay hidden">
+    <div class="card wide">
+      <div class="title small">🛒 <span data-i18n="shop">Tienda</span></div>
+      <div class="shopTacos"><span class="icon">🌮</span> <span id="shopTacoCount">0</span></div>
+      <div id="shopGrid" class="shopGrid"></div>
+      <button id="shopClose" class="smallBtn" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="touchControls"></div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
