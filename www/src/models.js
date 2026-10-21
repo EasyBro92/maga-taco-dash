@@ -15,6 +15,8 @@ const LISTA = {
   ciudad: ["tienda_roja", "tienda_crema", "oficina_azul", "oficina_verde", "artdeco", "diner", "apart_morado",
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
+  pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
+    "buzon_pueblo", "farola_pueblo"],
 };
 
 const plantillas = {};

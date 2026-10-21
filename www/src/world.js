@@ -1555,14 +1555,23 @@ export function createWorld(scene) {
       coches: ["taxi", "coche_rojo", "coche_azul"],
       orienta: { farola_ciudad: "brazo", banco: "calle", buzon: "calle", semaforo: "jugador" },
     },
+    town: {
+      carpeta: "pueblo", linea: 9.6,
+      fachadas: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia"], pesos: [3, 3, 3, 3, 3, 1],
+      acera: ["roble", "arbusto", "buzon_pueblo", "farola_pueblo"], aceraPesos: [4, 2, 2, 2],
+      // los coches son los de la ciudad (un nombre con "/" es carpeta/pieza)
+      coches: ["ciudad/coche_rojo", "ciudad/coche_azul"],
+      orienta: { buzon_pueblo: "calle" },
+    },
   };
   const zonaBlender = {};
+  const clave = (z, n) => (n.includes("/") ? n : `${z.carpeta}/${n}`);
   for (const zona in ZONAS_BLENDER) {
     const z = ZONAS_BLENDER[zona];
     const nombres = [...z.fachadas, ...z.acera, ...z.coches];
-    if (!nombres.every((n) => hayModelo(`${z.carpeta}/${n}`))) continue;
+    if (!nombres.every((n) => hayModelo(clave(z, n)))) continue;
     BIOME_PROP_FACTORIES[zona] = nombres.map((n, i) => () => {
-      const g = modelo(`${z.carpeta}/${n}`);
+      const g = modelo(clave(z, n));
       g.userData.fachada = i < z.fachadas.length;
       return g;
     });
@@ -1572,7 +1581,7 @@ export function createWorld(scene) {
       sorteoFachada: repartir(z.pesos, 0),
       sorteoAcera: repartir(z.aceraPesos, z.fachadas.length),
       primerCoche: z.fachadas.length + z.acera.length,
-      medidas: nombres.map((n) => medidas(`${z.carpeta}/${n}`)),
+      medidas: nombres.map((n) => medidas(clave(z, n))),
     };
   }
   const outerPools = {};

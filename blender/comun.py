@@ -217,6 +217,60 @@ def columnata(m, x0, x1, n, y, z, r, h, basa=None, capitel=None):
         caja(basa or m, x, y, z, r * 2.6, r * 2.6, r * 0.6)
         caja(capitel or m, x, y, z + h - r * 0.6, r * 2.8, r * 2.8, r * 0.6)
 
+def panel(m, a, b, c, d, grosor=0.1):
+    """Losa de grosor `grosor` sobre el cuadrilátero a-b-c-d (faldones de tejado)."""
+    me = bpy.data.meshes.new('panel')
+    bm = bmesh.new()
+    bm.faces.new([bm.verts.new(p) for p in (a, b, c, d)])
+    bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new('panel', me)
+    bpy.context.scene.collection.objects.link(o)
+    md = o.modifiers.new('grosor', 'SOLIDIFY')
+    md.thickness = grosor
+    md.offset = 0
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.object.modifier_apply(modifier='grosor')
+    return _poner(o, m)
+
+def tejado(m, x, y0, y1, z, w, h, vuelo=0.3, grosor=0.12, cumbrera='y'):
+    """Tejado a dos aguas sobre un cuerpo de ancho w (en x) entre y0 e y1, alero
+    en z y cumbrera h más arriba. cumbrera='y': el hastial mira a la calle;
+    'x': los faldones miran a la calle."""
+    if cumbrera == 'y':
+        ya, yb = y0 - vuelo, y1 + vuelo
+        k = h / (w / 2)
+        xi, zi = x - w / 2 - vuelo, z - vuelo * k
+        xd = x + w / 2 + vuelo
+        panel(m, (xi, ya, zi), (x, ya, z + h), (x, yb, z + h), (xi, yb, zi), grosor)
+        panel(m, (x, ya, z + h), (xd, ya, zi), (xd, yb, zi), (x, yb, z + h), grosor)
+    else:
+        xa, xb = x - w / 2 - vuelo, x + w / 2 + vuelo
+        ym = (y0 + y1) / 2
+        k = h / ((y1 - y0) / 2)
+        panel(m, (xa, y0 - vuelo, z - vuelo * k), (xb, y0 - vuelo, z - vuelo * k), (xb, ym, z + h), (xa, ym, z + h), grosor)
+        panel(m, (xa, ym, z + h), (xb, ym, z + h), (xb, y1 + vuelo, z - vuelo * k), (xa, y1 + vuelo, z - vuelo * k), grosor)
+
+def hastial(m, x, y0, y1, z, w, h, cumbrera='y'):
+    """El triángulo de pared bajo un tejado a dos aguas (relleno macizo)."""
+    if cumbrera == 'y':
+        return fronton(m, x, y0, z, w, h, y1 - y0)
+    me = bpy.data.meshes.new('hastial')
+    bm = bmesh.new()
+    ym = (y0 + y1) / 2
+    lados = []
+    for xx in (x - w / 2, x + w / 2):
+        lados.append([bm.verts.new((xx, y0, z)), bm.verts.new((xx, y1, z)), bm.verts.new((xx, ym, z + h))])
+    a, b = lados
+    bm.faces.new(a); bm.faces.new(b[::-1])
+    for i in range(3):
+        j = (i + 1) % 3
+        bm.faces.new((a[j], a[i], b[i], b[j]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new('hastial', me)
+    bpy.context.scene.collection.objects.link(o)
+    return _poner(o, m)
+
 def rama(m, p0, p1, r0, r1, lados=8):
     """Cilindro de p0 a p1 (ramas, barandillas en diagonal, brazos de farola)."""
     from mathutils import Vector

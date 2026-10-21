@@ -620,3 +620,12 @@ Isidro dio por buena D.C. y pidió seguir con la ciudad, mismo estilo.
 - Ventanas de las torres pintadas con la textura de ladrillo de Blender al revés (el ladrillo es el cristal y la junta la pared): un rascacielos entero cuesta 600 triángulos.
 - `world.js`: la colocación de D.C. pasa a ser genérica (`ZONAS_BLENDER`): cada zona dice sus fachadas con su peso, su mobiliario y sus coches. Pueblo y desierto siguen con las piezas antiguas.
 - Medido en la ciudad: 3.406 llamadas de dibujo por fotograma (antes 4.262) y 385.000 triángulos (antes 306.000). D.C. comprobado igual tras generalizar el código.
+
+### Trigésimo sexta ronda: el pueblo rehecho en Blender (2026-10-21)
+
+Isidro dio por buena la ciudad y pidió seguir con el pueblo. Se mantiene la referencia de agosto (la casa victoriana de Gru: tablillas, tejas rojas, ojo de buey, chimenea, valla blanca, césped).
+
+- `blender/pueblo.py`, 10 piezas. Casas, cada una con su césped, camino y valla de estacas con flores: victoriana blanca de tejas rojas con porche, victoriana azul con torreón, casa baja amarilla con garaje, entrada de coches y canasta, colonial azul marino con buhardillas y portada, casita rosa de tejado turquesa con mirador, e iglesia blanca con campanario, reloj y cartel «WELCOME» (sale menos). Acera: roble, arbusto con flores, buzón con banderita y farola de farol. Coches: los de la ciudad.
+- Paredes de tablillas y tejados de tejas pintados con la textura de ladrillo de Blender; tejados a dos aguas nuevos en `comun.py` (`tejado`, `hastial`, `panel`).
+- Una zona puede usar piezas de otra carpeta (`"ciudad/coche_rojo"`).
+- Medido en el pueblo: 3.456 llamadas de dibujo por fotograma (antes 5.280) y 442.000 triángulos (antes 315.000).
