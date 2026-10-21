@@ -611,3 +611,12 @@ Isidro pidió hacer con este juego lo mismo que con AlienZ: rehacer los mapas en
 - Fachadas colocadas una detrás de otra según su ancho real (antes a distancia fija y se pisaban) y alineadas por delante en una misma línea.
 - Medido en D.C.: 3.262 llamadas de dibujo por fotograma (antes 4.431) y 437.000 triángulos (antes 349.000).
 - El juego no tenía copia: repositorio git solo local, etiqueta `antes-de-blender`.
+
+### Trigésimo quinta ronda: la ciudad rehecha en Blender (2026-10-21)
+
+Isidro dio por buena D.C. y pidió seguir con la ciudad, mismo estilo.
+
+- `blender/ciudad.py`, 17 piezas. Fachadas: tienda de ladrillo con escalera de incendios y depósito de agua (dos: «PIZZA» roja y «TACOS» crema), torre de oficinas de cristal (azul y verde), rascacielos art déco «HOTEL», diner con letrero de neón, pisos con mirador y balcones (morado y naranja). Acera: árbol, farola de brazo, semáforo con cartel «MAGA AVE», boca de incendios, banco, buzón azul de correos. Coches aparcados: taxi, rojo y azul.
+- Ventanas de las torres pintadas con la textura de ladrillo de Blender al revés (el ladrillo es el cristal y la junta la pared): un rascacielos entero cuesta 600 triángulos.
+- `world.js`: la colocación de D.C. pasa a ser genérica (`ZONAS_BLENDER`): cada zona dice sus fachadas con su peso, su mobiliario y sus coches. Pueblo y desierto siguen con las piezas antiguas.
+- Medido en la ciudad: 3.406 llamadas de dibujo por fotograma (antes 4.262) y 385.000 triángulos (antes 306.000). D.C. comprobado igual tras generalizar el código.

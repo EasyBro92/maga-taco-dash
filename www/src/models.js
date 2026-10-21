@@ -12,6 +12,9 @@ import { toon } from "./toon.js";
 
 const LISTA = {
   dc: ["casa_blanca", "capitolio", "lincoln", "federal", "georgetown", "cerezo", "farola", "monumento"],
+  ciudad: ["tienda_roja", "tienda_crema", "oficina_azul", "oficina_verde", "artdeco", "diner", "apart_morado",
+    "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
+    "coche_rojo", "coche_azul"],
 };
 
 const plantillas = {};
@@ -21,6 +24,8 @@ export async function loadZoneModels(onProgress) {
   if (/sinblender/.test(location.search)) return 0;
   const loader = new GLTFLoader();
   const tareas = [];
+  const total = Object.values(LISTA).reduce((n, l) => n + l.length, 0);
+  let hechas = 0;
   for (const zona in LISTA) {
     for (const nombre of LISTA[zona]) {
       tareas.push(
@@ -46,7 +51,7 @@ export async function loadZoneModels(onProgress) {
           };
         }).catch((e) => {
           console.warn(`No se pudo cargar ${zona}/${nombre}.glb`, e);
-        }).finally(() => onProgress && onProgress())
+        }).finally(() => onProgress && onProgress(++hechas, total))
       );
     }
   }

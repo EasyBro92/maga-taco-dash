@@ -159,11 +159,9 @@ scene.add(sunGlare);
 // de decorado se llenan al crearlo). Si alguna falla, world.js usa la antigua.
 {
   const barra = document.querySelector(".loadingBarFill");
-  let hechas = 0;
   try {
-    await loadZoneModels(() => {
-      hechas++;
-      if (barra) barra.style.width = `${Math.min(100, 20 + hechas * 9)}%`;
+    await loadZoneModels((n, total) => {
+      if (barra) barra.style.width = `${Math.round(20 + 80 * n / total)}%`;
     });
   } catch (e) {
     console.warn("Modelos de Blender no cargados", e);

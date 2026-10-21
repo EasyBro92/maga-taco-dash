@@ -1534,16 +1534,46 @@ export function createWorld(scene) {
     town: [makeHouse, makeFenceSegment, makeMailbox, makeStreetTree],
     dc: [makeWhiteHouse, makeWashingtonMonument, makeCapitol, makeGovBuilding, makeCherryBlossomTree, makePentagon],
   };
-  // D.C. hecho en Blender (blender/dc.py, 20/10/2026). Si los modelos no han
-  // cargado se queda la version de primitivas de arriba.
-  const DC_PIEZAS = ["casa_blanca", "capitolio", "lincoln", "federal", "georgetown", "cerezo", "farola"];
-  const DC_BLENDER = DC_PIEZAS.every((n) => hayModelo("dc/" + n));
-  if (DC_BLENDER) {
-    BIOME_PROP_FACTORIES.dc = DC_PIEZAS.map((n) => () => {
-      const g = modelo("dc/" + n);
-      g.userData.fachada = DC_PIEZAS.indexOf(n) <= 4;
+  // Zonas hechas en Blender (blender/<zona>.py). Si alguno de sus modelos no
+  // ha cargado, esa zona se queda con la version de primitivas de arriba.
+  //   fachadas/pesos: los edificios y cuanto sale cada uno (los monumentos
+  //     menos que el relleno, para que no haya tres Casas Blancas seguidas)
+  //   linea: x donde acaba lo que sobresale por delante (cesped, escalones)
+  //   acera: mobiliario sobre la acera; `alterna` = uno y uno, en orden
+  //   coches: aparcados en batería delante de las fachadas, a lo largo de la calle
+  const ZONAS_BLENDER = {
+    dc: {
+      carpeta: "dc", linea: 9.2, alterna: true,
+      fachadas: ["casa_blanca", "capitolio", "lincoln", "federal", "georgetown"], pesos: [1, 1, 1, 3, 3],
+      acera: ["cerezo", "farola"], aceraPesos: [1, 1], coches: [],
+    },
+    city: {
+      carpeta: "ciudad", linea: 10.2,
+      fachadas: ["tienda_roja", "tienda_crema", "oficina_azul", "oficina_verde", "artdeco", "diner", "apart_morado", "apart_naranja"],
+      pesos: [2, 2, 2, 2, 1, 1, 2, 2],
+      acera: ["arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon"], aceraPesos: [4, 4, 1, 1, 2, 1],
+      coches: ["taxi", "coche_rojo", "coche_azul"],
+      orienta: { farola_ciudad: "brazo", banco: "calle", buzon: "calle", semaforo: "jugador" },
+    },
+  };
+  const zonaBlender = {};
+  for (const zona in ZONAS_BLENDER) {
+    const z = ZONAS_BLENDER[zona];
+    const nombres = [...z.fachadas, ...z.acera, ...z.coches];
+    if (!nombres.every((n) => hayModelo(`${z.carpeta}/${n}`))) continue;
+    BIOME_PROP_FACTORIES[zona] = nombres.map((n, i) => () => {
+      const g = modelo(`${z.carpeta}/${n}`);
+      g.userData.fachada = i < z.fachadas.length;
       return g;
     });
+    const repartir = (pesos, desde) => pesos.flatMap((p, i) => Array(p).fill(desde + i));
+    zonaBlender[zona] = {
+      ...z,
+      sorteoFachada: repartir(z.pesos, 0),
+      sorteoAcera: repartir(z.aceraPesos, z.fachadas.length),
+      primerCoche: z.fachadas.length + z.acera.length,
+      medidas: nombres.map((n) => medidas(`${z.carpeta}/${n}`)),
+    };
   }
   const outerPools = {};
   for (const biome in BIOME_PROP_FACTORIES) {
@@ -1561,10 +1591,6 @@ export function createWorld(scene) {
   // el edificio generico(3). Monumento(1), cerezos(4) y Pentagono(5) quedan
   // como relleno cercano.
   const BIOME_FRONTAGE_IDX = { city: [0], town: [0], dc: [0, 0, 2, 2, 3], desert: [] };
-  // Con Blender: los monumentos (Casa Blanca, Capitolio, Lincoln) salen menos
-  // que el relleno (edificio federal y casas de Georgetown), para que no haya
-  // tres Casas Blancas seguidas.
-  if (DC_BLENDER) BIOME_FRONTAGE_IDX.dc = [0, 1, 2, 3, 3, 3, 4, 4, 4];
   // D.C. usa un retranqueo mayor: sus monumentos son mucho mas anchos que un
   // edificio corriente (la Casa Blanca escalada mide ~8 de ancho), asi que
   // con la linea comun se meterian encima de la acera.
@@ -1574,9 +1600,9 @@ export function createWorld(scene) {
   // miden 3.4-5.6 de ancho y van 2 por grupo, o sea uno cada 5.5, asi que la
   // fachada sigue siendo continua con bastante menos coste.
   const OUTER_SPACING = 11;
-  const DC_FRONT_LINE = 9.2;
-  const dcCursor = { "-1": null, "1": null };
-  const dcLast = { "-1": -1, "1": -1 };
+
+  const frontCursor = { "-1": null, "1": null };
+  const frontLast = { "-1": -1, "1": -1 };
 
   function spawnOuterCluster(z) {
     // Un prop spawneado ahora en z (negativo) sera alcanzado tras recorrer
@@ -1606,24 +1632,38 @@ export function createWorld(scene) {
       outerProps.push({ mesh, biome, poolIndex: idx });
     }
 
-    // D.C. de Blender: manzana continua. Cada lado lleva un cursor que avanza
+    // Zonas de Blender: manzana continua. Cada lado lleva un cursor que avanza
     // lo que mide de ancho cada edificio, asi el Capitolio (16 de ancho) no se
     // monta encima del vecino. Todos alinean su parte delantera (cesped o
     // escalinata) en la misma linea, detras de la acera.
-    if (biome === "dc" && DC_BLENDER) {
+    const zb = zonaBlender[biome];
+    if (zb) {
+      const sortear = (lista) => lista[Math.floor(Math.random() * lista.length)];
       for (const side of [-1, 1]) {
-        if (dcCursor[side] === null || Math.abs(dcCursor[side] - z) > 40) dcCursor[side] = z + OUTER_SPACING / 2;
-        while (dcCursor[side] > z - OUTER_SPACING / 2) {
-          let idx = frontIdx[Math.floor(Math.random() * frontIdx.length)];
-          for (let t = 0; t < 4 && idx === dcLast[side]; t++) idx = frontIdx[Math.floor(Math.random() * frontIdx.length)];
-          dcLast[side] = idx;
-          const m = medidas("dc/" + DC_PIEZAS[idx]);
-          place(idx, side * (DC_FRONT_LINE + m.frente), dcCursor[side] - m.ancho / 2, 0);
-          dcCursor[side] -= m.ancho + 0.5 + Math.random() * 1.5;
+        if (frontCursor[side] === null || Math.abs(frontCursor[side] - z) > 40) frontCursor[side] = z + OUTER_SPACING / 2;
+        while (frontCursor[side] > z - OUTER_SPACING / 2) {
+          let idx = sortear(zb.sorteoFachada);
+          for (let t = 0; t < 4 && idx === frontLast[side]; t++) idx = sortear(zb.sorteoFachada);
+          frontLast[side] = idx;
+          const m = zb.medidas[idx];
+          place(idx, side * (zb.linea + m.frente), frontCursor[side] - m.ancho / 2, 0);
+          frontCursor[side] -= m.ancho + 0.5 + Math.random() * 1.5;
         }
-        // Acera: cerezos y farolas alternos
         for (let k = 0; k < 2; k++) {
-          place(k === 0 ? 5 : 6, side * (7.6 + Math.random() * 0.5), z - k * (OUTER_SPACING / 2) + (Math.random() - 0.5), Math.random() * Math.PI * 2);
+          const idx = zb.alterna ? zb.fachadas.length + k : sortear(zb.sorteoAcera);
+          // Blender: el brazo de la farola apunta a +X y el frente de banco,
+          // buzon y semaforo a +Z local.
+          const giro = {
+            brazo: side < 0 ? 0 : Math.PI,                 // hacia la calzada
+            calle: side < 0 ? Math.PI / 2 : -Math.PI / 2,  // de cara a la calzada
+            jugador: 0,                                    // de cara a quien llega
+          }[(zb.orienta || {})[zb.acera[idx - zb.fachadas.length]]];
+          place(idx, side * (7.4 + Math.random() * 0.4), z - k * (OUTER_SPACING / 2) + (Math.random() - 0.5),
+            giro === undefined ? Math.random() * Math.PI * 2 : giro);
+        }
+        if (zb.coches.length && Math.random() < 0.6) {
+          const idx = zb.primerCoche + Math.floor(Math.random() * zb.coches.length);
+          place(idx, side * 8.95, z - 2 - Math.random() * 6, Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
         }
       }
       return;
@@ -2094,8 +2134,8 @@ export function createWorld(scene) {
     }
 
     lastOuterZ += dz;
-    if (dcCursor[-1] !== null) dcCursor[-1] += dz;
-    if (dcCursor[1] !== null) dcCursor[1] += dz;
+    if (frontCursor[-1] !== null) frontCursor[-1] += dz;
+    if (frontCursor[1] !== null) frontCursor[1] += dz;
     ensureOuterProps();
     for (let i = outerProps.length - 1; i >= 0; i--) {
       const p = outerProps[i];
@@ -2212,7 +2252,7 @@ export function createWorld(scene) {
     activeSparkles.forEach((s) => sparklePool.release(s.mesh));
     citySigns.forEach((s) => disposeCitySign(s));
     outerProps.forEach((p) => outerPools[p.biome][p.poolIndex].release(p.mesh));
-    dcCursor[-1] = dcCursor[1] = null;
+    frontCursor[-1] = frontCursor[1] = null;
     obstacles.length = 0; tacos.length = 0; powerups.length = 0; activeSparkles.length = 0; citySigns.length = 0; outerProps.length = 0;
     cityIndex = 0;
     nextSignAt = 260;

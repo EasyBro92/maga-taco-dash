@@ -50,9 +50,11 @@ def mat(nombre, color, rug=0.6):
     _mats[nombre] = m
     return m
 
-def mat_bloques(nombre, color, junta, ancho=0.9, alto=0.35, grosor=0.012, mezcla=1.0):
+def mat_bloques(nombre, color, junta, ancho=0.9, alto=0.35, grosor=0.012, mezcla=1.0, desfase=0.5, variacion=1.08):
     """Ladrillo o sillería: la textura de ladrillo de Blender proyectada en las
-    paredes (u = x + y, v = z, vale para paredes que miren a x o a y)."""
+    paredes (u = x + y, v = z, vale para paredes que miren a x o a y).
+    Con la junta gruesa y desfase 0 sirve para pintar ventanas: `color` es el
+    cristal y `junta` la pared (ver `mat_ventanas`)."""
     if nombre in _mats:
         return _mats[nombre]
     m = bpy.data.materials.new(nombre)
@@ -76,11 +78,11 @@ def mat_bloques(nombre, color, junta, ancho=0.9, alto=0.35, grosor=0.012, mezcla
     br.inputs['Mortar Size'].default_value = grosor
     br.inputs['Mortar Smooth'].default_value = 0.2
     c1 = lin(color)
-    c2 = tuple(min(1, v * 1.08) for v in c1)
+    c2 = tuple(min(1, v * variacion) for v in c1)
     br.inputs['Color1'].default_value = (*c1, 1)
     br.inputs['Color2'].default_value = (*c2, 1)
     br.inputs['Mortar'].default_value = (*lin(junta), 1)
-    br.offset = 0.5
+    br.offset = desfase
     nt.links.new(comb.outputs[0], br.inputs['Vector'])
     if mezcla < 1.0:
         mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'
@@ -92,6 +94,14 @@ def mat_bloques(nombre, color, junta, ancho=0.9, alto=0.35, grosor=0.012, mezcla
         nt.links.new(br.outputs['Color'], b.inputs['Base Color'])
     _mats[nombre] = m
     return m
+
+def mat_ventanas(nombre, cristal, pared, paso_x=0.9, paso_z=1.1, hueco_x=0.5, hueco_z=0.6, variacion=1.35):
+    """Fachada entera de ventanas pintadas: rejilla de huecos `hueco_x` x
+    `hueco_z` cada `paso_x` x `paso_z`. Unas ventanas salen más claras que
+    otras (luz encendida)."""
+    grosor = min(paso_x - hueco_x, paso_z - hueco_z) / 2
+    return mat_bloques(nombre, cristal, pared, ancho=paso_x, alto=paso_z, grosor=grosor,
+                       desfase=0.0, variacion=variacion)
 
 def mat_franjas(nombre, c1, c2, n, eje='Z', z0=0.0, alto=1.0):
     """Franjas (la bandera): n franjas a lo largo de `eje` entre z0 y z0+alto."""
@@ -206,6 +216,34 @@ def columnata(m, x0, x1, n, y, z, r, h, basa=None, capitel=None):
         cil(m, x, y, z + r * 0.6, r, h - r * 1.2, lados=12, r2=r * 0.86)
         caja(basa or m, x, y, z, r * 2.6, r * 2.6, r * 0.6)
         caja(capitel or m, x, y, z + h - r * 0.6, r * 2.8, r * 2.8, r * 0.6)
+
+def rama(m, p0, p1, r0, r1, lados=8):
+    """Cilindro de p0 a p1 (ramas, barandillas en diagonal, brazos de farola)."""
+    from mathutils import Vector
+    p0, p1 = Vector(p0), Vector(p1)
+    d = p1 - p0
+    bpy.ops.mesh.primitive_cone_add(vertices=lados, radius1=r0, radius2=r1, depth=d.length,
+                                    location=(p0 + p1) / 2)
+    o = bpy.context.object
+    o.rotation_mode = 'QUATERNION'
+    o.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(d.normalized())
+    return _poner(o, m)
+
+def texto(m, cadena, x, y, z, tam=0.5, prof=0.04):
+    """Letras en relieve sobre una fachada que mira a -y; (x, z) es el centro."""
+    bpy.ops.object.text_add(location=(0, 0, 0))
+    o = bpy.context.object
+    o.data.body = cadena
+    o.data.size = tam
+    o.data.extrude = prof / 2
+    o.data.align_x = 'CENTER'
+    o.data.align_y = 'CENTER'
+    o.data.resolution_u = 3
+    bpy.ops.object.convert(target='MESH')
+    o = bpy.context.object
+    o.rotation_euler = (math.pi / 2, 0, 0)
+    o.location = (x, y - prof / 2, z)
+    return _poner(o, m)
 
 def ventana(x, z, w, h, y=0.0, marco=None, cristal=None, remate=None, persiana=None):
     """Ventana en una fachada que mira a -y: marco que sale un poco, cristal
