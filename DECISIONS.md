@@ -660,3 +660,13 @@ Isidro pidió seguir con más cosas de Minion Rush: rayo congelador, cohete, jef
 - **Jefe Burrito-Bot**: a los 1200 m y luego cada 2000. Flota delante con barra de vida, lanza barriles de salsa (se saltan) al carril del jugador el 60 % de las veces; el primero espera 5.5 s para no coincidir con obstáculos normales. Mientras está no salen obstáculos normales, solo tacos y chiles; cada chile cogido sale disparado hacia él. 5 golpes = +150 tacos y confeti; a los 40 s se va sin premio.
 - **Misiones** (`missions.js`): tres activas de tipos distintos, de partida (tacos, distancia) o acumuladas (saltos, deslizar, autobuses, aplastar de gigante, hielo, cohete, jefe), con niveles que suben y premios de 60 a 800 tacos. Se ven en el menú y al acabar; aviso verde al cumplir una.
 - `?prueba` ahora también tiene `rayo()`, `cohete()`, `jefe()` y `paso(n)`, que avanza el juego fotograma a fotograma aunque la ventana esté oculta. Comprobado: cohete a 6.96 de altura, 164 tacos y 0 choques, aterriza; rayo congela y rompe sin choque; jefe aparece, lanza barriles, cae con 5 chiles y da el premio; una misión se cumplió y se repuso sola.
+
+### Cuadragésima ronda: el juego mareaba (2026-10-23)
+
+Isidro: «lo único que me molesta es que el juego marea mucho… las carreteras con esos colores y esa textura marean al jugarlo unos segundos». Causas encontradas y arreglos:
+
+- **La pista se balanceaba de lado sin parar** (curva de 2.1 cada ~130 u y otra de 0.55 cada ~47 u: un vaivén de 0.2-0.5 Hz, el típico de mareo en barco). `CURVE_AMPLITUDE` y `CURVE_AMPLITUDE2` a 0: pista recta.
+- **Rayas de carril discontinuas** amarillas de 1.1 cada 3: a 25-30 u/s pasaban ~10 por segundo, efecto estroboscópico. Ahora continuas (tramos de 3 seguidos, reciclados a 129 para no solaparse) y blanco suave sin brillo; las doradas exteriores también continuas.
+- **Texturas con dibujo pequeño y contraste** (juntas oscuras con relieve pintado, baldosas de 1 m, manchas y grietas en el asfalto, rayitas en el césped) que «tiemblan» al pasar. Ahora: asfalto liso con granulado finísimo, losas de acera de ~2 × 2.2 con la junta apenas marcada, losetas de plaza suaves, césped solo con manchas grandes; anisotropía 8.
+- **Colores más tranquilos**: calzada gris pizarra (no azul vivo), aceras beis suave, césped menos chillón.
+- **Cámara**: ya no se inclina al cambiar de carril, solo acompaña la mitad del cambio de carril (antes se deslizaba entero), y no sube y baja en cada salto (solo con el techo del autobús o el cohete). Líneas de velocidad rebajadas (máximo 0.35 en vez de 1).

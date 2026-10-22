@@ -838,11 +838,12 @@ function frame(dtFijo) {
 
     // ---- Camara dinamica: sigue en X, FOV punch en boost, temblor, inclinacion en giros ----
     // (magnitudes deliberadamente sutiles: la primera pasada se sintio muy exagerada)
-    camBaseX += (playerX + curveX - camBaseX) * dt * 6;
+    // 23/10, contra el mareo: la camara solo acompaña la mitad del cambio de
+    // carril (antes se deslizaba entera con cada cambio) y ya no se inclina.
+    camBaseX += ((playerX + curveX) * 0.5 - camBaseX) * Math.min(1, dt * 3);
     const targetFov = boostTimeLeft > 0 ? BASE_FOV + 1.2 : BASE_FOV;
     camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 2.5);
-    const tiltTarget = Math.max(-0.03, Math.min(0.03, -(playerX - prevX) * 0.6));
-    camera.rotation.z += (tiltTarget - camera.rotation.z) * Math.min(1, dt * 4);
+    camera.rotation.z = 0;
     let shakeX = 0, shakeY = 0;
     if (shakeTimeLeft > 0) {
       shakeTimeLeft = Math.max(0, shakeTimeLeft - dt);
@@ -853,13 +854,16 @@ function frame(dtFijo) {
     camera.position.x = camBaseX + shakeX;
     // La camara sube con el jugador cuando va por el techo del autobus, y un
     // poco mas en modo gigante para que se vea la pista por encima de el.
-    camY += ((py * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 4);
+    // Sigue al suelo que pisa (techo del autobus) o al cohete, no a cada salto:
+    // subir y bajar la camara en cada salto era otro vaiven que mareaba.
+    const alturaCam = rocketTimeLeft > 0 ? py : world.surfaceAt(playerX);
+    camY += ((alturaCam * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 2.5);
     camera.position.y = RACE_CAM.pos.y + camY + shakeY;
     camera.updateProjectionMatrix();
 
     // ---- Lineas de velocidad ----
     const speedFrac = Math.max(0, Math.min(1, (speed - BASE_SPEED * 1.15) / (MAX_SPEED - BASE_SPEED * 1.15)));
-    speedLinesEl.style.opacity = String(Math.min(1, speedFrac * 0.8 + (boostTimeLeft > 0 ? 0.5 : 0)));
+    speedLinesEl.style.opacity = String(Math.min(0.35, speedFrac * 0.25 + (boostTimeLeft > 0 ? 0.2 : 0)));
 
     // ---- Polvo bajo los pies (solo corriendo en el suelo, mas seguido cuanto mas rapido) ----
     if (!isJumping && !isSliding) {

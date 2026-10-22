@@ -71,106 +71,72 @@ function texturaRepetida(c, rx, ry) {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
+  tex.anisotropy = 8;
   tex.repeat.set(rx, ry);
   return tex;
 }
-// Baldosas: `cols` x `filas` piezas por textura, cada una con su tono y su
-// canto en relieve; `junta` es el grosor de la llaga en pixeles.
+// ---- 23/10: suelo que no marea ----
+// Isidro se mareaba a los pocos segundos. Lo que pasa por debajo a 25-30 u/s
+// tiene que ser casi liso: cualquier dibujo pequeño y con contraste (juntas
+// oscuras, grietas, manchas, rayitas de cesped) se repite muchas veces por
+// segundo y "tiembla" en pantalla. Ahora: juntas apenas marcadas, baldosas
+// grandes, sin relieve pintado, y el asfalto sin grietas ni manchas.
 function dibujarBaldosas(ctx, size, cols, filas, junta, variacion) {
   const w = size / cols, h = size / filas;
-  ctx.fillStyle = "#8f8a86";
+  ctx.fillStyle = "#dcd8d2";
   ctx.fillRect(0, 0, size, size);
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < filas; j++) {
       const x = i * w + junta / 2, y = j * h + junta / 2, bw = w - junta, bh = h - junta;
-      const v = 236 + Math.round((Math.random() - 0.5) * variacion);
+      const v = 240 + Math.round((Math.random() - 0.5) * variacion);
       ctx.fillStyle = `rgb(${v},${v},${v})`;
       ctx.beginPath();
       ctx.roundRect(x, y, bw, bh, junta);
       ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.fillRect(x + junta * 0.6, y + junta * 0.4, bw - junta * 1.6, junta * 0.6);
-      ctx.fillRect(x + junta * 0.4, y + junta * 0.6, junta * 0.6, bh - junta * 1.6);
-      ctx.fillStyle = "rgba(0,0,30,0.13)";
-      ctx.fillRect(x + junta, y + bh - junta * 0.9, bw - junta * 1.4, junta * 0.6);
-      ctx.fillRect(x + bw - junta * 0.9, y + junta, junta * 0.6, bh - junta * 1.4);
-      if (Math.random() < 0.18) {                      // alguna baldosa con desconchon
-        ctx.fillStyle = "rgba(0,0,30,0.08)";
-        ctx.beginPath();
-        ctx.ellipse(x + bw * Math.random(), y + bh * Math.random(), junta * 1.5, junta, Math.random() * 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
   }
 }
 
-// Asfalto de dibujos: liso, con manchas suaves, un granulado muy fino y
-// alguna grieta. El color (azulado, no negro) lo pone la zona.
+// Asfalto: liso con un granulado finisimo y de muy poco contraste (de lejos
+// se funde en un tono uniforme; de cerca no parece plastico). Sin manchas ni
+// grietas, que eran lo que se veia pasar y repetirse.
 function makeAsphaltTexture() {
   if (typeof document === "undefined") return null;
   const size = 256;
-  const { c, ctx } = lienzo(size, "#ececf0");
-  for (let i = 0; i < 26; i++) {
-    const x = Math.random() * size, y = Math.random() * size, r = 18 + Math.random() * 40;
-    sinCostura(size, x, y, (px, py) => mancha(ctx, px, py, r, Math.random() < 0.4, 0.07 + Math.random() * 0.05));
-  }
-  for (let i = 0; i < 900; i++) {
-    const v = Math.random() < 0.5;
-    ctx.fillStyle = v ? "rgba(255,255,255,0.22)" : "rgba(0,0,30,0.12)";
-    ctx.fillRect(Math.random() * size, Math.random() * size, 1.5, 1.5);
-  }
-  ctx.strokeStyle = "rgba(0,0,40,0.22)";
-  ctx.lineWidth = 1.4;
-  ctx.lineCap = "round";
-  for (let k = 0; k < 3; k++) {
-    let x = 30 + Math.random() * (size - 60), y = 30 + Math.random() * (size - 60);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    for (let s = 0; s < 5; s++) {
-      x += (Math.random() - 0.5) * 22; y += 6 + Math.random() * 10;
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
+  const { c, ctx } = lienzo(size, "#ececee");
+  for (let i = 0; i < 1400; i++) {
+    ctx.fillStyle = Math.random() < 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,20,0.05)";
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.2, 1.2);
   }
   return texturaRepetida(c, 6, 45);
 }
 
-// Acera de baldosas grandes con relieve (2 x 4 por textura: ~1 x 1.1 m).
+// Acera: losas grandes (1 x 2 por textura: unos 2 x 2.2) con la junta apenas marcada.
 function makeSidewalkTexture() {
   if (typeof document === "undefined") return null;
   const size = 256;
   const { c, ctx } = lienzo(size, "#ffffff");
-  dibujarBaldosas(ctx, size, 2, 4, 7, 16);
+  dibujarBaldosas(ctx, size, 1, 2, 4, 6);
   return texturaRepetida(c, 2, 90);
 }
 
-// Suelo de plaza para ciudad y D.C.: losetas pequeñas.
+// Suelo de plaza para ciudad y D.C.: losetas medianas, muy suaves.
 function makePavingTexture() {
   if (typeof document === "undefined") return null;
   const size = 256;
   const { c, ctx } = lienzo(size, "#ffffff");
-  dibujarBaldosas(ctx, size, 6, 6, 4, 20);
+  dibujarBaldosas(ctx, size, 3, 3, 3, 8);
   return texturaRepetida(c, 10, 70);
 }
 
-// Cesped de dibujos para el pueblo: manchas de tono y matas en forma de V.
+// Cesped del pueblo: solo manchas grandes y suaves de tono, sin rayitas.
 function makeGrassTexture() {
   if (typeof document === "undefined") return null;
   const size = 256;
   const { c, ctx } = lienzo(size, "#e9efe4");
-  for (let i = 0; i < 30; i++) {
-    const x = Math.random() * size, y = Math.random() * size, r = 16 + Math.random() * 34;
-    sinCostura(size, x, y, (px, py) => mancha(ctx, px, py, r, Math.random() < 0.5, 0.1 + Math.random() * 0.08));
-  }
-  ctx.lineWidth = 1.6;
-  ctx.lineCap = "round";
-  for (let i = 0; i < 220; i++) {
-    const x = Math.random() * size, y = Math.random() * size, h = 4 + Math.random() * 5;
-    ctx.strokeStyle = Math.random() < 0.5 ? "rgba(255,255,255,0.45)" : "rgba(0,40,0,0.18)";
-    ctx.beginPath();
-    ctx.moveTo(x - 2.5, y - h); ctx.lineTo(x, y); ctx.lineTo(x + 2.5, y - h);
-    ctx.stroke();
+  for (let i = 0; i < 18; i++) {
+    const x = Math.random() * size, y = Math.random() * size, r = 30 + Math.random() * 40;
+    sinCostura(size, x, y, (px, py) => mancha(ctx, px, py, r, Math.random() < 0.5, 0.05 + Math.random() * 0.04));
   }
   return texturaRepetida(c, 10, 70);
 }
@@ -366,9 +332,11 @@ export function createWorld(scene) {
   // offset (ver valor de retorno de update()), asi que el carril relativo
   // del jugador y las colisiones no cambian en nada. ----
   const CURVE_FREQ = (Math.PI * 2) / 130;
-  const CURVE_AMPLITUDE = 2.1;
+  // 23/10: a cero. La pista se balanceaba de lado sin parar (casi un carril
+  // cada ~5 s y otro poco cada ~2): ese vaiven lento es lo que mas marea.
+  const CURVE_AMPLITUDE = 0;
   const CURVE_FREQ2 = (Math.PI * 2) / 47;
-  const CURVE_AMPLITUDE2 = 0.55;
+  const CURVE_AMPLITUDE2 = 0;
   let totalScrolled = 0;
   let curveX = 0;
 
@@ -387,16 +355,16 @@ export function createWorld(scene) {
     // mismo tono (0xaebfd6 contra 0x9fe6ff) y la cordillera del fondo, que
     // ademas va sin niebla, se fundia con el cielo -- se dibujaba pero no se
     // veia, y el fondo seguia leyendose como un vacio blanco.
-    // 22/10/2026, estilo Minion Rush: calzada de asfalto azulado de dibujos (no
-    // negro), aceras de baldosa calidas y suelos mas vivos. `sidewalk` es nuevo.
-    city: { sky: 0x9fe6ff, skyTop: 0x3d8fff, ground: 0xe3c79b, fog: 0x9fe6ff, road: 0x55608a, horizon: 0x6d86ad, sidewalk: 0xffd98c },
+    // 22/10 estilo Minion Rush; 23/10 rebajados porque mareaban: calzada gris
+    // pizarra (no azul vivo), aceras beis suave y cesped menos chillon.
+    city: { sky: 0x9fe6ff, skyTop: 0x3d8fff, ground: 0xd9cbb4, fog: 0x9fe6ff, road: 0x5c6170, horizon: 0x6d86ad, sidewalk: 0xe6dccb },
     // Pista de tierra bastante mas oscura que la arena de alrededor: antes
     // ambas compartian textura Y tono parecido, asi que el borde de la pista
     // desaparecia, no habia referencia de donde estabas y el conjunto se leia
     // como una superficie plana y transparente que marea.
-    desert: { sky: 0xffe0ae, skyTop: 0xff9d4d, ground: 0xf7c66a, fog: 0xffe0ae, road: 0xd28a4e, horizon: 0xb0724a, sidewalk: 0xeab877 },
-    town: { sky: 0xbdeaff, skyTop: 0x5cabff, ground: 0x7fd85a, fog: 0xbdeaff, road: 0x5b6890, horizon: 0x7d9e86, sidewalk: 0xfbe6b8 },
-    dc: { sky: 0xbfe0ff, skyTop: 0x4a8fd6, ground: 0xf0dfba, fog: 0xbfe0ff, road: 0x525d86, horizon: 0x74879f, sidewalk: 0xfff0cc },
+    desert: { sky: 0xffe0ae, skyTop: 0xff9d4d, ground: 0xe9c47e, fog: 0xffe0ae, road: 0xb88456, horizon: 0xb0724a, sidewalk: 0xdcc09a },
+    town: { sky: 0xbdeaff, skyTop: 0x5cabff, ground: 0x86c766, fog: 0xbdeaff, road: 0x5d6272, horizon: 0x7d9e86, sidewalk: 0xeee5d2 },
+    dc: { sky: 0xbfe0ff, skyTop: 0x4a8fd6, ground: 0xe6dcc6, fog: 0xbfe0ff, road: 0x5a5f6d, horizon: 0x74879f, sidewalk: 0xf0e9dc },
   };
 
   // ---- Horizonte lejano permanente: una cordillera que nunca se crea ni se
@@ -555,7 +523,11 @@ export function createWorld(scene) {
   // alfombra roja, sobre el asfalto (pool reciclado igual que las franjas).
   const roadLines = [];
   const roadLineMat = toon(GOLD);
-  const roadLineGeo = new THREE.BoxGeometry(0.15, 0.02, 1.2);
+  // 23/10: tramos de 3 seguidos (la misma separacion con que se ponen):
+  // linea continua. Discontinua, a 25 u/s, parpadeaba unas 8 veces por
+  // segundo y era una de las cosas que mareaban.
+  const roadLineGeo = new THREE.BoxGeometry(0.15, 0.02, 3.02);
+  const TRAMOS_RAYA = Math.ceil(Math.abs(SPAWN_Z) / 3) * 3;
   function spawnRoadLine(z) {
     for (const x of [-9, 9]) {
       const m = new THREE.Mesh(roadLineGeo, roadLineMat);
@@ -655,9 +627,10 @@ export function createWorld(scene) {
 
   // ---- Franjas divisorias de carril (pool reciclado) ----
   const stripes = [];
-  // Rayas de carril amarillo Minion, mas anchas y cortas, de dibujo animado.
-  const stripeGeo = new THREE.BoxGeometry(0.14, 0.02, 1.1);
-  const stripeMat = toon(0xffd83a, { emissive: 0x332600 });
+  // Rayas de carril continuas y de un blanco suave (23/10): las amarillas
+  // discontinuas pasaban a 10 por segundo como una luz estroboscopica.
+  const stripeGeo = new THREE.BoxGeometry(0.1, 0.02, 3.02);
+  const stripeMat = toon(0xeae6dc);
   function spawnStripe(z) {
     for (const laneEdge of [-LANE_WIDTH / 2, LANE_WIDTH / 2]) {
       const m = new THREE.Mesh(stripeGeo, stripeMat);
@@ -2622,11 +2595,13 @@ export function createWorld(scene) {
     // Cada marca consulta la zona en SU propia posicion (no la del jugador)
     // porque conviven varias franjas de bioma a lo largo del recorrido.
     for (const s of stripes) {
-      s.position.z += dz; if (s.position.z > 4) s.position.z -= Math.abs(SPAWN_Z);
+      // Se recicla 43 tramos x 3 = 129 atras (no 128): asi la linea continua no
+      // se solapa consigo misma en la costura (el solape parpadeaba).
+      s.position.z += dz; if (s.position.z > 4) s.position.z -= TRAMOS_RAYA;
       s.visible = currentZoneName(totalScrolled - s.position.z) !== "desert";
     }
     for (const rl of roadLines) {
-      rl.position.z += dz; if (rl.position.z > 4) rl.position.z -= Math.abs(SPAWN_Z);
+      rl.position.z += dz; if (rl.position.z > 4) rl.position.z -= TRAMOS_RAYA;
       rl.visible = currentZoneName(totalScrolled - rl.position.z) !== "desert";
     }
     for (const d of decor) {
