@@ -639,3 +639,13 @@ Isidro pidió rediseñar el personaje «un poco parecido a Donald Trump, solo un
 - Primera piel (0xf3a46a) salía marrón en el juego; se aclaró a 0xffbe86.
 - Suelo estilo Minion Rush: calzada de asfalto azulado de dibujos (no negro) con manchas y grietas, aceras de baldosas grandes con relieve y color cálido por zona (nuevo `sidewalk` en `BIOME_COLORS`), losetas de plaza en ciudad y D.C., césped de dibujos en el pueblo, bordillo más gordo y rayas de carril amarillas.
 - Medido en el pueblo: 3.234 llamadas de dibujo y 431.000 triángulos (antes 3.456 y 442.000).
+
+### Trigésimo octava ronda: obstáculos, visibilidad y mecánicas de Minion Rush (2026-10-22)
+
+Isidro pidió rediseñar los obstáculos y la visibilidad copiando de Minion Rush todo lo posible, en lo visual y en las mecánicas, y que sea atractivo. Se copian mecánicas y estilo, no sus personajes ni sus dibujos.
+
+- `blender/obstaculos.py`, 9 modelos con contorno negro de dibujos y sombra en el suelo: barricada de caballetes y fila de conos (saltar), pancarta «MAGA» y arco de globos (deslizarse), guardaespaldas con atril y furgoneta de prensa «NEWS» (esquivar), coche patrulla con sirena que viene de frente (se puede saltar por encima: mide 1.2), autobús de campaña «MAGA TOUR» con rampa (subirse) y gorra roja (potenciador).
+- Mecánicas nuevas: física vertical real (gravedad y velocidad de salto calculadas para que el salto normal se sienta igual); subir por la rampa, correr por el techo del autobús lleno de tacos y caer al acabarse; coche patrulla que adelanta a la pista (solo sale si su carril está libre y no se cruza cerca del jugador con una fila que tape los otros dos carriles; se lleva por delante los tacos); arcos de tacos encima de lo que se salta; modo gigante «Presidente Gigante» (gorra, 7 s, ×1.7, aplasta todo y da 5 tacos por golpe, la cámara sube); con escudo o gigante los obstáculos salen volando dando vueltas.
+- Junto al autobús nunca hay más de un obstáculo más: siempre queda hueco.
+- `?prueba` en la dirección activa `window.__juego` (estado, inmortal, saltar, gigante, carril) para comprobar mecánicas sin jugar a mano. Comprobado: barricada saltada 0 choques y sin saltar choca; pancarta, guardaespaldas y patrulla chocan; autobús 0 choques subiendo; gigante aplasta.
+- Medido en el pueblo: 3.379 llamadas de dibujo y 481.000 triángulos (antes 3.234 y 431.000).

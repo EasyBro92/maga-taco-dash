@@ -1,7 +1,7 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
-import { modelo, hayModelo, medidas } from "./models.js";
+import { modelo, hayModelo, medidas, modeloConContorno } from "./models.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -1999,13 +1999,111 @@ export function createWorld(scene) {
     full: makePool(buildPodiumGuard),
   };
 
-  function spawnObstacle(lane, type, z) {
-    const obj = obstaclePools[type].acquire();
+  // ---- Obstaculos de Blender, estilo Minion Rush (blender/obstaculos.py, 22/10/2026) ----
+  //   choque: como se esquiva (low = saltar, high = deslizarse, full = cambiar
+  //     de carril, bus = subirse por la rampa o cambiar de carril)
+  //   medio: medio largo a lo largo de la pista; centro: donde cae su centro
+  //     respecto al origen (los vehiculos se modelaron hacia atras desde el morro)
+  //   alto: por encima de esto se le pasa por encima saltando
+  //   mueve: velocidad propia hacia el jugador (el coche patrulla)
+  const TIPOS = {
+    barricada: { choque: "low", medio: 0.45, alto: 0.95 },
+    conos: { choque: "low", medio: 0.45, alto: 0.75 },
+    pancarta: { choque: "high", medio: 0.45, alto: 2.5 },
+    globos: { choque: "high", medio: 0.45, alto: 2.4 },
+    guardaespaldas: { choque: "full", medio: 0.75, alto: 2.4, centro: 0 },
+    furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3 },
+    patrulla: { choque: "full", medio: 1.3, alto: 1.2, centro: -1.3, mueve: 7 },
+    autobus: { choque: "bus", alto: 1.55 },
+  };
+  const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
+  const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
+  const USAR_BLENDER = Object.keys(TIPOS).every((n) => hayModelo("obstaculos/" + n)) && hayModelo("obstaculos/gorra");
+
+  // Sombra suave bajo cada obstaculo: lo "asienta" en el suelo y ayuda a
+  // calcular la distancia, que era lo que mas costaba al verlos venir.
+  const sombraTex = (() => {
+    if (typeof document === "undefined") return null;
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const ctx = c.getContext("2d");
+    const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 32);
+    g.addColorStop(0, "rgba(0,0,0,0.55)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+  const sombraMat = new THREE.MeshBasicMaterial({ map: sombraTex, transparent: true, depthWrite: false, opacity: 0.85 });
+  const sombraGeo = new THREE.PlaneGeometry(1, 1);
+  sombraGeo.rotateX(-Math.PI / 2);
+
+  // Luces de la sirena del coche patrulla, que parpadean (van aparte del modelo).
+  const sirenaRoja = new THREE.MeshBasicMaterial({ color: 0xff2a2a });
+  const sirenaAzul = new THREE.MeshBasicMaterial({ color: 0x2a6bff });
+  const sirenaGeo = new THREE.BoxGeometry(0.28, 0.12, 0.2);
+
+  function construirObstaculo(nombre) {
+    const g = modeloConContorno("obstaculos/" + nombre);
+    const m = medidas("obstaculos/" + nombre);
+    const sombra = new THREE.Mesh(sombraGeo, sombraMat);
+    sombra.scale.set(m.ancho * 1.15, 1, m.fondo * 1.1 + 0.4);
+    sombra.position.set(0, 0.075, m.frente - m.fondo / 2);
+    g.add(sombra);
+    if (nombre === "patrulla") {
+      const roja = new THREE.Mesh(sirenaGeo, sirenaRoja);
+      const azul = new THREE.Mesh(sirenaGeo, sirenaAzul);
+      roja.position.set(-0.2, 1.22, -1.4);
+      azul.position.set(0.2, 1.22, -1.4);
+      g.add(roja, azul);
+      g.userData.sirena = [roja, azul];
+    }
+    return g;
+  }
+  if (USAR_BLENDER) {
+    for (const nombre in TIPOS) obstaclePools[nombre] = makePool(() => construirObstaculo(nombre));
+  }
+
+  function spawnObstacle(lane, type, z, nombre) {
+    const pool = USAR_BLENDER ? (nombre || DE_TIPO[type][Math.floor(Math.random() * DE_TIPO[type].length)]) : type;
+    const t = USAR_BLENDER ? TIPOS[pool] : { medio: 0.7, alto: type === "low" ? 0.6 : 3 };
+    const obj = obstaclePools[pool].acquire();
     obj.visible = true;
     obj.position.set(LANE_X[lane], 0, z);
+    obj.rotation.set(0, 0, 0);
     if (!obj.parent) group.add(obj);
-    obstacles.push({ mesh: obj, lane, type, z, phase: Math.random() * Math.PI * 2 });
+    const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
+      medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
+    obstacles.push(o);
+    return o;
   }
+
+  // Altura del suelo bajo el jugador en un carril: la rampa y el techo del
+  // autobus. `d` es cuanto se ha metido el jugador desde el pie de la rampa.
+  function surfaceAt(x) {
+    let h = 0;
+    for (const o of obstacles) {
+      if (o.type !== "bus" || o.smashed) continue;
+      if (Math.abs(x - LANE_X[o.lane]) > 0.85) continue;
+      const d = o.z;
+      if (d < 0 || d > BUS_LARGO) continue;
+      h = Math.max(h, d < BUS_RAMPA ? BUS_TECHO * d / BUS_RAMPA : BUS_TECHO);
+    }
+    return h;
+  }
+
+  // Un obstaculo aplastado (modo gigante o escudo) sale volando dando vueltas.
+  function smash(o) {
+    if (o.smashed) return;
+    const lado = LANE_X[o.lane] === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(LANE_X[o.lane]);
+    o.smashed = { vx: lado * (4 + Math.random() * 3), vy: 9 + Math.random() * 4, vz: -14 - Math.random() * 6,
+      rx: (Math.random() - 0.5) * 9, ry: (Math.random() - 0.5) * 9, rz: (Math.random() - 0.5) * 9 };
+    burstSparkles(o.mesh.position.x, 1, o.mesh.position.z);
+  }
+
+  // Ritmo actual de la pista (unidades por segundo), para calcular por donde
+  // se va a cruzar un coche que viene de frente con lo que ya hay en la pista.
+  let ritmo = 17;
 
   // ---- Tacos reconocibles: concha curva en "U" con capas de relleno ----
   const shellMat = toon(0xffc94d);
@@ -2160,6 +2258,12 @@ export function createWorld(scene) {
     shield: makePool(() => buildPowerupIcon("shield")),
     magnet: makePool(() => buildPowerupIcon("magnet")),
     boost: makePool(() => buildPowerupIcon("boost")),
+    // Gorra roja de campaña: el modo gigante (el "Mega Minion" de Minion Rush).
+    mega: makePool(() => {
+      const g = modeloConContorno("obstaculos/gorra") || buildPowerupIcon("shield");
+      g.scale.setScalar(1.5);
+      return g;
+    }),
   };
 
   function spawnPowerup(lane, z, kind) {
@@ -2183,29 +2287,93 @@ export function createWorld(scene) {
   // normal. Los tacos si siguen apareciendo en este tramo (ver rama `else`),
   // asi que la salida no queda vacia.
   const EASY_ZONE_Z = -52;
+  // Carril del autobus y cuantas filas mas ocupa (mide 10.2: la suya y las
+  // dos siguientes). En esas filas no se pone nada mas en su carril.
+  let busCarril = -1, busFilas = 0;
+
+  // ¿Puede salir un coche patrulla en `lane` desde `z`? Viene de frente mas
+  // rapido que la pista, asi que adelanta a las filas que ya hay delante: su
+  // carril tiene que estar libre en todas ellas, y no puede cruzarse cerca del
+  // jugador con una fila que ya tape los otros dos carriles.
+  function cocheCabe(lane, z, mueve) {
+    for (const o of obstacles) {
+      if (o.smashed || o.z <= z) continue;
+      if (o.lane === lane) return false;
+    }
+    const filas = {};
+    for (const o of obstacles) {
+      if (o.smashed || o.z <= z || o.type !== "full") continue;
+      (filas[o.z] = filas[o.z] || new Set()).add(o.lane);
+    }
+    for (const fz in filas) {
+      if (filas[fz].size < 2) continue;
+      const t = (Number(fz) - z) / mueve;
+      const cruce = Number(fz) + ritmo * t;
+      if (cruce > -30 && cruce < 3) return false;
+    }
+    return true;
+  }
+
+  function arcoDeTacos(lane, z) {
+    // Tacos en arco por encima de lo que se salta, como los platanos de Minion Rush.
+    for (let i = -2; i <= 2; i++) spawnTaco(lane, z - i * 1.1, 0.9 + 1.25 * (1 - (i * i) / 5));
+  }
+
   function spawnRow(z) {
     const lanes = [0, 1, 2];
     const roll = Math.random();
     const obstacleChance = z > EASY_ZONE_Z ? 0 : 0.55;
+    // Carril que el autobus de la fila anterior sigue ocupando.
+    const ocupado = busFilas > 0 ? busCarril : -1;
+    if (busFilas > 0) busFilas--;
+    const tramo = totalScrolled - z;           // distancia de la partida a la que llegara esta fila
+    if (USAR_BLENDER && roll < obstacleChance && ocupado < 0 && tramo > 220 && Math.random() < 0.14) {
+      // Autobus de campaña con rampa: subirse y correr por el techo lleno de tacos.
+      const lane = Math.floor(Math.random() * 3);
+      spawnObstacle(lane, "bus", z, "autobus");
+      busCarril = lane; busFilas = 2;
+      for (let i = 0; i < 7; i++) spawnTaco(lane, z - BUS_RAMPA - 0.6 - i * 1.15, BUS_TECHO + 0.9);
+      const otros = lanes.filter((l) => l !== lane);
+      // A un lado, algo que obligue a decidir (o subir o esquivar).
+      const lado = otros[Math.floor(Math.random() * 2)];
+      spawnObstacle(lado, Math.random() < 0.5 ? "full" : "low", z);
+      otros.filter((l) => l !== lado).forEach((l) => spawnTaco(l, z, 0.9));
+      return;
+    }
+    if (USAR_BLENDER && roll < obstacleChance && tramo > 300 && Math.random() < 0.12) {
+      // Coche patrulla que viene de frente con la sirena puesta.
+      const opciones = lanes.filter((l) => l !== ocupado && cocheCabe(l, z, TIPOS.patrulla.mueve));
+      if (opciones.length) {
+        const lane = opciones[Math.floor(Math.random() * opciones.length)];
+        spawnObstacle(lane, "full", z, "patrulla");
+        lanes.filter((l) => l !== lane && l !== ocupado).forEach((l) => { if (Math.random() < 0.6) spawnTaco(l, z, 0.9); });
+        return;
+      }
+    }
     if (roll < obstacleChance) {
-      const blockCount = Math.random() < 0.5 ? 1 : 2;
-      const shuffled = lanes.slice().sort(() => Math.random() - 0.5);
+      const libres = lanes.filter((l) => l !== ocupado);
+      // Junto al autobus, como mucho un obstaculo mas: siempre queda un hueco.
+      const blockCount = ocupado >= 0 ? 1 : (Math.random() < 0.5 ? 1 : 2);
+      const shuffled = libres.slice().sort(() => Math.random() - 0.5);
       const blocked = shuffled.slice(0, blockCount);
       blocked.forEach((lane) => {
         const typeRoll = Math.random();
         const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 ? "high" : "full";
         spawnObstacle(lane, type, z);
+        if (type === "low" && Math.random() < 0.45) arcoDeTacos(lane, z);
       });
-      const free = lanes.filter((l) => !blocked.includes(l));
+      const free = libres.filter((l) => !blocked.includes(l));
       let powerupLane = null;
-      if (Math.random() < 0.08 && free.length > 0) {
+      if (Math.random() < 0.1 && free.length > 0) {
         powerupLane = free[Math.floor(Math.random() * free.length)];
-        const kind = ["shield", "magnet", "boost"][Math.floor(Math.random() * 3)];
+        const kinds = USAR_BLENDER ? ["shield", "magnet", "boost", "mega"] : ["shield", "magnet", "boost"];
+        const kind = kinds[Math.floor(Math.random() * kinds.length)];
         spawnPowerup(powerupLane, z, kind);
       }
       free.forEach((lane) => { if (lane !== powerupLane && Math.random() < 0.7) spawnTaco(lane, z, 0.9); });
     } else {
-      const lane = Math.floor(Math.random() * 3);
+      const sitio = lanes.filter((l) => l !== ocupado);       // no meter tacos dentro del autobus
+      const lane = sitio[Math.floor(Math.random() * sitio.length)];
       for (let i = 0; i < 4; i++) {
         spawnTaco(lane, z - i * 1.1, 0.9 + Math.sin(i * 0.8) * 0.3);
       }
@@ -2320,10 +2488,36 @@ export function createWorld(scene) {
       b.rotation.z = Math.sin(animClock * 2.2 + b.userData.phase) * 0.22;
     }
 
+    if (dt > 0) ritmo += (dz / dt - ritmo) * Math.min(1, dt * 2);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
-      o.z += dz; o.mesh.position.z = o.z;
-      if (o.z > DESPAWN_Z) { obstaclePools[o.type].release(o.mesh); obstacles.splice(i, 1); }
+      o.z += dz + o.mueve * dt;
+      if (o.smashed) {
+        // Sale volando dando vueltas y cae fuera de la pista.
+        const s = o.smashed;
+        s.vy -= 26 * dt;
+        o.z += s.vz * dt;
+        o.mesh.position.x += s.vx * dt;
+        o.mesh.position.y += s.vy * dt;
+        o.mesh.rotation.x += s.rx * dt; o.mesh.rotation.y += s.ry * dt; o.mesh.rotation.z += s.rz * dt;
+      }
+      o.mesh.position.z = o.z;
+      if (o.mesh.userData.sirena) {
+        const on = Math.floor(animClock * 6) % 2 === 0;
+        o.mesh.userData.sirena[0].visible = on;
+        o.mesh.userData.sirena[1].visible = !on;
+      }
+      if (o.mueve) {
+        // El coche se lleva por delante los tacos de su carril.
+        for (const t of tacos) {
+          if (!t.collected && t.lane === o.lane && Math.abs(t.z - (o.z + o.centro)) < o.medio) { t.collected = true; t.atropellado = true; }
+        }
+      }
+      if (o.z > DESPAWN_Z + (o.type === "bus" ? BUS_LARGO : 0) || o.mesh.position.y < -6) {
+        o.mesh.position.y = 0;
+        obstaclePools[o.pool].release(o.mesh);
+        obstacles.splice(i, 1);
+      }
     }
     for (let i = tacos.length - 1; i >= 0; i--) {
       const it = tacos[i];
@@ -2379,7 +2573,8 @@ export function createWorld(scene) {
     totalScrolled = 0;
     curveX = 0;
     group.position.x = 0;
-    obstacles.forEach((o) => obstaclePools[o.type].release(o.mesh));
+    obstacles.forEach((o) => { o.mesh.position.y = 0; obstaclePools[o.pool].release(o.mesh); });
+    busCarril = -1; busFilas = 0;
     tacos.forEach((t) => tacoPool.release(t.mesh));
     powerups.forEach((p) => powerupPools[p.kind].release(p.mesh));
     activeSparkles.forEach((s) => sparklePool.release(s.mesh));
@@ -2412,5 +2607,5 @@ export function createWorld(scene) {
     ensureOuterProps();
   }
 
-  return { group, obstacles, tacos, powerups, update, reset, setForcedZone };
+  return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup };
 }

@@ -24,6 +24,15 @@ const STREAK_RESET_GAP = 2.2;
 const MAGNET_DURATION = 6;
 const BOOST_DURATION = 4;
 const BOOST_MULT = 1.5;
+// Fisica vertical de verdad (22/10/2026): hace falta para subir por la rampa
+// del autobus, correr por el techo y caer al acabarse. Gravedad y velocidad
+// de salto salen de la altura y la duracion de siempre, asi que el salto en
+// el suelo se siente exactamente igual que antes.
+const GRAVEDAD = 8 * JUMP_HEIGHT / (JUMP_DURATION * JUMP_DURATION);
+const V_SALTO = 4 * JUMP_HEIGHT / JUMP_DURATION;
+// Modo gigante (gorra roja): el personaje crece y aplasta lo que toca.
+const MEGA_DURATION = 7;
+const MEGA_SCALE = 1.7;
 
 // ---------- Soporte WebGL ----------
 function hasWebGL() {
@@ -205,10 +214,10 @@ const dustPool = makePool(() => {
 });
 const activeDust = [];
 let dustSpawnTimer = 0;
-function spawnDust(x, z) {
+function spawnDust(x, z, y = 0) {
   const m = dustPool.acquire();
   m.visible = true;
-  m.position.set(x + (Math.random() - 0.5) * 0.2, 0.03, z + 0.3 + Math.random() * 0.15);
+  m.position.set(x + (Math.random() - 0.5) * 0.2, y + 0.03, z + 0.3 + Math.random() * 0.15);
   m.scale.setScalar(0.6 + Math.random() * 0.3);
   m.material.opacity = 0.5;
   if (!m.parent) scene.add(m);
@@ -244,7 +253,9 @@ let gameState = "menu"; // menu | playing | gameover
 let currentLane = 1;
 let playerX = 0;
 let elapsed = 0, speed = BASE_SPEED, distance = 0, tacosThisRun = 0;
-let isJumping = false, jumpElapsed = 0;
+let isJumping = false, jumpElapsed = 0;   // isJumping = en el aire (salto o caida)
+let py = 0, vy = 0, enSuelo = true, camY = 0;
+let megaTimeLeft = 0;
 let isSliding = false, slideElapsed = 0;
 let idlePhase = 0;
 
@@ -258,6 +269,8 @@ function resetRun() {
   playerX = 0;
   elapsed = 0; speed = BASE_SPEED; distance = 0; tacosThisRun = 0;
   isJumping = false; jumpElapsed = 0;
+  py = 0; vy = 0; enSuelo = true; camY = 0;
+  megaTimeLeft = 0; character.setMega(1);
   isSliding = false; slideElapsed = 0;
   streak = 0; multiplier = 1; lastTacoTime = 0;
   shieldActive = false; magnetTimeLeft = 0; boostTimeLeft = 0;
@@ -359,7 +372,8 @@ function updateHud() {
 
 function updatePowerupBadge() {
   const badge = document.getElementById("powerupBadge");
-  if (shieldActive) { badge.textContent = "🛡 " + t("powerupShield"); badge.classList.remove("hidden"); }
+  if (megaTimeLeft > 0) { badge.textContent = "🧢 " + t("powerupMega") + " " + megaTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
+  else if (shieldActive) { badge.textContent = "🛡 " + t("powerupShield"); badge.classList.remove("hidden"); }
   else if (magnetTimeLeft > 0) { badge.textContent = "🧲 " + t("powerupMagnet") + " " + magnetTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
   else if (boostTimeLeft > 0) { badge.textContent = "🚀 " + t("powerupBoost") + " " + boostTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
   else { badge.classList.add("hidden"); }
@@ -397,7 +411,9 @@ initControls(document.getElementById("touchControls"), (action) => {
   if (gameState !== "playing") return;
   if (action === "left" && currentLane > 0) { currentLane--; sndLaneSwitch(); }
   else if (action === "right" && currentLane < 2) { currentLane++; sndLaneSwitch(); }
-  else if (action === "jump" && !isJumping && !isSliding) { isJumping = true; jumpElapsed = 0; sndJump(); vibrate(15); }
+  else if (action === "jump" && enSuelo && !isSliding) {
+    vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; sndJump(); vibrate(15);
+  }
   // Deslizarse otra vez mientras ya te deslizas REINICIA el cronometro en vez
   // de ignorarse: con dos vallas seguidas el jugador da al boton por segunda
   // vez y antes se levantaba igual en medio de la segunda valla.
@@ -414,19 +430,37 @@ function checkCollisions() {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
+    if (o.smashed) continue;
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
-    if (o.z < -0.7 || o.z > 0.7) continue;
-    if (o.type === "low") {
-      const jumpProgress = isJumping ? jumpElapsed / JUMP_DURATION : 0;
-      const h = isJumping ? Math.sin(jumpProgress * Math.PI) * JUMP_HEIGHT : 0;
-      if (h > 0.55) continue;
-    } else if (o.type === "high") {
-      if (isSliding) continue;
+    if (o.type === "bus") {
+      // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
+      // suelo (por la rampa se sube sin mas). `o.z` es lo que llevas metido
+      // desde el pie de la rampa; la rampa mide 2.2 y el autobus entero 10.2.
+      if (o.z < 0.3 || o.z > 10.2) continue;
+      const suelo = o.z < 2.2 ? 1.55 * o.z / 2.2 : 1.55;
+      if (py > suelo - 0.45) continue;
+    } else {
+      const zc = o.z + (o.centro || 0);
+      const medio = o.medio || 0.7;
+      if (zc < -medio || zc > medio) continue;
+      if (o.type === "low" && py > 0.55) continue;
+      if (o.type === "high" && isSliding) continue;
+      if (o.alto !== undefined && py > o.alto - 0.1) continue;   // le pasas por encima
+    }
+    if (megaTimeLeft > 0) {
+      // Gigante: lo que toca sale volando.
+      world.smash(o);
+      sndHit();
+      vibrate(25);
+      triggerCameraShake(0.04);
+      tacosThisRun += 5 * multiplier;
+      continue;
     }
     if (shieldActive) {
       shieldActive = false;
       character.setShieldActive(false);
       updatePowerupBadge();
+      world.smash(o);
       sndHit();
       vibrate(20);
       flashExpression("surprised", 0.5);
@@ -506,11 +540,34 @@ function checkPowerups() {
     if (p.kind === "shield") { shieldActive = true; character.setShieldActive(true); showBubble(t("powerupShield") + "!"); }
     else if (p.kind === "magnet") { magnetTimeLeft = MAGNET_DURATION; showBubble(t("powerupMagnet") + "!"); }
     else if (p.kind === "boost") { boostTimeLeft = BOOST_DURATION; showBubble(t("powerupBoost") + "!"); }
+    else if (p.kind === "mega") {
+      megaTimeLeft = MEGA_DURATION;
+      character.setMega(MEGA_SCALE);
+      showBubble(t("powerupMega") + "!");
+      flashExpression("happy", 1);
+      triggerCameraShake(0.05);
+      vibrate([30, 30, 60]);
+    }
     updatePowerupBadge();
   }
 }
 
+// ?prueba en la direccion: deja mirar y tocar el estado desde la consola
+// (para comprobar mecanicas sin jugar a mano). `__juego.inmortal = true`
+// hace que los choques no acaben la partida.
+const PRUEBA = /prueba/.test(location.search);
+if (PRUEBA) {
+  window.__juego = {
+    world, character, inmortal: false, choques: 0,
+    estado: () => ({ gameState, py, vy, enSuelo, megaTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
+    carril: (l) => { currentLane = l; },
+    saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
+    gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
+  };
+}
+
 function triggerGameOver() {
+  if (PRUEBA && window.__juego.inmortal) { window.__juego.choques++; return; }
   gameState = "gameover";
   speedLinesEl.style.opacity = "0";
   sndHit();
@@ -550,24 +607,38 @@ function tick() {
     character.object3D.position.x = playerX;
     character.setLean((playerX - prevX) * 12);
 
-    if (isJumping) {
-      jumpElapsed += dt;
-      const p = Math.min(1, jumpElapsed / JUMP_DURATION);
-      const h = Math.sin(p * Math.PI) * JUMP_HEIGHT;
-      character.object3D.position.y = h;
-      character.setJumpPose(p);
-      shadowBlob.scale.setScalar(Math.max(0.4, 1 - h / JUMP_HEIGHT));
-      if (p >= 1) {
-        isJumping = false;
-        character.object3D.position.y = 0;
-        shadowBlob.scale.setScalar(1);
+    if (megaTimeLeft > 0) {
+      megaTimeLeft = Math.max(0, megaTimeLeft - dt);
+      if (megaTimeLeft === 0) character.setMega(1);
+      updatePowerupBadge();
+    }
+
+    // ---- Altura: suelo, rampa y techo del autobus ----
+    const suelo = world.surfaceAt(playerX);
+    if (enSuelo) {
+      if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; } // se acabo el techo: a caer
+      else py = suelo;                                                    // por la rampa se sube andando
+    }
+    if (!enSuelo) {
+      vy -= GRAVEDAD * dt;
+      py += vy * dt;
+      if (py <= suelo && vy <= 0) {
+        py = suelo; vy = 0; enSuelo = true; isJumping = false;
+        character.setJumpPose(1);
         // Aterrizaje con peso: nube de polvo a los pies + vibracion corta.
-        // Antes el salto terminaba en seco, sin ningun impacto. Se usa la X
-        // real del personaje (ya incluye el desplazamiento de la curva) --
-        // `curveX` de este frame todavia no existe aqui, se calcula despues.
-        for (let d = 0; d < 5; d++) spawnDust(character.object3D.position.x, character.object3D.position.z);
+        for (let d = 0; d < 5; d++) spawnDust(character.object3D.position.x, character.object3D.position.z, py);
         vibrate(10);
       }
+    }
+    character.object3D.position.y = py;
+    shadowBlob.position.y = suelo + 0.015;
+    shadowBlob.scale.setScalar(Math.max(0.4, 1 - (py - suelo) / JUMP_HEIGHT));
+
+    if (isJumping) {
+      jumpElapsed += dt;
+      // Pose de salto mientras se esta en el aire; en una caida larga se
+      // queda en la mitad recogida hasta tocar suelo.
+      character.setJumpPose(Math.min(0.95, jumpElapsed / JUMP_DURATION));
     } else if (isSliding) {
       slideElapsed += dt;
       character.setSlidePose(true);
@@ -580,6 +651,13 @@ function tick() {
     // La pista curva: personaje/sombra se mueven con el mismo offset que el
     // grupo del mundo, asi que el carril relativo y las colisiones no cambian.
     character.object3D.position.x = playerX + curveX;
+    // La pista ya ha avanzado este fotograma: si va por la rampa, se recoloca
+    // a la altura nueva antes de mirar choques (si no, va un pelin por debajo
+    // de la rampa y cuenta como chocar con el autobus).
+    if (enSuelo) {
+      py = Math.max(py, world.surfaceAt(playerX));
+      character.object3D.position.y = py;
+    }
     checkCollisions();
     checkCollectibles(dt);
     checkPowerups();
@@ -604,7 +682,10 @@ function tick() {
       shakeY = (Math.random() - 0.5) * shakeMag * k * 0.6;
     }
     camera.position.x = camBaseX + shakeX;
-    camera.position.y = RACE_CAM.pos.y + shakeY;
+    // La camara sube con el jugador cuando va por el techo del autobus, y un
+    // poco mas en modo gigante para que se vea la pista por encima de el.
+    camY += ((py * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 4);
+    camera.position.y = RACE_CAM.pos.y + camY + shakeY;
     camera.updateProjectionMatrix();
 
     // ---- Lineas de velocidad ----
@@ -615,7 +696,7 @@ function tick() {
     if (!isJumping && !isSliding) {
       dustSpawnTimer -= dt;
       if (dustSpawnTimer <= 0) {
-        if (speedFrac > 0.1) spawnDust(playerX + curveX, character.object3D.position.z);
+        if (speedFrac > 0.1) spawnDust(playerX + curveX, character.object3D.position.z, py);
         dustSpawnTimer = 0.12 - speedFrac * 0.06;
       }
     }

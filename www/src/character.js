@@ -510,6 +510,7 @@ export function createCharacter(cosmetics) {
   let leanTarget = 0;
   let hairLag = 0;
   const NEUTRAL_SCALE = new THREE.Vector3(1, 1, 1);
+  let mega = 1; // tamaño del modo gigante (1 = normal); la carrera lo alcanza poco a poco
 
   // ---- Expresiones ----
   const EXPRESSIONS = {
@@ -651,7 +652,7 @@ export function createCharacter(cosmetics) {
       const squash = Math.max(0, (t - 0.75) * 4);
       const scaleY = 1 + 0.28 * stretch - 0.34 * squash;
       const scaleXZ = 1 - 0.18 * stretch + 0.26 * squash;
-      root.scale.set(scaleXZ, scaleY, scaleXZ);
+      root.scale.set(scaleXZ * mega, scaleY * mega, scaleXZ * mega);
     },
 
     // Derrape de beisbol, no un ovillo: antes solo se rotaban y bajaban las
@@ -719,6 +720,14 @@ export function createCharacter(cosmetics) {
       root.scale.set(1 / breathe, breathe, 1 / breathe);
       updateBlink(Math.max(0, t - lastIdleT));
       lastIdleT = t;
+    },
+
+    // Modo gigante: 1 = normal. La carrera va hacia este tamaño suavemente
+    // (crece con un "pop" y encoge igual al acabarse).
+    setMega(k) {
+      mega = k;
+      NEUTRAL_SCALE.setScalar(k);
+      if (k === 1) root.scale.set(1, 1, 1);
     },
 
     setShieldActive(active) {

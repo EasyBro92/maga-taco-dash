@@ -1,5 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { GLTFLoader } from "../vendor/GLTFLoader.js";
+import { mergeVertices } from "../vendor/BufferGeometryUtils.js";
 import { toon } from "./toon.js";
 
 // Piezas hechas en Blender (blender/*.py). Cada .glb es UNA malla con UNA
@@ -16,6 +17,7 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
+  obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -85,5 +87,38 @@ export function modelo(clave) {
   g.userData.ancho = p.ancho;
   g.userData.fondo = p.fondo;
   g.userData.frente = p.frente;
+  return g;
+}
+
+// ---- Contorno de dibujo animado (22/10/2026) ----
+// Para que los obstaculos se distingan de un vistazo, como en Minion Rush: una
+// copia de la malla un poco hinchada hacia fuera, negra y vista solo por
+// dentro (la tecnica clasica de "casco invertido"). Se hincha con normales
+// suavizadas propias -- con las de la malla, partidas en cada arista, el
+// contorno se abria en las esquinas.
+const contornos = {};
+const contornoMat = new THREE.ShaderMaterial({
+  uniforms: { grosor: { value: 0.035 }, color: { value: new THREE.Color(0x1b1424) } },
+  vertexShader: `uniform float grosor;
+    void main() {
+      vec3 p = position + normalize(normal) * grosor;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }`,
+  fragmentShader: `uniform vec3 color; void main() { gl_FragColor = vec4(color, 1.0); }`,
+  side: THREE.BackSide,
+});
+
+export function modeloConContorno(clave) {
+  const g = modelo(clave);
+  if (!g) return null;
+  let geo = contornos[clave];
+  if (!geo) {
+    const base = plantillas[clave].geometry.clone();
+    for (const nombre of Object.keys(base.attributes)) if (nombre !== "position") base.deleteAttribute(nombre);
+    geo = mergeVertices(base, 1e-3);
+    geo.computeVertexNormals();
+    contornos[clave] = geo;
+  }
+  g.add(new THREE.Mesh(geo, contornoMat));
   return g;
 }
