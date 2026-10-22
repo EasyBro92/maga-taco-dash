@@ -273,3 +273,38 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
   #powerupBadge { top: 54px; }
   #speechBubble { top: 12%; }
 }
+
+/* ---- Misiones, jefe y avisos (22/10/2026) ---- */
+.misiones { margin: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.misiones:empty { display: none; }
+.misiones .mision {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #f4e4b0;
+}
+.misiones .misionFila { display: flex; justify-content: space-between; gap: 8px; }
+.misiones .misionPremio { font-weight: 800; white-space: nowrap; }
+.misiones .misionBarra { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.12); margin-top: 5px; overflow: hidden; }
+.misiones .misionBarra > div { height: 100%; background: linear-gradient(90deg, #f0d375, #ff9d2e); border-radius: 999px; }
+
+#bossBar {
+  position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
+  width: min(320px, 70vw); z-index: 5; pointer-events: none; text-align: center;
+}
+#bossBar .bossName { font-weight: 900; color: #fff; text-shadow: 0 2px 0 #000, 0 0 8px #ff3a2a; font-size: 15px; margin-bottom: 4px; }
+#bossBar .bossTrack { height: 12px; border-radius: 999px; background: rgba(0,0,0,0.55); border: 2px solid #fff; overflow: hidden; }
+#bossFill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3a2a, #ffb02e); transition: width 0.25s; }
+
+#misionToast {
+  position: absolute; top: 140px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, #2b8a3e, #37b24d);
+  border: 2px solid #fff; border-radius: 14px;
+  padding: 8px 16px; color: #fff; font-weight: 900; font-size: 15px;
+  z-index: 6; pointer-events: none; text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  animation: misionEntra 0.35s ease-out;
+}
+@keyframes misionEntra { from { transform: translate(-50%, -20px) scale(0.8); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }

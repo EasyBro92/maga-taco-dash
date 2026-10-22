@@ -17,7 +17,8 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
-  obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra"],
+  obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
+    "rayo", "cohete", "barril", "chile", "jefe"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -121,4 +122,31 @@ export function modeloConContorno(clave) {
   }
   g.add(new THREE.Mesh(geo, contornoMat));
   return g;
+}
+
+// ---- Capa de hielo del rayo congelador (22/10/2026) ----
+// La misma forma hinchada del contorno, pero mas gorda, azul hielo y
+// translucida por fuera: el obstaculo se ve metido en un bloque de hielo.
+const hieloMat = new THREE.ShaderMaterial({
+  uniforms: { grosor: { value: 0.09 } },
+  vertexShader: `uniform float grosor; varying vec3 vN; varying vec3 vV;
+    void main() {
+      vec3 p = position + normalize(normal) * grosor;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz);
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: `varying vec3 vN; varying vec3 vV;
+    void main() {
+      float borde = 1.0 - abs(dot(vN, vV));
+      gl_FragColor = vec4(mix(vec3(0.55, 0.9, 1.0), vec3(1.0), borde * 0.7), 0.45 + borde * 0.4);
+    }`,
+  transparent: true,
+  depthWrite: false,
+});
+
+export function capaHielo(clave) {
+  if (!plantillas[clave]) return null;
+  if (!contornos[clave]) { const g = modeloConContorno(clave); g.clear(); }
+  return new THREE.Mesh(contornos[clave], hieloMat);
 }

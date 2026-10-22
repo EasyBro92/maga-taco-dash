@@ -35,6 +35,11 @@ function persist() {
   localStorage.setItem(KEY, JSON.stringify(state));
 }
 
+// Para modulos que cambian la partida guardada por dentro (misiones).
+export function persistSave() {
+  persist();
+}
+
 export function getSave() {
   return state;
 }

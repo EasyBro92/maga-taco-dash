@@ -35,6 +35,8 @@
   </div>
 
   <div id="powerupBadge" class="hidden"></div>
+  <div id="bossBar" class="hidden"><div class="bossName">🌯 BURRITO-BOT</div><div class="bossTrack"><div id="bossFill"></div></div></div>
+  <div id="misionToast" class="hidden"></div>
   <div id="speechBubble" class="hidden"></div>
   <div id="confettiLayer"></div>
 
@@ -52,6 +54,7 @@
           <button class="smallBtn zoneBtn" data-zone="dc" data-i18n="zoneDc">🏛️ Washington D.C.</button>
         </div>
       </div>
+      <div class="misiones" id="misionesMenu"></div>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
       <div class="row">
         <button id="startShopBtn" class="smallBtn" data-i18n="shop">🛒 Tienda</button>
@@ -107,6 +110,7 @@
       <p class="statLine"><span data-i18n="distance">Distancia</span>: <span id="finalScore">0</span> m</p>
       <p class="statLine"><span class="icon">🌮</span> <span id="finalTacos">0</span></p>
       <p class="statLine best" id="bestLine"></p>
+      <div class="misiones" id="misionesFin"></div>
       <button id="retryBtn" class="bigBtn" data-i18n="retry">REINTENTAR</button>
       <button id="menuBtn" class="smallBtn" data-i18n="menu">Menú</button>
     </div>

@@ -1,10 +1,12 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
-import { modelo, hayModelo, medidas, modeloConContorno } from "./models.js";
+import { modelo, hayModelo, medidas, modeloConContorno, capaHielo } from "./models.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
+// Altura a la que vuela el cohete (los tacos del cielo van un poco mas arriba).
+export const CIELO_Y = 7;
 // Debe coincidir con BIOME_NAMES + "dc" dentro de createWorld(). Se duplica
 // aqui a nivel de modulo (en vez de exportar la lista interna) para que
 // main.js pueda construir el selector de zona sin acoplarse al cierre de
@@ -2015,10 +2017,13 @@ export function createWorld(scene) {
     furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3 },
     patrulla: { choque: "full", medio: 1.3, alto: 1.2, centro: -1.3, mueve: 7 },
     autobus: { choque: "bus", alto: 1.55 },
+    // Lo lanza el jefe: cae del cielo y rueda hacia el jugador. Se salta.
+    barril: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
   const USAR_BLENDER = Object.keys(TIPOS).every((n) => hayModelo("obstaculos/" + n)) && hayModelo("obstaculos/gorra");
+  const EXTRAS = ["rayo", "cohete", "chile", "jefe"].every((n) => hayModelo("obstaculos/" + n));
 
   // Sombra suave bajo cada obstaculo: lo "asienta" en el suelo y ayuda a
   // calcular la distancia, que era lo que mas costaba al verlos venir.
@@ -2099,6 +2104,25 @@ export function createWorld(scene) {
     o.smashed = { vx: lado * (4 + Math.random() * 3), vy: 9 + Math.random() * 4, vz: -14 - Math.random() * 6,
       rx: (Math.random() - 0.5) * 9, ry: (Math.random() - 0.5) * 9, rz: (Math.random() - 0.5) * 9 };
     burstSparkles(o.mesh.position.x, 1, o.mesh.position.z);
+  }
+
+  // Rayo congelador: lo que hay delante a menos de `alcance` se mete en un
+  // bloque de hielo, se para (el coche patrulla tambien) y al tocarlo se
+  // rompe en vez de chocar. El autobus no se congela: es para subirse.
+  function congelar(alcance) {
+    let nuevos = 0;
+    for (const o of obstacles) {
+      if (o.congelado || o.smashed || o.type === "bus" || o.z < -alcance || o.z > 1) continue;
+      o.congelado = true;
+      o.mueve = 0;
+      if (USAR_BLENDER && !o.hielo) {
+        o.hielo = capaHielo("obstaculos/" + o.pool);
+        if (o.hielo) o.mesh.add(o.hielo);
+      }
+      burstSparkles(o.mesh.position.x, 1, o.mesh.position.z);
+      nuevos++;
+    }
+    return nuevos;
   }
 
   // Ritmo actual de la pista (unidades por segundo), para calcular por donde
@@ -2264,6 +2288,10 @@ export function createWorld(scene) {
       g.scale.setScalar(1.5);
       return g;
     }),
+    // 22/10 (2): rayo congelador, cohete y el chile para darle al jefe.
+    freeze: makePool(() => { const g = modeloConContorno("obstaculos/rayo") || buildPowerupIcon("shield"); g.scale.setScalar(1.3); return g; }),
+    rocket: makePool(() => { const g = modeloConContorno("obstaculos/cohete") || buildPowerupIcon("boost"); g.scale.setScalar(0.42); return g; }),
+    chile: makePool(() => { const g = modeloConContorno("obstaculos/chile") || buildPowerupIcon("shield"); g.scale.setScalar(1.4); g.position.y = -0.4; return g; }),
   };
 
   function spawnPowerup(lane, z, kind) {
@@ -2319,10 +2347,137 @@ export function createWorld(scene) {
     for (let i = -2; i <= 2; i++) spawnTaco(lane, z - i * 1.1, 0.9 + 1.25 * (1 - (i * i) / 5));
   }
 
+  // ---- Cohete: mientras se vuela, las filas nuevas son tacos en el cielo ----
+  let cielo = false, carrilCielo = 1;
+  function setCielo(v) {
+    // Al despegar se llena de tacos el cielo de delante: si no, los primeros
+    // tardarian 5 s en llegar desde el horizonte y el vuelo dura 6.5.
+    if (v && !cielo) {
+      for (let z = -10; z > lastRowZ; z -= 1.4) {
+        if (Math.random() < 0.12) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
+        spawnTaco(carrilCielo, z, CIELO_Y + 0.9);
+      }
+    }
+    cielo = v;
+  }
+
+  // ---- Jefe: el Burrito-Bot (22/10/2026) ----
+  // Como los jefes de Minion Rush: flota delante, lanza barriles de salsa al
+  // carril donde estas y se le vence recogiendo chiles, que salen disparados
+  // hacia el. Cinco golpes. Si tarda demasiado, se va sin premio.
+  const JEFE_VIDA = 5, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 40;
+  const jefe = { activo: false, mesh: null, vida: 0, carril: 1, x: 0, z: -90, tiro: 0, tiempo: 0,
+    golpe: 0, saliendo: false, derrotado: false };
+  const disparos = [];
+  let jugadorCarril = 1;
+  let alEventoJefe = null;
+  function setJugador(l) { jugadorCarril = l; }
+  function onJefe(fn) { alEventoJefe = fn; }
+  function jefeActivo() { return jefe.activo && !jefe.saliendo; }
+  function iniciarJefe() {
+    if (jefe.activo || !EXTRAS) return false;
+    if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
+    jefe.mesh.visible = true;
+    jefe.mesh.rotation.set(0, 0, 0);
+    if (!jefe.mesh.parent) group.add(jefe.mesh);
+    Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
+      saliendo: false, derrotado: false,
+      // El primer barril espera a que pase lo que ya estaba en la pista
+      // (hasta 128 por delante): asi nunca coincide con un obstaculo normal.
+      tiro: 5.5 });
+    return true;
+  }
+  const chileGeo = () => modelo("obstaculos/chile");
+  function dispararJefe(x, y) {
+    if (!jefeActivo()) return;
+    const m = chileGeo();
+    m.scale.setScalar(1.6);
+    m.position.set(x, y, 0);
+    group.add(m);
+    disparos.push({ mesh: m, t: 0, x0: x, y0: y });
+  }
+  function acabarJefe() {
+    if (jefe.mesh) jefe.mesh.visible = false;
+    jefe.activo = false;
+    for (const d of disparos) group.remove(d.mesh);
+    disparos.length = 0;
+  }
+  function actualizarJefe(dt) {
+    if (!jefe.activo) return;
+    const m = jefe.mesh;
+    jefe.tiempo += dt;
+    if (jefe.saliendo) {
+      // Vencido: sale despedido girando. Si se va por tiempo, se aleja volando.
+      m.position.y += (jefe.derrotado ? 9 : 5) * dt;
+      jefe.z -= (jefe.derrotado ? 10 : 25) * dt;
+      if (jefe.derrotado) { m.rotation.z += dt * 6; m.rotation.x += dt * 3; }
+      m.position.z = jefe.z;
+      if (m.position.y > 30) acabarJefe();
+      return;
+    }
+    jefe.z += (JEFE_Z - jefe.z) * Math.min(1, dt * 1.2);
+    jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * 4);
+    const temblor = jefe.golpe > 0 ? Math.sin(jefe.tiempo * 70) * 0.25 * jefe.golpe : 0;
+    m.position.set(jefe.x + temblor, JEFE_Y + Math.sin(jefe.tiempo * 2.2) * 0.25, jefe.z);
+    m.rotation.z = Math.sin(jefe.tiempo * 1.7) * 0.06;
+    if (jefe.golpe > 0) {
+      jefe.golpe = Math.max(0, jefe.golpe - dt * 2.5);
+      m.scale.setScalar(1 + jefe.golpe * 0.25);
+    }
+    // Lanza un barril al carril donde esta (casi siempre el tuyo) y cambia de carril.
+    jefe.tiro -= dt;
+    if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6) {
+      const o = spawnObstacle(jefe.carril, "low", jefe.z + 1.5, "barril");
+      o.cae = { vy: 2 };
+      o.mesh.position.y = JEFE_Y;
+      jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
+      jefe.tiro = 1.6;
+    }
+    if (jefe.tiempo > JEFE_TIEMPO) {
+      jefe.saliendo = true;
+      if (alEventoJefe) alEventoJefe("escapa", 0);
+    }
+  }
+  function actualizarDisparos(dt) {
+    for (let i = disparos.length - 1; i >= 0; i--) {
+      const d = disparos[i];
+      d.t += dt / 0.45;
+      const t = Math.min(1, d.t);
+      d.mesh.position.set(d.x0 + (jefe.x - d.x0) * t, d.y0 + (JEFE_Y + 1.5 - d.y0) * t + Math.sin(t * Math.PI) * 2,
+        jefe.z * t);
+      d.mesh.rotation.x += dt * 12;
+      if (t >= 1) {
+        group.remove(d.mesh);
+        disparos.splice(i, 1);
+        if (!jefeActivo()) continue;
+        jefe.vida--;
+        jefe.golpe = 1;
+        for (let k = 0; k < 3; k++) burstSparkles(jefe.x, JEFE_Y + 1.5, jefe.z);
+        if (jefe.vida <= 0) {
+          jefe.saliendo = true; jefe.derrotado = true;
+          if (alEventoJefe) alEventoJefe("derrotado", 0);
+        } else if (alEventoJefe) alEventoJefe("golpe", jefe.vida);
+      }
+    }
+  }
+
   function spawnRow(z) {
     const lanes = [0, 1, 2];
     const roll = Math.random();
     const obstacleChance = z > EASY_ZONE_Z ? 0 : 0.55;
+    if (cielo) {
+      // Volando en cohete: una hilera de tacos en el cielo que va cambiando de carril.
+      if (Math.random() < 0.5) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
+      for (let i = 0; i < 5; i++) spawnTaco(carrilCielo, z - i * 1.4, CIELO_Y + 0.9);
+      return;
+    }
+    if (jefeActivo()) {
+      // Durante el jefe no hay obstaculos normales (solo sus barriles): tacos y chiles.
+      const lane = Math.floor(Math.random() * 3);
+      for (let i = 0; i < 4; i++) spawnTaco(lane, z - i * 1.1, 0.9);
+      if (Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, "chile");
+      return;
+    }
     // Carril que el autobus de la fila anterior sigue ocupando.
     const ocupado = busFilas > 0 ? busCarril : -1;
     if (busFilas > 0) busFilas--;
@@ -2366,7 +2521,8 @@ export function createWorld(scene) {
       let powerupLane = null;
       if (Math.random() < 0.1 && free.length > 0) {
         powerupLane = free[Math.floor(Math.random() * free.length)];
-        const kinds = USAR_BLENDER ? ["shield", "magnet", "boost", "mega"] : ["shield", "magnet", "boost"];
+        const kinds = !USAR_BLENDER ? ["shield", "magnet", "boost"]
+          : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
         const kind = kinds[Math.floor(Math.random() * kinds.length)];
         spawnPowerup(powerupLane, z, kind);
       }
@@ -2388,9 +2544,9 @@ export function createWorld(scene) {
   }
   ensureRows();
 
-  function update(dz) {
+  function update(dz, dtFijo) {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-    const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
+    const dt = dtFijo !== undefined ? dtFijo : Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
     lastTime = now;
     animClock += dt;
 
@@ -2489,9 +2645,18 @@ export function createWorld(scene) {
     }
 
     if (dt > 0) ritmo += (dz / dt - ritmo) * Math.min(1, dt * 2);
+    actualizarJefe(dt);
+    actualizarDisparos(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
       o.z += dz + o.mueve * dt;
+      if (o.cae && !o.smashed) {
+        // Barril del jefe: cae desde su mano hasta la pista.
+        o.cae.vy -= 30 * dt;
+        o.mesh.position.y = Math.max(0, o.mesh.position.y + o.cae.vy * dt);
+        if (o.mesh.position.y === 0) o.cae = null;
+      }
+      if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
       if (o.smashed) {
         // Sale volando dando vueltas y cae fuera de la pista.
         const s = o.smashed;
@@ -2515,6 +2680,7 @@ export function createWorld(scene) {
       }
       if (o.z > DESPAWN_Z + (o.type === "bus" ? BUS_LARGO : 0) || o.mesh.position.y < -6) {
         o.mesh.position.y = 0;
+        if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; }
         obstaclePools[o.pool].release(o.mesh);
         obstacles.splice(i, 1);
       }
@@ -2573,7 +2739,8 @@ export function createWorld(scene) {
     totalScrolled = 0;
     curveX = 0;
     group.position.x = 0;
-    obstacles.forEach((o) => { o.mesh.position.y = 0; obstaclePools[o.pool].release(o.mesh); });
+    obstacles.forEach((o) => { o.mesh.position.y = 0; if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; } obstaclePools[o.pool].release(o.mesh); });
+    acabarJefe(); cielo = false;
     busCarril = -1; busFilas = 0;
     tacos.forEach((t) => tacoPool.release(t.mesh));
     powerups.forEach((p) => powerupPools[p.kind].release(p.mesh));
@@ -2607,5 +2774,6 @@ export function createWorld(scene) {
     ensureOuterProps();
   }
 
-  return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup };
+  return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
+    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador };
 }

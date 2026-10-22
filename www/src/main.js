@@ -1,6 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { createCharacter } from "./character.js";
-import { createWorld, LANE_X } from "./world.js";
+import { createWorld, LANE_X, CIELO_Y } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic,
@@ -10,7 +10,8 @@ import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetPr
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
-import { loadZoneModels } from "./models.js";
+import { loadZoneModels, modelo } from "./models.js";
+import * as misiones from "./missions.js";
 
 initErrorReporting();
 
@@ -33,6 +34,11 @@ const V_SALTO = 4 * JUMP_HEIGHT / JUMP_DURATION;
 // Modo gigante (gorra roja): el personaje crece y aplasta lo que toca.
 const MEGA_DURATION = 7;
 const MEGA_SCALE = 1.7;
+// Rayo congelador, cohete y jefe (22/10/2026, mas Minion Rush).
+const FREEZE_DURATION = 6;
+const ROCKET_DURATION = 6.5;
+const JEFE_PRIMERO = 1200;   // metros hasta el primer Burrito-Bot
+const JEFE_CADA = 2000;      // y luego cada tantos
 
 // ---------- Soporte WebGL ----------
 function hasWebGL() {
@@ -182,6 +188,70 @@ const character = createCharacter(getSave().equipped);
 character.object3D.position.set(0, 0, 0);
 scene.add(character.object3D);
 
+// El cohete en el que se monta (oculto hasta coger el potenciador). Viene con
+// la punta hacia +z y el personaje corre hacia -z: se gira media vuelta, y se
+// baja para que el personaje quede sentado encima.
+const monturaCohete = modelo("obstaculos/cohete");
+if (monturaCohete) {
+  monturaCohete.rotation.y = Math.PI;
+  monturaCohete.position.set(0, -0.92, 0.2);
+  monturaCohete.visible = false;
+  character.object3D.add(monturaCohete);
+}
+
+// ---- Misiones: lista en el menu y al acabar, y aviso al cumplir una ----
+function pintarMisiones(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<div class="zoneLabel">🎯 ${t("misiones")}</div>` + misiones.activas().map((m) => {
+    const meta = Math.round(misiones.metaDe(m));
+    const hecho = Math.min(meta, Math.floor(m.hecho));
+    return `<div class="mision"><div class="misionFila"><span>${t("mis_" + m.tipo).replace("{n}", meta)}</span>`
+      + `<span class="misionPremio">+${misiones.premioDe(m)} 🌮</span></div>`
+      + `<div class="misionBarra"><div style="width:${(100 * hecho / meta).toFixed(0)}%"></div></div></div>`;
+  }).join("");
+}
+const colaAvisos = [];
+let avisoVisible = false;
+function avisarMisiones(cumplidas) {
+  for (const c of cumplidas) colaAvisos.push(`${t("misionCumplida")} +${c.premio} 🌮`);
+  if (!avisoVisible) siguienteAviso();
+}
+function siguienteAviso() {
+  const el = document.getElementById("misionToast");
+  const texto = colaAvisos.shift();
+  if (!texto) { avisoVisible = false; el.classList.add("hidden"); return; }
+  avisoVisible = true;
+  el.textContent = texto;
+  el.classList.remove("hidden");
+  el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  sndPoint();
+  setTimeout(siguienteAviso, 2400);
+}
+pintarMisiones("misionesMenu");
+
+// ---- Jefe: barra de vida y premio ----
+world.onJefe((evento, vida) => {
+  const barra = document.getElementById("bossBar");
+  if (evento === "golpe") {
+    document.getElementById("bossFill").style.width = `${(vida / 5) * 100}%`;
+    triggerCameraShake(0.03);
+    flashExpression("happy", 0.5);
+  } else if (evento === "derrotado") {
+    document.getElementById("bossFill").style.width = "0%";
+    tacosThisRun += 150;
+    showBubble(t("jefeVencido") + " +150 🌮");
+    spawnConfetti(30);
+    triggerCameraShake(0.06);
+    vibrate([40, 30, 80]);
+    avisarMisiones(misiones.evento("jefe"));
+    setTimeout(() => barra.classList.add("hidden"), 1500);
+  } else if (evento === "escapa") {
+    showBubble(t("jefeEscapa"));
+    setTimeout(() => barra.classList.add("hidden"), 1000);
+  }
+});
+
 const shadowBlob = new THREE.Mesh(
   new THREE.CircleGeometry(0.4, 16),
   new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 })
@@ -255,7 +325,8 @@ let playerX = 0;
 let elapsed = 0, speed = BASE_SPEED, distance = 0, tacosThisRun = 0;
 let isJumping = false, jumpElapsed = 0;   // isJumping = en el aire (salto o caida)
 let py = 0, vy = 0, enSuelo = true, camY = 0;
-let megaTimeLeft = 0;
+let megaTimeLeft = 0, freezeTimeLeft = 0, rocketTimeLeft = 0;
+let nextJefeAt = JEFE_PRIMERO, misionesReloj = 0;
 let isSliding = false, slideElapsed = 0;
 let idlePhase = 0;
 
@@ -271,6 +342,11 @@ function resetRun() {
   isJumping = false; jumpElapsed = 0;
   py = 0; vy = 0; enSuelo = true; camY = 0;
   megaTimeLeft = 0; character.setMega(1);
+  freezeTimeLeft = 0; rocketTimeLeft = 0; nextJefeAt = JEFE_PRIMERO; misionesReloj = 0;
+  if (monturaCohete) monturaCohete.visible = false;
+  world.setCielo(false);
+  document.getElementById("bossBar").classList.add("hidden");
+  misiones.empezarPartida();
   isSliding = false; slideElapsed = 0;
   streak = 0; multiplier = 1; lastTacoTime = 0;
   shieldActive = false; magnetTimeLeft = 0; boostTimeLeft = 0;
@@ -372,7 +448,9 @@ function updateHud() {
 
 function updatePowerupBadge() {
   const badge = document.getElementById("powerupBadge");
-  if (megaTimeLeft > 0) { badge.textContent = "🧢 " + t("powerupMega") + " " + megaTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
+  if (rocketTimeLeft > 0) { badge.textContent = "🚀 " + t("powerupRocket") + " " + rocketTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
+  else if (megaTimeLeft > 0) { badge.textContent = "🧢 " + t("powerupMega") + " " + megaTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
+  else if (freezeTimeLeft > 0) { badge.textContent = "🧊 " + t("powerupFreeze") + " " + freezeTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
   else if (shieldActive) { badge.textContent = "🛡 " + t("powerupShield"); badge.classList.remove("hidden"); }
   else if (magnetTimeLeft > 0) { badge.textContent = "🧲 " + t("powerupMagnet") + " " + magnetTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
   else if (boostTimeLeft > 0) { badge.textContent = "🚀 " + t("powerupBoost") + " " + boostTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
@@ -426,6 +504,7 @@ initControls(document.getElementById("touchControls"), (action) => {
 // ---------- Colisiones ----------
 const HIT_LANE_TOLERANCE = 0.85; // menos que medio ancho de carril (1.1): rozar el borde durante un cambio de carril no cuenta como choque
 function checkCollisions() {
+  if (rocketTimeLeft > 0) return;          // en el cohete se vuela por encima de todo
   for (const o of world.obstacles) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
@@ -438,14 +517,32 @@ function checkCollisions() {
       // desde el pie de la rampa; la rampa mide 2.2 y el autobus entero 10.2.
       if (o.z < 0.3 || o.z > 10.2) continue;
       const suelo = o.z < 2.2 ? 1.55 * o.z / 2.2 : 1.55;
-      if (py > suelo - 0.45) continue;
+      if (py > suelo - 0.45) {
+        if (o.z > 2.2 && !o.contado) { o.contado = true; avisarMisiones(misiones.evento("autobus")); }
+        continue;
+      }
     } else {
       const zc = o.z + (o.centro || 0);
       const medio = o.medio || 0.7;
       if (zc < -medio || zc > medio) continue;
-      if (o.type === "low" && py > 0.55) continue;
-      if (o.type === "high" && isSliding) continue;
+      if (o.type === "low" && py > 0.55) {
+        if (!o.contado) { o.contado = true; avisarMisiones(misiones.evento("saltos")); }
+        continue;
+      }
+      if (o.type === "high" && isSliding) {
+        if (!o.contado) { o.contado = true; avisarMisiones(misiones.evento("deslizar")); }
+        continue;
+      }
       if (o.alto !== undefined && py > o.alto - 0.1) continue;   // le pasas por encima
+    }
+    if (o.congelado) {
+      // Congelado por el rayo: se rompe al tocarlo.
+      world.smash(o);
+      sndHit();
+      vibrate(15);
+      tacosThisRun += 2 * multiplier;
+      avisarMisiones(misiones.evento("hielo"));
+      continue;
     }
     if (megaTimeLeft > 0) {
       // Gigante: lo que toca sale volando.
@@ -454,6 +551,7 @@ function checkCollisions() {
       vibrate(25);
       triggerCameraShake(0.04);
       tacosThisRun += 5 * multiplier;
+      avisarMisiones(misiones.evento("gigante"));
       continue;
     }
     if (shieldActive) {
@@ -521,6 +619,9 @@ function checkCollectibles(dt) {
       continue;
     }
     if (tItem.lane !== currentLane) continue;
+    // A la altura del personaje (volando en cohete no se cogen los del suelo,
+    // ni desde el suelo los del cielo). Holgado: los arcos se cogen saltando.
+    if (Math.abs(tItem.baseY - (py + 0.9)) > 1.7) continue;
     if (tItem.z < -0.8 || tItem.z > 0.8) continue;
     tItem.collected = true;
     registerTaco(1);
@@ -547,6 +648,24 @@ function checkPowerups() {
       flashExpression("happy", 1);
       triggerCameraShake(0.05);
       vibrate([30, 30, 60]);
+    } else if (p.kind === "freeze") {
+      freezeTimeLeft = FREEZE_DURATION;
+      showBubble(t("powerupFreeze") + "!");
+      vibrate(30);
+    } else if (p.kind === "rocket") {
+      rocketTimeLeft = ROCKET_DURATION;
+      if (monturaCohete) monturaCohete.visible = true;
+      world.setCielo(true);
+      isSliding = false; character.setSlidePose(false);
+      showBubble(t("powerupRocket") + "!");
+      flashExpression("happy", 1.5);
+      triggerCameraShake(0.05);
+      vibrate([30, 30, 60]);
+      avisarMisiones(misiones.evento("cohete"));
+    } else if (p.kind === "chile") {
+      // Chile picante: sale disparado hacia el Burrito-Bot.
+      world.dispararJefe(playerX, py + 1.2);
+      vibrate(15);
     }
     updatePowerupBadge();
   }
@@ -559,10 +678,15 @@ const PRUEBA = /prueba/.test(location.search);
 if (PRUEBA) {
   window.__juego = {
     world, character, inmortal: false, choques: 0,
-    estado: () => ({ gameState, py, vy, enSuelo, megaTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
+    estado: () => ({ gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
+    rayo: () => { freezeTimeLeft = FREEZE_DURATION; },
+    cohete: () => { rocketTimeLeft = ROCKET_DURATION; if (monturaCohete) monturaCohete.visible = true; world.setCielo(true); },
+    jefe: () => { nextJefeAt = 0; },
+    misiones,
+    paso: (n = 1, dt = 1 / 60) => { for (let i = 0; i < n; i++) frame(dt); },
   };
 }
 
@@ -573,6 +697,9 @@ function triggerGameOver() {
   sndHit();
   vibrate([80, 40, 80]);
   addTacos(Math.floor(tacosThisRun));
+  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+  pintarMisiones("misionesFin");
+  document.getElementById("bossBar").classList.add("hidden");
   const isRecord = reportRunScore(Math.floor(distance));
   document.getElementById("finalScore").textContent = Math.floor(distance);
   document.getElementById("finalTacos").textContent = Math.floor(tacosThisRun);
@@ -590,8 +717,14 @@ let firstFrame = true;
 
 function tick() {
   requestAnimationFrame(tick);
+  frame();
+}
+
+// Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
+// paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
+function frame(dtFijo) {
   if (contextLost) return;
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const dt = dtFijo !== undefined ? dtFijo : Math.min(clock.getDelta(), 0.05);
 
   if (gameState === "playing") {
     elapsed += dt;
@@ -613,13 +746,49 @@ function tick() {
       updatePowerupBadge();
     }
 
+    if (freezeTimeLeft > 0) {
+      freezeTimeLeft = Math.max(0, freezeTimeLeft - dt);
+      world.congelar(45);
+      updatePowerupBadge();
+    }
+
+    // ---- Cohete: sube al cielo y vuela recogiendo tacos ----
+    if (rocketTimeLeft > 0) {
+      rocketTimeLeft = Math.max(0, rocketTimeLeft - dt);
+      py += (CIELO_Y - py) * Math.min(1, dt * 2.5);
+      vy = 0; enSuelo = false; isJumping = true; jumpElapsed = JUMP_DURATION * 0.5;
+      // Las ultimas filas antes de aterrizar salen vacias: se aterriza limpio.
+      if (rocketTimeLeft < 1.6) world.setCielo(false);
+      if (monturaCohete) monturaCohete.rotation.z = Math.sin(elapsed * 9) * 0.05;
+      if (rocketTimeLeft === 0 && monturaCohete) monturaCohete.visible = false;
+      updatePowerupBadge();
+    }
+
+    // ---- El Burrito-Bot llega cada tantos metros ----
+    world.setJugador(currentLane);
+    if (distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
+      nextJefeAt = distance + JEFE_CADA;
+      document.getElementById("bossFill").style.width = "100%";
+      document.getElementById("bossBar").classList.remove("hidden");
+      showBubble(t("jefeLlega"));
+      triggerCameraShake(0.04);
+    }
+
+    // Misiones "de una partida": se miran una vez por segundo (no a cada
+    // fotograma, que cada aviso guarda la partida).
+    misionesReloj -= dt;
+    if (misionesReloj <= 0) {
+      misionesReloj = 1;
+      avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+    }
+
     // ---- Altura: suelo, rampa y techo del autobus ----
     const suelo = world.surfaceAt(playerX);
     if (enSuelo) {
       if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; } // se acabo el techo: a caer
       else py = suelo;                                                    // por la rampa se sube andando
     }
-    if (!enSuelo) {
+    if (!enSuelo && rocketTimeLeft === 0) {
       vy -= GRAVEDAD * dt;
       py += vy * dt;
       if (py <= suelo && vy <= 0) {
@@ -647,7 +816,7 @@ function tick() {
       character.updateRun(dt, speed / BASE_SPEED);
     }
 
-    const curveX = world.update(frameSpeed * dt);
+    const curveX = world.update(frameSpeed * dt, dtFijo !== undefined ? dt : undefined);
     // La pista curva: personaje/sombra se mueven con el mismo offset que el
     // grupo del mundo, asi que el carril relativo y las colisiones no cambian.
     character.object3D.position.x = playerX + curveX;
@@ -744,10 +913,11 @@ document.getElementById("menuBtn").addEventListener("click", () => {
   setCameraMode("menu");
   document.getElementById("gameOverScreen").classList.add("hidden");
   document.getElementById("startScreen").classList.remove("hidden");
+  pintarMisiones("misionesMenu");
 });
 
 document.getElementById("langToggle").addEventListener("click", () => { toggleLang(); updatePowerupBadge(); });
-document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); });
+document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); pintarMisiones("misionesMenu"); });
 
 // Fase 2/4 todavia no implementadas: ocultar accesos por ahora.
 document.getElementById("startShopBtn").style.display = "none";

@@ -649,3 +649,14 @@ Isidro pidió rediseñar los obstáculos y la visibilidad copiando de Minion Rus
 - Junto al autobús nunca hay más de un obstáculo más: siempre queda hueco.
 - `?prueba` en la dirección activa `window.__juego` (estado, inmortal, saltar, gigante, carril) para comprobar mecánicas sin jugar a mano. Comprobado: barricada saltada 0 choques y sin saltar choca; pancarta, guardaespaldas y patrulla chocan; autobús 0 choques subiendo; gigante aplasta.
 - Medido en el pueblo: 3.379 llamadas de dibujo y 481.000 triángulos (antes 3.234 y 431.000).
+
+### Trigésimo novena ronda: rayo congelador, cohete, jefe y misiones (2026-10-22)
+
+Isidro pidió seguir con más cosas de Minion Rush: rayo congelador, cohete, jefes y misiones.
+
+- Modelos nuevos en `blender/obstaculos.py`: pistola de rayo, cohete rojo y blanco, barril de salsa, chile y el jefe «Burrito-Bot» (burrito robot con ojos rojos, pinzas y propulsores; rival inventado, nada de personas reales).
+- **Rayo congelador** (6 s): lo que hay delante a menos de 45 se mete en un bloque de hielo (capa translúcida con la forma hinchada, `capaHielo` en models.js), se para y se rompe al tocarlo (+2 tacos). El autobús no se congela.
+- **Cohete presidencial** (6.5 s): el personaje sube a 7 de altura montado en el cohete y vuela sin chocar; al despegar se llena de tacos el cielo de delante; las filas del último 1.6 s salen vacías para aterrizar limpio. Los tacos solo se cogen a la altura del personaje (antes se cogían los del suelo volando).
+- **Jefe Burrito-Bot**: a los 1200 m y luego cada 2000. Flota delante con barra de vida, lanza barriles de salsa (se saltan) al carril del jugador el 60 % de las veces; el primero espera 5.5 s para no coincidir con obstáculos normales. Mientras está no salen obstáculos normales, solo tacos y chiles; cada chile cogido sale disparado hacia él. 5 golpes = +150 tacos y confeti; a los 40 s se va sin premio.
+- **Misiones** (`missions.js`): tres activas de tipos distintos, de partida (tacos, distancia) o acumuladas (saltos, deslizar, autobuses, aplastar de gigante, hielo, cohete, jefe), con niveles que suben y premios de 60 a 800 tacos. Se ven en el menú y al acabar; aviso verde al cumplir una.
+- `?prueba` ahora también tiene `rayo()`, `cohete()`, `jefe()` y `paso(n)`, que avanza el juego fotograma a fotograma aunque la ventana esté oculta. Comprobado: cohete a 6.96 de altura, 164 tacos y 0 choques, aterriza; rayo congela y rompe sin choque; jefe aparece, lanza barriles, cae con 5 chiles y da el premio; una misión se cumplió y se repuso sola.

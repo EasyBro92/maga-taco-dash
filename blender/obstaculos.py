@@ -210,7 +210,94 @@ def gorra():
     esfera(rojo(), 0, 0, 0.26, 0.04, 1)
 
 
+# ---------------------------------------------------------------- 22/10 (2): más Minion Rush
+def rayo():
+    """Pistola de rayo congelador (potenciador)."""
+    hielo = mat('hielo', 0x7fe6ff, 0.2)
+    caja(blanco(), 0, 0, 0, 0.22, 0.6, 0.22)                             # cuerpo
+    cil(azul(), 0, -0.32, 0.11, 0.13, 0.12, 16, eje='Y')
+    for k in range(3):                                                  # anillos del cañón
+        cil(hielo, 0, -0.42 - k * 0.1, 0.11, 0.1 - k * 0.012, 0.05, 16, eje='Y')
+    esfera(hielo, 0, -0.68, 0.11, 0.08, 2)
+    caja(azul(), 0, 0.18, -0.22, 0.12, 0.18, 0.3, inclina=0.3)           # empuñadura
+    esfera(hielo, 0, 0.12, 0.28, 0.1, 2)                                # depósito
+    caja(gris(), 0, 0.12, 0.2, 0.1, 0.1, 0.06)
+
+def cohete():
+    """El cohete en el que se monta el personaje (punta hacia -y, que es hacia delante)."""
+    cil(blanco(), 0, 0, 0.45, 0.45, 2.4, 20, eje='Y')
+    cil(rojo(), 0, -1.45, 0.45, 0.46, 0.5, 20, eje='Y', r2=0.0)          # morro
+    o = cil(rojo(), 0, -1.6, 0.45, 0.45, 0.9, 20, r2=0.0)
+    o.rotation_euler = (math.pi / 2, 0, 0)
+    cil(rojo(), 0, 0.2, 0.45, 0.47, 0.25, 20, eje='Y')                   # franja
+    cil(azul(), 0, -0.5, 0.45, 0.47, 0.18, 20, eje='Y')
+    for a in range(4):                                                   # aletas
+        ang = a * math.pi / 2 + math.pi / 4
+        caja(rojo(), math.cos(ang) * 0.55, 1.0, 0.45 + math.sin(ang) * 0.55, 0.08, 0.7, 0.5, giro=0, inclina=0)
+    cil(gris(), 0, 1.3, 0.45, 0.3, 0.25, 16, eje='Y', r2=0.22)          # tobera
+    o = cil(mat('fuego', 0xffa21a, 0.2), 0, 1.75, 0.45, 0.28, 0.7, 14, r2=0.0)
+    o.rotation_euler = (-math.pi / 2, 0, 0)
+    o = cil(mat('fuego2', 0xffe24a, 0.2), 0, 1.6, 0.45, 0.16, 0.45, 12, r2=0.0)
+    o.rotation_euler = (-math.pi / 2, 0, 0)
+    for s in (-1, 1):                                                    # ojo de buey
+        cil(cristal(), s * 0.46, -0.6, 0.55, 0.13, 0.02, 14, eje='X')
+
+def barril():
+    """Barril de salsa que lanza el jefe: rueda hacia el jugador (eje x)."""
+    cil(rojo(), 0, 0, 0.42, 0.42, 1.5, 20, eje='X')
+    for x in (-0.6, 0, 0.6):
+        cil(negro(), x, 0, 0.42, 0.44, 0.08, 20, eje='X')
+    caja(mat('etiqueta', 0xffe24a, 0.4), 0, -0.42, 0.42, 0.7, 0.04, 0.3)
+    texto(rojo(), 'SALSA', 0, -0.44, 0.42, tam=0.16, prof=0.02)
+    cil(mat('llama', 0xff6a1a, 0.3), 0.3, -0.43, 0.6, 0.05, 0.02, 3, eje='Y')
+
+def chile():
+    """Chile picante: se recoge para dispararle al jefe."""
+    roja = mat('chile', 0xff2a1a, 0.25)
+    rama(roja, (0, 0, 0.55), (0.05, 0, 0.25), 0.16, 0.12, 14)
+    rama(roja, (0.05, 0, 0.25), (-0.05, 0, 0.0), 0.12, 0.02, 12)
+    esfera(roja, 0, 0, 0.55, 0.16, 2)
+    verde = mat('rabito', 0x3fae3a, 0.5)
+    cil(verde, 0, 0, 0.66, 0.1, 0.06, 10)
+    rama(verde, (0, 0, 0.7), (0.08, 0, 0.88), 0.03, 0.02, 6)
+
+def jefe():
+    """Robot Burrito: el jefe rival. Flota con propulsores y mira al jugador."""
+    tortilla = mat_bloques('tortilla', 0xf0cf8a, 0xd9a85a, ancho=0.35, alto=0.3, grosor=0.02, variacion=1.06)
+    metal = mat('metal_jefe', 0x8f99a8, 0.35)
+    cil(tortilla, 0, 0, 0.6, 1.1, 2.4, 24)                               # el burrito de pie
+    cupula(tortilla, 0, 0, 3.0, 1.1, 0.7, lados=24, aros=6)
+    for z in (1.2, 2.1):                                                 # pliegues de la tortilla
+        cil(mat('pliegue', 0xd9a85a, 0.6), 0, 0, z, 1.13, 0.08, 24)
+    for k, c in enumerate((0x5fd65f, 0xff4d4d, 0x8a5a34)):              # relleno asomando arriba
+        esfera(mat(f'relleno{c:06x}', c, 0.7), -0.5 + k * 0.5, -0.2, 3.55, 0.3, 2)
+    # cara de enfadado: ojos rojos de robot y ceño
+    for s in (-1, 1):
+        caja(metal, s * 0.38, -1.05, 2.25, 0.5, 0.14, 0.38)
+        esfera(mat('ojo_robot', 0xff2030, 0.2), s * 0.38, -1.15, 2.25, 0.14, 2, esc=(1.4, 0.5, 1))
+        caja(negro(), s * 0.38, -1.13, 2.55, 0.55, 0.08, 0.1, giro=0, inclina=0)
+    caja(negro(), 0, -1.1, 1.75, 0.7, 0.06, 0.12)                        # boca
+    for k in range(5):
+        caja(blanco(), -0.24 + k * 0.12, -1.13, 1.73, 0.07, 0.04, 0.09)
+    # brazos de robot y propulsores
+    for s in (-1, 1):
+        rama(metal, (s * 1.05, 0, 2.0), (s * 1.7, -0.4, 1.4), 0.12, 0.1, 10)
+        esfera(metal, s * 1.7, -0.4, 1.4, 0.16, 2)
+        rama(metal, (s * 1.7, -0.4, 1.4), (s * 1.6, -0.9, 2.0), 0.1, 0.09, 10)
+        caja(mat('pinza', 0xff7a1a, 0.4), s * 1.6, -0.95, 2.05, 0.3, 0.2, 0.25)
+        cil(metal, s * 0.6, 0.6, 0.0, 0.3, 0.8, 14, r2=0.24)
+        o = cil(mat('fuego', 0xffa21a, 0.2), s * 0.6, 0.6, -0.55, 0.26, 0.6, 12, r2=0.0)
+        o.rotation_euler = (math.pi, 0, 0)
+    cil(metal, 0, 0, 0.35, 0.95, 0.3, 24)
+    texto(mat('letra_jefe', 0xff2030, 0.3), 'BURRITO-BOT', 0, -1.12, 1.2, tam=0.22, prof=0.03)
+
+
 PIEZAS = {
+    'rayo':           (rayo,           'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'cohete':         (cohete,         'obstaculos', dict(lado=512, bisel=0.0, suelo=False)),
+    'barril':         (barril,         'obstaculos', dict(lado=256, bisel=0.0)),
+    'chile':          (chile,          'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'jefe':           (jefe,           'obstaculos', dict(lado=1024, bisel=0.0, suelo=False)),
     'barricada':      (barricada,      'obstaculos', dict(lado=512)),
     'conos':          (conos,          'obstaculos', dict(lado=512)),
     'pancarta':       (pancarta,       'obstaculos', dict(lado=512)),
