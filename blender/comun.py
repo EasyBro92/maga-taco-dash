@@ -360,7 +360,7 @@ def _apuntar(materiales, im):
         n.image = im
         nt.nodes.active = n
 
-def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True):
+def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, exportar=True):
     """Une las partes, redondea los cantos, hornea color + oclusión en una textura
     y exporta `nombre`.glb a www/models/<carpeta>/."""
     t0 = time.time()
@@ -444,6 +444,14 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True):
 
     if suelo:
         bpy.data.objects.remove(piso)
+    tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
+    if not exportar:
+        # Varias piezas en un mismo archivo (el personaje): esta se aparta para
+        # que no tape la luz de las siguientes, y se exporta todo al final.
+        print(f'PARTE {nombre}: {tris} triángulos, textura {lado}, {time.time() - t0:.0f} s', flush=True)
+        _partes.clear()
+        ob.hide_render = True
+        return ob
     salida = os.path.join(MODELOS, carpeta)
     os.makedirs(salida, exist_ok=True)
     bpy.ops.object.select_all(action='DESELECT')
@@ -455,7 +463,6 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True):
         bpy.ops.export_scene.gltf(**kw, export_jpeg_quality=85)
     except TypeError:
         bpy.ops.export_scene.gltf(**kw)
-    tris = sum(len(p.vertices) - 2 for p in ob.data.polygons)
     dims = ob.dimensions
     print(f'PIEZA {nombre}: {tris} triángulos, {dims.x:.1f} x {dims.y:.1f} x {dims.z:.1f}, '
           f'textura {lado}, {time.time() - t0:.0f} s', flush=True)

@@ -629,3 +629,13 @@ Isidro dio por buena la ciudad y pidió seguir con el pueblo. Se mantiene la ref
 - Paredes de tablillas y tejados de tejas pintados con la textura de ladrillo de Blender; tejados a dos aguas nuevos en `comun.py` (`tejado`, `hastial`, `panel`).
 - Una zona puede usar piezas de otra carpeta (`"ciudad/coche_rojo"`).
 - Medido en el pueblo: 3.456 llamadas de dibujo por fotograma (antes 5.280) y 442.000 triángulos (antes 315.000).
+
+### Trigésimo séptima ronda: protagonista nuevo y suelo estilo Minions (2026-10-22)
+
+Isidro pidió rediseñar el personaje «un poco parecido a Donald Trump, solo un poco», cambiar los colores del suelo y hacerlo todo más estilo Minions; permiso libre para descargar texturas (no hizo falta: las de dibujos salen mejor generadas).
+
+- `blender/personaje.py`: 11 partes en un solo `www/models/personaje/personaje.glb`, cada una con su punto de giro en el origen del pivote de `character.js`. Estilo Gru: torso de tonel con chaqueta y solapas, camisa en V, insignia de la bandera, corbata roja larga hasta la cintura, piernas finas, zapatos negros en punta, manos pequeñas, cara de pera con mandíbula ancha, piel bronceada naranja con la marca blanca de las gafas, tupé rubio con mechas.
+- Se queda el esqueleto de primitivas (todas las animaciones, ojos, cejas y boca que cambian de expresión); solo se cambian las formas. Traje y corbata se hornean en blanco y el juego los tiñe con el color de la tienda. Si el modelo no carga, sale el muñeco antiguo.
+- Primera piel (0xf3a46a) salía marrón en el juego; se aclaró a 0xffbe86.
+- Suelo estilo Minion Rush: calzada de asfalto azulado de dibujos (no negro) con manchas y grietas, aceras de baldosas grandes con relieve y color cálido por zona (nuevo `sidewalk` en `BIOME_COLORS`), losetas de plaza en ciudad y D.C., césped de dibujos en el pueblo, bordillo más gordo y rayas de carril amarillas.
+- Medido en el pueblo: 3.234 llamadas de dibujo y 431.000 triángulos (antes 3.456 y 442.000).

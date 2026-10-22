@@ -1,5 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
+import { medidas } from "./models.js";
 
 // Personaje estilo "juguete de vinilo" (referencia visual: Subway
 // Surfers) -- formas grandes y limpias, pocos colores muy saturados,
@@ -442,6 +443,57 @@ export function createCharacter(cosmetics) {
   const leftArm = leftArmRig.pivot, rightArm = rightArmRig.pivot;
   hips.add(leftArm, rightArm);
 
+  // ---- Version de Blender (blender/personaje.py, 22/10/2026) ----
+  // Estilo Gru / Minions con un ligero aire a Trump. Se queda el esqueleto de
+  // arriba (pivotes, animaciones, ojos, cejas y boca que cambian de expresion)
+  // y se cambian las formas: cada parte de Blender trae su punto de giro en el
+  // origen, el mismo que el del pivote donde se cuelga. Si no ha cargado, se
+  // queda el muñeco de primitivas.
+  const PARTES = ["torso_traje", "torso_resto", "corbata", "cabeza", "tupe", "brazo_traje",
+    "antebrazo_traje", "mano", "muslo_traje", "espinilla_traje", "zapato"];
+  const pieza = {};
+  for (const n of PARTES) pieza[n] = medidas("personaje/" + n);
+  let tupePivot = null, corbataPivot = null;
+  if (PARTES.every((n) => pieza[n])) {
+    const seQueda = new Set([mouth, eyeGroup.left, eyeGroup.right, browL, browR, headGroup,
+      leftArm, rightArm, leftLegRig.knee, rightLegRig.knee, leftArmRig.elbow, rightArmRig.elbow]);
+    for (const g of [hips, headGroup, leftLeg, rightLeg, leftLegRig.knee, rightLegRig.knee,
+      leftArm, rightArm, leftArmRig.elbow, rightArmRig.elbow]) {
+      for (const c of [...g.children]) if (!seQueda.has(c)) g.remove(c);
+    }
+    const malla = (n) => new THREE.Mesh(pieza[n].geometry, pieza[n].material);
+    // Las de traje y corbata vienen en blanco (solo la sombra horneada): aqui
+    // se tiñen del color elegido en la tienda. Material propio por pieza
+    // porque cada una tiene su textura.
+    const tinte = (n, color) => {
+      const m = pieza[n].material.clone();
+      m.color.set(color);
+      m.shininess = 30;
+      return new THREE.Mesh(pieza[n].geometry, m);
+    };
+    hips.add(tinte("torso_traje", suitColor), malla("torso_resto"));
+    corbataPivot = new THREE.Group();
+    corbataPivot.position.set(0, 0.56, 0.267); // el nudo, sobre la camisa
+    corbataPivot.add(tinte("corbata", tieColor));
+    hips.add(corbataPivot);
+    // headGroup esta escalado a 0.78; la cabeza de Blender viene a tamaño real.
+    const cabeza = malla("cabeza");
+    cabeza.scale.setScalar(1 / 0.78);
+    headGroup.add(cabeza);
+    tupePivot = new THREE.Group();
+    tupePivot.scale.setScalar(1 / 0.78);
+    tupePivot.add(malla("tupe"));
+    headGroup.add(tupePivot);
+    for (const rig of [leftArmRig, rightArmRig]) {
+      rig.pivot.add(tinte("brazo_traje", suitColor));
+      rig.elbow.add(tinte("antebrazo_traje", suitColor), malla("mano"));
+    }
+    for (const rig of [leftLegRig, rightLegRig]) {
+      rig.pivot.add(tinte("muslo_traje", suitColor));
+      rig.knee.add(tinte("espinilla_traje", suitColor), malla("zapato"));
+    }
+  }
+
   // ---- Aura del escudo (Orden Ejecutiva), oculta por defecto ----
   const shield = new THREE.Mesh(
     new THREE.SphereGeometry(0.78, 16, 12),
@@ -567,6 +619,9 @@ export function createCharacter(cosmetics) {
       swoop2.rotation.set(SWOOP2_BASE.x, SWOOP2_BASE.y + hairLag * 0.4, SWOOP2_BASE.z - bob * 0.07);
       // La corbata y la chaqueta ondean hacia atras con la velocidad.
       tie.rotation.x = -0.25 - Math.min(0.5, (speedFactor - 1) * 0.5) - Math.sin(runPhase * 2) * 0.12;
+      if (tupePivot) tupePivot.rotation.set(-bob * 0.05, hairLag * 0.25, -bob * 0.03);
+      // La corbata de Blender cuelga del nudo: se separa un poco de la tripa a cada paso.
+      if (corbataPivot) corbataPivot.rotation.x = -0.04 - Math.max(0, Math.sin(runPhase * 2)) * 0.12;
       updateBlink(dt);
     },
 

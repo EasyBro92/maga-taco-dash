@@ -15,6 +15,7 @@ const LISTA = {
   ciudad: ["tienda_roja", "tienda_crema", "oficina_azul", "oficina_verde", "artdeco", "diner", "apart_morado",
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
+  personaje: ["personaje"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -32,25 +33,30 @@ export async function loadZoneModels(onProgress) {
     for (const nombre of LISTA[zona]) {
       tareas.push(
         loader.loadAsync(`models/${zona}/${nombre}.glb`).then((gltf) => {
-          let malla = null;
-          gltf.scene.traverse((o) => { if (o.isMesh && !malla) malla = o; });
-          if (!malla) return;
-          const mapa = malla.material.map;
-          if (mapa) {
-            mapa.colorSpace = THREE.SRGBColorSpace;
-            mapa.anisotropy = 4;
-          }
-          malla.material.dispose();
-          malla.material = toon(0xffffff, mapa ? { map: mapa, shininess: 18, specular: 0x222222 } : null);
-          malla.geometry.computeBoundingBox();
-          const caja = malla.geometry.boundingBox;
-          plantillas[`${zona}/${nombre}`] = {
-            geometry: malla.geometry,
-            material: malla.material,
-            ancho: caja.max.x - caja.min.x,
-            fondo: caja.max.z - caja.min.z,
-            frente: caja.max.z, // lo que sobresale por delante de la fachada (cesped, escalinata)
-          };
+          // Un archivo puede traer varias piezas (el personaje): cada malla se
+          // guarda tambien con su propio nombre, `zona/<nombre de la malla>`.
+          const mallas = [];
+          gltf.scene.traverse((o) => { if (o.isMesh) mallas.push(o); });
+          mallas.forEach((malla, i) => {
+            const mapa = malla.material.map;
+            if (mapa) {
+              mapa.colorSpace = THREE.SRGBColorSpace;
+              mapa.anisotropy = 4;
+            }
+            malla.material.dispose();
+            malla.material = toon(0xffffff, mapa ? { map: mapa, shininess: 18, specular: 0x222222 } : null);
+            malla.geometry.computeBoundingBox();
+            const caja = malla.geometry.boundingBox;
+            const p = {
+              geometry: malla.geometry,
+              material: malla.material,
+              ancho: caja.max.x - caja.min.x,
+              fondo: caja.max.z - caja.min.z,
+              frente: caja.max.z, // lo que sobresale por delante de la fachada (cesped, escalinata)
+            };
+            if (i === 0) plantillas[`${zona}/${nombre}`] = p;
+            if (mallas.length > 1) plantillas[`${zona}/${malla.name}`] = p;
+          });
         }).catch((e) => {
           console.warn(`No se pudo cargar ${zona}/${nombre}.glb`, e);
         }).finally(() => onProgress && onProgress(++hechas, total))

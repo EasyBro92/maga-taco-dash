@@ -41,23 +41,136 @@ const glowGeo = new THREE.CircleGeometry(0.34, 16);
 // Base clara y ruido suave: la textura se multiplica por el color de bioma
 // (ver BIOME_COLORS/groundMat mas abajo), asi que tiene que partir de un
 // gris claro/casi blanco para no oscurecer siempre el resultado.
-function makeAsphaltTexture() {
-  if (typeof document === "undefined") return null;
-  const size = 128;
+// ---- Suelo estilo Minion Rush (22/10/2026) ----
+// Texturas de dibujo animado: bases casi blancas (las tiñe el color de cada
+// zona), manchas suaves grandes en vez de ruido fino, y baldosas con relieve
+// pintado (luz arriba-izquierda, sombra abajo-derecha). Todo se dibuja tambien
+// desplazado un lado entero para que la textura empalme sin costuras.
+function lienzo(size, fondo) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
   const ctx = c.getContext("2d");
-  ctx.fillStyle = "#d9d3c4";
+  ctx.fillStyle = fondo;
   ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < 500; i++) {
-    const v = Math.random() * 30 - 15;
-    ctx.fillStyle = `rgba(${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${v > 0 ? 255 : 0},${Math.abs(v) / 80})`;
-    ctx.fillRect(Math.random() * size, Math.random() * size, 1.6, 1.6);
-  }
+  return { c, ctx };
+}
+function sinCostura(size, x, y, dibujar) {
+  for (const dx of [-size, 0, size]) for (const dy of [-size, 0, size]) dibujar(x + dx, y + dy);
+}
+function mancha(ctx, x, y, r, claro, alfa) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  const c = claro ? "255,255,255" : "0,0,40";
+  g.addColorStop(0, `rgba(${c},${alfa})`);
+  g.addColorStop(1, `rgba(${c},0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function texturaRepetida(c, rx, ry) {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(10, 70);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.repeat.set(rx, ry);
   return tex;
+}
+// Baldosas: `cols` x `filas` piezas por textura, cada una con su tono y su
+// canto en relieve; `junta` es el grosor de la llaga en pixeles.
+function dibujarBaldosas(ctx, size, cols, filas, junta, variacion) {
+  const w = size / cols, h = size / filas;
+  ctx.fillStyle = "#8f8a86";
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < filas; j++) {
+      const x = i * w + junta / 2, y = j * h + junta / 2, bw = w - junta, bh = h - junta;
+      const v = 236 + Math.round((Math.random() - 0.5) * variacion);
+      ctx.fillStyle = `rgb(${v},${v},${v})`;
+      ctx.beginPath();
+      ctx.roundRect(x, y, bw, bh, junta);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.fillRect(x + junta * 0.6, y + junta * 0.4, bw - junta * 1.6, junta * 0.6);
+      ctx.fillRect(x + junta * 0.4, y + junta * 0.6, junta * 0.6, bh - junta * 1.6);
+      ctx.fillStyle = "rgba(0,0,30,0.13)";
+      ctx.fillRect(x + junta, y + bh - junta * 0.9, bw - junta * 1.4, junta * 0.6);
+      ctx.fillRect(x + bw - junta * 0.9, y + junta, junta * 0.6, bh - junta * 1.4);
+      if (Math.random() < 0.18) {                      // alguna baldosa con desconchon
+        ctx.fillStyle = "rgba(0,0,30,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(x + bw * Math.random(), y + bh * Math.random(), junta * 1.5, junta, Math.random() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
+// Asfalto de dibujos: liso, con manchas suaves, un granulado muy fino y
+// alguna grieta. El color (azulado, no negro) lo pone la zona.
+function makeAsphaltTexture() {
+  if (typeof document === "undefined") return null;
+  const size = 256;
+  const { c, ctx } = lienzo(size, "#ececf0");
+  for (let i = 0; i < 26; i++) {
+    const x = Math.random() * size, y = Math.random() * size, r = 18 + Math.random() * 40;
+    sinCostura(size, x, y, (px, py) => mancha(ctx, px, py, r, Math.random() < 0.4, 0.07 + Math.random() * 0.05));
+  }
+  for (let i = 0; i < 900; i++) {
+    const v = Math.random() < 0.5;
+    ctx.fillStyle = v ? "rgba(255,255,255,0.22)" : "rgba(0,0,30,0.12)";
+    ctx.fillRect(Math.random() * size, Math.random() * size, 1.5, 1.5);
+  }
+  ctx.strokeStyle = "rgba(0,0,40,0.22)";
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = "round";
+  for (let k = 0; k < 3; k++) {
+    let x = 30 + Math.random() * (size - 60), y = 30 + Math.random() * (size - 60);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let s = 0; s < 5; s++) {
+      x += (Math.random() - 0.5) * 22; y += 6 + Math.random() * 10;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  return texturaRepetida(c, 6, 45);
+}
+
+// Acera de baldosas grandes con relieve (2 x 4 por textura: ~1 x 1.1 m).
+function makeSidewalkTexture() {
+  if (typeof document === "undefined") return null;
+  const size = 256;
+  const { c, ctx } = lienzo(size, "#ffffff");
+  dibujarBaldosas(ctx, size, 2, 4, 7, 16);
+  return texturaRepetida(c, 2, 90);
+}
+
+// Suelo de plaza para ciudad y D.C.: losetas pequeñas.
+function makePavingTexture() {
+  if (typeof document === "undefined") return null;
+  const size = 256;
+  const { c, ctx } = lienzo(size, "#ffffff");
+  dibujarBaldosas(ctx, size, 6, 6, 4, 20);
+  return texturaRepetida(c, 10, 70);
+}
+
+// Cesped de dibujos para el pueblo: manchas de tono y matas en forma de V.
+function makeGrassTexture() {
+  if (typeof document === "undefined") return null;
+  const size = 256;
+  const { c, ctx } = lienzo(size, "#e9efe4");
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * size, y = Math.random() * size, r = 16 + Math.random() * 34;
+    sinCostura(size, x, y, (px, py) => mancha(ctx, px, py, r, Math.random() < 0.5, 0.1 + Math.random() * 0.08));
+  }
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = "round";
+  for (let i = 0; i < 220; i++) {
+    const x = Math.random() * size, y = Math.random() * size, h = 4 + Math.random() * 5;
+    ctx.strokeStyle = Math.random() < 0.5 ? "rgba(255,255,255,0.45)" : "rgba(0,40,0,0.18)";
+    ctx.beginPath();
+    ctx.moveTo(x - 2.5, y - h); ctx.lineTo(x, y); ctx.lineTo(x + 2.5, y - h);
+    ctx.stroke();
+  }
+  return texturaRepetida(c, 10, 70);
 }
 
 // Tierra/arena compacta para el bioma desierto: parches grandes e
@@ -272,14 +385,16 @@ export function createWorld(scene) {
     // mismo tono (0xaebfd6 contra 0x9fe6ff) y la cordillera del fondo, que
     // ademas va sin niebla, se fundia con el cielo -- se dibujaba pero no se
     // veia, y el fondo seguia leyendose como un vacio blanco.
-    city: { sky: 0x9fe6ff, skyTop: 0x3d8fff, ground: 0xb8b0c0, fog: 0x9fe6ff, road: 0x38383d, horizon: 0x6d86ad },
+    // 22/10/2026, estilo Minion Rush: calzada de asfalto azulado de dibujos (no
+    // negro), aceras de baldosa calidas y suelos mas vivos. `sidewalk` es nuevo.
+    city: { sky: 0x9fe6ff, skyTop: 0x3d8fff, ground: 0xe3c79b, fog: 0x9fe6ff, road: 0x55608a, horizon: 0x6d86ad, sidewalk: 0xffd98c },
     // Pista de tierra bastante mas oscura que la arena de alrededor: antes
     // ambas compartian textura Y tono parecido, asi que el borde de la pista
     // desaparecia, no habia referencia de donde estabas y el conjunto se leia
     // como una superficie plana y transparente que marea.
-    desert: { sky: 0xffe0ae, skyTop: 0xff9d4d, ground: 0xe8c48c, fog: 0xffe0ae, road: 0x9c6b43, horizon: 0xb0724a },
-    town: { sky: 0xbdeaff, skyTop: 0x5cabff, ground: 0x9fd68a, fog: 0xbdeaff, road: 0x46464c, horizon: 0x7d9e86 },
-    dc: { sky: 0xbfe0ff, skyTop: 0x4a8fd6, ground: 0xc9c2b0, fog: 0xbfe0ff, road: 0x333338, horizon: 0x74879f },
+    desert: { sky: 0xffe0ae, skyTop: 0xff9d4d, ground: 0xf7c66a, fog: 0xffe0ae, road: 0xd28a4e, horizon: 0xb0724a, sidewalk: 0xeab877 },
+    town: { sky: 0xbdeaff, skyTop: 0x5cabff, ground: 0x7fd85a, fog: 0xbdeaff, road: 0x5b6890, horizon: 0x7d9e86, sidewalk: 0xfbe6b8 },
+    dc: { sky: 0xbfe0ff, skyTop: 0x4a8fd6, ground: 0xf0dfba, fog: 0xbfe0ff, road: 0x525d86, horizon: 0x74879f, sidewalk: 0xfff0cc },
   };
 
   // ---- Horizonte lejano permanente: una cordillera que nunca se crea ni se
@@ -422,7 +537,12 @@ export function createWorld(scene) {
   // decoracion y los edificios).
   const asphaltTex = makeAsphaltTexture();
   const dirtTex = makeDirtTexture();
-  const groundMat = toon(BIOME_COLORS.city.ground, asphaltTex ? { map: asphaltTex } : null);
+  const pavingTex = makePavingTexture();
+  const grassTex = makeGrassTexture();
+  // Que textura lleva cada parte del suelo segun la zona.
+  const texSuelo = (zona) => (zona === "desert" ? dirtTex : zona === "town" ? grassTex : pavingTex);
+  const texCalzada = (zona) => (zona === "desert" ? dirtTex : asphaltTex);
+  const groundMat = toon(BIOME_COLORS.city.ground, pavingTex ? { map: pavingTex, shininess: 8 } : null);
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 400), groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.position.z = -150;
@@ -446,20 +566,21 @@ export function createWorld(scene) {
 
   // Acera de hormigon a ambos lados, entre la calzada y donde estan los
   // props (antes el suelo era una sola superficie sin ninguna referencia).
-  const concreteTex = makeConcreteTexture();
-  const sidewalkMat = toon(0xcdc6b8, concreteTex ? { map: concreteTex } : null);
+  const concreteTex = makeSidewalkTexture() || makeConcreteTexture();
+  const sidewalkMat = toon(BIOME_COLORS.city.sidewalk, concreteTex ? { map: concreteTex, shininess: 12 } : null);
   sidewalkMat.polygonOffset = true;
   sidewalkMat.polygonOffsetFactor = -1;
   sidewalkMat.polygonOffsetUnits = -2;
-  const curbMat = toon(0xe8e2d4);
+  const curbMat = toon(0xfff6e0);
   for (const side of [-1, 1]) {
     const sidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 400), sidewalkMat);
     sidewalk.rotation.x = -Math.PI / 2;
     sidewalk.position.set(side * 6, 0.025, -150);
     sidewalk.receiveShadow = true;
     group.add(sidewalk);
-    const curb = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 400), curbMat);
-    curb.position.set(side * 3.9, 0.03, -150);
+    // Bordillo mas gordo y alto: en los dibujos los bordes se marcan mucho.
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 400), curbMat);
+    curb.position.set(side * 3.95, 0.06, -150);
     group.add(curb);
   }
 
@@ -473,7 +594,7 @@ export function createWorld(scene) {
   // -- parpadeaban entre si (z-fighting), que en pantalla se ve como si el
   // suelo fuera medio transparente y marea. El offset las ordena en el
   // rasterizador sin depender de la distancia.
-  const carpetMat = toon(BIOME_COLORS.city.road, asphaltTex ? { map: asphaltTex } : null);
+  const carpetMat = toon(BIOME_COLORS.city.road, asphaltTex ? { map: asphaltTex, shininess: 20 } : null);
   carpetMat.polygonOffset = true;
   carpetMat.polygonOffsetFactor = -2;
   carpetMat.polygonOffsetUnits = -4;
@@ -532,8 +653,9 @@ export function createWorld(scene) {
 
   // ---- Franjas divisorias de carril (pool reciclado) ----
   const stripes = [];
-  const stripeGeo = new THREE.BoxGeometry(0.08, 0.02, 1.0);
-  const stripeMat = toon(0xffffff);
+  // Rayas de carril amarillo Minion, mas anchas y cortas, de dibujo animado.
+  const stripeGeo = new THREE.BoxGeometry(0.14, 0.02, 1.1);
+  const stripeMat = toon(0xffd83a, { emissive: 0x332600 });
   function spawnStripe(z) {
     for (const laneEdge of [-LANE_WIDTH / 2, LANE_WIDTH / 2]) {
       const m = new THREE.Mesh(stripeGeo, stripeMat);
@@ -2116,6 +2238,8 @@ export function createWorld(scene) {
     groundMat.color.copy(blendA);
     blendA.set(cFrom.road); blendB.set(cTo.road); blendA.lerp(blendB, blend.t);
     carpetMat.color.copy(blendA);
+    blendA.set(cFrom.sidewalk); blendB.set(cTo.sidewalk); blendA.lerp(blendB, blend.t);
+    sidewalkMat.color.copy(blendA);
     blendA.set(cFrom.fog); blendB.set(cTo.fog); blendA.lerp(blendB, blend.t);
     scene.fog.color.copy(blendA);
     scene.background.copy(blendA);
@@ -2129,9 +2253,9 @@ export function createWorld(scene) {
       // patron en vez de crossfade como el color, pero al ser una textura de
       // ruido fino y de baja escala no se nota como un "pop" -- coincide
       // ademas con el momento en que ya esta cambiando el color del suelo.
-      groundMat.map = zoneNow === "desert" ? dirtTex : asphaltTex;
+      groundMat.map = texSuelo(zoneNow);
       groundMat.needsUpdate = true;
-      carpetMat.map = zoneNow === "desert" ? dirtTex : asphaltTex;
+      carpetMat.map = texCalzada(zoneNow);
       carpetMat.needsUpdate = true;
       for (const t of goldTrims) t.visible = zoneNow !== "desert";
       for (const b of dirtBerms) b.visible = zoneNow === "desert";
@@ -2271,10 +2395,11 @@ export function createWorld(scene) {
     const startColors = BIOME_COLORS[lastZoneName];
     updateSkyColors(startColors.skyTop, startColors.sky);
     groundMat.color.set(startColors.ground);
-    groundMat.map = lastZoneName === "desert" ? dirtTex : asphaltTex;
+    groundMat.map = texSuelo(lastZoneName);
     groundMat.needsUpdate = true;
     carpetMat.color.set(startColors.road);
-    carpetMat.map = lastZoneName === "desert" ? dirtTex : asphaltTex;
+    sidewalkMat.color.set(startColors.sidewalk);
+    carpetMat.map = texCalzada(lastZoneName);
     carpetMat.needsUpdate = true;
     for (const t of goldTrims) t.visible = lastZoneName !== "desert";
     for (const b of dirtBerms) b.visible = lastZoneName === "desert";
