@@ -176,3 +176,21 @@ export function capaHielo(clave) {
   if (!contornos[clave]) { const g = modeloConContorno(clave); g.clear(); }
   return new THREE.Mesh(contornos[clave], hieloMat);
 }
+
+// ---- El presidente de Meshy (24/10/2026): con esqueleto y animaciones ----
+// Este no es una malla quieta como el resto: es un personaje con huesos
+// (andar y correr de Meshy), asi que se guarda la escena entera del .glb.
+let personaje = null;
+export async function cargarPersonaje() {
+  if (/sinmeshy/.test(location.search)) return null;
+  try {
+    const gltf = await new GLTFLoader().loadAsync("models/personaje/presidente.glb");
+    personaje = gltf;
+  } catch (e) {
+    console.warn("No se pudo cargar el presidente de Meshy", e);
+  }
+  return personaje;
+}
+export function getPersonaje() {
+  return personaje;
+}

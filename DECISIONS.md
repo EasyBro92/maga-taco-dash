@@ -694,3 +694,13 @@ Primer nivel de la gira (el último de la historia, que Isidro eligió hacer pri
 - Final (~10 s): frena tras la verja, va por la curva del camino alrededor de la fuente, sube la escalinata, se da la vuelta y saluda en la puerta, entra y se cierran las puertas; pantalla «¡Has llegado a la Casa Blanca!» con estrellas (350/700/1100 tacos) y misiones.
 - JUGAR abre el mapa de EE. UU. con la ruta de la gira (NY → Ohio → Arizona → Las Vegas → Washington); los otros cuatro salen como «Próximamente». «♾️ Sin fin» queda como extra.
 - Pendiente: personaje con Meshy (estilo Pixar, más parecido a Trump, animado con esqueleto), voces, los otros cuatro niveles, el Capitolio detrás de la salida.
+
+### Cuadragésimo tercera ronda: el presidente de Meshy (2026-10-24)
+
+Isidro pidió rehacer el personaje con Meshy enseñándole la malla antes de pagar.
+
+- Tres mallas de prueba (20 créditos cada una, `--pixar --persona --solo-malla`, estilo Pixar nuevo en `z-resistance/herramientas/meshy.mjs`): la 1 y la 2 sin nombre salían un señor genérico sonriente; la 3, pidiendo «caricatura de Donald Trump», sí tiene el tupé ancho, el ceño y la cara ancha. Eligió la 3. Textura y esqueleto 15 créditos más. Total 75; saldo 360.
+- `www/models/personaje/presidente.glb`: andar y correr de Meshy unidos en un archivo (`unir-animacion.mjs`) y adelgazado de 5.3 a 0.83 MB (`adelgazar.mjs --color 1024`).
+- `www/src/presidente.js`: mismo contrato que el muñeco de `character.js` (que queda de respaldo, `?sinmeshy`). Corre con la animación de verdad; salto y deslizamiento son posturas encima; el saludo de la Casa Blanca levanta el brazo derecho. Material cambiado a Phong (el metálico de Meshy salía negro sin entorno). La altura sale de la geometría (los huesos ya están en metros; la caja en el mundo lo dejaba 4 veces más grande).
+- Aprendido: con la animación parada el mezclador no reescribe los huesos, así que un giro relativo se acumula: hay que guardar la postura de partida y girar desde ella.
+- La cara de Meshy no tiene gestos: las expresiones (sorpresa, alegría…) ya no se ven. Los colores de traje de la tienda tampoco (la textura viene pintada).

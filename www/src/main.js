@@ -11,7 +11,7 @@ import { NIVELES, piezasDeNivel } from "./levels.js";
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
-import { loadZoneModels, modelo, cargarCarpeta } from "./models.js";
+import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
 import * as misiones from "./missions.js";
 
 initErrorReporting();
@@ -123,7 +123,8 @@ const RACE_CAM = { pos: new THREE.Vector3(0, 7.2, 9.8), look: new THREE.Vector3(
 // Apunta por debajo del pecho (y=0.45) para que el personaje quede en la
 // mitad ALTA del encuadre y se le vea la cara y el traje por encima de la
 // tarjeta del menu, que ocupa el centro de la pantalla.
-const MENU_CAM = { pos: new THREE.Vector3(-1.25, 1.25, -2.75), look: new THREE.Vector3(0, 0.45, 0) };
+// 24/10: algo mas lejos para el presidente de Meshy, que es mas alto que el muñeco.
+const MENU_CAM = { pos: new THREE.Vector3(-1.9, 1.7, -4.4), look: new THREE.Vector3(0, 1.15, 0) };
 function setCameraMode(mode) {
   const c = mode === "menu" ? MENU_CAM : RACE_CAM;
   camera.position.copy(c.pos);
@@ -180,9 +181,9 @@ scene.add(sunGlare);
 {
   const barra = document.querySelector(".loadingBarFill");
   try {
-    await loadZoneModels((n, total) => {
+    await Promise.all([cargarPersonaje(), loadZoneModels((n, total) => {
       if (barra) barra.style.width = `${Math.round(20 + 80 * n / total)}%`;
-    });
+    })]);
   } catch (e) {
     console.warn("Modelos de Blender no cargados", e);
   }
@@ -898,6 +899,8 @@ function tick() {
 // paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
 function frame(dtFijo) {
   if (contextLost) return;
+  // ?prueba: `__juego.pausa = true` congela el juego (sigue dibujando) para mirar una escena.
+  if (PRUEBA && window.__juego && window.__juego.pausa && dtFijo === undefined) { renderer.render(scene, camera); return; }
   const dt = dtFijo !== undefined ? dtFijo : Math.min(clock.getDelta(), 0.05);
 
   if (gameState === "playing") {

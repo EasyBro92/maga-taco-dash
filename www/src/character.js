@@ -1,6 +1,7 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
-import { medidas } from "./models.js";
+import { medidas, getPersonaje } from "./models.js";
+import { crearPresidente } from "./presidente.js";
 
 // Personaje estilo "juguete de vinilo" (referencia visual: Subway
 // Surfers) -- formas grandes y limpias, pocos colores muy saturados,
@@ -27,7 +28,14 @@ const COSMETIC_COLORS = {
   tie_gold: 0xffc23c,
 };
 
+// Si esta el presidente de Meshy, ese; si no (sin conexion, o ?sinmeshy), el muñeco de piezas.
 export function createCharacter(cosmetics) {
+  const gltf = getPersonaje();
+  if (gltf) return crearPresidente(gltf);
+  return crearMuneco(cosmetics);
+}
+
+function crearMuneco(cosmetics) {
   cosmetics = cosmetics || { suit: "suit_navy", tie: "tie_red" };
   const suitColor = COSMETIC_COLORS[cosmetics.suit] || COSMETIC_COLORS.suit_navy;
   const tieColor = COSMETIC_COLORS[cosmetics.tie] || COSMETIC_COLORS.tie_red;
