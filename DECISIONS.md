@@ -670,3 +670,15 @@ Isidro: «lo único que me molesta es que el juego marea mucho… las carreteras
 - **Texturas con dibujo pequeño y contraste** (juntas oscuras con relieve pintado, baldosas de 1 m, manchas y grietas en el asfalto, rayitas en el césped) que «tiemblan» al pasar. Ahora: asfalto liso con granulado finísimo, losas de acera de ~2 × 2.2 con la junta apenas marcada, losetas de plaza suaves, césped solo con manchas grandes; anisotropía 8.
 - **Colores más tranquilos**: calzada gris pizarra (no azul vivo), aceras beis suave, césped menos chillón.
 - **Cámara**: ya no se inclina al cambiar de carril, solo acompaña la mitad del cambio de carril (antes se deslizaba entero), y no sube y baja en cada salto (solo con el techo del autobús o el cohete). Líneas de velocidad rebajadas (máximo 0.35 en vez de 1).
+
+### Cuadragésimo primera ronda: 32 preguntas — de juego sin fin a campaña con historia (2026-10-24)
+
+Isidro: el personaje es «tosco, poco natural», la estética «Playmobil» no le convence, las casas son genéricas; quiere mapas «como la vida real» (edificios fijos en su sitio, no los mismos apareciendo sin parar), recrear la Casa Blanca con el personaje entrando al final, y que tenga historia y no sea sin fin. Pidió 30+ preguntas. Respuestas:
+
+- Mareo (le sigue mareando algo menos, en todos los momentos): cámara más alta y lejana; empezar más lento. Efectos, público y cambio de carril como están. Juega en móvil vertical.
+- Estética: animación tipo Pixar, colores naturales, luz distinta por nivel (Casa Blanca al atardecer), sin contorno negro.
+- Personaje: con Meshy (enseñar malla antes de pagar), bastante más parecido a Trump, proporciones Pixar, animación de verdad con esqueleto.
+- Historia: gira hasta la Casa Blanca en 5 niveles de 3-4 minutos con calles reales: Quinta Avenida → pueblo del Medio Oeste → Ruta 66 (Arizona) → Strip de Las Vegas → Pennsylvania Avenue. Primero se hace Washington. Final corto (~10 s) entrando por el pórtico norte. Entre niveles, mapa de EE. UU. con el autobús.
+- Jugabilidad: al chocar se repite el nivel entero; el sin fin queda como extra; se quedan autobús, cohete, gigante, rayo y misiones; un jefe distinto al final de algunos niveles; estrellas 1-3; controles deslizando; el personaje habla con voz.
+
+Aplicado ya: cámara de carrera de (0, 5.2, 7.2) a (0, 7.2, 9.8) mirando a z -18; velocidad de 13 a 25 con aceleración 0.12 (antes 17 a 29 con 0.24).

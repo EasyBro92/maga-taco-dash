@@ -15,9 +15,11 @@ import * as misiones from "./missions.js";
 
 initErrorReporting();
 
-const BASE_SPEED = 17;
-const MAX_SPEED = 29;
-const ACCEL = 0.24;
+// 24/10: arranque mas lento y subida mas suave (le mareaba ir tan rapido):
+// de 13 a 25 en unos 100 s, en vez de 17 a 29 en 50 s.
+const BASE_SPEED = 13;
+const MAX_SPEED = 25;
+const ACCEL = 0.12;
 const JUMP_DURATION = 0.4;
 const JUMP_HEIGHT = 1.35;
 const SLIDE_DURATION = 0.5;
@@ -110,7 +112,9 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 150);
 
 // Camara elevada y alejada tipo Minion Rush: el personaje se ve pequeno,
 // se ve mucho tramo de pista por delante para reaccionar con tiempo.
-const RACE_CAM = { pos: new THREE.Vector3(0, 5.2, 7.2), look: new THREE.Vector3(0, 0.6, -14) };
+// 24/10: mas alta y mas lejos (lo pidio contra el mareo): el suelo pasa mas
+// despacio por la pantalla y se ve mas pista por delante.
+const RACE_CAM = { pos: new THREE.Vector3(0, 7.2, 9.8), look: new THREE.Vector3(0, 0.4, -18) };
 // Camara de menu por delante y a un lado: el personaje corre alejandose, asi
 // que con la posicion antigua (z positivo) el menu solo enseñaba su espalda y
 // la mochila. Ahora se le ve la cara y el traje, que es lo que da personalidad
