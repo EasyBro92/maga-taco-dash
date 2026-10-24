@@ -70,6 +70,32 @@ export async function loadZoneModels(onProgress) {
   return Object.keys(plantillas).length;
 }
 
+// Carga bajo demanda (24/10/2026): los modelos de un nivel (Pennsylvania
+// Avenue pesa 6 MB) solo se bajan al entrar en el, no al abrir el juego.
+// Lo ya cargado no se vuelve a pedir.
+export async function cargarCarpeta(carpeta, nombres, onProgress) {
+  const loader = new GLTFLoader();
+  const faltan = nombres.filter((n) => !plantillas[`${carpeta}/${n}`]);
+  let hechas = 0;
+  await Promise.all(faltan.map((nombre) =>
+    loader.loadAsync(`models/${carpeta}/${nombre}.glb`).then((gltf) => {
+      let malla = null;
+      gltf.scene.traverse((o) => { if (o.isMesh && !malla) malla = o; });
+      if (!malla) return;
+      const mapa = malla.material.map;
+      if (mapa) { mapa.colorSpace = THREE.SRGBColorSpace; mapa.anisotropy = 4; }
+      malla.material.dispose();
+      malla.material = toon(0xffffff, mapa ? { map: mapa, shininess: 14, specular: 0x1a1a1a } : null);
+      malla.geometry.computeBoundingBox();
+      const caja = malla.geometry.boundingBox;
+      plantillas[`${carpeta}/${nombre}`] = {
+        geometry: malla.geometry, material: malla.material,
+        ancho: caja.max.x - caja.min.x, fondo: caja.max.z - caja.min.z, frente: caja.max.z,
+      };
+    }).catch((e) => console.warn(`No se pudo cargar ${carpeta}/${nombre}.glb`, e))
+      .finally(() => onProgress && onProgress(++hechas, faltan.length))));
+}
+
 export function hayModelo(clave) {
   return !!plantillas[clave];
 }

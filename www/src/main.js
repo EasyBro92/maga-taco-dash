@@ -6,11 +6,12 @@ import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
-import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress } from "./save.js";
+import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel } from "./save.js";
+import { NIVELES, piezasDeNivel } from "./levels.js";
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
-import { loadZoneModels, modelo } from "./models.js";
+import { loadZoneModels, modelo, cargarCarpeta } from "./models.js";
 import * as misiones from "./missions.js";
 
 initErrorReporting();
@@ -234,6 +235,163 @@ function siguienteAviso() {
 }
 pintarMisiones("misionesMenu");
 
+// ================================================================
+// ---- La gira hasta la Casa Blanca (24/10/2026) ----
+// Niveles con calle real y final. `nivelActual` = null es el modo sin fin.
+// ================================================================
+let nivelActual = null;
+let fin = null;
+
+// Luz del nivel. El atardecer: sol bajo, dorado y de lado; cielo calido.
+const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.position.clone(), hemi: hemi.color.getHex(), suelo: hemi.groundColor.getHex() };
+function aplicarLuz(luz) {
+  if (luz === "atardecer") {
+    sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
+    hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
+  } else {
+    sun.color.set(LUZ_NORMAL.sun); sun.intensity = LUZ_NORMAL.sunI; sun.position.copy(LUZ_NORMAL.sunPos);
+    hemi.color.set(LUZ_NORMAL.hemi); hemi.groundColor.set(LUZ_NORMAL.suelo);
+  }
+}
+
+function mostrarBanner(n) {
+  const el = document.getElementById("bannerNivel");
+  el.querySelector(".bnNumero").textContent = `${t("nivel")} ${n.numero}`;
+  el.querySelector(".bnNombre").textContent = n.nombre;
+  el.querySelector(".bnLugar").textContent = n.lugar;
+  el.classList.remove("hidden");
+  el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  clearTimeout(mostrarBanner.t);
+  mostrarBanner.t = setTimeout(() => el.classList.add("hidden"), 2800);
+}
+
+// ---- El mapa de la gira ----
+const SILUETA_EEUU = "8,8 6,14 5,22 7,30 10,38 14,45 20,47 26,50 33,52 38,51 44,54 47,60 52,57 55,52 60,50 66,51 72,52 76,58 79,57 77,50 80,44 84,40 86,34 90,28 94,22 96,16 95,12 88,16 82,20 76,18 70,14 60,12 40,10 20,8";
+let nivelElegido = null;
+function abrirMapa() {
+  const svg = document.getElementById("mapaSvg");
+  const hechos = getNiveles();
+  const ruta = NIVELES.map((n) => n.mapa.join(",")).join(" ");
+  svg.innerHTML = `<polygon class="tierra" points="${SILUETA_EEUU}"/><polyline class="ruta" points="${ruta}"/>`
+    + NIVELES.map((n) => {
+      const [x, y] = n.mapa;
+      const color = !n.listo ? "#9a9a9a" : hechos[n.id] ? "#2b8a3e" : "#c0392b";
+      return `<g class="parada" data-id="${n.id}"><circle cx="${x}" cy="${y}" r="3.2" fill="${color}"/>`
+        + `<text x="${x}" y="${y + 1.1}">${n.numero}</text><text class="etiqueta" x="${x}" y="${y + 6.2}">${n.lugar}</text></g>`;
+    }).join("")
+    + `<text x="${NIVELES[4].mapa[0] - 6}" y="${NIVELES[4].mapa[1] - 4}" font-size="5">🚌</text>`;
+  svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
+  elegirNivel(nivelElegido || NIVELES.find((n) => n.listo).id);
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("mapaGira").classList.remove("hidden");
+}
+function elegirNivel(id) {
+  const n = NIVELES.find((x) => x.id === id);
+  nivelElegido = id;
+  const hecho = getNiveles()[id];
+  const est = hecho ? "★".repeat(hecho.estrellas) + "☆".repeat(3 - hecho.estrellas) : "☆☆☆";
+  document.getElementById("mapaInfo").innerHTML =
+    `<div class="miNombre">${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
+    + (n.listo ? `<div class="miEstrellas">${est}</div><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
+      : `<div class="proximamente">${t("proximamente")}</div>`);
+  const b = document.getElementById("mapaJugar");
+  if (b) b.addEventListener("click", () => empezarNivel(n));
+}
+async function empezarNivel(n) {
+  const boton = document.getElementById("mapaJugar");
+  // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
+  const piezas = piezasDeNivel(n);
+  await cargarCarpeta(n.carpeta, piezas, (h, total) => { if (boton) boton.textContent = `${Math.round((100 * h) / total)}%`; });
+  await cargarCarpeta("dc", ["farola"]);
+  await cargarCarpeta("pueblo", ["roble"]);
+  nivelActual = n;
+  unlockAudio();
+  startMusic();
+  resetRun();
+  gameState = "playing";
+  document.getElementById("mapaGira").classList.add("hidden");
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("hud").classList.remove("hidden");
+}
+
+// ---- Llegada a la Casa Blanca: unos 10 segundos ----
+// 0 frena y anda hasta la escalinata · 1 sube al portico y llega a la puerta
+// · 2 se da la vuelta y saluda · 3 se gira y entra · 4 se cierran las puertas.
+function iniciarFinal() {
+  gameState = "final";
+  fin = { fase: 0, t: 0, v: speed, look: new THREE.Vector3(0, 0.4, -18) };
+  currentLane = 1;
+  isSliding = false; character.setSlidePose(false);
+  rocketTimeLeft = 0; freezeTimeLeft = 0; megaTimeLeft = 0; character.setMega(1);
+  if (monturaCohete) monturaCohete.visible = false;
+  world.setCielo(false);
+  document.getElementById("hud").classList.add("hidden");
+  document.getElementById("powerupBadge").classList.add("hidden");
+  speedLinesEl.style.opacity = "0";
+}
+function frameFinal(dt) {
+  fin.t += dt;
+  const cb = world.getCasaBlanca();
+  if (!cb) { completarNivel(); return; }
+  const zPasos = cb.position.z + 8.8;     // pie de la escalinata del portico norte
+  const zPuerta = cb.position.z + 0.06;
+  // Por el camino de coches: en el jardin la fuente queda en medio, asi que
+  // entre 31 y 9 de la fachada se rodea por la curva de la derecha (radio 11).
+  const u = -cb.position.z;
+  const xCamino = u > 9 && u < 31 ? 11 * Math.sin(((u - 9) / 22) * Math.PI) : 0;
+  playerX += (xCamino - playerX) * Math.min(1, dt * 6);
+  let dz = 0;
+  if (fin.fase === 0) {
+    fin.v = Math.max(7, Math.min(fin.v - dt * 5, -zPasos * 1.6 + 6));
+    dz = fin.v * dt;
+    character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
+    if (zPasos + dz >= 0) fin.fase = 1;
+  } else if (fin.fase === 1) {
+    dz = 2.6 * dt;
+    py = Math.min(1, Math.max(0, zPasos / 1.8));
+    character.updateRun(dt, 0.45);
+    if (zPuerta + dz >= -1.4) { fin.fase = 2; fin.t = 0; showBubble(t("finCasaBlanca")); vibrate([30, 40, 30]); }
+  } else if (fin.fase === 2) {
+    character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
+    character.setIdlePose(fin.t + 1);
+    if (fin.t > 2.6) { fin.fase = 3; fin.t = 0; }
+  } else if (fin.fase === 3) {
+    character.object3D.rotation.y += (0 - character.object3D.rotation.y) * Math.min(1, dt * 6);
+    if (fin.t > 0.45) { dz = 2.2 * dt; character.updateRun(dt, 0.4); }
+    if (zPuerta + dz > 0.9) { fin.fase = 4; fin.t = 0; character.object3D.visible = false; }
+  } else if (fin.fase === 4) {
+    const k = Math.min(1, fin.t / 0.9);
+    const suave = k * k * (3 - 2 * k);
+    for (const h of cb.userData.puertas || []) h.rotation.y = Math.PI / 2 + (h.userData.cerrada - Math.PI / 2) * suave;
+    if (fin.t > 1.7) { fin.fase = 5; completarNivel(); }
+  }
+  if (dz) world.update(dz);
+  character.object3D.position.set(playerX, py, 0);
+  shadowBlob.position.set(playerX, py + 0.015, 0);
+  // Camara de cine: baja y se acerca a medida que llega al portico.
+  const cerca = fin.fase >= 2;
+  const objetivo = cerca ? new THREE.Vector3(1.2, 3.4 + py, 12.5) : new THREE.Vector3(playerX * 0.6, 4.4 + py, 11);
+  const mira = cerca ? new THREE.Vector3(0, 3.6 + py, -3) : new THREE.Vector3(playerX * 0.8, 2.6 + py, -6);
+  camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
+  fin.look.lerp(mira, Math.min(1, dt * 1.6));
+  camera.lookAt(fin.look);
+}
+function completarNivel() {
+  gameState = "completado";
+  const n = nivelActual;
+  const tacos = Math.floor(tacosThisRun);
+  const estrellas = n.estrellas.filter((e) => tacos >= e).length;
+  addTacos(tacos);
+  guardarNivel(n.id, estrellas);
+  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+  document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca") : t("nivelSuperado");
+  document.getElementById("nivelFinEstrellas").textContent = "★".repeat(estrellas) + "☆".repeat(3 - estrellas);
+  document.getElementById("nivelFinTacos").textContent = tacos;
+  pintarMisiones("misionesNivel");
+  document.getElementById("nivelFin").classList.remove("hidden");
+  spawnConfetti(45);
+}
+
 // ---- Jefe: barra de vida y premio ----
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
@@ -365,8 +523,15 @@ function resetRun() {
   appliedExpression = "normal";
   expressionFlashLeft = 0;
   const zoneChoice = getSettings().selectedZone || "auto";
-  world.setForcedZone(zoneChoice === "auto" ? null : zoneChoice);
+  // En un nivel manda el nivel (su zona, su luz y su calle); en el sin fin, la zona elegida.
+  world.setNivel(nivelActual);
+  world.setLuz(nivelActual ? nivelActual.luz : null);
+  aplicarLuz(nivelActual ? nivelActual.luz : null);
+  world.setForcedZone(nivelActual ? nivelActual.zona : (zoneChoice === "auto" ? null : zoneChoice));
   world.reset();
+  character.object3D.visible = true;
+  fin = null;
+  if (nivelActual) mostrarBanner(nivelActual);
   setCameraMode("race");
   camBaseX = camera.position.x;
   camera.fov = BASE_FOV;
@@ -682,13 +847,18 @@ const PRUEBA = /prueba/.test(location.search);
 if (PRUEBA) {
   window.__juego = {
     world, character, inmortal: false, choques: 0,
-    estado: () => ({ gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
+    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
     rayo: () => { freezeTimeLeft = FREEZE_DURATION; },
     cohete: () => { rocketTimeLeft = ROCKET_DURATION; if (monturaCohete) monturaCohete.visible = true; world.setCielo(true); },
     jefe: () => { nextJefeAt = 0; },
+    // Empieza el nivel de Washington (o el que se diga) sin pasar por el mapa.
+    nivel: async (id = "washington") => { await empezarNivel(NIVELES.find((n) => n.id === id)); },
+    final: () => { distance = nivelActual ? nivelActual.largo - 40 : distance; },
+    // Adelanta la partida hasta la distancia `d` a saltos cortos (los reciclajes de la pista van de 129 en 129).
+    saltarA: (d) => { while (distance < d) { const dz = Math.min(30, d - distance); distance += dz; world.update(dz, 1 / 60); } },
     misiones,
     paso: (n = 1, dt = 1 / 60) => { for (let i = 0; i < n; i++) frame(dt); },
   };
@@ -770,7 +940,8 @@ function frame(dtFijo) {
 
     // ---- El Burrito-Bot llega cada tantos metros ----
     world.setJugador(currentLane);
-    if (distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
+    if (nivelActual && distance >= nivelActual.largo - 1) { iniciarFinal(); return; }
+    if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
       nextJefeAt = distance + JEFE_CADA;
       document.getElementById("bossFill").style.width = "100%";
       document.getElementById("bossBar").classList.remove("hidden");
@@ -878,6 +1049,8 @@ function frame(dtFijo) {
       }
     }
     updateDust(dt);
+  } else if (gameState === "final") {
+    frameFinal(dt);
   } else if (gameState === "menu") {
     idlePhase += dt;
     character.object3D.rotation.y = Math.sin(idlePhase * 0.5) * 0.5;
@@ -897,12 +1070,34 @@ function frame(dtFijo) {
 }
 
 // ---------- UI wiring ----------
-document.getElementById("startBtn").addEventListener("click", () => {
+// JUGAR abre el mapa de la gira; «Sin fin» es el modo de siempre.
+document.getElementById("startBtn").addEventListener("click", () => { unlockAudio(); abrirMapa(); });
+document.getElementById("sinFinBtn").addEventListener("click", () => {
   unlockAudio();
   startMusic();
+  nivelActual = null;
   resetRun();
   gameState = "playing";
   document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("hud").classList.remove("hidden");
+});
+function volverAlMenu() {
+  gameState = "menu";
+  idlePhase = 0;
+  character.object3D.visible = true;
+  character.object3D.position.set(0, 0, 0);
+  character.object3D.rotation.set(0, 0, 0);
+  setCameraMode("menu");
+  for (const id of ["gameOverScreen", "nivelFin", "mapaGira", "hud", "bossBar", "bannerNivel"]) document.getElementById(id).classList.add("hidden");
+  document.getElementById("startScreen").classList.remove("hidden");
+  pintarMisiones("misionesMenu");
+}
+document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
+document.getElementById("nivelFinMapa").addEventListener("click", () => { volverAlMenu(); abrirMapa(); });
+document.getElementById("nivelFinRepetir").addEventListener("click", () => {
+  document.getElementById("nivelFin").classList.add("hidden");
+  resetRun();
+  gameState = "playing";
   document.getElementById("hud").classList.remove("hidden");
 });
 
@@ -913,16 +1108,7 @@ document.getElementById("retryBtn").addEventListener("click", () => {
   document.getElementById("hud").classList.remove("hidden");
 });
 
-document.getElementById("menuBtn").addEventListener("click", () => {
-  gameState = "menu";
-  idlePhase = 0;
-  character.object3D.position.set(0, 0, 0);
-  character.object3D.rotation.set(0, 0, 0);
-  setCameraMode("menu");
-  document.getElementById("gameOverScreen").classList.add("hidden");
-  document.getElementById("startScreen").classList.remove("hidden");
-  pintarMisiones("misionesMenu");
-});
+document.getElementById("menuBtn").addEventListener("click", volverAlMenu);
 
 document.getElementById("langToggle").addEventListener("click", () => { toggleLang(); updatePowerupBadge(); });
 document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); pintarMisiones("misionesMenu"); });

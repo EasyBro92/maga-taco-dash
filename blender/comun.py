@@ -360,7 +360,7 @@ def _apuntar(materiales, im):
         n.image = im
         nt.nodes.active = n
 
-def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, exportar=True):
+def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, exportar=True, segmentos=1, min_bisel=0.2):
     """Une las partes, redondea los cantos, hornea color + oclusión en una textura
     y exporta `nombre`.glb a www/models/<carpeta>/."""
     t0 = time.time()
@@ -374,10 +374,10 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, e
     # balaustres) no se ve y multiplica los triángulos por cuatro.
     if bisel > 0:
         for o in _partes:
-            if min(o.dimensions) >= 0.2 and len(o.data.polygons) <= 64:
+            if min(o.dimensions) >= min_bisel and len(o.data.polygons) <= 64:
                 md = o.modifiers.new('bisel', 'BEVEL')
                 md.width = bisel
-                md.segments = 1
+                md.segments = segmentos
                 md.limit_method = 'ANGLE'
                 md.angle_limit = math.radians(35)
                 bpy.context.view_layer.objects.active = o

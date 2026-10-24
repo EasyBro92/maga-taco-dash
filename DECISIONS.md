@@ -682,3 +682,15 @@ Isidro: el personaje es «tosco, poco natural», la estética «Playmobil» no l
 - Jugabilidad: al chocar se repite el nivel entero; el sin fin queda como extra; se quedan autobús, cohete, gigante, rayo y misiones; un jefe distinto al final de algunos niveles; estrellas 1-3; controles deslizando; el personaje habla con voz.
 
 Aplicado ya: cámara de carrera de (0, 5.2, 7.2) a (0, 7.2, 9.8) mirando a z -18; velocidad de 13 a 25 con aceleración 0.12 (antes 17 a 29 con 0.24).
+
+### Cuadragésimo segunda ronda: nivel 5, Pennsylvania Avenue hasta la Casa Blanca (2026-10-24)
+
+Primer nivel de la gira (el último de la historia, que Isidro eligió hacer primero).
+
+- `blender/washington.py`, estilo tipo Pixar (cantos redondeados con 2 segmentos, colores naturales de piedra): Archivos Nacionales (tramo con columnas gigantes y el gran pórtico), Justicia, IRS, antiguo Correos con su torre del reloj, Reagan, Wilson, Embajada de Canadá, edificio de cristal «FREEDOM», Navy Memorial con su plaza y fuentes, FBI brutalista, hotel Willard con mansarda y torreón, ala Este de la Galería Nacional, Pershing Park, Tesoro con su columnata, y la Casa Blanca (fachada norte, pórtico, jardín con fuente y camino curvo, verja) con las hojas de la puerta aparte.
+- Los edificios federales son enormes: se modelan por tramos de 20 de fachada que el nivel repite en su orden real (`www/src/levels.js`). Cada lado es una lista en orden con los cruces de calle como huecos: la calle es siempre la misma (275 tramos), nada al azar.
+- Obstáculos con azar de semilla (el mismo reparto en cada intento, como pidió: al chocar se repite el nivel entero); empiezan tranquilos y se van llenando; los últimos 190 m solo tacos. Mobiliario: farolas de globo y robles. Luz de atardecer (sol bajo y dorado, cielo cálido). Sin jefe en este nivel.
+- Los modelos del nivel (6.4 MB) se cargan al entrar, no al abrir el juego (`cargarCarpeta`).
+- Final (~10 s): frena tras la verja, va por la curva del camino alrededor de la fuente, sube la escalinata, se da la vuelta y saluda en la puerta, entra y se cierran las puertas; pantalla «¡Has llegado a la Casa Blanca!» con estrellas (350/700/1100 tacos) y misiones.
+- JUGAR abre el mapa de EE. UU. con la ruta de la gira (NY → Ohio → Arizona → Las Vegas → Washington); los otros cuatro salen como «Próximamente». «♾️ Sin fin» queda como extra.
+- Pendiente: personaje con Meshy (estilo Pixar, más parecido a Trump, animado con esqueleto), voces, los otros cuatro niveles, el Capitolio detrás de la salida.

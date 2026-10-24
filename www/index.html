@@ -37,6 +37,27 @@
   <div id="powerupBadge" class="hidden"></div>
   <div id="bossBar" class="hidden"><div class="bossName">🌯 BURRITO-BOT</div><div class="bossTrack"><div id="bossFill"></div></div></div>
   <div id="misionToast" class="hidden"></div>
+  <div id="bannerNivel" class="hidden"><div class="bnNumero"></div><div class="bnNombre"></div><div class="bnLugar"></div></div>
+
+  <div id="mapaGira" class="overlay hidden">
+    <div class="card wide">
+      <div class="title small">🗺️ <span data-i18n="gira">La gira</span></div>
+      <svg id="mapaSvg" viewBox="0 0 100 62" class="mapaSvg"></svg>
+      <div id="mapaInfo" class="mapaInfo"></div>
+      <button id="mapaCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="nivelFin" class="overlay hidden">
+    <div class="card">
+      <h2 class="title small" id="nivelFinTitulo"></h2>
+      <div class="estrellas" id="nivelFinEstrellas"></div>
+      <p class="statLine"><span class="icon">🌮</span> <span id="nivelFinTacos">0</span></p>
+      <div class="misiones" id="misionesNivel"></div>
+      <button id="nivelFinMapa" class="bigBtn" data-i18n="mapa">MAPA</button>
+      <button id="nivelFinRepetir" class="smallBtn" data-i18n="repetir">Repetir</button>
+    </div>
+  </div>
   <div id="speechBubble" class="hidden"></div>
   <div id="confettiLayer"></div>
 
@@ -56,6 +77,7 @@
       </div>
       <div class="misiones" id="misionesMenu"></div>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
+      <button id="sinFinBtn" class="smallBtn" data-i18n="sinFin">♾️ Sin fin</button>
       <div class="row">
         <button id="startShopBtn" class="smallBtn" data-i18n="shop">🛒 Tienda</button>
         <button id="startRankBtn" class="smallBtn" data-i18n="ranking">🌍 Ranking</button>

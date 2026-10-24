@@ -100,3 +100,15 @@ export function resetProgress() {
   persist();
   return state;
 }
+
+// ---- Niveles de la gira (24/10/2026): estrellas conseguidas en cada uno ----
+export function getNiveles() {
+  return state.niveles || {};
+}
+export function guardarNivel(id, estrellas) {
+  state.niveles = state.niveles || {};
+  const antes = state.niveles[id] || { estrellas: 0, superado: false };
+  state.niveles[id] = { estrellas: Math.max(antes.estrellas, estrellas), superado: true };
+  persist();
+  return state.niveles[id];
+}

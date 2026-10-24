@@ -2,6 +2,7 @@ import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo } from "./models.js";
+import { colocarNivel, ANCHO, azarConSemilla } from "./levels.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -1710,7 +1711,105 @@ export function createWorld(scene) {
   const frontCursor = { "-1": null, "1": null };
   const frontLast = { "-1": -1, "1": -1 };
 
+  // ---- Modo nivel (24/10/2026): la calle de verdad de levels.js ----
+  // Cada edificio sale en su sitio fijo de la avenida (no al azar) y la
+  // calle se acaba en la Casa Blanca. `nivel` = null es el modo sin fin.
+  let nivel = null;
+  let azar = Math.random;
+  let calle = [], siguientePieza = 0;
+  const calleViva = [];
+  let casaBlanca = null;
+  const COLORES_ORIGINALES = JSON.parse(JSON.stringify(BIOME_COLORS));
+  function setNivel(n) { nivel = n || null; }
+  function getNivel() { return nivel; }
+  // Luz del nivel: el atardecer tiñe cielo, niebla y horizonte de Washington.
+  function setLuz(luz) {
+    for (const z in COLORES_ORIGINALES) BIOME_COLORS[z] = { ...COLORES_ORIGINALES[z] };
+    if (luz === "atardecer") {
+      Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
+    }
+  }
+  function prepararCalle() {
+    for (const p of calleViva) group.remove(p.mesh);
+    calleViva.length = 0;
+    casaBlanca = null;
+    calle = nivel ? colocarNivel(nivel, (k) => ANCHO[k] || 20) : [];
+    siguientePieza = 0;
+    azar = nivel ? azarConSemilla(nivel.semilla) : Math.random;
+  }
+  // Retranqueo: lo que sobresale mucho (porticos, plazas) se mete hacia
+  // dentro para no invadir la acera; la fachada queda un poco mas atras.
+  function actualizarCalle(dz) {
+    if (!nivel) return;
+    // Primero se mueve lo que ya estaba y despues se pone lo nuevo (si no, lo
+    // recien puesto avanzaba dz de mas y salia mas cerca de lo que toca).
+    for (let i = calleViva.length - 1; i >= 0; i--) {
+      const p = calleViva[i];
+      p.mesh.position.z += dz;
+      if (p.mesh.position.z > DESPAWN_Z + p.fin && p.mesh !== casaBlanca) {
+        group.remove(p.mesh);
+        calleViva.splice(i, 1);
+      }
+    }
+    const alcance = Math.abs(SPAWN_Z) + 25;
+    while (siguientePieza < calle.length && calle[siguientePieza].d - totalScrolled < alcance) {
+      const p = calle[siguientePieza++];
+      const clave = `${nivel.carpeta}/${p.pieza}`;
+      const mesh = modelo(clave);
+      if (!mesh) continue;
+      const m = medidas(clave);
+      if (p.centro) {
+        mesh.position.set(0, 0.05, -(p.d - totalScrolled));
+        if (p.pieza === "casa_blanca_final") {
+          // Las dos hojas de la puerta, abiertas; la escena final las cierra.
+          const puertas = [];
+          for (const lado of [-1, 1]) {
+            const hoja = modelo(`${nivel.carpeta}/puerta_cb`);
+            if (!hoja) continue;
+            hoja.position.set(lado * 1.3, 1.0, 0.06);
+            hoja.rotation.y = Math.PI / 2;
+            hoja.userData.cerrada = lado < 0 ? 0 : Math.PI;
+            mesh.add(hoja);
+            puertas.push(hoja);
+          }
+          mesh.userData.puertas = puertas;
+          casaBlanca = mesh;
+        }
+      } else {
+        const retranqueo = Math.max(0, m.frente - 3);
+        mesh.position.set(p.lado * (nivel.linea + retranqueo), 0, -(p.d + p.ancho / 2 - totalScrolled));
+        mesh.rotation.y = p.lado < 0 ? Math.PI / 2 : -Math.PI / 2;
+      }
+      group.add(mesh);
+      calleViva.push({ mesh, fin: p.ancho + 40 });
+    }
+  }
+  // Farolas y arboles de la acera, alternos (estos si se repiten: es mobiliario).
+  const acerasNivel = {};
+  function aceraNivel(z) {
+    if (totalScrolled - z > nivel.largo - 15) return;
+    if (!acerasNivel[nivel.id]) {
+      acerasNivel[nivel.id] = nivel.acera.map((k) => makePool(() => modelo(k)));
+      outerPools["nivel_" + nivel.id] = acerasNivel[nivel.id];
+    }
+    const pools = acerasNivel[nivel.id];
+    for (const side of [-1, 1]) {
+      for (let k = 0; k < 2; k++) {
+        const idx = k % pools.length;
+        const mesh = pools[idx].acquire();
+        if (!mesh) continue;
+        mesh.visible = true;
+        mesh.rotation.set(0, side < 0 ? 0 : Math.PI, 0);
+        mesh.position.set(side * 7.6, 0, z - k * (OUTER_SPACING / 2));
+        if (!mesh.parent) group.add(mesh);
+        outerProps.push({ mesh, biome: "nivel_" + nivel.id, poolIndex: idx });
+      }
+    }
+  }
+  function getCasaBlanca() { return casaBlanca; }
+
   function spawnOuterCluster(z) {
+    if (nivel) { aceraNivel(z); return; }
     // Un prop spawneado ahora en z (negativo) sera alcanzado tras recorrer
     // |z| unidades mas -> el bioma se decide para la distancia en que
     // realmente llegara el jugador, no la actual (o la zona forzada, si hay una).
@@ -2437,7 +2536,9 @@ export function createWorld(scene) {
   function spawnRow(z) {
     const lanes = [0, 1, 2];
     const roll = Math.random();
-    const obstacleChance = z > EASY_ZONE_Z ? 0 : 0.55;
+    let obstacleChance = z > EASY_ZONE_Z ? 0 : 0.55;
+    // En un nivel la avenida empieza tranquila y se va llenando.
+    if (nivel) obstacleChance *= 0.55 + 0.5 * Math.min(1, (totalScrolled - z) / nivel.largo);
     if (cielo) {
       // Volando en cohete: una hilera de tacos en el cielo que va cambiando de carril.
       if (Math.random() < 0.5) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
@@ -2511,9 +2612,25 @@ export function createWorld(scene) {
 
   function ensureRows() {
     while (lastRowZ > SPAWN_Z) {
-      spawnRow(lastRowZ);
+      if (!nivel) spawnRow(lastRowZ);
+      else {
+        // Nivel: el mismo reparto en cada intento (azar con semilla). Al final
+        // de la avenida solo tacos, y pasada la verja nada.
+        const tramo = totalScrolled - lastRowZ;
+        if (tramo < nivel.largo - 30) {
+          const r = Math.random;
+          Math.random = azar;
+          try {
+            if (tramo > nivel.largo - 190) filaDeTacos(lastRowZ);
+            else spawnRow(lastRowZ);
+          } finally { Math.random = r; }
+        }
+      }
       lastRowZ -= ROW_SPACING;
     }
+  }
+  function filaDeTacos(z) {
+    for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
   }
   ensureRows();
 
@@ -2598,15 +2715,16 @@ export function createWorld(scene) {
       // Se recicla 43 tramos x 3 = 129 atras (no 128): asi la linea continua no
       // se solapa consigo misma en la costura (el solape parpadeaba).
       s.position.z += dz; if (s.position.z > 4) s.position.z -= TRAMOS_RAYA;
-      s.visible = currentZoneName(totalScrolled - s.position.z) !== "desert";
+      s.visible = currentZoneName(totalScrolled - s.position.z) !== "desert" && !(nivel && totalScrolled - s.position.z > nivel.largo);
     }
     for (const rl of roadLines) {
       rl.position.z += dz; if (rl.position.z > 4) rl.position.z -= TRAMOS_RAYA;
-      rl.visible = currentZoneName(totalScrolled - rl.position.z) !== "desert";
+      rl.visible = currentZoneName(totalScrolled - rl.position.z) !== "desert" && !(nivel && totalScrolled - rl.position.z > nivel.largo);
     }
     for (const d of decor) {
       d.position.z += dz; if (d.position.z > 6) d.position.z -= Math.abs(SPAWN_Z);
       d.scale.setScalar(Math.max(0.001, edgeFade(d.position.z, 6, 5)));
+      d.visible = !(nivel && totalScrolled - d.position.z > nivel.largo - 10);
       if (d.userData.kind === "flag") {
         d.userData.flagMesh.rotation.y = Math.sin(animClock * 3 + d.userData.phase) * 0.3;
       } else if (d.userData.kind === "person") {
@@ -2616,10 +2734,12 @@ export function createWorld(scene) {
     for (const b of bunting) {
       b.position.z += dz; if (b.position.z > 4) b.position.z -= Math.abs(SPAWN_Z);
       b.scale.setScalar(Math.max(0.001, edgeFade(b.position.z, 4, 4)));
+      b.visible = !(nivel && totalScrolled - b.position.z > nivel.largo - 10);
       b.rotation.z = Math.sin(animClock * 2.2 + b.userData.phase) * 0.22;
     }
 
     if (dt > 0) ritmo += (dz / dt - ritmo) * Math.min(1, dt * 2);
+    actualizarCalle(dz);
     actualizarJefe(dt);
     actualizarDisparos(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -2728,6 +2848,7 @@ export function createWorld(scene) {
     nextSignAt = 260;
     lastRowZ = -14;
     lastOuterZ = -4;
+    prepararCalle();
     lastZoneName = forcedZone || "city";
     const startColors = BIOME_COLORS[lastZoneName];
     updateSkyColors(startColors.skyTop, startColors.sky);
@@ -2750,5 +2871,6 @@ export function createWorld(scene) {
   }
 
   return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
-    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador };
+    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador,
+    setNivel, getNivel, setLuz, getCasaBlanca };
 }
