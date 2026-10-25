@@ -7,7 +7,8 @@ import {
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel } from "./save.js";
-import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto } from "./levels.js";
+import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit } from "./levels.js";
+import { PIEZAS_KIT } from "./edificios.js";
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
@@ -109,7 +110,7 @@ canvas.addEventListener("webglcontextrestored", () => {
 });
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 150);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 320);   // 25/10: de 150 a 320 (ver SPAWN_Z en world.js)
 
 // Camara elevada y alejada tipo Minion Rush: el personaje se ve pequeno,
 // se ve mucho tramo de pista por delante para reaccionar con tiempo.
@@ -246,7 +247,11 @@ let fin = null;
 // Luz del nivel. El atardecer: sol bajo, dorado y de lado; cielo calido.
 const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.position.clone(), hemi: hemi.color.getHex(), suelo: hemi.groundColor.getHex() };
 function aplicarLuz(luz) {
-  if (luz === "atardecer") {
+  if (luz === "manana") {
+    // Mañana: sol claro y algo bajo, de frente a la derecha; cielo limpio.
+    sun.color.set(0xfff1d8); sun.intensity = 1.15; sun.position.set(6, 9, -5);
+    hemi.color.set(0xe6f1ff); hemi.groundColor.set(0x8a8070);
+  } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
   } else {
@@ -313,8 +318,8 @@ async function empezarNivel(n) {
   // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
   const piezas = piezasDeNivel(n);
   await cargarCarpeta(n.carpeta, piezas, (h, total) => { if (boton) boton.textContent = `${Math.round((100 * h) / total)}%`; });
-  await cargarCarpeta("dc", ["farola"]);
-  await cargarCarpeta("pueblo", ["roble"]);
+  if (usaKit(n)) await cargarCarpeta("kit", PIEZAS_KIT);
+  for (const k of n.acera || []) { const [c, p] = k.split("/"); await cargarCarpeta(c, [p]); }
   nivelActual = n;
   unlockAudio();
   startMusic();
@@ -344,6 +349,7 @@ function frameFinal(dt) {
   fin.t += dt;
   const cb = world.getCasaBlanca();
   if (!cb) { completarNivel(); return; }
+  if (nivelActual.final === "camion") { finalCamion(dt, cb); return; }
   const zPasos = cb.position.z + 8.8;     // pie de la escalinata del portico norte
   const zPuerta = cb.position.z + 0.06;
   // Por el camino de coches: en el jardin la fuente queda en medio, asi que
@@ -387,6 +393,34 @@ function frameFinal(dt) {
   fin.look.lerp(mira, Math.min(1, dt * 1.6));
   camera.lookAt(fin.look);
 }
+// Llegada al camion de tacos (Nueva York): frena, se planta delante, se da la
+// vuelta y saluda con la tortilla recuperada.
+function finalCamion(dt, flat) {
+  const zParada = flat.position.z + 21.6 + 1.6;   // delante del morro del camion
+  playerX += (0 - playerX) * Math.min(1, dt * 4);
+  let dz = 0;
+  if (fin.fase === 0) {
+    fin.v = Math.max(5, Math.min(fin.v - dt * 6, -zParada * 1.5 + 4));
+    dz = fin.v * dt;
+    character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
+    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); }
+  } else if (fin.fase === 2) {
+    character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
+    character.setIdlePose(fin.t + 1);
+    if (fin.t > 2.8) { fin.fase = 5; completarNivel(); }
+  }
+  if (dz) world.update(dz);
+  py = 0;
+  character.object3D.position.set(playerX, 0, 0);
+  shadowBlob.position.set(playerX, 0.015, 0);
+  const cerca = fin.fase >= 2;
+  const objetivo = cerca ? new THREE.Vector3(2.0, 3.2, 9.5) : new THREE.Vector3(0, 4.6, 11);
+  const mira = cerca ? new THREE.Vector3(0, 2.2, -3) : new THREE.Vector3(0, 2.4, -8);
+  camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
+  fin.look.lerp(mira, Math.min(1, dt * 1.6));
+  camera.lookAt(fin.look);
+}
+
 function completarNivel() {
   gameState = "completado";
   const n = nivelActual;
@@ -395,7 +429,9 @@ function completarNivel() {
   addTacos(tacos);
   guardarNivel(n.id, estrellas);
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
-  document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca") : t("nivelSuperado");
+  document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca")
+    : n.fin ? (n.fin[getLang()] || n.fin.es) : t("nivelSuperado");
+  pintarSinFin();
   document.getElementById("nivelFinEstrellas").textContent = "★".repeat(estrellas) + "☆".repeat(3 - estrellas);
   document.getElementById("nivelFinTacos").textContent = tacos;
   pintarMisiones("misionesNivel");
@@ -580,7 +616,12 @@ function resetRun() {
   world.setNivel(nivelActual);
   world.setLuz(nivelActual ? nivelActual.luz : null);
   aplicarLuz(nivelActual ? nivelActual.luz : null);
-  world.setForcedZone(nivelActual ? nivelActual.zona : (zoneChoice === "auto" ? null : zoneChoice));
+  // 25/10: cada mapa por separado. En «Auto» se sortea UNA zona al empezar y
+  // no cambia en toda la partida (antes rotaba cada pocos cientos de metros y
+  // el fondo cambiaba de golpe de un sitio a otro).
+  const zonas = ["city", "desert", "town", "dc"];
+  const zonaSinFin = zoneChoice === "auto" ? zonas[Math.floor(Math.random() * zonas.length)] : zoneChoice;
+  world.setForcedZone(nivelActual ? nivelActual.zona : zonaSinFin);
   world.reset();
   character.object3D.visible = true;
   fin = null;

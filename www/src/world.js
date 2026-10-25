@@ -2,7 +2,8 @@ import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo } from "./models.js";
-import { colocarNivel, ANCHO, azarConSemilla } from "./levels.js";
+import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel } from "./levels.js";
+import { construirEdificio } from "./edificios.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -18,7 +19,11 @@ export const ZONE_NAMES = ["city", "desert", "town", "dc"];
 // visible ya lleven mucho rato existiendo. Junto con camera.far=150 y la
 // niebla en 118-150 (ver createWorld y main.js), el punto de nacimiento queda
 // completamente fuera de lo que se ve.
-const SPAWN_Z = -128;
+// 25/10: de -128 a -280. Las cosas aparecian de golpe: nacian donde la niebla
+// aun no las tapaba del todo, y los edificios altos asomaban como una silueta
+// clara contra el cielo. Ahora nacen muy lejos, dentro de la bruma, y el cielo
+// bajo es del mismo color que la niebla: van saliendo poco a poco.
+const SPAWN_Z = -280;
 const DESPAWN_Z = 8;
 const ROW_SPACING = 7;
 
@@ -291,7 +296,7 @@ export function createWorld(scene) {
   // nuevo limite). La niebla queda como una franja corta y lejana, pegada al
   // limite real, para que la desaparicion en el horizonte no tenga un corte
   // duro -- no como fondo difuminado permanente.
-  scene.fog = new THREE.Fog(0x9fe6ff, 118, 150);
+  scene.fog = new THREE.Fog(0x9fe6ff, 130, 285);
 
   // ---- Cielo degradado (domo con vertex colors), anclado a la escena y no
   // al grupo que hace scroll, para que nunca se quede atras. Se recolorea
@@ -299,7 +304,7 @@ export function createWorld(scene) {
   // camera.far (100) con margen para cubrir tambien los rayos diagonales
   // hacia las esquinas del frustum, si no el domo (esfera opaca) tapa la
   // pista lejana antes de llegar al limite real de dibujado. ----
-  const skyGeo = new THREE.SphereGeometry(146, 16, 12);
+  const skyGeo = new THREE.SphereGeometry(310, 24, 16);
   const skyPos = skyGeo.attributes.position;
   const skyColorAttr = new Float32Array(skyPos.count * 3);
   const tmpColor = new THREE.Color();
@@ -307,7 +312,9 @@ export function createWorld(scene) {
     const top = tmpColor.set(topHex).clone();
     const bottom = new THREE.Color(bottomHex);
     for (let i = 0; i < skyPos.count; i++) {
-      const t = THREE.MathUtils.clamp((skyPos.getY(i) + 8) / 60, 0, 1);
+      // El tercio de abajo, del color de la niebla (asi lo lejano se funde
+      // con el cielo en vez de recortarse); arriba, el azul del cielo.
+      const t = THREE.MathUtils.smoothstep(skyPos.getY(i) / 310, 0.28, 0.8);
       tmpColor.copy(bottom).lerp(top, t);
       skyColorAttr[i * 3] = tmpColor.r; skyColorAttr[i * 3 + 1] = tmpColor.g; skyColorAttr[i * 3 + 2] = tmpColor.b;
     }
@@ -543,6 +550,7 @@ export function createWorld(scene) {
   // props (antes el suelo era una sola superficie sin ninguna referencia).
   const concreteTex = makeSidewalkTexture() || makeConcreteTexture();
   const sidewalkMat = toon(BIOME_COLORS.city.sidewalk, concreteTex ? { map: concreteTex, shininess: 12 } : null);
+  const texturasSuelo = [asphaltTex, dirtTex, pavingTex, grassTex, concreteTex];
   sidewalkMat.polygonOffset = true;
   sidewalkMat.polygonOffsetFactor = -1;
   sidewalkMat.polygonOffsetUnits = -2;
@@ -670,7 +678,30 @@ export function createWorld(scene) {
   // en capsula (menos "ladrillo"), brazos y zapatos propios, y pelo -- sigue
   // siendo barato en poligonos (son figuras de fondo vistas de lejos) pero
   // ya no se lee como un maniqui de caja.
+  // ---- Publico estilo Pixar (25/10/2026, blender/publico.py) ----
+  // Seis personas con cara y el brazo derecho aparte: saludan, botan y se
+  // animan mas cuando pasa el jugador. Si no han cargado, el muñeco viejo.
+  const PERSONAS = ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan"];
+  const HOMBROS = { ejecutivo: [0.272, 1.368], senora: [0.23, 1.277], chico: [0.158, 0.874],
+    abuelo: [0.262, 1.262], turista: [0.239, 1.322], fan: [0.233, 1.292] };
+  const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_brazo`));
+  function personaPixar() {
+    const n = PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
+    const g = new THREE.Group();
+    const c = medidas(`publico/${n}_cuerpo`), b = medidas(`publico/${n}_brazo`);
+    g.add(new THREE.Mesh(c.geometry, c.material));
+    const hombro = new THREE.Group();
+    hombro.position.set(HOMBROS[n][0], HOMBROS[n][1], 0);
+    hombro.add(new THREE.Mesh(b.geometry, b.material));
+    g.add(hombro);
+    g.userData.kind = "person";
+    g.userData.brazo = hombro;
+    g.userData.phase = Math.random() * Math.PI * 2;
+    g.userData.ritmo = 0.8 + Math.random() * 0.5;
+    return g;
+  }
   function makePerson() {
+    if (PUBLICO_PIXAR) return personaPixar();
     const g = new THREE.Group();
     const shirtMat = shirtMats[Math.floor(Math.random() * shirtMats.length)];
     const pantsMat = pantsMats[Math.floor(Math.random() * pantsMats.length)];
@@ -768,19 +799,20 @@ export function createWorld(scene) {
     const right = makeFlagPole(); right.position.set(4.6, 0, z); right.rotation.y = Math.PI;
     group.add(left, right);
     decor.push(left, right);
-    for (let i = 0; i < 4; i++) {
+    const porLado = PUBLICO_PIXAR ? 2 : 4;
+    for (let i = 0; i < porLado; i++) {
       const pL = makePerson();
-      pL.position.set(-4.6 - 0.4 - i * 0.4, 0, z + i * 0.45 - 0.6);
+      pL.position.set(-4.6 - 0.4 - i * (PUBLICO_PIXAR ? 0.9 : 0.4), 0, z + i * (PUBLICO_PIXAR ? 1.2 : 0.45) - 0.6);
       pL.rotation.y = 0.4;
       group.add(pL);
       decor.push(pL);
       const pR = makePerson();
-      pR.position.set(4.6 + 0.4 + i * 0.4, 0, z + i * 0.45 - 0.6);
+      pR.position.set(4.6 + 0.4 + i * (PUBLICO_PIXAR ? 0.9 : 0.4), 0, z + i * (PUBLICO_PIXAR ? 1.2 : 0.45) - 0.6);
       pR.rotation.y = -0.4;
       group.add(pR);
       decor.push(pR);
     }
-    if (Math.random() < 0.6) {
+    if (!PUBLICO_PIXAR && Math.random() < 0.6) {
       const bL = makeBleacher(); bL.position.set(-6.6, 0, z - 1); bL.rotation.y = 0.5;
       group.add(bL); decor.push(bL);
       const bR = makeBleacher(); bR.position.set(6.6, 0, z - 1); bR.rotation.y = -0.5;
@@ -1725,6 +1757,9 @@ export function createWorld(scene) {
   // Luz del nivel: el atardecer tiñe cielo, niebla y horizonte de Washington.
   function setLuz(luz) {
     for (const z in COLORES_ORIGINALES) BIOME_COLORS[z] = { ...COLORES_ORIGINALES[z] };
+    if (luz === "manana") {
+      Object.assign(BIOME_COLORS.city, { sky: 0xd8ebff, skyTop: 0x5f9fea, fog: 0xd8ebff, horizon: 0x8aa2c4 });
+    }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
@@ -1733,7 +1768,7 @@ export function createWorld(scene) {
     for (const p of calleViva) group.remove(p.mesh);
     calleViva.length = 0;
     casaBlanca = null;
-    calle = nivel ? colocarNivel(nivel, (k) => ANCHO[k] || 20) : [];
+    calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
     siguientePieza = 0;
     azar = nivel ? azarConSemilla(nivel.semilla) : Math.random;
   }
@@ -1754,10 +1789,19 @@ export function createWorld(scene) {
     const alcance = Math.abs(SPAWN_Z) + 25;
     while (siguientePieza < calle.length && calle[siguientePieza].d - totalScrolled < alcance) {
       const p = calle[siguientePieza++];
+      if (p.tipo) {
+        // Del suelo: paso de cebra o tapa de alcantarilla (no son modelos).
+        const m = p.tipo === "cebra" ? hacerCebra() : hacerTapa();
+        m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
+        group.add(m);
+        calleViva.push({ mesh: m, fin: 10 });
+        continue;
+      }
       const clave = `${nivel.carpeta}/${p.pieza}`;
-      const mesh = modelo(clave);
+      // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
+      const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, nivel.kit) : modelo(clave);
       if (!mesh) continue;
-      const m = medidas(clave);
+      const m = p.pieza === "kit" ? { frente: mesh.userData.frente } : medidas(clave);
       if (p.centro) {
         mesh.position.set(0, 0.05, -(p.d - totalScrolled));
         if (p.pieza === "casa_blanca_final") {
@@ -1773,8 +1817,8 @@ export function createWorld(scene) {
             puertas.push(hoja);
           }
           mesh.userData.puertas = puertas;
-          casaBlanca = mesh;
         }
+        casaBlanca = mesh;   // lo del fondo: donde acaba el nivel (Casa Blanca, Flatiron...)
       } else {
         const retranqueo = Math.max(0, m.frente - 3);
         mesh.position.set(p.lado * (nivel.linea + retranqueo), 0, -(p.d + p.ancho / 2 - totalScrolled));
@@ -1807,6 +1851,33 @@ export function createWorld(scene) {
     }
   }
   function getCasaBlanca() { return casaBlanca; }
+  const cebraGeo = new THREE.BoxGeometry(0.55, 0.02, 4.2);
+  const cebraMat = toon(0xf2efe6);
+  const lineaGeo = new THREE.BoxGeometry(7.6, 0.02, 0.35);
+  function hacerCebra() {
+    const g = new THREE.Group();
+    for (let k = 0; k < 8; k++) {
+      const b = new THREE.Mesh(cebraGeo, cebraMat);
+      b.position.set(-3.3 + k * 0.95, 0.072, 0);
+      g.add(b);
+    }
+    const l = new THREE.Mesh(lineaGeo, cebraMat);
+    l.position.set(0, 0.072, 3.2);
+    g.add(l);
+    return g;
+  }
+  const tapaGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 18);
+  const tapaMat = toon(0x4a4c52);
+  const tapaAroGeo = new THREE.TorusGeometry(0.42, 0.04, 6, 18);
+  function hacerTapa() {
+    const g = new THREE.Group();
+    const t = new THREE.Mesh(tapaGeo, tapaMat);
+    t.position.y = 0.065;
+    const a = new THREE.Mesh(tapaAroGeo, toon(0x6a6c72));
+    a.rotation.x = Math.PI / 2; a.position.y = 0.075;
+    g.add(t, a);
+    return g;
+  }
 
   function spawnOuterCluster(z) {
     if (nivel) { aceraNivel(z); return; }
@@ -2645,7 +2716,7 @@ export function createWorld(scene) {
     const ocupado = busFilas > 0 ? busCarril : -1;
     if (busFilas > 0) busFilas--;
     const tramo = totalScrolled - z;           // distancia de la partida a la que llegara esta fila
-    if (USAR_BLENDER && roll < obstacleChance && ocupado < 0 && tramo > 220 && Math.random() < 0.14) {
+    if (USAR_BLENDER && !(nivel && nivel.sinBus) && roll < obstacleChance && ocupado < 0 && tramo > 220 && Math.random() < 0.14) {
       // Autobus de campaña con rampa: subirse y correr por el techo lleno de tacos.
       const lane = Math.floor(Math.random() * 3);
       spawnObstacle(lane, "bus", z, "autobus");
@@ -2658,7 +2729,7 @@ export function createWorld(scene) {
       otros.filter((l) => l !== lado).forEach((l) => spawnTaco(l, z, 0.9));
       return;
     }
-    if (USAR_BLENDER && roll < obstacleChance && tramo > 300 && Math.random() < 0.12) {
+    if (USAR_BLENDER && !(nivel && nivel.sinPatrulla) && roll < obstacleChance && tramo > 300 && Math.random() < 0.12) {
       // Coche patrulla que viene de frente con la sirena puesta.
       const opciones = lanes.filter((l) => l !== ocupado && cocheCabe(l, z, TIPOS.patrulla.mueve));
       if (opciones.length) {
@@ -2686,7 +2757,8 @@ export function createWorld(scene) {
         powerupLane = free[Math.floor(Math.random() * free.length)];
         const kinds = !USAR_BLENDER ? ["shield", "magnet", "boost"]
           : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
-        const kind = kinds[Math.floor(Math.random() * kinds.length)];
+        const lista = nivel && nivel.potenciadores ? nivel.potenciadores : kinds;
+        const kind = lista[Math.floor(Math.random() * lista.length)];
         spawnPowerup(powerupLane, z, kind);
       }
       // Microfonos para las frases: aparte de los potenciadores, para que no escaseen.
@@ -2735,6 +2807,13 @@ export function createWorld(scene) {
     animClock += dt;
 
     totalScrolled += dz;
+    // El suelo avanza de verdad: calzada, aceras y suelo eran laminas quietas
+    // y solo pasaban las rayas. Cada textura se desplaza lo mismo que la pista
+    // (el plano mide 400 y la textura se repite repeat.y veces en el).
+    for (const tex of texturasSuelo) {
+      if (!tex) continue;
+      tex.offset.y = (tex.offset.y + (dz * tex.repeat.y) / 400) % 1;
+    }
     curveX = Math.sin(totalScrolled * CURVE_FREQ) * CURVE_AMPLITUDE
       + Math.sin(totalScrolled * CURVE_FREQ2 + 1.3) * CURVE_AMPLITUDE2;
     group.position.x = curveX;
@@ -2822,7 +2901,11 @@ export function createWorld(scene) {
       if (d.userData.kind === "flag") {
         d.userData.flagMesh.rotation.y = Math.sin(animClock * 3 + d.userData.phase) * 0.3;
       } else if (d.userData.kind === "person") {
-        d.position.y = Math.max(0, Math.sin(animClock * 2.4 + d.userData.phase)) * 0.12;
+        // Se animan al ver pasar al jugador: botan mas y agitan el brazo.
+        const cerca = THREE.MathUtils.clamp(1 - Math.abs(d.position.z) / 18, 0, 1);
+        const r = d.userData.ritmo || 1;
+        d.position.y = Math.max(0, Math.sin(animClock * 2.4 * r + d.userData.phase)) * (0.08 + 0.16 * cerca);
+        if (d.userData.brazo) d.userData.brazo.rotation.z = 1.2 + 1.1 * cerca + Math.sin(animClock * (5 + 4 * cerca) * r + d.userData.phase) * (0.25 + 0.35 * cerca);
       }
     }
     for (const b of bunting) {

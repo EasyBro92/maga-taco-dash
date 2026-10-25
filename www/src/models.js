@@ -17,6 +17,7 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
+  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan"],
   obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
     "rayo", "cohete", "barril", "chile", "jefe"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
