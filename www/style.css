@@ -522,3 +522,13 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 /* Ajustes y zona del sin fin, por encima del inicio y con el fondo velado */
 #settingsOverlay, #sinFinOverlay { z-index: 20; background: rgba(40, 70, 130, 0.35); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 #settingsOverlay .card, #sinFinOverlay .card { background: rgba(255, 255, 255, 0.97); }
+
+/* Aviso flotante del menu (Sin fin cerrado...) */
+#avisoMenu { position: absolute; left: 50%; bottom: 46%; transform: translateX(-50%); z-index: 30; max-width: 86vw; background: #22304f; color: #fff; font-family: var(--letra); font-weight: 800; font-size: 14px; padding: 12px 18px; border-radius: 18px; text-align: center; box-shadow: var(--sombra); animation: misionEntra 0.3s ease-out; pointer-events: none; }
+.smallBtn.cerrado { color: #8a94a8; background: #eef1f6; }
+.mapaInfo .miHistoria { font-size: 13px; color: var(--tinta-suave); margin: 4px 6px 8px; font-weight: 700; line-height: 1.35; }
+/* Microfonos para lanzar frases */
+#hudFrases { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 52px); left: max(14px, env(safe-area-inset-left)); z-index: 5; pointer-events: none; background: rgba(255,255,255,0.88); border-radius: 999px; padding: 5px 12px; font-size: 18px; letter-spacing: 2px; box-shadow: 0 4px 12px rgba(28,52,102,0.2); }
+#hudFrases { top: auto; bottom: max(18px, env(safe-area-inset-bottom)); left: max(14px, env(safe-area-inset-left)); font-size: 24px; padding: 6px 12px; display: flex; gap: 4px; }
+#hudFrases .vacio { filter: grayscale(1); opacity: 0.3; }
+#hudFrases .lleno { animation: hudPulse 0.3s ease; }

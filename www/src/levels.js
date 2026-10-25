@@ -9,12 +9,17 @@
 // Las piezas son modelos de www/models/<carpeta>/<pieza>.glb.
 
 export const NIVELES = [
-  { id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: false, mapa: [88, 25] },
-  { id: "pueblo", numero: 2, nombre: "Calle Mayor", lugar: "Ohio", listo: false, mapa: [73, 29] },
-  { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45] },
-  { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38] },
+  { id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: false, mapa: [88, 25],
+    ingrediente: "🫓", historia: { es: "¡Empieza la carrera a la Casa Blanca! Sal de tu torre y recupera la tortilla.", en: "The race to the White House begins! Leave your tower and get the tortilla back." } },
+  { id: "pueblo", numero: 2, nombre: "Calle Mayor", lugar: "Ohio", listo: false, mapa: [73, 29],
+    ingrediente: "🌽", historia: { es: "Mitin en un pueblo de Ohio. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses!", en: "Rally in an Ohio town. Burrito-Bot hid the corn: ride the buses!" } },
+  { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45],
+    ingrediente: "🌶️", historia: { es: "Ruta 66 por el desierto. ¡La policía te persigue! Es una caza de brujas.", en: "Route 66 through the desert. The police are after you! It is a witch hunt." } },
+  { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38],
+    ingrediente: "🥫", historia: { es: "Debate en Las Vegas contra el Burrito-Bot, el candidato hecho en China. ¡Gánale!", en: "Debate in Las Vegas against Burrito-Bot, the made-in-China candidate. Beat him!" } },
   {
     id: "washington", numero: 5, nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true, mapa: [85, 33],
+    ingrediente: "🏛️", historia: { es: "La recta final. Corre por Pennsylvania Avenue y entra en la Casa Blanca: ¡el taco perfecto te espera!", en: "The home stretch. Run down Pennsylvania Avenue into the White House: the perfect taco awaits!" },
     zona: "dc",
     carpeta: "washington",
     luz: "atardecer",
@@ -61,6 +66,22 @@ export const ANCHO = {
   reagan: 20, wilson: 40, pershing: 40, canada: 30, cristal: 30, navy: 40, fbi: 20, willard: 35,
   galeria_este: 40, tesoro: 60, casa_blanca_final: 76,
 };
+
+// ¿Se puede jugar este nivel? Como en AlienZ: en orden. El primero siempre;
+// cada uno, si se supero el anterior; los ya superados, siempre.
+// Mientras no exista el nivel 1, Washington queda abierto (lo decidio Isidro el
+// 25/10 para poder seguir jugandolo mientras se hacen los otros).
+export function nivelAbierto(n, superados) {
+  if (!n.listo) return false;
+  if (superados[n.id]) return true;
+  if (n.id === "washington" && !NIVELES[0].listo) return true;
+  const i = NIVELES.indexOf(n);
+  return i === 0 || !!superados[NIVELES[i - 1].id];
+}
+// El Sin fin se abre al superar el primer nivel.
+export function sinFinAbierto(superados) {
+  return !!superados[NIVELES[0].id];
+}
 
 export function nivelPorId(id) {
   return NIVELES.find((n) => n.id === id) || null;

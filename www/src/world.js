@@ -2170,6 +2170,77 @@ export function createWorld(scene) {
   }
 
   // Un obstaculo aplastado (modo gigante o escudo) sale volando dando vueltas.
+  // ---- Frases (25/10/2026): un bocadillo enorme que sale volando por el
+  // carril y tumba lo primero que pilla (o le da al Burrito-Bot). ----
+  const texturasFrase = {};
+  function texturaFrase(texto) {
+    if (texturasFrase[texto]) return texturasFrase[texto];
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 192;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#22304f"; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.roundRect(12, 12, 488, 140, 60); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(200, 148); ctx.lineTo(170, 186); ctx.lineTo(250, 148); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(196, 140, 58, 14);
+    let tam = 74;
+    ctx.font = `900 ${tam}px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    while (ctx.measureText(texto).width > 440 && tam > 30) { tam -= 4; ctx.font = `900 ${tam}px Fredoka, Arial, sans-serif`; }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineWidth = 8; ctx.strokeStyle = "#ffd23f"; ctx.strokeText(texto, 256, 84);
+    ctx.fillStyle = "#e8463c"; ctx.fillText(texto, 256, 84);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    texturasFrase[texto] = tex;
+    return tex;
+  }
+  const frases = [];
+  function primerObstaculo(lane, alcance) {
+    let mejor = null;
+    for (const o of obstacles) {
+      if (o.smashed || o.lane !== lane || o.type === "bus") continue;
+      const zc = o.z + (o.centro || 0);
+      if (zc > 1 || zc < -alcance) continue;
+      if (!mejor || zc > mejor.z + (mejor.centro || 0)) mejor = o;
+    }
+    return mejor;
+  }
+  function lanzarFrase(lane, texto, objetivo) {
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaFrase(texto), transparent: true, depthTest: false }));
+    sprite.scale.set(4.2, 1.6, 1);
+    sprite.position.set(LANE_X[lane], 2.6, -0.5);
+    sprite.renderOrder = 5;
+    group.add(sprite);
+    frases.push({ sprite, lane, objetivo, t: 0 });
+  }
+  function actualizarFrases(dt) {
+    for (let i = frases.length - 1; i >= 0; i--) {
+      const f = frases[i];
+      f.t += dt;
+      const s = f.sprite;
+      // Sale con un «pop» y vuela recto por el carril.
+      const pop = Math.min(1, f.t * 6);
+      s.scale.set(4.2 * pop, 1.6 * pop, 1);
+      s.position.z -= 48 * dt;
+      s.position.y = 2.6 + Math.sin(f.t * 10) * 0.08;
+      let llego = false;
+      if (f.objetivo === "jefe") {
+        if (!jefeActivo()) llego = true;
+        else {
+          s.position.x += (jefe.x - s.position.x) * Math.min(1, dt * 6);
+          if (s.position.z <= jefe.z + 1) { golpearJefe(); llego = true; }
+        }
+      } else if (f.objetivo && !f.objetivo.smashed) {
+        if (s.position.z <= f.objetivo.z + (f.objetivo.centro || 0) + 0.5) { smash(f.objetivo); llego = true; }
+      } else if (f.objetivo && f.objetivo.smashed) llego = true;
+      if (llego || f.t > 1.4) {
+        burstSparkles(s.position.x, s.position.y, s.position.z);
+        group.remove(s);
+        s.material.dispose();
+        frases.splice(i, 1);
+      }
+    }
+  }
+
   function smash(o) {
     if (o.smashed) return;
     const lado = LANE_X[o.lane] === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(LANE_X[o.lane]);
@@ -2363,6 +2434,21 @@ export function createWorld(scene) {
     // 22/10 (2): rayo congelador, cohete y el chile para darle al jefe.
     freeze: makePool(() => { const g = modeloConContorno("obstaculos/rayo") || buildPowerupIcon("shield"); g.scale.setScalar(1.3); return g; }),
     rocket: makePool(() => { const g = modeloConContorno("obstaculos/cohete") || buildPowerupIcon("boost"); g.scale.setScalar(0.42); return g; }),
+    // 25/10: microfono dorado, la carga para lanzar una frase.
+    micro: makePool(() => {
+      const g = new THREE.Group();
+      const oro = toon(0xf2c23a, { emissive: 0x3a2a00 });
+      const rejilla = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), toon(0xd9dde3, { emissive: 0x222222 }));
+      rejilla.position.y = 0.32;
+      const aro = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 8, 20), oro);
+      aro.position.y = 0.32; aro.rotation.x = Math.PI / 2;
+      const mango = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5, 12), oro);
+      mango.position.y = -0.05;
+      g.add(rejilla, aro, mango);
+      g.rotation.z = 0.35;
+      g.scale.setScalar(1.4);
+      return g;
+    }),
     chile: makePool(() => { const g = modeloConContorno("obstaculos/chile") || buildPowerupIcon("shield"); g.scale.setScalar(1.4); g.position.y = -0.4; return g; }),
   };
 
@@ -2521,16 +2607,19 @@ export function createWorld(scene) {
       if (t >= 1) {
         group.remove(d.mesh);
         disparos.splice(i, 1);
-        if (!jefeActivo()) continue;
-        jefe.vida--;
-        jefe.golpe = 1;
-        for (let k = 0; k < 3; k++) burstSparkles(jefe.x, JEFE_Y + 1.5, jefe.z);
-        if (jefe.vida <= 0) {
-          jefe.saliendo = true; jefe.derrotado = true;
-          if (alEventoJefe) alEventoJefe("derrotado", 0);
-        } else if (alEventoJefe) alEventoJefe("golpe", jefe.vida);
+        golpearJefe();
       }
     }
+  }
+  function golpearJefe() {
+    if (!jefeActivo()) return;
+    jefe.vida--;
+    jefe.golpe = 1;
+    for (let k = 0; k < 3; k++) burstSparkles(jefe.x, JEFE_Y + 1.5, jefe.z);
+    if (jefe.vida <= 0) {
+      jefe.saliendo = true; jefe.derrotado = true;
+      if (alEventoJefe) alEventoJefe("derrotado", 0);
+    } else if (alEventoJefe) alEventoJefe("golpe", jefe.vida);
   }
 
   function spawnRow(z) {
@@ -2599,6 +2688,11 @@ export function createWorld(scene) {
           : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
         const kind = kinds[Math.floor(Math.random() * kinds.length)];
         spawnPowerup(powerupLane, z, kind);
+      }
+      // Microfonos para las frases: aparte de los potenciadores, para que no escaseen.
+      if (powerupLane === null && free.length && USAR_BLENDER && Math.random() < 0.13) {
+        powerupLane = free[Math.floor(Math.random() * free.length)];
+        spawnPowerup(powerupLane, z, "micro");
       }
       free.forEach((lane) => { if (lane !== powerupLane && Math.random() < 0.7) spawnTaco(lane, z, 0.9); });
     } else {
@@ -2742,6 +2836,7 @@ export function createWorld(scene) {
     actualizarCalle(dz);
     actualizarJefe(dt);
     actualizarDisparos(dt);
+    actualizarFrases(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
       o.z += dz + o.mueve * dt;
@@ -2836,6 +2931,8 @@ export function createWorld(scene) {
     group.position.x = 0;
     obstacles.forEach((o) => { o.mesh.position.y = 0; if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; } obstaclePools[o.pool].release(o.mesh); });
     acabarJefe(); cielo = false;
+    for (const f of frases) group.remove(f.sprite);
+    frases.length = 0;
     busCarril = -1; busFilas = 0;
     tacos.forEach((t) => tacoPool.release(t.mesh));
     powerups.forEach((p) => powerupPools[p.kind].release(p.mesh));
@@ -2871,6 +2968,6 @@ export function createWorld(scene) {
   }
 
   return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
-    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador,
+    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, getCasaBlanca };
 }

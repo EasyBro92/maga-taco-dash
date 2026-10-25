@@ -713,3 +713,14 @@ Isidro: el menú de inicio y el de ajustes «se sienten muy pesados y con una te
 - Inicio como panel inferior: logo de dibujos arriba (MAGA en rojo, TACO DASH en azul, contorno blanco, flotando) y el presidente de cuerpo entero saludando en medio (cámara del menú más lejos y mirando más abajo). Misiones compactas de una línea.
 - La zona del sin fin sale ahora al pulsar «Sin fin» (antes cargaba el inicio). Ajustes con cada opción en su tarjeta con icono, deslizadores naranjas, selectores redondeados de idioma y gráficos, y «Borrar progreso» discreto abajo.
 - Pantalla de carga clara (cielo) en vez de casi negra. Fin de partida, mapa y nivel superado cambian a juego.
+
+### Cuadragésimo quinta ronda: modo historia en orden y frases como ataques (2026-10-25)
+
+Isidro: siguiendo la lógica de AlienZ, que no se pueda elegir nivel (en orden; los superados se repiten); pidió proponer un modo historia. Le gustó la propuesta (el Burrito-Bot roba la receta del taco; cinco ingredientes) pero quiso que fuera también una carrera hacia la presidencia «contando mentiras», con el protagonista lanzando frases como «¡Fake news!» y «¡China! ¡China!», elegidas por mí y que sean muy divertidas.
+
+- Historia «Rumbo a la Casa Blanca»: carrera a la presidencia contra el Burrito-Bot, candidato robot «hecho en China»; en cada ciudad un mitin y un ingrediente (🫓 Nueva York, 🌽 Ohio, 🌶️ Arizona, 🥫 Las Vegas —debate con el Burrito-Bot—, 🏛️ Washington). Cada nivel trae su frase en el mapa (`historia` en levels.js, en los dos idiomas).
+- Bloqueo (`nivelAbierto` en levels.js): el 1 siempre; cada uno, si se superó el anterior (llegar al final, sin contar estrellas); los superados, siempre. Washington queda abierto mientras no exista el nivel 1 (lo decidió él). En el mapa, candados y el autobús en el nivel abierto más avanzado.
+- Sin fin con candado hasta superar el nivel 1 entero: botón «🔒 Sin fin» y aviso «Pasa el nivel 1 (Quinta Avenida) para desbloquear el Sin fin». La zona se elige al abrirlo.
+- Frases: micrófonos dorados por la pista (hasta 3; se empieza con 1). Un toque corto en la pantalla (o F / Intro) lanza un bocadillo enorme que vuela por el carril y tumba lo primero que pilla (+3 tacos). La frase depende del blanco: furgoneta «¡FAKE NEWS!», patrulla «¡CAZA DE BRUJAS!», guardaespaldas «¡ESTÁS DESPEDIDO!», barricada y conos «¡TOTAL DESASTRE!», pancarta y globos «¡TRISTE!», barril «¡HECHO EN CHINA!», el Burrito-Bot «¡CHINA! ¡CHINA!» (cuenta como golpe); sin nada delante, «¡CRÉEME!», «¡ENORME!», «¡COVFEFE!» o «¡NADIE LO HACE MEJOR!». En inglés, las originales.
+- Comprobado: candados en el mapa y en Sin fin; la frase gasta el micrófono y tumba la furgoneta sin choque.
+- Siguiente: el nivel 1, Quinta Avenida (lo eligió él). Pendiente: voces de las frases.

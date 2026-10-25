@@ -7,7 +7,7 @@ import {
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel } from "./save.js";
-import { NIVELES, piezasDeNivel } from "./levels.js";
+import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto } from "./levels.js";
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
@@ -276,13 +276,16 @@ function abrirMapa() {
   svg.innerHTML = `<polygon class="tierra" points="${SILUETA_EEUU}"/><polyline class="ruta" points="${ruta}"/>`
     + NIVELES.map((n) => {
       const [x, y] = n.mapa;
-      const color = !n.listo ? "#9a9a9a" : hechos[n.id] ? "#2b8a3e" : "#c0392b";
+      const abierto = nivelAbierto(n, hechos);
+      const color = hechos[n.id] ? "#2fa84f" : abierto ? "#e8463c" : "#a7b0c0";
       return `<g class="parada" data-id="${n.id}"><circle cx="${x}" cy="${y}" r="3.2" fill="${color}"/>`
-        + `<text x="${x}" y="${y + 1.1}">${n.numero}</text><text class="etiqueta" x="${x}" y="${y + 6.2}">${n.lugar}</text></g>`;
-    }).join("")
-    + `<text x="${NIVELES[4].mapa[0] - 6}" y="${NIVELES[4].mapa[1] - 4}" font-size="5">🚌</text>`;
+        + `<text x="${x}" y="${y + 1.1}">${abierto || hechos[n.id] ? n.numero : "🔒"}</text><text class="etiqueta" x="${x}" y="${y + 6.2}">${n.lugar}</text></g>`;
+    }).join("");
+  // El autobus de campaña, en el nivel abierto mas avanzado.
+  const actual = [...NIVELES].reverse().find((n) => nivelAbierto(n, hechos)) || NIVELES[0];
+  svg.innerHTML += `<text x="${actual.mapa[0] - 6}" y="${actual.mapa[1] - 4}" font-size="5">🚌</text>`;
   svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
-  elegirNivel(nivelElegido || NIVELES.find((n) => n.listo).id);
+  elegirNivel(nivelElegido || actual.id);
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("mapaGira").classList.remove("hidden");
 }
@@ -291,14 +294,21 @@ function elegirNivel(id) {
   nivelElegido = id;
   const hecho = getNiveles()[id];
   const est = hecho ? "★".repeat(hecho.estrellas) + "☆".repeat(3 - hecho.estrellas) : "☆☆☆";
+  const abierto = nivelAbierto(n, getNiveles());
+  const i = NIVELES.indexOf(n);
+  // Cerrado: si existe y falta pasar el anterior, se dice cual; si no existe, proximamente.
+  const cierre = !n.listo ? t("proximamente")
+    : `🔒 ${t("superaAntes").replace("{n}", NIVELES[i - 1] ? NIVELES[i - 1].nombre : "")}`;
   document.getElementById("mapaInfo").innerHTML =
-    `<div class="miNombre">${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
-    + (n.listo ? `<div class="miEstrellas">${est}</div><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
-      : `<div class="proximamente">${t("proximamente")}</div>`);
+    `<div class="miNombre">${n.ingrediente || ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
+    + (n.historia ? `<div class="miHistoria">${n.historia[getLang()] || n.historia.es}</div>` : "")
+    + (abierto ? `<div class="miEstrellas">${est}</div><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
+      : `<div class="proximamente">${cierre}</div>`);
   const b = document.getElementById("mapaJugar");
   if (b) b.addEventListener("click", () => empezarNivel(n));
 }
 async function empezarNivel(n) {
+  if (!nivelAbierto(n, getNiveles()) && !PRUEBA) return;
   const boton = document.getElementById("mapaJugar");
   // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
   const piezas = piezasDeNivel(n);
@@ -490,6 +500,47 @@ let isJumping = false, jumpElapsed = 0;   // isJumping = en el aire (salto o cai
 let py = 0, vy = 0, enSuelo = true, camY = 0;
 let megaTimeLeft = 0, freezeTimeLeft = 0, rocketTimeLeft = 0;
 let nextJefeAt = JEFE_PRIMERO, misionesReloj = 0;
+// Frases (25/10): cargas de microfono, hasta 3.
+let frasesCargas = 0, microVisto = false;
+const MAX_FRASES = 3;
+// Lo que suelta segun lo que tenga delante (la pieza del obstaculo).
+const FRASES = {
+  es: { furgoneta: "¡FAKE NEWS!", patrulla: "¡CAZA DE BRUJAS!", guardaespaldas: "¡ESTÁS DESPEDIDO!",
+    barricada: "¡TOTAL DESASTRE!", conos: "¡TOTAL DESASTRE!", pancarta: "¡TRISTE!", globos: "¡TRISTE!",
+    barril: "¡HECHO EN CHINA!", jefe: "¡CHINA! ¡CHINA!",
+    nada: ["¡CRÉEME!", "¡ENORME!", "¡COVFEFE!", "¡NADIE LO HACE MEJOR!"] },
+  en: { furgoneta: "FAKE NEWS!", patrulla: "WITCH HUNT!", guardaespaldas: "YOU'RE FIRED!",
+    barricada: "TOTAL DISASTER!", conos: "TOTAL DISASTER!", pancarta: "SAD!", globos: "SAD!",
+    barril: "MADE IN CHINA!", jefe: "CHINA! CHINA!",
+    nada: ["BELIEVE ME!", "HUGE!", "COVFEFE!", "NOBODY DOES IT BETTER!"] },
+};
+let frasesPintadas = "";
+function pintarFrases() {
+  // Solo toca la pagina si algo ha cambiado (se llama en cada fotograma).
+  const clave = gameState + frasesCargas + microVisto;
+  if (clave === frasesPintadas) return;
+  frasesPintadas = clave;
+  const el = document.getElementById("hudFrases");
+  el.innerHTML = Array.from({ length: MAX_FRASES }, (_, i) => `<span class="${i < frasesCargas ? "lleno" : "vacio"}">🎤</span>`).join("");
+  el.classList.toggle("hidden", gameState !== "playing" || (frasesCargas === 0 && !microVisto));
+}
+function lanzarFrase() {
+  if (frasesCargas <= 0) return;
+  const f = FRASES[getLang()] || FRASES.es;
+  const o = world.primerObstaculo(currentLane, 60);
+  let texto, objetivo;
+  if (o) { texto = f[o.pool] || f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = o; }
+  else if (world.jefeActivo()) { texto = f.jefe; objetivo = "jefe"; }
+  else { texto = f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = null; }
+  frasesCargas--;
+  world.lanzarFrase(currentLane, texto, objetivo);
+  if (objetivo && objetivo !== "jefe") tacosThisRun += 3 * multiplier;
+  flashExpression("determined", 0.6);
+  triggerCameraShake(0.02);
+  vibrate(25);
+  sndPoint();
+  pintarFrases();
+}
 let isSliding = false, slideElapsed = 0;
 let idlePhase = 0;
 
@@ -506,6 +557,7 @@ function resetRun() {
   py = 0; vy = 0; enSuelo = true; camY = 0;
   megaTimeLeft = 0; character.setMega(1);
   freezeTimeLeft = 0; rocketTimeLeft = 0; nextJefeAt = JEFE_PRIMERO; misionesReloj = 0;
+  frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   if (monturaCohete) monturaCohete.visible = false;
   world.setCielo(false);
   document.getElementById("bossBar").classList.add("hidden");
@@ -659,6 +711,7 @@ initControls(document.getElementById("touchControls"), (action) => {
   if (gameState !== "playing") return;
   if (action === "left" && currentLane > 0) { currentLane--; sndLaneSwitch(); }
   else if (action === "right" && currentLane < 2) { currentLane++; sndLaneSwitch(); }
+  else if (action === "frase") lanzarFrase();
   else if (action === "jump" && enSuelo && !isSliding) {
     vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; sndJump(); vibrate(15);
   }
@@ -832,6 +885,10 @@ function checkPowerups() {
       triggerCameraShake(0.05);
       vibrate([30, 30, 60]);
       avisarMisiones(misiones.evento("cohete"));
+    } else if (p.kind === "micro") {
+      frasesCargas = Math.min(MAX_FRASES, frasesCargas + 1);
+      if (!microVisto) { microVisto = true; showBubble(t("microfono")); }
+      pintarFrases();
     } else if (p.kind === "chile") {
       // Chile picante: sale disparado hacia el Burrito-Bot.
       world.dispararJefe(playerX, py + 1.2);
@@ -899,6 +956,7 @@ function tick() {
 // paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
 function frame(dtFijo) {
   if (contextLost) return;
+  pintarFrases();
   // ?prueba: `__juego.pausa = true` congela el juego (sigue dibujando) para mirar una escena.
   if (PRUEBA && window.__juego && window.__juego.pausa && dtFijo === undefined) { renderer.render(scene, camera); return; }
   const dt = dtFijo !== undefined ? dtFijo : Math.min(clock.getDelta(), 0.05);
@@ -1076,10 +1134,27 @@ function frame(dtFijo) {
 // JUGAR abre el mapa de la gira; «Sin fin» es el modo de siempre.
 document.getElementById("startBtn").addEventListener("click", () => { unlockAudio(); abrirMapa(); });
 // «Sin fin» abre primero la eleccion de zona (25/10: antes estaba en el inicio).
+// Candado (25/10): el Sin fin se abre al superar el nivel 1. Cerrado, avisa de que hace falta.
+function avisoMenu(texto) {
+  const el = document.getElementById("avisoMenu");
+  el.textContent = texto;
+  el.classList.remove("hidden");
+  el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  clearTimeout(avisoMenu.t);
+  avisoMenu.t = setTimeout(() => el.classList.add("hidden"), 2600);
+}
+function pintarSinFin() {
+  const abierto = sinFinAbierto(getNiveles());
+  const b = document.getElementById("sinFinBtn");
+  b.textContent = abierto ? t("sinFin") : "🔒 " + t("sinFin").replace("♾️ ", "");
+  b.classList.toggle("cerrado", !abierto);
+}
 document.getElementById("sinFinBtn").addEventListener("click", () => {
   unlockAudio();
+  if (!sinFinAbierto(getNiveles()) && !PRUEBA) { avisoMenu(t("sinFinCerrado")); return; }
   document.getElementById("sinFinOverlay").classList.remove("hidden");
 });
+pintarSinFin();
 document.getElementById("sinFinCerrar").addEventListener("click", () => {
   document.getElementById("sinFinOverlay").classList.add("hidden");
 });
@@ -1108,6 +1183,7 @@ function volverAlMenu() {
   for (const id of ["gameOverScreen", "nivelFin", "mapaGira", "hud", "bossBar", "bannerNivel"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("startScreen").classList.remove("hidden");
   pintarMisiones("misionesMenu");
+  pintarSinFin();
 }
 document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
 document.getElementById("nivelFinMapa").addEventListener("click", () => { volverAlMenu(); abrirMapa(); });
@@ -1128,7 +1204,7 @@ document.getElementById("retryBtn").addEventListener("click", () => {
 document.getElementById("menuBtn").addEventListener("click", volverAlMenu);
 
 document.getElementById("langToggle").addEventListener("click", () => { toggleLang(); updatePowerupBadge(); });
-document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); marcarIdioma(); pintarMisiones("misionesMenu"); });
+document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
 
 // Fase 2/4 todavia no implementadas: ocultar accesos por ahora.
 document.getElementById("startShopBtn").style.display = "none";
@@ -1190,8 +1266,8 @@ sfxMuteBtn.addEventListener("click", () => {
   updateSettings({ sfxMuted: muted });
   sfxMuteBtn.textContent = muted ? "🔇" : "🔊";
 });
-document.getElementById("settingsLangEs").addEventListener("click", () => { setLang("es"); marcarIdioma(); pintarMisiones("misionesMenu"); });
-document.getElementById("settingsLangEn").addEventListener("click", () => { setLang("en"); marcarIdioma(); pintarMisiones("misionesMenu"); });
+document.getElementById("settingsLangEs").addEventListener("click", () => { setLang("es"); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
+document.getElementById("settingsLangEn").addEventListener("click", () => { setLang("en"); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
 marcarIdioma();
 
 const qualityBtns = {

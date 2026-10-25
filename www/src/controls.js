@@ -1,4 +1,5 @@
-// Captura swipe (movil) y teclado (escritorio) y emite acciones: left, right, jump, slide.
+// Captura swipe (movil) y teclado (escritorio) y emite acciones: left, right, jump, slide
+// y (25/10) frase: un toque corto en la pantalla, o la tecla F / Intro, lanza una frase.
 let swipeMinPx = 28;
 
 export function setSwipeThreshold(px) {
@@ -21,7 +22,11 @@ export function initControls(target, onAction) {
     const dx = t.clientX - startX;
     const dy = t.clientY - startY;
     const adx = Math.abs(dx), ady = Math.abs(dy);
-    if (adx < swipeMinPx && ady < swipeMinPx) return; // tap, ignored here
+    if (adx < swipeMinPx && ady < swipeMinPx) {
+      // Toque corto: lanzar una frase (si dura mucho, es que se dejo el dedo puesto).
+      if (performance.now() - startT < 350) onAction("frase");
+      return;
+    }
     if (adx > ady) {
       onAction(dx > 0 ? "right" : "left");
     } else {
@@ -35,6 +40,7 @@ export function initControls(target, onAction) {
       case "ArrowRight": case "d": case "D": onAction("right"); break;
       case "ArrowUp": case "w": case "W": case " ": onAction("jump"); break;
       case "ArrowDown": case "s": case "S": onAction("slide"); break;
+      case "f": case "F": case "Enter": onAction("frase"); break;
     }
   });
 }
