@@ -12,6 +12,9 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="icons/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -61,68 +64,81 @@
   <div id="speechBubble" class="hidden"></div>
   <div id="confettiLayer"></div>
 
-  <div id="startScreen" class="overlay">
-    <div class="card">
-      <h1 class="title">MAGA<br/>TACO DASH</h1>
-      <p class="subtitle" data-i18n="tapToStart">Toca para correr</p>
-      <div class="zonePicker">
-        <div class="zoneLabel" data-i18n="zone">Zona</div>
-        <div class="row" id="zoneButtons">
-          <button class="smallBtn zoneBtn" data-zone="auto" data-i18n="zoneAuto">🎲 Auto</button>
-          <button class="smallBtn zoneBtn" data-zone="city" data-i18n="zoneCity">🏙️ Ciudad</button>
-          <button class="smallBtn zoneBtn" data-zone="desert" data-i18n="zoneDesert">🌵 Desierto</button>
-          <button class="smallBtn zoneBtn" data-zone="town" data-i18n="zoneTown">🏘️ Pueblo</button>
-          <button class="smallBtn zoneBtn" data-zone="dc" data-i18n="zoneDc">🏛️ Washington D.C.</button>
-        </div>
-      </div>
+  <!-- Menu de inicio (25/10/2026): panel claro abajo, el presidente se ve arriba. -->
+  <div id="startScreen" class="overlay inicio">
+    <div class="logo">
+      <div class="logoMaga">MAGA</div>
+      <div class="logoTaco">TACO DASH <span class="logoTacoIcono">🌮</span></div>
+    </div>
+    <div class="card hoja">
       <div class="misiones" id="misionesMenu"></div>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
-      <button id="sinFinBtn" class="smallBtn" data-i18n="sinFin">♾️ Sin fin</button>
-      <div class="row">
+      <div class="filaInicio">
+        <button id="sinFinBtn" class="smallBtn ancho" data-i18n="sinFin">♾️ Sin fin</button>
         <button id="startShopBtn" class="smallBtn" data-i18n="shop">🛒 Tienda</button>
         <button id="startRankBtn" class="smallBtn" data-i18n="ranking">🌍 Ranking</button>
-        <button id="startLangBtn" class="smallBtn">ES/EN</button>
-        <button id="startSettingsBtn" class="smallBtn">⚙️</button>
+        <button id="startLangBtn" class="redondo" aria-label="Idioma">🌐</button>
+        <button id="startSettingsBtn" class="redondo" aria-label="Ajustes">⚙️</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Sin fin: aqui se elige la zona (antes estaba en el inicio y lo cargaba). -->
+  <div id="sinFinOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small" data-i18n="sinFin">♾️ Sin fin</div>
+      <div class="zoneLabel" data-i18n="zone">Zona</div>
+      <div class="zonas" id="zoneButtons">
+        <button class="zoneBtn" data-zone="auto" data-i18n="zoneAuto">🎲 Auto</button>
+        <button class="zoneBtn" data-zone="city" data-i18n="zoneCity">🏙️ Ciudad</button>
+        <button class="zoneBtn" data-zone="desert" data-i18n="zoneDesert">🌵 Desierto</button>
+        <button class="zoneBtn" data-zone="town" data-i18n="zoneTown">🏘️ Pueblo</button>
+        <button class="zoneBtn" data-zone="dc" data-i18n="zoneDc">🏛️ Washington D.C.</button>
+      </div>
+      <button id="sinFinCorrer" class="bigBtn" data-i18n="play">JUGAR</button>
+      <button id="sinFinCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
     </div>
   </div>
 
   <div id="settingsOverlay" class="overlay hidden">
     <div class="card">
-      <div class="title small">⚙️ <span data-i18n="settings">Ajustes</span></div>
+      <div class="title small" data-i18n="settings">Ajustes</div>
 
-      <div class="settingRow">
+      <div class="ajuste">
+        <span class="ajusteIcono">🎵</span>
         <label data-i18n="music">Música</label>
         <input id="musicVolRange" type="range" min="0" max="100" value="80" />
-        <button id="musicMuteBtn" class="smallBtn">🔊</button>
+        <button id="musicMuteBtn" class="redondo pequeno">🔊</button>
       </div>
-      <div class="settingRow">
+      <div class="ajuste">
+        <span class="ajusteIcono">🔔</span>
         <label data-i18n="sfx">Sonido</label>
         <input id="sfxVolRange" type="range" min="0" max="100" value="80" />
-        <button id="sfxMuteBtn" class="smallBtn">🔊</button>
+        <button id="sfxMuteBtn" class="redondo pequeno">🔊</button>
       </div>
-      <div class="settingRow">
+      <div class="ajuste">
+        <span class="ajusteIcono">👆</span>
         <label data-i18n="sensitivity">Sensibilidad</label>
         <input id="sensitivityRange" type="range" min="15" max="45" value="28" />
       </div>
-      <div class="settingRow">
-        <label data-i18n="language">Idioma</label>
-        <div class="row">
-          <button id="settingsLangEs" class="smallBtn">Español</button>
-          <button id="settingsLangEn" class="smallBtn">English</button>
+      <div class="ajuste columna">
+        <div class="ajusteTitulo"><span class="ajusteIcono">🌐</span><label data-i18n="language">Idioma</label></div>
+        <div class="segmentos">
+          <button id="settingsLangEs" class="segmento">Español</button>
+          <button id="settingsLangEn" class="segmento">English</button>
         </div>
       </div>
-      <div class="settingRow">
-        <label data-i18n="quality">Gráficos</label>
-        <div class="row">
-          <button id="qualityLow" class="smallBtn" data-i18n="qualityLow">Baja</button>
-          <button id="qualityMedium" class="smallBtn" data-i18n="qualityMedium">Media</button>
-          <button id="qualityHigh" class="smallBtn" data-i18n="qualityHigh">Alta</button>
+      <div class="ajuste columna">
+        <div class="ajusteTitulo"><span class="ajusteIcono">✨</span><label data-i18n="quality">Gráficos</label></div>
+        <div class="segmentos">
+          <button id="qualityLow" class="segmento" data-i18n="qualityLow">Baja</button>
+          <button id="qualityMedium" class="segmento" data-i18n="qualityMedium">Media</button>
+          <button id="qualityHigh" class="segmento" data-i18n="qualityHigh">Alta</button>
         </div>
       </div>
 
-      <button id="resetProgressBtn" class="smallBtn danger" data-i18n="resetProgress">Borrar progreso</button>
-      <button id="settingsClose" class="bigBtn" data-i18n="close" style="margin-top:14px;">Cerrar</button>
+      <button id="settingsClose" class="bigBtn" data-i18n="close">Cerrar</button>
+      <button id="resetProgressBtn" class="enlaceRojo" data-i18n="resetProgress">Borrar progreso</button>
     </div>
   </div>
 

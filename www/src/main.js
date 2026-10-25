@@ -8,7 +8,7 @@ import {
 } from "./audio.js";
 import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel } from "./save.js";
 import { NIVELES, piezasDeNivel } from "./levels.js";
-import { applyI18n, toggleLang, setLang, t, randomCatchphrase } from "./i18n.js";
+import { applyI18n, toggleLang, setLang, t, randomCatchphrase, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
@@ -124,7 +124,7 @@ const RACE_CAM = { pos: new THREE.Vector3(0, 7.2, 9.8), look: new THREE.Vector3(
 // mitad ALTA del encuadre y se le vea la cara y el traje por encima de la
 // tarjeta del menu, que ocupa el centro de la pantalla.
 // 24/10: algo mas lejos para el presidente de Meshy, que es mas alto que el muñeco.
-const MENU_CAM = { pos: new THREE.Vector3(-1.9, 1.7, -4.4), look: new THREE.Vector3(0, 1.15, 0) };
+const MENU_CAM = { pos: new THREE.Vector3(-2.3, 1.9, -6.2), look: new THREE.Vector3(0, 0.05, 0) };
 function setCameraMode(mode) {
   const c = mode === "menu" ? MENU_CAM : RACE_CAM;
   camera.position.copy(c.pos);
@@ -1075,15 +1075,29 @@ function frame(dtFijo) {
 // ---------- UI wiring ----------
 // JUGAR abre el mapa de la gira; «Sin fin» es el modo de siempre.
 document.getElementById("startBtn").addEventListener("click", () => { unlockAudio(); abrirMapa(); });
+// «Sin fin» abre primero la eleccion de zona (25/10: antes estaba en el inicio).
 document.getElementById("sinFinBtn").addEventListener("click", () => {
   unlockAudio();
+  document.getElementById("sinFinOverlay").classList.remove("hidden");
+});
+document.getElementById("sinFinCerrar").addEventListener("click", () => {
+  document.getElementById("sinFinOverlay").classList.add("hidden");
+});
+document.getElementById("sinFinCorrer").addEventListener("click", () => {
   startMusic();
   nivelActual = null;
   resetRun();
   gameState = "playing";
+  document.getElementById("sinFinOverlay").classList.add("hidden");
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
 });
+// Idioma en ajustes: marcar el elegido como los demas selectores.
+function marcarIdioma() {
+  const en = getLang() === "en";
+  document.getElementById("settingsLangEs").classList.toggle("equippedBtn", !en);
+  document.getElementById("settingsLangEn").classList.toggle("equippedBtn", en);
+}
 function volverAlMenu() {
   gameState = "menu";
   idlePhase = 0;
@@ -1114,7 +1128,7 @@ document.getElementById("retryBtn").addEventListener("click", () => {
 document.getElementById("menuBtn").addEventListener("click", volverAlMenu);
 
 document.getElementById("langToggle").addEventListener("click", () => { toggleLang(); updatePowerupBadge(); });
-document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); pintarMisiones("misionesMenu"); });
+document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); marcarIdioma(); pintarMisiones("misionesMenu"); });
 
 // Fase 2/4 todavia no implementadas: ocultar accesos por ahora.
 document.getElementById("startShopBtn").style.display = "none";
@@ -1176,8 +1190,9 @@ sfxMuteBtn.addEventListener("click", () => {
   updateSettings({ sfxMuted: muted });
   sfxMuteBtn.textContent = muted ? "🔇" : "🔊";
 });
-document.getElementById("settingsLangEs").addEventListener("click", () => setLang("es"));
-document.getElementById("settingsLangEn").addEventListener("click", () => setLang("en"));
+document.getElementById("settingsLangEs").addEventListener("click", () => { setLang("es"); marcarIdioma(); pintarMisiones("misionesMenu"); });
+document.getElementById("settingsLangEn").addEventListener("click", () => { setLang("en"); marcarIdioma(); pintarMisiones("misionesMenu"); });
+marcarIdioma();
 
 const qualityBtns = {
   low: document.getElementById("qualityLow"),

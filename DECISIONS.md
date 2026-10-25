@@ -704,3 +704,12 @@ Isidro pidió rehacer el personaje con Meshy enseñándole la malla antes de pag
 - `www/src/presidente.js`: mismo contrato que el muñeco de `character.js` (que queda de respaldo, `?sinmeshy`). Corre con la animación de verdad; salto y deslizamiento son posturas encima; el saludo de la Casa Blanca levanta el brazo derecho. Material cambiado a Phong (el metálico de Meshy salía negro sin entorno). La altura sale de la geometría (los huesos ya están en metros; la caja en el mundo lo dejaba 4 veces más grande).
 - Aprendido: con la animación parada el mezclador no reescribe los huesos, así que un giro relativo se acumula: hay que guardar la postura de partida y girar desde ella.
 - La cara de Meshy no tiene gestos: las expresiones (sorpresa, alegría…) ya no se ven. Los colores de traje de la tienda tampoco (la textura viene pintada).
+
+### Cuadragésimo cuarta ronda: menús con aire de Pixar (2026-10-25)
+
+Isidro: el menú de inicio y el de ajustes «se sienten muy pesados y con una textura poco estilo Pixar».
+
+- Fuera la tarjeta casi negra con borde dorado que brillaba, la letra con serifa y las sombras duras. Ahora: paneles blancos translúcidos con sombras suaves, letra redondeada (Fredoka para títulos y botones, Nunito para el texto, de Google Fonts), botón grande naranja de caramelo con su canto, botones pequeños en pastilla blanca, selección en azul.
+- Inicio como panel inferior: logo de dibujos arriba (MAGA en rojo, TACO DASH en azul, contorno blanco, flotando) y el presidente de cuerpo entero saludando en medio (cámara del menú más lejos y mirando más abajo). Misiones compactas de una línea.
+- La zona del sin fin sale ahora al pulsar «Sin fin» (antes cargaba el inicio). Ajustes con cada opción en su tarjeta con icono, deslizadores naranjas, selectores redondeados de idioma y gráficos, y «Borrar progreso» discreto abajo.
+- Pantalla de carga clara (cielo) en vez de casi negra. Fin de partida, mapa y nivel superado cambian a juego.

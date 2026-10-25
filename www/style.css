@@ -331,3 +331,194 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 #bannerNivel .bnNumero { font-size: 15px; font-weight: 800; letter-spacing: 3px; opacity: 0.9; }
 #bannerNivel .bnNombre { font-size: 30px; font-weight: 900; line-height: 1.1; }
 #bannerNivel .bnLugar { font-size: 16px; font-weight: 700; }
+
+/* =====================================================================
+   25/10/2026 - Menus con aire de pelicula de animacion (tipo Pixar).
+   Isidro: el menu se sentia muy pesado y poco estilo Pixar. Fuera la
+   tarjeta casi negra con borde dorado y letra con serifa: paneles claros y
+   translucidos, sombras suaves, letra redondeada, colores alegres. Va al
+   final para mandar sobre lo anterior (tambien cambia a juego el fin de
+   partida, el mapa y el nivel superado).
+   ===================================================================== */
+:root {
+  --tinta: #22304f;
+  --tinta-suave: #5f6d89;
+  --papel: rgba(255, 255, 255, 0.9);
+  --borde: rgba(255, 255, 255, 0.95);
+  --rojo: #e8463c;
+  --azul: #2f6bd8;
+  --naranja-1: #ffc54d;
+  --naranja-2: #ff8a2b;
+  --sombra: 0 18px 40px rgba(28, 52, 102, 0.28), 0 3px 8px rgba(28, 52, 102, 0.12);
+  --letra-titulo: "Fredoka", "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --letra: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+
+.overlay {
+  background: linear-gradient(180deg, rgba(160, 205, 255, 0.10) 0%, rgba(110, 160, 230, 0.28) 100%);
+  font-family: var(--letra);
+}
+.card {
+  background: var(--papel);
+  border: 2px solid var(--borde);
+  border-radius: 28px;
+  padding: 22px 20px;
+  box-shadow: var(--sombra);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: cardIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+  color: var(--tinta);
+}
+.title {
+  font-family: var(--letra-titulo);
+  color: var(--tinta);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: none;
+}
+.title.small { font-size: 26px; margin-bottom: 12px; }
+.subtitle, .zoneLabel, .statLine, .mapaInfo, .mapaInfo .miLugar { color: var(--tinta-suave); }
+.statLine { font-weight: 700; }
+.statLine.best { color: #d98a00; }
+.zoneLabel { font-family: var(--letra-titulo); letter-spacing: 1px; font-size: 13px; font-weight: 600; }
+
+/* Boton grande: caramelo naranja con su canto, como un boton de juguete */
+.bigBtn {
+  font-family: var(--letra-titulo);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(170, 70, 0, 0.45);
+  background: linear-gradient(180deg, var(--naranja-1) 0%, var(--naranja-2) 100%);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 22px;
+  padding: 15px 16px;
+  box-shadow: 0 6px 0 #d9661a, 0 12px 22px rgba(217, 102, 26, 0.35);
+}
+.bigBtn:active { transform: translateY(5px); box-shadow: 0 1px 0 #d9661a, 0 4px 10px rgba(217, 102, 26, 0.3); }
+
+/* Botones pequenos: pastilla blanca con sombra blanda */
+.smallBtn {
+  font-family: var(--letra);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--tinta);
+  background: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  box-shadow: 0 3px 0 #d6deeb, 0 6px 14px rgba(28, 52, 102, 0.12);
+}
+.smallBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #d6deeb; background: #f4f7fc; }
+.smallBtn.equippedBtn, .zoneBtn.equippedBtn, .segmento.equippedBtn {
+  background: linear-gradient(180deg, #5b95f5, var(--azul));
+  color: #fff;
+  box-shadow: 0 3px 0 #1f4fa8, 0 6px 14px rgba(47, 107, 216, 0.35);
+}
+.redondo {
+  width: 46px; height: 46px; flex: 0 0 46px;
+  border-radius: 50%; border: none; background: #fff;
+  font-size: 20px; cursor: pointer;
+  box-shadow: 0 3px 0 #d6deeb, 0 6px 14px rgba(28, 52, 102, 0.12);
+}
+.redondo:active { transform: translateY(2px); box-shadow: 0 1px 0 #d6deeb; }
+.redondo.pequeno { width: 38px; height: 38px; flex-basis: 38px; font-size: 16px; }
+
+/* ---- Inicio: logo arriba, el presidente en medio, panel abajo ---- */
+.overlay.inicio {
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(18px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 45%, rgba(120, 170, 235, 0.35) 100%);
+}
+.logo { text-align: center; line-height: 0.92; transform: rotate(-3deg); margin-top: 8px; animation: logoFlota 3.2s ease-in-out infinite; }
+.logoMaga {
+  font-family: var(--letra-titulo); font-weight: 700; font-size: 58px; color: var(--rojo);
+  -webkit-text-stroke: 5px #fff; paint-order: stroke fill;
+  text-shadow: 0 6px 0 rgba(150, 30, 30, 0.35), 0 10px 18px rgba(0, 0, 0, 0.18);
+  letter-spacing: 2px;
+}
+.logoTaco {
+  font-family: var(--letra-titulo); font-weight: 700; font-size: 34px; color: var(--azul);
+  -webkit-text-stroke: 4px #fff; paint-order: stroke fill;
+  text-shadow: 0 5px 0 rgba(20, 50, 120, 0.3), 0 8px 14px rgba(0, 0, 0, 0.15);
+}
+.logoTacoIcono { -webkit-text-stroke: 0; display: inline-block; animation: tacoBaila 1.8s ease-in-out infinite; }
+@keyframes logoFlota { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-2deg) translateY(-6px); } }
+@keyframes tacoBaila { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(12deg) scale(1.1); } }
+
+.card.hoja { max-width: 420px; padding: 16px 16px 14px; border-radius: 30px; }
+.card.hoja .bigBtn { margin: 4px 0 12px; }
+.filaInicio { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.filaInicio .ancho { flex: 1; }
+
+/* Misiones: tarjetitas claras con barra de colores */
+.misiones { gap: 7px; margin: 0 0 10px; }
+.misiones .zoneLabel { margin-bottom: 0; }
+.misiones .mision {
+  background: #f3f6fc; border: none; border-radius: 16px;
+  color: var(--tinta); font-weight: 700; font-size: 13px; padding: 8px 12px;
+}
+.misiones .misionPremio { color: #d97a00; }
+.misiones .misionBarra { background: #dfe6f2; height: 7px; }
+.misiones .misionBarra > div { background: linear-gradient(90deg, #52c46a, #2fa84f); }
+
+/* Zonas del sin fin: fichas en rejilla */
+.zonas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 16px; }
+.zoneBtn {
+  font-family: var(--letra); font-weight: 800; font-size: 14px; color: var(--tinta);
+  background: #f3f6fc; border: none; border-radius: 16px; padding: 12px 8px; cursor: pointer;
+  box-shadow: 0 3px 0 #d6deeb;
+}
+.zoneBtn[data-zone="dc"] { grid-column: span 2; }
+
+/* ---- Ajustes ---- */
+.ajuste {
+  display: flex; align-items: center; gap: 10px;
+  background: #f3f6fc; border-radius: 18px; padding: 10px 12px; margin-bottom: 9px; text-align: left;
+}
+.ajuste.columna { flex-direction: column; align-items: stretch; gap: 8px; }
+.ajusteTitulo { display: flex; align-items: center; gap: 10px; }
+.ajusteIcono { font-size: 20px; width: 26px; text-align: center; }
+.ajuste label { flex: 0 0 92px; color: var(--tinta); font-weight: 800; font-size: 14px; }
+.ajuste input[type="range"] { flex: 1; min-width: 0; -webkit-appearance: none; appearance: none; height: 10px; border-radius: 999px; background: #dfe6f2; outline: none; }
+.ajuste input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(180deg, var(--naranja-1), var(--naranja-2)); border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.ajuste input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--naranja-2); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.segmentos { display: flex; background: #dfe6f2; border-radius: 999px; padding: 4px; gap: 4px; }
+.segmento {
+  flex: 1; border: none; background: transparent; border-radius: 999px; padding: 9px 6px;
+  font-family: var(--letra); font-weight: 800; font-size: 14px; color: var(--tinta-suave); cursor: pointer;
+}
+#settingsOverlay .bigBtn { margin: 8px 0 6px; }
+.enlaceRojo {
+  background: none; border: none; color: #d0453b; font-family: var(--letra); font-weight: 800;
+  font-size: 13px; text-decoration: underline; cursor: pointer; padding: 6px;
+}
+
+/* Otras pantallas, a juego */
+.mapaInfo { color: var(--tinta); }
+.mapaInfo .miNombre { color: var(--tinta); font-family: var(--letra-titulo); }
+.estrellas { color: #ffb400; text-shadow: 0 3px 0 #d98a00; }
+#nameInput { border-radius: 16px; }
+
+/* Inicio: misiones compactas, una linea cada una, para que el panel no tape al presidente */
+.card.hoja .misiones { gap: 5px; margin-bottom: 8px; }
+.card.hoja .misiones .mision { padding: 6px 10px; font-size: 12px; border-radius: 12px; }
+.card.hoja .misiones .misionFila > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.hoja .misiones .misionBarra { height: 5px; margin-top: 4px; }
+#loadingScreen, #webglError { background: linear-gradient(180deg, #8fc6ff 0%, #d9ecff 100%); }
+.loadingText, #webglError p { color: #22304f; font-weight: 700; }
+.loadingBar { background: rgba(255,255,255,0.7); }
+
+/* Ajustes y zona del sin fin, por encima del inicio y con el fondo velado */
+#settingsOverlay, #sinFinOverlay { z-index: 20; background: rgba(40, 70, 130, 0.35); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#settingsOverlay .card, #sinFinOverlay .card { background: rgba(255, 255, 255, 0.97); }
