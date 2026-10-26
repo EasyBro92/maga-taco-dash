@@ -251,6 +251,10 @@ function aplicarLuz(luz) {
     // Mañana: sol claro y algo bajo, de frente a la derecha; cielo limpio.
     sun.color.set(0xfff1d8); sun.intensity = 1.15; sun.position.set(6, 9, -5);
     hemi.color.set(0xe6f1ff); hemi.groundColor.set(0x8a8070);
+  } else if (luz === "mediodia") {
+    // Mediodia (Findlay): sol alto y blanco, sombras cortas, cielo azul fuerte.
+    sun.color.set(0xfffaf0); sun.intensity = 1.3; sun.position.set(2.5, 12, -2);
+    hemi.color.set(0xe8f3ff); hemi.groundColor.set(0x8c8270);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -350,6 +354,7 @@ function frameFinal(dt) {
   const cb = world.getCasaBlanca();
   if (!cb) { completarNivel(); return; }
   if (nivelActual.final === "camion") { finalCamion(dt, cb); return; }
+  if (nivelActual.final === "mitin") { finalMitin(dt, cb); return; }
   const zPasos = cb.position.z + 8.8;     // pie de la escalinata del portico norte
   const zPuerta = cb.position.z + 0.06;
   // Por el camino de coches: en el jardin la fuente queda en medio, asi que
@@ -416,6 +421,66 @@ function finalCamion(dt, flat) {
   const cerca = fin.fase >= 2;
   const objetivo = cerca ? new THREE.Vector3(2.0, 3.2, 9.5) : new THREE.Vector3(0, 4.6, 11);
   const mira = cerca ? new THREE.Vector3(0, 2.2, -3) : new THREE.Vector3(0, 2.4, -8);
+  camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
+  fin.look.lerp(mira, Math.min(1, dt * 1.6));
+  camera.lookAt(fin.look);
+}
+
+// Mitin en el juzgado (Findlay): frena, sube los escalones del escenario, se
+// planta en medio, se da la vuelta y saluda; el maiz aparece por encima.
+let mazorca = null;
+function hacerMazorca() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const x = c.getContext("2d");
+  x.font = '200px "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  x.textAlign = "center"; x.textBaseline = "middle";
+  x.fillText("🌽", 128, 140);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  m.renderOrder = 10;
+  scene.add(m);
+  return m;
+}
+function finalMitin(dt, cb) {
+  const zPie = cb.position.z + 18.4;      // pie de los escalones del escenario
+  const zParada = cb.position.z + 12.8;   // en medio del escenario
+  playerX += (0 - playerX) * Math.min(1, dt * 4);
+  let dz = 0;
+  if (fin.fase === 0) {
+    fin.v = Math.max(6, Math.min(fin.v - dt * 5, -zPie * 1.5 + 5));
+    dz = fin.v * dt;
+    character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
+    if (zPie + dz >= 0) fin.fase = 1;
+  } else if (fin.fase === 1) {
+    dz = Math.min(2.8 * dt, Math.max(0, -zParada));
+    character.updateRun(dt, 0.45);
+    if (zParada + dz >= -0.02) {
+      fin.fase = 2; fin.t = 0;
+      showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es);
+      vibrate([30, 40, 30]);
+      if (!mazorca) mazorca = hacerMazorca();
+      mazorca.visible = true;
+      spawnConfetti(30);
+    }
+  } else if (fin.fase === 2) {
+    character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
+    character.setIdlePose(fin.t + 1);
+    const k = Math.min(1, fin.t / 0.6);
+    mazorca.scale.setScalar(1.6 * k * (2 - k));
+    mazorca.position.set(playerX, py + 3.0 + 0.5 * k + Math.sin(fin.t * 3) * 0.08, 0);
+    if (fin.t > 3.2) { fin.fase = 5; completarNivel(); }
+  }
+  if (dz) world.update(dz);
+  // Los escalones: suben 1 en los 2,4 que hay entre el pie y el escenario.
+  const subido = zPie + dz > 0 ? Math.min(1, (zPie + dz) / 2.4) : 0;
+  if (fin.fase <= 1) py = subido;
+  character.object3D.position.set(playerX, py, 0);
+  shadowBlob.position.set(playerX, py + 0.015, 0);
+  const cerca = fin.fase >= 2;
+  const objetivo = cerca ? new THREE.Vector3(1.6, 3.6 + py, 10.5) : new THREE.Vector3(0, 4.6 + py, 11);
+  const mira = cerca ? new THREE.Vector3(0, 2.6 + py, -3) : new THREE.Vector3(0, 2.4 + py, -8);
   camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
   fin.look.lerp(mira, Math.min(1, dt * 1.6));
   camera.lookAt(fin.look);
@@ -586,6 +651,7 @@ let magnetTimeLeft = 0;
 let boostTimeLeft = 0;
 
 function resetRun() {
+  if (mazorca) mazorca.visible = false;
   currentLane = 1;
   playerX = 0;
   elapsed = 0; speed = BASE_SPEED; distance = 0; tacosThisRun = 0;
@@ -1166,8 +1232,8 @@ function frame(dtFijo) {
   if (firstFrame) {
     firstFrame = false;
     const loadingScreen = document.getElementById("loadingScreen");
-    loadingScreen.classList.add("fadeOut");
-    setTimeout(() => loadingScreen.remove(), 350);
+    if (loadingScreen) loadingScreen.classList.add("fadeOut");
+    if (loadingScreen) setTimeout(() => loadingScreen.remove(), 350);
   }
 }
 

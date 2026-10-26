@@ -47,8 +47,32 @@ export const NIVELES = [
     final: "camion",
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
   },
-  { id: "pueblo", numero: 2, nombre: "Calle Mayor", lugar: "Ohio", listo: false, mapa: [73, 29],
-    ingrediente: "🌽", historia: { es: "Mitin en un pueblo de Ohio. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses!", en: "Rally in an Ohio town. Burrito-Bot hid the corn: ride the buses!" } },
+  {
+    id: "pueblo", numero: 2, nombre: "Main Street", lugar: "Findlay, Ohio", listo: true, mapa: [73, 29],
+    ingrediente: "🌽", historia: { es: "Mitin en Findlay, la ciudad de las banderas. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses y llega al juzgado!", en: "Rally in Findlay, Flag City USA. Burrito-Bot hid the corn: ride the buses and reach the courthouse!" },
+    fin: { es: "¡Maíz recuperado! 🌽 ¡Ohio es tuyo!", en: "Corn recovered! 🌽 Ohio is yours!" },
+    zona: "city", carpeta: "findlay", luz: "mediodia", semilla: 1888,
+    largo: 3200, estrellas: [320, 650, 1000], linea: 11.5,
+    // Segundo nivel: entran los autobuses de campaña (por el techo hay tacos).
+    sinPatrulla: true, potenciadores: ["magnet", "shield", "boost", "magnet"],
+    // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
+    kit: { pueblo: true, minPlantas: 1, maxPlantas: 3 },
+    // Subiendo por South Main Street hacia el norte: el oeste queda a la izquierda.
+    izquierda: [
+      40, ["kit", 3], 14, ["courier", 1], ["kit", 2], 14,
+      ...cuadras(7), ["heladeria", 1], ["kit", 3], 14,
+      ...cuadras(8), ["deposito_agua", 1], ["kit", 3], 14,
+      ...cuadras(9), ["kit", 2], ["davis", 1], ["kit", 1],
+    ],
+    derecha: [
+      40, ["marathon", 1], ["kit", 2], 14,
+      ...cuadras(27), ["kit", 2],
+    ],
+    // Al fondo, el juzgado del condado con la plaza y el escenario del mitin.
+    fondo: [{ pieza: "juzgado_final", d: 3240, centro: true }],
+    final: "mitin",
+    acera: ["findlay/farola_bandera", "ciudad/arbol_ciudad"],
+  },
   { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45],
     ingrediente: "🌶️", historia: { es: "Ruta 66 por el desierto. ¡La policía te persigue! Es una caza de brujas.", en: "Route 66 through the desert. The police are after you! It is a witch hunt." } },
   { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38],
@@ -111,6 +135,8 @@ export const ANCHO = {
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
+  // Findlay
+  courier: 24, heladeria: 20, deposito_agua: 20, davis: 20, marathon: 40, juzgado_final: 62,
 };
 
 // ¿Se puede jugar este nivel? Como en AlienZ: en orden. El primero siempre;

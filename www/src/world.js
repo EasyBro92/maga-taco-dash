@@ -1760,6 +1760,9 @@ export function createWorld(scene) {
     if (luz === "manana") {
       Object.assign(BIOME_COLORS.city, { sky: 0xd8ebff, skyTop: 0x5f9fea, fog: 0xd8ebff, horizon: 0x8aa2c4 });
     }
+    if (luz === "mediodia") {
+      Object.assign(BIOME_COLORS.city, { sky: 0xb4dcff, skyTop: 0x2f7fe6, fog: 0xc4e2ff, horizon: 0x7f9fc8 });
+    }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }

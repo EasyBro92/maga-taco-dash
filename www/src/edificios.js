@@ -98,6 +98,17 @@ export function construirEdificio(azar, ancho, opciones = {}) {
       bajo: azar() < 0.6 ? "bajo_banco" : "bajo_grande", cornisa: "cornisa_clasica",
       remate: azar() < 0.2 ? "remate_mansarda" : null };
   }
+  if (opciones.pueblo) {
+    // Main Street de un pueblo del Medio Oeste (26/10): casi todo ladrillo,
+    // tiendas con toldo abajo, cornisa de ménsulas y tejado plano. Tambien se
+    // elige despues de lo normal para no cambiar los otros niveles.
+    const lad = azar() < 0.7;
+    const p = lad ? "planta_ladrillo" : elegir(azar, ["planta_lisa", "planta_balcones", "planta_miradores"]);
+    const c = lad ? elegir(azar, [...LADRILLOS, 0xb8704f, 0xc58a62]) : elegir(azar, [0xf1e3c8, 0xe9d6c0, 0xe2d2b0, 0xd8c3b4, 0xc9d1c0, 0xf3ece0]);
+    estilo = { planta: p, noble: p, color: c, colorBajo: azar() < 0.6 ? c : elegir(azar, PIEDRAS),
+      bajo: azar() < 0.85 ? "bajo_tiendas" : "bajo_grande", cornisa: azar() < 0.6 ? "cornisa_clasica" : "cornisa_deco",
+      remate: azar() < 0.12 ? "remate_deposito" : null };
+  }
 
   for (let c = 0; c < columnas; c++) {
     const col = new THREE.Group();
