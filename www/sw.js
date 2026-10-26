@@ -1,7 +1,7 @@
 // Service worker de MAGA Taco Dash (26/10/2026). Hace que el juego se pueda
 // instalar en el movil. Siempre pide primero a internet (asi cada cambio
 // publicado llega al momento) y, si no hay conexion, usa lo ya guardado.
-const CACHE = "taco-dash-v2";
+const CACHE = "taco-dash-v3";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
