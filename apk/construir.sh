@@ -23,7 +23,7 @@ rm -f "$B/assets/www/sw.js"          # dentro de la app no hace falta
 
 "$BT/aapt2.exe" compile --dir res -o "$B/res.zip"
 "$BT/aapt2.exe" link -I "$JAR" --manifest "$B/AndroidManifest.xml" -o "$B/base.apk" "$B/res.zip" \
-  --java "$B/gen" --min-sdk-version 24 --target-sdk-version 34
+  --java "$B/gen" --min-sdk-version 26 --target-sdk-version 34
 "$JDK/javac.exe" -source 8 -target 8 -nowarn -encoding UTF-8 -cp "$JAR" -d "$B/clases" \
   $(find src "$B/gen" -name "*.java") 2>&1 | grep -v "warning" || true
 cmd //c "$(cygpath -w "$BT/d8.bat")" --release --lib "$(cygpath -w "$JAR")" --output "$(cygpath -w "$B/dex")" \
