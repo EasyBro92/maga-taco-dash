@@ -1349,3 +1349,8 @@ for (const btn of zoneBtns) {
 
 applyI18n();
 requestAnimationFrame(tick);
+
+// Para poder instalar el juego en el movil (26/10/2026): ver sw.js.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
