@@ -15,6 +15,9 @@ function cuadras(n) {
   return out;
 }
 
+// Edificio del kit con aire oficial (Washington).
+const FED = { federal: true, minPlantas: 5, maxPlantas: 7 };
+
 export const NIVELES = [
   {
     id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: true, mapa: [88, 25],
@@ -60,27 +63,34 @@ export const NIVELES = [
     largo: 3300,                   // donde esta la verja de la Casa Blanca
     estrellas: [350, 700, 1100],   // tacos para 1, 2 y 3 estrellas
     linea: 11.5,                   // x de las fachadas
+    // Edificios del kit: 6-10 plantas (en Washington no se puede subir mas que el Capitolio).
+    kit: { minPlantas: 6, maxPlantas: 10 },
     // Hacia el oeste: el sur queda a la izquierda y el norte a la derecha.
+    // 26/10: los monumentos de verdad en su sitio, sus fachadas en tramos
+    // cortos con patios entre medias, y el resto edificios unicos del kit
+    // (FED: piedra clara y frontones, como los ministerios del Triangulo Federal).
     izquierda: [
       60,
       ["galeria_este", 1], 18,
-      ["archivos_ala", 12], ["archivos_portico", 1], ["archivos_ala", 12], 18,   // 7th - 9th
-      ["justicia", 30], 18,                                                    // 9th - 10th
-      ["irs", 24], 12,                                                         // 10th - 12th
-      ["correos", 10], ["correos_torre", 1], ["correos", 10], 18,                 // 12th
-      ["reagan", 36], 18,                                                      // 12th - 14th
-      ["wilson", 1], 18,                                                       // 14th
-      ["pershing", 1],
+      ["kit", 8, FED], 18, ["kit", 6, FED], 18,                                 // Galeria Nacional
+      ["archivos_ala", 5], ["archivos_portico", 1], ["archivos_ala", 5], 18,     // 7th - 9th
+      ["justicia", 8], 10, ["justicia", 8], 18, ["kit", 5, FED], 18,                                // 9th - 10th
+      ["irs", 8], ["kit", 4, FED], ["irs", 8], 12,                              // 10th - 12th
+      ["kit", 3, FED], ["correos", 5], ["correos_torre", 1], ["correos", 5], 18,  // 12th
+      ["reagan", 8], ["kit", 5, FED], ["reagan", 8], 10, ["kit", 4, FED], 18,     // 12th - 14th
+      ["kit", 6, FED], 18, ["kit", 3, FED], ["wilson", 1], 18,                                      // 14th
+      ["kit", 2, FED], ["pershing", 1],
     ],
     derecha: [
       60,
       ["canada", 1], 18, ["cristal", 1], 18,                                    // 4th - 6th
-      ["navy", 1], 18,                                                         // 7th - 9th
-      ["fbi", 40], 18,                                                         // 9th - 10th
-      ["irs", 30], 18, ["cristal", 1], 18, ["justicia", 34], 18,
-      ["correos", 10], 18, ["reagan", 14], 18,                // 10th - 14th
+      ["kit", 6], 18, ["kit", 5], 18, ["navy", 1], ["kit", 5], 18,             // 7th - 9th
+      ["fbi", 8], 10, ["fbi", 8], 18,                                          // 9th - 10th
+      ["kit", 6], 18, ["kit", 6], 18, ["kit", 5], 18, ["cristal", 1], ["kit", 5], 18, ["kit", 6], 18,  // 10th - 13th
+      ["kit", 6], 18, ["kit", 6], 18, ["kit", 6], 18, ["kit", 5], 18,          // 13th - 14th
+      ["kit", 6], 18, ["kit", 6], 18,
       ["willard", 1], 18,                                                      // 14th
-      ["canada", 1],
+      ["kit", 3],
     ],
     // Al final de la avenida: el Tesoro a la izquierda y la Casa Blanca al fondo.
     fondo: [
@@ -122,49 +132,56 @@ export function nivelPorId(id) {
   return NIVELES.find((n) => n.id === id) || null;
 }
 
+// Recorre un lado de la calle y da cada edificio con su sitio: { pieza, d,
+// ancho, semilla (kit), opciones (kit) }. Los numeros sueltos son cruces.
+function recorrerLado(nivel, lista, lado, anchoDe, alEdificio, alCruce) {
+  let d = 0;
+  for (const item of lista) {
+    if (typeof item === "number") { if (alCruce) alCruce(d, item); d += item; continue; }
+    const [pieza, veces, opciones] = item;
+    for (let k = 0; k < veces; k++) {
+      if (pieza === "kit") {
+        // Edificio unico: su ancho y su semilla salen del sitio que ocupa.
+        const semilla = nivel.semilla * 7919 + (lado > 0 ? 500000 : 0) + Math.round(d);
+        const a = azarConSemilla(semilla);
+        const ancho = [18, 20, 22, 24, 26, 40][Math.floor(a() * 6)];
+        alEdificio({ pieza, d, lado, ancho, semilla, opciones });
+        d += ancho;
+        continue;
+      }
+      const ancho = anchoDe(pieza);
+      alEdificio({ pieza, d, lado, ancho });
+      d += ancho;
+    }
+  }
+  return d;
+}
+
 // Pasa las listas de cada lado a posiciones: { pieza, d (donde empieza a lo
 // largo de la calle), lado }. Necesita el ancho de cada pieza (medidas).
 export function colocarNivel(nivel, anchoDe) {
   const salida = [];
-  for (const [lista, lado] of [[nivel.izquierda, -1], [nivel.derecha, 1]]) {
-    let d = 0;
-    for (const item of lista) {
-      if (typeof item === "number") { d += item; continue; }
-      const [pieza, veces] = item;
-      for (let k = 0; k < veces; k++) {
-        if (pieza === "kit") {
-          // Edificio unico: su ancho y su semilla salen del sitio que ocupa.
-          const semilla = nivel.semilla * 7919 + (lado > 0 ? 500000 : 0) + Math.round(d);
-          const a = azarConSemilla(semilla);
-          const ancho = [18, 20, 22, 24, 26, 40][Math.floor(a() * 6)];
-          salida.push({ pieza, d, lado, ancho, semilla });
-          d += ancho;
-          continue;
-        }
-        const ancho = anchoDe(pieza);
-        salida.push({ pieza, d, lado, ancho });
-        d += ancho;
-      }
-    }
-  }
+  recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
+  recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
   for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, ancho: anchoDe(f.pieza) });
   return salida.sort((a, b) => a.d - b.d);
+}
+
+// Lo largo que es cada lado (para comprobar que llegan a donde toca).
+export function largoDeLados(nivel) {
+  const a = (k) => ANCHO[k] || 20;
+  return [recorrerLado(nivel, nivel.izquierda, -1, a, () => {}), recorrerLado(nivel, nivel.derecha, 1, a, () => {})];
 }
 
 // Lo que va pintado o puesto en el suelo de la calle (25/10): un paso de
 // cebra en cada cruce (los huecos de 12 o mas de la acera izquierda) y tapas
 // de alcantarilla junto al bordillo cada 45-70. Siempre en el mismo sitio.
+// (26/10: los cruces se miden con el ancho real de cada edificio del kit.)
 export function sueloDeNivel(nivel) {
   const salida = [];
-  let d = 0;
-  for (const item of nivel.izquierda) {
-    if (typeof item === "number") {
-      if (item >= 12) salida.push({ tipo: "cebra", d: d + item / 2 });
-      d += item;
-    } else {
-      d += (ANCHO[item[0]] || 20) * item[1];
-    }
-  }
+  recorrerLado(nivel, nivel.izquierda, -1, (k) => ANCHO[k] || 20, () => {}, (d, hueco) => {
+    if (hueco >= 12) salida.push({ tipo: "cebra", d: d + hueco / 2 });
+  });
   const azar = azarConSemilla(nivel.semilla + 7);
   for (let x = 30; x < nivel.largo - 40; x += 45 + azar() * 25) {
     salida.push({ tipo: "tapa", d: x, x: (azar() < 0.5 ? -1 : 1) * 3.1 });

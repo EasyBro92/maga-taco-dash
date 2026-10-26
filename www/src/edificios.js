@@ -87,15 +87,26 @@ export function construirEdificio(azar, ancho, opciones = {}) {
   const rotulo = elegir(azar, ROTULOS);
   const fondoRotulo = azar() < 0.5 ? "#22304f" : "#2b2b2e";
   const letraRotulo = elegir(azar, ["#ffd23f", "#ffffff", "#f6c27a", "#e8f4ff"]);
+  let estilo = { planta, noble, color, colorBajo, bajo, cornisa, remate };
+  if (opciones.federal) {
+    // Ministerio de Washington (26/10): piedra clara, sin tiendas, frontones
+    // o lisa, cornisa clasica y tejado plano. Se eligen despues de lo normal
+    // para no cambiar los edificios de los niveles que ya existian.
+    const p = azar() < 0.55 ? "planta_frontones" : "planta_lisa";
+    const piedra = elegir(azar, [0xf1e3c8, 0xe9e2d4, 0xe2d2b0, 0xeadcb0, 0xf3ece0, 0xdcd3c2]);
+    estilo = { planta: p, noble: "planta_frontones", color: piedra, colorBajo: piedra,
+      bajo: azar() < 0.6 ? "bajo_banco" : "bajo_grande", cornisa: "cornisa_clasica",
+      remate: azar() < 0.2 ? "remate_mansarda" : null };
+  }
 
   for (let c = 0; c < columnas; c++) {
     const col = new THREE.Group();
     col.position.x = -ancho / 2 + anchoCol * (c + 0.5);
     col.scale.x = sx;
     g.add(col);
-    const b = pieza(bajo, tintes, colorBajo);
+    const b = pieza(estilo.bajo, tintes, estilo.colorBajo);
     if (b) col.add(b);
-    if (bajo === "bajo_tiendas") {
+    if (estilo.bajo === "bajo_tiendas") {
       for (const x of [-6.4, 0, 6.4]) {
         const t = pieza("toldo_kit", tintes, toldo);
         if (t) { t.position.set(x, 3.25, 0); col.add(t); }
@@ -108,16 +119,16 @@ export function construirEdificio(azar, ancho, opciones = {}) {
     }
     let z = 4.6;
     for (let k = 0; k < plantas; k++) {
-      const p = pieza(k === 0 ? noble : planta, tintes, color);
+      const p = pieza(k === 0 ? estilo.noble : estilo.planta, tintes, estilo.color);
       if (p) { p.position.y = z; col.add(p); }
       z += 3.0;
     }
-    const co = pieza(cornisa, tintes, color);
+    const co = pieza(estilo.cornisa, tintes, estilo.color);
     if (co) { co.position.y = z; col.add(co); }
     const alto = z + 1.2;
-    if (remate && c === columnas - 1) {
-      const re = pieza(remate, tintes, remate === "remate_mansarda" ? 0xb8c2cc : color);
-      if (re) { re.position.y = alto - (cornisa === "cornisa_simple" ? 0.7 : 0); col.add(re); }
+    if (estilo.remate && c === columnas - 1) {
+      const re = pieza(estilo.remate, tintes, estilo.remate === "remate_mansarda" ? 0xb8c2cc : estilo.color);
+      if (re) { re.position.y = alto - (estilo.cornisa === "cornisa_simple" ? 0.7 : 0); col.add(re); }
     }
   }
   g.userData.ancho = ancho;

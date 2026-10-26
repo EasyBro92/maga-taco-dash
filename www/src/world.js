@@ -1799,7 +1799,7 @@ export function createWorld(scene) {
       }
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
-      const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, nivel.kit) : modelo(clave);
+      const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, { ...nivel.kit, ...p.opciones }) : modelo(clave);
       if (!mesh) continue;
       const m = p.pieza === "kit" ? { frente: mesh.userData.frente } : medidas(clave);
       if (p.centro) {
