@@ -2343,67 +2343,110 @@ export function createWorld(scene) {
   // se va a cruzar un coche que viene de frente con lo que ya hay en la pista.
   let ritmo = 17;
 
-  // ---- Tacos reconocibles: concha curva en "U" con capas de relleno ----
-  const shellMat = toon(0xffc94d);
-  const meatMat = toon(0x8a5a34);
-  const creamMat = toon(0xfff6e0);
-  const lettuceMat = toon(0x5fd65f);
-  const tomatoMat = toon(0xff4d4d);
+  // ---- Taco en 2D, como el 🌮 del menu (26/10/2026) ----
+  // Isidro: el de piezas 3D «parece de Playmobil». Ahora es un dibujo plano
+  // tipo pegatina (borde blanco y contorno marron) que siempre mira a la
+  // camara: concha dorada con motas tostadas, carne, lechuga, tomate y queso.
+  function texturaTaco() {
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const x = c.getContext("2d");
+    const cx = 128, cy = 112, r = 96;
+    const contorno = "#5b3412";
+    x.lineJoin = x.lineCap = "round";
+    // Relleno que asoma por arriba: lechuga ondulada, carne, tomate y queso.
+    const relleno = () => {
+      x.beginPath();
+      x.moveTo(cx - r, cy);
+      for (let i = 0; i <= 8; i++) {
+        const px = cx - r + (2 * r * i) / 8;
+        x.quadraticCurveTo(px - r / 8, cy - 46 - (i % 2) * 12, px, cy - 26);
+      }
+      x.lineTo(cx + r, cy);
+      x.closePath();
+    };
+    // Pegatina: borde blanco grueso alrededor de todo.
+    x.save();
+    x.strokeStyle = "#ffffff"; x.lineWidth = 26;
+    relleno(); x.stroke();
+    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath(); x.stroke();
+    x.restore();
+    // Lechuga
+    relleno();
+    x.fillStyle = "#5cc93c"; x.fill();
+    x.lineWidth = 7; x.strokeStyle = contorno; x.stroke();
+    // Carne
+    x.fillStyle = "#8b4a22";
+    for (const [px, py, pr] of [[-60, -14, 20], [-22, -20, 22], [18, -16, 21], [56, -18, 19]]) {
+      x.beginPath(); x.arc(cx + px, cy + py, pr, 0, Math.PI * 2); x.fill();
+    }
+    // Tomate
+    for (const [px, py] of [[-44, -34], [6, -40], [46, -36]]) {
+      x.beginPath(); x.arc(cx + px, cy + py, 13, 0, Math.PI * 2);
+      x.fillStyle = "#ee3b2f"; x.fill();
+      x.lineWidth = 4; x.strokeStyle = contorno; x.stroke();
+      x.beginPath(); x.arc(cx + px - 4, cy + py - 4, 4, 0, Math.PI * 2);
+      x.fillStyle = "#ffb3a8"; x.fill();
+    }
+    // Queso rallado
+    x.strokeStyle = "#ffd84a"; x.lineWidth = 6;
+    for (const [px, py, ang] of [[-70, -24, 0.4], [-30, -40, -0.5], [28, -28, 0.6], [70, -26, -0.3], [-6, -24, 0.2]]) {
+      x.beginPath();
+      x.moveTo(cx + px - Math.cos(ang) * 10, cy + py - Math.sin(ang) * 10);
+      x.lineTo(cx + px + Math.cos(ang) * 10, cy + py + Math.sin(ang) * 10);
+      x.stroke();
+    }
+    // Concha: media luna dorada con degradado y motas tostadas.
+    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath();
+    const grad = x.createLinearGradient(0, cy, 0, cy + r);
+    grad.addColorStop(0, "#ffd35c"); grad.addColorStop(1, "#f0a42a");
+    x.fillStyle = grad; x.fill();
+    x.save(); x.clip();
+    x.fillStyle = "rgba(196,110,30,0.55)";
+    for (const [px, py, pr] of [[-56, 26, 7], [-20, 52, 6], [24, 34, 8], [60, 18, 6], [8, 74, 5], [-48, 60, 5], [52, 56, 6]]) {
+      x.beginPath(); x.arc(cx + px, cy + py, pr, 0, Math.PI * 2); x.fill();
+    }
+    // Brillo de arriba
+    x.strokeStyle = "rgba(255,255,255,0.55)"; x.lineWidth = 9;
+    x.beginPath(); x.arc(cx, cy, r - 18, Math.PI * 0.62, Math.PI * 0.86); x.stroke();
+    x.restore();
+    x.lineWidth = 8; x.strokeStyle = contorno;
+    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath(); x.stroke();
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    return tex;
+  }
+  const tacoMat = typeof document !== "undefined"
+    ? new THREE.SpriteMaterial({ map: texturaTaco(), transparent: true, alphaTest: 0.05, fog: true })
+    : new THREE.SpriteMaterial({ color: 0xffc94d });
+  function texturaBrillo() {
+    const c = document.createElement("canvas");
+    c.width = c.height = 64;
+    const x = c.getContext("2d");
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, "rgba(255,240,170,1)"); g.addColorStop(0.5, "rgba(255,226,122,0.6)"); g.addColorStop(1, "rgba(255,226,122,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+  const tacoGlowMat = new THREE.SpriteMaterial({ map: typeof document !== "undefined" ? texturaBrillo() : null, color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false, fog: true });
 
   function buildTaco() {
     const g = new THREE.Group();
-
-    // Brillo pulsante detras del taco (juice: task "taco juice")
-    const glow = new THREE.Mesh(glowGeo, glowMat);
-    glow.position.set(0, -0.02, -0.06);
+    // Brillo suave detras del taco
+    const glow = new THREE.Sprite(tacoGlowMat);
+    glow.scale.setScalar(0.85);
+    glow.position.set(0, -0.02, -0.08);
+    glow.renderOrder = -1;
     g.add(glow);
     g.userData.glow = glow;
-
-    // Concha: medio toro volteado para formar una "U" (abertura hacia arriba),
-    // igual que una concha de taco dura vista de lado.
-    const shell = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.15, 12, 20, Math.PI), shellMat);
-    shell.rotation.z = Math.PI;
-    withOutline(shell, 1.1);
-    g.add(shell);
-
-    // Carne: grumos irregulares en el fondo (posiciones fijas por geometria;
-    // se re-mezclan por instancia via randomizeTacoLumps, sin crear geometria nueva)
-    const lumpGeo = new THREE.SphereGeometry(0.065, 6, 6);
-    const lumps = [];
-    for (let i = 0; i < 5; i++) {
-      const lump = new THREE.Mesh(lumpGeo, meatMat);
-      g.add(lump);
-      lumps.push(lump);
-    }
-    g.userData.lumps = lumps;
-
-    // Crema agria
-    const cream = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.15), creamMat);
-    cream.position.set(0, -0.08, 0.02);
-    g.add(cream);
-
-    // Lechuga
-    const lettuce = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.09, 0.16), lettuceMat);
-    lettuce.position.set(0, 0.01, 0.02);
-    g.add(lettuce);
-
-    // Tomate asomando arriba
-    for (const side of [-0.09, 0, 0.09]) {
-      const tomato = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), tomatoMat);
-      tomato.position.set(side, 0.1, 0.03);
-      g.add(tomato);
-    }
-
+    const taco = new THREE.Sprite(tacoMat);
+    taco.scale.setScalar(0.95);
+    g.add(taco);
     return g;
   }
 
-  function randomizeTacoLumps(mesh) {
-    for (const lump of mesh.userData.lumps) {
-      lump.position.set((Math.random() - 0.5) * 0.26, -0.18 + Math.random() * 0.03, (Math.random() - 0.5) * 0.08);
-      const s = 0.85 + Math.random() * 0.5;
-      lump.scale.setScalar(s);
-    }
-  }
+  function randomizeTacoLumps() {}
 
   const tacoPool = makePool(buildTaco);
 
@@ -2964,7 +3007,7 @@ export function createWorld(scene) {
       it.mesh.rotation.y += 0.08;
       it.mesh.position.y = it.baseY + Math.sin(animClock * 3 + it.phase) * 0.08;
       const glowPulse = 1 + Math.sin(animClock * 4 + it.phase) * 0.18;
-      it.mesh.userData.glow.scale.setScalar(glowPulse);
+      it.mesh.userData.glow.scale.setScalar(glowPulse * 0.85);
       if (it.z > DESPAWN_Z || it.collected) {
         if (it.collected) burstSparkles(it.mesh.position.x, it.mesh.position.y, it.mesh.position.z);
         tacoPool.release(it.mesh);
