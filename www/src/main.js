@@ -22,8 +22,8 @@ initErrorReporting();
 const BASE_SPEED = 13;
 const MAX_SPEED = 25;
 const ACCEL = 0.12;
-const JUMP_DURATION = 0.4;
-const JUMP_HEIGHT = 1.35;
+const JUMP_DURATION = 0.62;   // 26/10: mas rato en el aire (habia que estar muy encima para saltar)
+const JUMP_HEIGHT = 1.7;
 const SLIDE_DURATION = 0.5;
 const STREAK_RESET_GAP = 2.2;
 const MAGNET_DURATION = 6;

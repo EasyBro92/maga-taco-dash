@@ -74,6 +74,29 @@ export function crearPresidente(gltf) {
   const q = new THREE.Quaternion();
   const EJE_Z = new THREE.Vector3(0, 0, 1);
 
+  // Apunta un hueso (de el a su hijo) hacia una direccion del mundo, sin
+  // depender de como vengan orientados los ejes de cada hueso en Meshy.
+  // k: cuanto se acerca en este fotograma (para entrar en la postura suave).
+  const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _d = new THREE.Vector3();
+  const _qd = new THREE.Quaternion(), _qw = new THREE.Quaternion(), _qp = new THREE.Quaternion();
+  function apuntar(nombre, hijo, x, y, z, k) {
+    const h = huesos[nombre], c = huesos[hijo];
+    if (!h || !c || !h.parent) return;
+    h.getWorldPosition(_a);
+    c.getWorldPosition(_b);
+    _b.sub(_a).normalize();
+    _d.set(x, y, z).normalize();
+    _qd.setFromUnitVectors(_b, _d);
+    h.getWorldQuaternion(_qw);
+    _qd.multiply(_qw);
+    h.parent.getWorldQuaternion(_qp).invert();
+    _qp.multiply(_qd);
+    h.quaternion.slerp(_qp, k);
+    h.updateMatrixWorld(true);
+  }
+  let deslizando = 0;
+  const ATRAS = 0.45;                  // adelanta la postura: la cadera, sobre su sitio
+
   function mezclar(dt, objetivoAndar) {
     modoAndar += (objetivoAndar - modoAndar) * Math.min(1, dt * 5);
     andar.weight = modoAndar;
@@ -114,12 +137,33 @@ export function crearPresidente(gltf) {
     },
 
     setSlidePose(active) {
-      if (!active) { pose.rotation.set(0, 0, 0); pose.position.y = 0; return; }
-      // Tumbado hacia atras, deslizandose con los pies por delante.
-      pose.rotation.set(1.1, 0, 0.1);
-      pose.position.set(0, 0.35, 0);
-      correr.timeScale = 0.05;
-      mixer.update(1 / 60);
+      if (!active) { deslizando = 0; pose.rotation.set(0, 0, 0); pose.position.y = 0; return; }
+      // 26/10: deslizarse como en el beisbol (a Isidro el tablon tumbado le
+      // parecia raro). Cadera casi en el suelo y cuerpo echado atras, pierna
+      // derecha estirada por delante, la izquierda doblada por debajo y los
+      // brazos arriba. Entra en unos fotogramas, no de golpe.
+      deslizando++;
+      const k = deslizando === 1 ? 0.5 : 0.45;
+      const e = Math.min(1, deslizando / 5);
+      base = null;
+      mezclar(1, 0);
+      correr.timeScale = 0;
+      mixer.update(0);
+      // (Negativo = hacia atras; la cadera se devuelve a su sitio con z.)
+      pose.rotation.set(-0.7 * e, 0, 0);
+      pose.position.set(0, -0.35 * e, ATRAS * e);
+      root.scale.set(mega, mega, mega);
+      root.updateMatrixWorld(true);
+      // Direcciones en el mundo: se corre hacia -Z y la derecha es +X.
+      apuntar("RightUpLeg", "RightLeg", 0.1, -0.22, -1, k);
+      apuntar("RightLeg", "RightFoot", 0.1, -0.18, -1, k);
+      apuntar("LeftUpLeg", "LeftLeg", -0.2, -0.3, -1, k);
+      apuntar("LeftLeg", "LeftFoot", 0.75, -0.3, -0.15, k);
+      apuntar("RightArm", "RightForeArm", 0.55, 0.75, 0.3, k);
+      apuntar("RightForeArm", "RightHand", 0.25, 1, 0.1, k);
+      apuntar("LeftArm", "LeftForeArm", -0.55, 0.75, 0.3, k);
+      apuntar("LeftForeArm", "LeftHand", -0.25, 1, 0.1, k);
+      apuntar("Head", "head_end", 0, 1, -0.6, k);
     },
 
     setLean(amount) {
