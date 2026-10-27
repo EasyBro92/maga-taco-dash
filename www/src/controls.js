@@ -3,8 +3,11 @@
 //
 // 27/10: el gesto cuenta en cuanto el dedo ha recorrido lo bastante, sin
 // esperar a que se levante (antes se leia al soltar y llegaba con retraso:
-// costaba saltar a tiempo). Con el dedo aun puesto se puede encadenar otro
-// gesto: el punto de partida se mueve a donde se hizo el anterior.
+// costaba saltar a tiempo).
+// 27/10 (2): un solo gesto por cada vez que se pone el dedo. Antes, con el
+// dedo aun puesto, se encadenaba otro y un deslizamiento largo cambiaba dos
+// carriles de golpe (de una esquina a la otra). Isidro prefiere tener que
+// deslizar dos veces para pasar dos carriles.
 let swipeMinPx = 28;
 
 export function setSwipeThreshold(px) {
@@ -21,7 +24,7 @@ export function initControls(target, onAction) {
   }, { passive: true });
 
   target.addEventListener("touchmove", (e) => {
-    if (!tracking) return;
+    if (!tracking || hizoGesto) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - startX;
     const dy = t.clientY - startY;
@@ -29,8 +32,7 @@ export function initControls(target, onAction) {
     if (adx < swipeMinPx && ady < swipeMinPx) return;
     if (adx > ady) onAction(dx > 0 ? "right" : "left");
     else onAction(dy > 0 ? "slide" : "jump");
-    hizoGesto = true;
-    startX = t.clientX; startY = t.clientY;
+    hizoGesto = true;   // hasta levantar el dedo, nada mas
   }, { passive: true });
 
   target.addEventListener("touchend", () => {
