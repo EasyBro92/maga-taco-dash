@@ -686,3 +686,7 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .shopItem button.caro { background: #dfe6f2; color: #8a94a8; }
 .shopItem button.ponerse { background: linear-gradient(180deg, #5b95f5, var(--azul)); color: #fff; }
 .shopItem button.puesto { background: #52c46a; color: #fff; }
+
+#sinFinBtn { white-space: nowrap; }
+.mapaSvg .actual { fill: rgba(255, 197, 77, 0.35); stroke: #ff8a2b; stroke-width: 0.8; transform-box: fill-box; transform-origin: center; animation: anilloLate 1.4s ease-in-out infinite; }
+@keyframes anilloLate { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.6; } }

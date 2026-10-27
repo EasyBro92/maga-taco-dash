@@ -337,9 +337,9 @@ function abrirMapa() {
         + `<text x="${x}" y="${y + 1.1}">${abierto || hechos[n.id] ? n.numero : "?"}</text>`
         + `<text class="etiqueta" x="${x + ex}" y="${y + ey}">${n.lugar}</text></g>`;
     }).join("");
-  // El autobus de campaña, en el nivel abierto mas avanzado.
+  // Donde vas: un anillo que late en el nivel abierto mas avanzado.
   const actual = [...NIVELES].reverse().find((n) => nivelAbierto(n, hechos)) || NIVELES[0];
-  svg.innerHTML += `<image href="${urlPegatina("taco")}" x="${actual.mapa[0] - 4}" y="${actual.mapa[1] - 11}" width="8" height="8"/>`;
+  svg.querySelector(".ruta").insertAdjacentHTML("afterend", `<circle class="actual" cx="${actual.mapa[0]}" cy="${actual.mapa[1]}" r="4.8"/>`);
   svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
   elegirNivel(nivelElegido || actual.id);
   document.getElementById("startScreen").classList.add("hidden");

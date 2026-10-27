@@ -2949,7 +2949,7 @@ export function createWorld(scene) {
   // Fuera de los tramos del nivel (el final de la calle): siempre el mismo objeto.
   const TRAMO_FINAL = { desde: 0, hasta: 1e9, tipo: "calma" }, TRAMO_MIXTO = { desde: 0, hasta: 1e9, tipo: "mixto" };
   const SIN_FIN = [["suave", 2], ["mixto", 4], ["slalom", 2], ["vallas", 2], ["autobuses", 2], ["festin", 1], ["calma", 1], ["local", 2]];
-  const LOCAL_DE_ZONA = { city: "obras", town: "desfile", dc: "comitiva", desert: "mixto" };
+  const LOCAL_DE_ZONA = { city: "obras", town: "desfile", dc: "comitiva", desert: "slalom" };
   function prepararTramos() {
     tramos = nivel && nivel.tramos ? nivel.tramos.map(([desde, hasta, tipo, op]) => ({ desde, hasta, tipo, ...(op || {}) })) : [];
   }
