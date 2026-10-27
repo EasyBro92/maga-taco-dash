@@ -1,5 +1,10 @@
 // Captura swipe (movil) y teclado (escritorio) y emite acciones: left, right, jump, slide
 // y (25/10) frase: un toque corto en la pantalla, o la tecla F / Intro, lanza una frase.
+//
+// 27/10: el gesto cuenta en cuanto el dedo ha recorrido lo bastante, sin
+// esperar a que se levante (antes se leia al soltar y llegaba con retraso:
+// costaba saltar a tiempo). Con el dedo aun puesto se puede encadenar otro
+// gesto: el punto de partida se mueve a donde se hizo el anterior.
 let swipeMinPx = 28;
 
 export function setSwipeThreshold(px) {
@@ -7,32 +12,35 @@ export function setSwipeThreshold(px) {
 }
 
 export function initControls(target, onAction) {
-  let startX = 0, startY = 0, startT = 0, tracking = false;
+  let startX = 0, startY = 0, startT = 0, tracking = false, hizoGesto = false;
 
   target.addEventListener("touchstart", (e) => {
     const t = e.changedTouches[0];
     startX = t.clientX; startY = t.clientY; startT = performance.now();
-    tracking = true;
+    tracking = true; hizoGesto = false;
   }, { passive: true });
 
-  target.addEventListener("touchend", (e) => {
+  target.addEventListener("touchmove", (e) => {
     if (!tracking) return;
-    tracking = false;
     const t = e.changedTouches[0];
     const dx = t.clientX - startX;
     const dy = t.clientY - startY;
     const adx = Math.abs(dx), ady = Math.abs(dy);
-    if (adx < swipeMinPx && ady < swipeMinPx) {
-      // Toque corto: lanzar una frase (si dura mucho, es que se dejo el dedo puesto).
-      if (performance.now() - startT < 350) onAction("frase");
-      return;
-    }
-    if (adx > ady) {
-      onAction(dx > 0 ? "right" : "left");
-    } else {
-      onAction(dy > 0 ? "slide" : "jump");
-    }
+    if (adx < swipeMinPx && ady < swipeMinPx) return;
+    if (adx > ady) onAction(dx > 0 ? "right" : "left");
+    else onAction(dy > 0 ? "slide" : "jump");
+    hizoGesto = true;
+    startX = t.clientX; startY = t.clientY;
   }, { passive: true });
+
+  target.addEventListener("touchend", () => {
+    if (!tracking) return;
+    tracking = false;
+    // Toque corto sin gesto: lanzar una frase (si dura mucho, se dejo el dedo puesto).
+    if (!hizoGesto && performance.now() - startT < 350) onAction("frase");
+  }, { passive: true });
+
+  target.addEventListener("touchcancel", () => { tracking = false; }, { passive: true });
 
   window.addEventListener("keydown", (e) => {
     switch (e.key) {
@@ -41,6 +49,7 @@ export function initControls(target, onAction) {
       case "ArrowUp": case "w": case "W": case " ": onAction("jump"); break;
       case "ArrowDown": case "s": case "S": onAction("slide"); break;
       case "f": case "F": case "Enter": onAction("frase"); break;
+      case "Escape": case "p": case "P": onAction("pausa"); break;
     }
   });
 }

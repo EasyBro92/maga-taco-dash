@@ -101,14 +101,45 @@ export function resetProgress() {
   return state;
 }
 
-// ---- Niveles de la gira (24/10/2026): estrellas conseguidas en cada uno ----
+// ---- Niveles de la gira (24/10/2026) ----
+// 27/10: cada estrella es un objetivo: llegar a la meta, llegar sin chocar ni
+// una vez y encontrar las tres chapas de campaña. Lo conseguido se suma entre
+// intentos (las chapas se pueden ir encontrando en partidas distintas).
+// Las partidas guardadas de antes (estrellas por tacos) cuentan como «llegar».
 export function getNiveles() {
   return state.niveles || {};
 }
-export function guardarNivel(id, estrellas) {
+export function estrellasDe(r) {
+  if (!r) return 0;
+  if (r.meta === undefined) return r.superado ? 1 : 0;
+  return (r.meta ? 1 : 0) + (r.sinChocar ? 1 : 0) + ((r.chapas || []).filter(Boolean).length === 3 ? 1 : 0);
+}
+export function guardarNivel(id, logros) {
   state.niveles = state.niveles || {};
-  const antes = state.niveles[id] || { estrellas: 0, superado: false };
-  state.niveles[id] = { estrellas: Math.max(antes.estrellas, estrellas), superado: true };
+  const a = state.niveles[id] || {};
+  const chapas = [0, 1, 2].map((i) => !!(a.chapas && a.chapas[i]) || !!(logros.chapas && logros.chapas[i]));
+  const n = { superado: true, meta: true, sinChocar: !!a.sinChocar || !!logros.sinChocar, chapas };
+  n.estrellas = estrellasDe(n);
+  state.niveles[id] = n;
   persist();
-  return state.niveles[id];
+  return n;
+}
+
+// ---- Tienda (27/10/2026): lo comprado y lo puesto ----
+export function getTienda() {
+  if (!state.tienda) state.tienda = { tengo: ["gorra_ninguna", "traje_azul"], puesto: { gorra: "gorra_ninguna", traje: "traje_azul" } };
+  return state.tienda;
+}
+export function comprar(id, precio) {
+  const t = getTienda();
+  if (t.tengo.includes(id)) return true;
+  if (state.totalTacos < precio) return false;
+  state.totalTacos -= precio;
+  t.tengo.push(id);
+  persist();
+  return true;
+}
+export function ponerse(hueco, id) {
+  getTienda().puesto[hueco] = id;
+  persist();
 }

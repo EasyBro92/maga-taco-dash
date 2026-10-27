@@ -17,9 +17,12 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
-  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan"],
+  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "valla_policia", "verja"],
   obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
-    "rayo", "cohete", "barril", "chile", "jefe"],
+    "rayo", "cohete", "barril", "chile", "jefe",
+    // 27/10: los de cada ciudad (blender/obstaculos2.py)
+    "taxi", "alcantarilla", "andamio", "contenedor", "paca", "tractor", "carroza", "guirnalda",
+    "valla_metal", "protesta", "agentes", "suv"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -118,27 +121,13 @@ export function modelo(clave) {
   return g;
 }
 
-// ---- Contorno de dibujo animado (22/10/2026) ----
-// Para que los obstaculos se distingan de un vistazo, como en Minion Rush: una
-// copia de la malla un poco hinchada hacia fuera, negra y vista solo por
-// dentro (la tecnica clasica de "casco invertido"). Se hincha con normales
-// suavizadas propias -- con las de la malla, partidas en cada arista, el
-// contorno se abria en las esquinas.
+// ---- Sin contorno (27/10/2026) ----
+// Los obstaculos llevaban un contorno negro de dibujo animado (una copia de la
+// malla hinchada y vista por dentro). Isidro eligio «sin contorno» para todo el
+// juego y era lo unico que lo tenia: ya no se pone. La forma hinchada se sigue
+// calculando, pero solo para la capa de hielo del rayo congelador.
 const contornos = {};
-const contornoMat = new THREE.ShaderMaterial({
-  uniforms: { grosor: { value: 0.035 }, color: { value: new THREE.Color(0x1b1424) } },
-  vertexShader: `uniform float grosor;
-    void main() {
-      vec3 p = position + normalize(normal) * grosor;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-    }`,
-  fragmentShader: `uniform vec3 color; void main() { gl_FragColor = vec4(color, 1.0); }`,
-  side: THREE.BackSide,
-});
-
-export function modeloConContorno(clave) {
-  const g = modelo(clave);
-  if (!g) return null;
+function formaHinchada(clave) {
   let geo = contornos[clave];
   if (!geo) {
     const base = plantillas[clave].geometry.clone();
@@ -147,8 +136,11 @@ export function modeloConContorno(clave) {
     geo.computeVertexNormals();
     contornos[clave] = geo;
   }
-  g.add(new THREE.Mesh(geo, contornoMat));
-  return g;
+  return geo;
+}
+
+export function modeloConContorno(clave) {
+  return modelo(clave);
 }
 
 // ---- Capa de hielo del rayo congelador (22/10/2026) ----
@@ -174,8 +166,7 @@ const hieloMat = new THREE.ShaderMaterial({
 
 export function capaHielo(clave) {
   if (!plantillas[clave]) return null;
-  if (!contornos[clave]) { const g = modeloConContorno(clave); g.clear(); }
-  return new THREE.Mesh(contornos[clave], hieloMat);
+  return new THREE.Mesh(formaHinchada(clave), hieloMat);
 }
 
 // ---- El presidente de Meshy (24/10/2026): con esqueleto y animaciones ----

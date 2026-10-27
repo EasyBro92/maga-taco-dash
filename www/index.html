@@ -19,7 +19,7 @@
 </head>
 <body>
 <div id="loadingScreen">
-  <div class="loadingLogo">🌮</div>
+  <div class="loadingLogo"><img src="icons/icon.svg" alt="" width="72" height="72"></div>
   <div class="loadingBar"><div class="loadingBarFill"></div></div>
   <div class="loadingText" data-i18n="loading">Cargando...</div>
 </div>
@@ -32,21 +32,59 @@
   <div id="speedLines"></div>
 
   <div id="hud" class="hidden">
-    <div id="hudTacos"><span class="icon">🌮</span><span id="hudTacoCount">0</span><span id="hudStreak" class="hidden"></span></div>
-    <div id="hudScore"><span id="hudScoreValue">0</span> m</div>
-    <button id="langToggle" class="smallBtn">EN</button>
+    <div class="hudFila">
+      <div id="hudTacos"><img class="peg" id="hudTacoIcono" alt=""><span id="hudTacoCount">0</span><span id="hudStreak" class="hidden"></span></div>
+      <div id="hudProgreso" class="hidden">
+        <div class="pgPista"><div class="pgLleno"></div><div class="pgMarcas"></div><div class="pgYo"></div></div>
+        <div class="pgTexto"></div>
+      </div>
+      <div id="hudScore"><span id="hudScoreValue">0</span> m</div>
+      <button id="pausaBtn" class="redondo hudRedondo" aria-label="Pausa" data-icono="pausa"></button>
+    </div>
+    <div id="hudChapas" class="hidden"></div>
   </div>
 
   <div id="powerupBadge" class="hidden"></div>
-  <div id="bossBar" class="hidden"><div class="bossName">🌯 BURRITO-BOT</div><div class="bossTrack"><div id="bossFill"></div></div></div>
+  <div id="bossBar" class="hidden"><div class="bossName">BURRITO-BOT</div><div class="bossTrack"><div id="bossFill"></div></div></div>
   <div id="misionToast" class="hidden"></div>
   <div id="avisoMenu" class="hidden"></div>
   <div id="hudFrases" class="hidden"></div>
   <div id="bannerNivel" class="hidden"><div class="bnNumero"></div><div class="bnNombre"></div><div class="bnLugar"></div></div>
+  <div id="tramoBanner" class="hidden"></div>
+  <div id="avisoGesto" class="hidden"><div class="gesto"><span class="gestoDedo"></span></div><div class="gestoTexto"></div></div>
+  <div id="cuentaAtras" class="hidden"></div>
 
+  <div id="pausaOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small" data-i18n="pausa">Pausa</div>
+      <div class="pausaInfo" id="pausaInfo"></div>
+      <button id="pausaSeguir" class="bigBtn" data-i18n="seguir">SEGUIR</button>
+      <div class="filaInicio">
+        <button id="pausaRepetir" class="smallBtn ancho" data-i18n="repetir">Repetir</button>
+        <button id="pausaSalir" class="smallBtn ancho" data-i18n="salir">Salir</button>
+        <button id="pausaMusica" class="redondo" aria-label="Música"></button>
+        <button id="pausaSonido" class="redondo" aria-label="Sonido"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="choqueNivel" class="overlay hidden">
+    <div class="card">
+      <h2 class="title small" id="choqueTitulo"></h2>
+      <div class="choqueBarra"><div class="pgPista"><div class="pgLleno"></div><div class="pgMarcas"></div><div class="pgYo"></div></div></div>
+      <p class="statLine" id="choqueFalta"></p>
+      <p class="statLine"><img class="peg" data-peg="taco" alt=""> <span id="choqueTacos">0</span></p>
+      <button id="choqueSeguirAqui" class="bigBtn"></button>
+      <button id="choqueControl" class="bigBtn azul" data-i18n="desdeControl">Desde el punto de control</button>
+      <div class="filaInicio">
+        <button id="choqueRepetir" class="smallBtn ancho" data-i18n="desdePrincipio">Desde el principio</button>
+        <button id="choqueMapa" class="smallBtn ancho" data-i18n="mapaMin">Mapa</button>
+      </div>
+    </div>
+  </div>
   <div id="mapaGira" class="overlay hidden">
     <div class="card wide">
-      <div class="title small">🗺️ <span data-i18n="gira">La gira</span></div>
+      <div class="title small"><span data-icono="mapa"></span> <span data-i18n="gira">La gira</span></div>
       <svg id="mapaSvg" viewBox="0 0 100 62" class="mapaSvg"></svg>
       <div id="mapaInfo" class="mapaInfo"></div>
       <button id="mapaCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
@@ -55,9 +93,12 @@
 
   <div id="nivelFin" class="overlay hidden">
     <div class="card">
+      <img id="nivelFinPremio" class="premioNivel" alt="">
       <h2 class="title small" id="nivelFinTitulo"></h2>
       <div class="estrellas" id="nivelFinEstrellas"></div>
-      <p class="statLine"><span class="icon">🌮</span> <span id="nivelFinTacos">0</span></p>
+      <ul class="objetivos" id="nivelFinObjetivos"></ul>
+      <p class="statLine"><img class="peg" data-peg="taco" alt=""> <span id="nivelFinTacos">0</span></p>
+      <div class="desbloqueo hidden" id="nivelFinDesbloqueo"></div>
       <div class="misiones" id="misionesNivel"></div>
       <button id="nivelFinMapa" class="bigBtn" data-i18n="mapa">MAPA</button>
       <button id="nivelFinRepetir" class="smallBtn" data-i18n="repetir">Repetir</button>
@@ -76,11 +117,11 @@
       <div class="misiones" id="misionesMenu"></div>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
       <div class="filaInicio">
-        <button id="sinFinBtn" class="smallBtn ancho">♾️ Sin fin</button>
-        <button id="startShopBtn" class="smallBtn" data-i18n="shop">🛒 Tienda</button>
-        <button id="startRankBtn" class="smallBtn" data-i18n="ranking">🌍 Ranking</button>
-        <button id="startLangBtn" class="redondo" aria-label="Idioma">🌐</button>
-        <button id="startSettingsBtn" class="redondo" aria-label="Ajustes">⚙️</button>
+        <button id="sinFinBtn" class="smallBtn ancho">Sin fin</button>
+        <button id="startShopBtn" class="smallBtn"><span data-icono="tienda"></span><span data-i18n="shop">Tienda</span></button>
+        <button id="startRankBtn" class="smallBtn" data-i18n="ranking">Ranking</button>
+        <button id="startLangBtn" class="redondo" aria-label="Idioma" data-icono="idioma"></button>
+        <button id="startSettingsBtn" class="redondo" aria-label="Ajustes" data-icono="ajustes"></button>
       </div>
     </div>
   </div>
@@ -107,31 +148,31 @@
       <div class="title small" data-i18n="settings">Ajustes</div>
 
       <div class="ajuste">
-        <span class="ajusteIcono">🎵</span>
+        <span class="ajusteIcono" data-icono="musica"></span>
         <label data-i18n="music">Música</label>
         <input id="musicVolRange" type="range" min="0" max="100" value="80" />
-        <button id="musicMuteBtn" class="redondo pequeno">🔊</button>
+        <button id="musicMuteBtn" class="redondo pequeno"></button>
       </div>
       <div class="ajuste">
-        <span class="ajusteIcono">🔔</span>
+        <span class="ajusteIcono" data-icono="sonido"></span>
         <label data-i18n="sfx">Sonido</label>
         <input id="sfxVolRange" type="range" min="0" max="100" value="80" />
-        <button id="sfxMuteBtn" class="redondo pequeno">🔊</button>
+        <button id="sfxMuteBtn" class="redondo pequeno"></button>
       </div>
       <div class="ajuste">
-        <span class="ajusteIcono">👆</span>
+        <span class="ajusteIcono" data-icono="boost"></span>
         <label data-i18n="sensitivity">Sensibilidad</label>
         <input id="sensitivityRange" type="range" min="15" max="45" value="28" />
       </div>
       <div class="ajuste columna">
-        <div class="ajusteTitulo"><span class="ajusteIcono">🌐</span><label data-i18n="language">Idioma</label></div>
+        <div class="ajusteTitulo"><span class="ajusteIcono" data-icono="idioma"></span><label data-i18n="language">Idioma</label></div>
         <div class="segmentos">
           <button id="settingsLangEs" class="segmento">Español</button>
           <button id="settingsLangEn" class="segmento">English</button>
         </div>
       </div>
       <div class="ajuste columna">
-        <div class="ajusteTitulo"><span class="ajusteIcono">✨</span><label data-i18n="quality">Gráficos</label></div>
+        <div class="ajusteTitulo"><span class="ajusteIcono" data-icono="estrella"></span><label data-i18n="quality">Gráficos</label></div>
         <div class="segmentos">
           <button id="qualityLow" class="segmento" data-i18n="qualityLow">Baja</button>
           <button id="qualityMedium" class="segmento" data-i18n="qualityMedium">Media</button>
@@ -146,19 +187,19 @@
 
   <div id="gameOverScreen" class="overlay hidden">
     <div class="card">
-      <h2 class="title small" data-i18n="gameOver">¡Te atraparon!</h2>
+      <h2 class="title small" data-i18n="gameOver">¡Fin de la carrera!</h2>
       <p class="statLine"><span data-i18n="distance">Distancia</span>: <span id="finalScore">0</span> m</p>
-      <p class="statLine"><span class="icon">🌮</span> <span id="finalTacos">0</span></p>
+      <p class="statLine"><img class="peg" data-peg="taco" alt=""> <span id="finalTacos">0</span></p>
       <p class="statLine best" id="bestLine"></p>
       <div class="misiones" id="misionesFin"></div>
-      <button id="retryBtn" class="bigBtn" data-i18n="retry">REINTENTAR</button>
+      <button id="seguirSinFin" class="bigBtn"></button>
+      <button id="retryBtn" class="bigBtn azul" data-i18n="retry">REINTENTAR</button>
       <button id="menuBtn" class="smallBtn" data-i18n="menu">Menú</button>
     </div>
   </div>
-
   <div id="nameOverlay" class="overlay hidden">
     <div class="card">
-      <div class="title small">🎉 <span data-i18n="newRecord">¡Nuevo récord!</span></div>
+      <div class="title small"><span data-i18n="newRecord">¡Nuevo récord!</span></div>
       <p class="subtitle" data-i18n="whatsYourName">¿Cómo te llamas?</p>
       <input id="nameInput" type="text" maxlength="12" autocomplete="off" placeholder="Tu nombre" />
       <button id="nameSubmit" class="bigBtn" data-i18n="save">Guardar</button>
@@ -167,7 +208,7 @@
 
   <div id="leaderboardOverlay" class="overlay hidden">
     <div class="card">
-      <div class="title small">🌍 <span data-i18n="worldRanking">Ranking mundial</span></div>
+      <div class="title small"><span data-i18n="worldRanking">Ranking mundial</span></div>
       <ol id="leaderboardList" class="lbList"><li class="lbEmpty">…</li></ol>
       <button id="leaderboardClose" class="smallBtn" data-i18n="close">Cerrar</button>
     </div>
@@ -175,8 +216,8 @@
 
   <div id="shopOverlay" class="overlay hidden">
     <div class="card wide">
-      <div class="title small">🛒 <span data-i18n="shop">Tienda</span></div>
-      <div class="shopTacos"><span class="icon">🌮</span> <span id="shopTacoCount">0</span></div>
+      <div class="title small"><span data-icono="tienda"></span> <span data-i18n="shop">Tienda</span></div>
+      <div class="shopTacos"><img class="peg" data-peg="taco" alt=""> <span id="shopTacoCount">0</span></div>
       <div id="shopGrid" class="shopGrid"></div>
       <button id="shopClose" class="smallBtn" data-i18n="close">Cerrar</button>
     </div>

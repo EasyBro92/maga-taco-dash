@@ -3,17 +3,22 @@ import { createCharacter } from "./character.js";
 import { createWorld, LANE_X, CIELO_Y } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
-  sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic,
+  sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
+  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
-import { getSave, addTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel } from "./save.js";
-import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit } from "./levels.js";
+import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe } from "./save.js";
+import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl } from "./levels.js";
+import { icono, pintarIconos } from "./iconos.js";
+import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
+import { abrirTienda, aplicarTienda } from "./tienda.js";
 import { PIEZAS_KIT } from "./edificios.js";
 import { applyI18n, toggleLang, setLang, t, randomCatchphrase, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
 import * as misiones from "./missions.js";
+import { FRASES } from "./frases.js";
 
 initErrorReporting();
 
@@ -43,6 +48,13 @@ const FREEZE_DURATION = 6;
 const ROCKET_DURATION = 6.5;
 const JEFE_PRIMERO = 1200;   // metros hasta el primer Burrito-Bot
 const JEFE_CADA = 2000;      // y luego cada tantos
+// 27/10: en los niveles la velocidad va con lo recorrido, no con el tiempo:
+// de 13 al empezar a `velMax` del nivel (20-23) al llegar, y un poco mas en
+// el sprint final. Un nivel dura asi unos 3 minutos (antes 2 y medio).
+const SPRINT_EXTRA = 1.08;
+// Seguir tras chocar: cuesta tacos, cada vez el doble.
+const PRECIO_SEGUIR = 300;
+const INVULNERABLE = 2.2;    // segundos de parpadeo al seguir: lo de delante no cuenta
 
 // ---------- Soporte WebGL ----------
 function hasWebGL() {
@@ -125,7 +137,9 @@ const RACE_CAM = { pos: new THREE.Vector3(0, 7.2, 9.8), look: new THREE.Vector3(
 // mitad ALTA del encuadre y se le vea la cara y el traje por encima de la
 // tarjeta del menu, que ocupa el centro de la pantalla.
 // 24/10: algo mas lejos para el presidente de Meshy, que es mas alto que el muñeco.
-const MENU_CAM = { pos: new THREE.Vector3(-2.3, 1.9, -6.2), look: new THREE.Vector3(0, 0.05, 0) };
+// 27/10: la camara del menu, al otro lado: el presidente se da la vuelta hacia
+// ella y detras se ve la calle con sus edificios (antes, una carretera gris vacia).
+const MENU_CAM = { pos: new THREE.Vector3(2.3, 1.9, 6.2), look: new THREE.Vector3(0, 0.05, 0) };
 function setCameraMode(mode) {
   const c = mode === "menu" ? MENU_CAM : RACE_CAM;
   camera.position.copy(c.pos);
@@ -207,21 +221,45 @@ if (monturaCohete) {
 }
 
 // ---- Misiones: lista en el menu y al acabar, y aviso al cumplir una ----
+// La pegatina del taco, para la interfaz (en vez del emoji).
+const TACO_IMG = () => `<img class="peg" src="${urlPegatina("taco")}" alt="">`;
+function pintarPegatinas() {
+  document.querySelectorAll("img[data-peg]").forEach((im) => { im.src = urlPegatina(im.dataset.peg); });
+  const hudIcono = document.getElementById("hudTacoIcono");
+  if (hudIcono) hudIcono.src = urlPegatina("taco");
+  const logo = document.querySelector(".logoTacoIcono");
+  if (logo) logo.innerHTML = `<img class="pegLogo" src="${urlPegatina("taco")}" alt="">`;
+}
+
+// Misiones posibles con lo que hay abierto (27/10): antes de pasar Nueva York
+// solo las basicas; despues ya se puede todo (en Findlay o en el Sin fin hay
+// autobuses, jefe y gorra gigante, y el cohete y el hielo en el Sin fin).
+function misionPosible(tipo) {
+  if (["tacos", "distancia", "saltos", "deslizar"].includes(tipo)) return true;
+  return sinFinAbierto(getNiveles());
+}
+misiones.fijarDisponibles(misionPosible);
+
 function pintarMisiones(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.innerHTML = `<div class="zoneLabel">🎯 ${t("misiones")}</div>` + misiones.activas().map((m) => {
+  el.innerHTML = `<div class="zoneLabel">${t("misiones")}</div>` + misiones.activas().map((m) => {
     const meta = Math.round(misiones.metaDe(m));
     const hecho = Math.min(meta, Math.floor(m.hecho));
     return `<div class="mision"><div class="misionFila"><span>${t("mis_" + m.tipo).replace("{n}", meta)}</span>`
-      + `<span class="misionPremio">+${misiones.premioDe(m)} 🌮</span></div>`
+      + `<span class="misionPremio">+${misiones.premioDe(m)} ${TACO_IMG()}</span></div>`
       + `<div class="misionBarra"><div style="width:${(100 * hecho / meta).toFixed(0)}%"></div></div></div>`;
   }).join("");
 }
 const colaAvisos = [];
 let avisoVisible = false;
 function avisarMisiones(cumplidas) {
-  for (const c of cumplidas) colaAvisos.push(`${t("misionCumplida")} +${c.premio} 🌮`);
+  for (const c of cumplidas) colaAvisos.push(`${t("misionCumplida")} +${c.premio} ${TACO_IMG()}`);
+  if (!avisoVisible) siguienteAviso();
+}
+// Otros avisos en la misma cola (chapas, punto de control...).
+function avisoVerde(html) {
+  colaAvisos.push(html);
   if (!avisoVisible) siguienteAviso();
 }
 function siguienteAviso() {
@@ -229,7 +267,7 @@ function siguienteAviso() {
   const texto = colaAvisos.shift();
   if (!texto) { avisoVisible = false; el.classList.add("hidden"); return; }
   avisoVisible = true;
-  el.textContent = texto;
+  el.innerHTML = texto;
   el.classList.remove("hidden");
   el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
   sndPoint();
@@ -278,41 +316,61 @@ function mostrarBanner(n) {
 // ---- El mapa de la gira ----
 const SILUETA_EEUU = "8,8 6,14 5,22 7,30 10,38 14,45 20,47 26,50 33,52 38,51 44,54 47,60 52,57 55,52 60,50 66,51 72,52 76,58 79,57 77,50 80,44 84,40 86,34 90,28 94,22 96,16 95,12 88,16 82,20 76,18 70,14 60,12 40,10 20,8";
 let nivelElegido = null;
+// 27/10: las etiquetas van cada una en su sitio (antes «Findlay, Ohio» tapaba
+// a «Nueva York») y el ultimo viaje, de Las Vegas a Washington, va en avion
+// con un arco por encima (antes una linea cruzaba el pais de lado a lado).
 function abrirMapa() {
   const svg = document.getElementById("mapaSvg");
   const hechos = getNiveles();
-  const ruta = NIVELES.map((n) => n.mapa.join(",")).join(" ");
-  svg.innerHTML = `<polygon class="tierra" points="${SILUETA_EEUU}"/><polyline class="ruta" points="${ruta}"/>`
+  const porTierra = NIVELES.slice(0, -1).map((n) => n.mapa.join(",")).join(" ");
+  const [vx, vy] = NIVELES[NIVELES.length - 2].mapa, [wx, wy] = NIVELES[NIVELES.length - 1].mapa;
+  const arco = `M${vx},${vy} Q${(vx + wx) / 2},${Math.min(vy, wy) - 26} ${wx},${wy}`;
+  svg.innerHTML = `<polygon class="tierra" points="${SILUETA_EEUU}"/><polyline class="ruta" points="${porTierra}"/>`
+    + `<path class="rutaAvion" d="${arco}"/>`
+    + `<g transform="translate(${(vx + wx) / 2 - 3},${Math.min(vy, wy) - 17}) scale(0.26)">${icono("avion").replace(/<\/?svg[^>]*>/g, "")}</g>`
     + NIVELES.map((n) => {
       const [x, y] = n.mapa;
+      const [ex, ey] = n.etiqueta || [0, 6.2];
       const abierto = nivelAbierto(n, hechos);
       const color = hechos[n.id] ? "#2fa84f" : abierto ? "#e8463c" : "#a7b0c0";
       return `<g class="parada" data-id="${n.id}"><circle cx="${x}" cy="${y}" r="3.2" fill="${color}"/>`
-        + `<text x="${x}" y="${y + 1.1}">${abierto || hechos[n.id] ? n.numero : "🔒"}</text><text class="etiqueta" x="${x}" y="${y + 6.2}">${n.lugar}</text></g>`;
+        + `<text x="${x}" y="${y + 1.1}">${abierto || hechos[n.id] ? n.numero : "?"}</text>`
+        + `<text class="etiqueta" x="${x + ex}" y="${y + ey}">${n.lugar}</text></g>`;
     }).join("");
   // El autobus de campaña, en el nivel abierto mas avanzado.
   const actual = [...NIVELES].reverse().find((n) => nivelAbierto(n, hechos)) || NIVELES[0];
-  svg.innerHTML += `<text x="${actual.mapa[0] - 6}" y="${actual.mapa[1] - 4}" font-size="5">🚌</text>`;
+  svg.innerHTML += `<image href="${urlPegatina("taco")}" x="${actual.mapa[0] - 4}" y="${actual.mapa[1] - 11}" width="8" height="8"/>`;
   svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
   elegirNivel(nivelElegido || actual.id);
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("mapaGira").classList.remove("hidden");
 }
+// Las tres estrellas de un nivel, cada una con su objetivo.
+function filaObjetivos(n, r) {
+  const chapas = r && r.chapas ? r.chapas.filter(Boolean).length : 0;
+  const obj = [
+    [r && (r.meta || r.superado), t("objMeta")],
+    [r && r.sinChocar, t("objSinChocar")],
+    [chapas === 3, `${t("objChapas")} (${chapas}/3)`],
+  ];
+  return obj.map(([ok, txt]) => `<li>${icono(ok ? "estrella" : "estrellaVacia")}<span>${txt}</span></li>`).join("");
+}
 function elegirNivel(id) {
   const n = NIVELES.find((x) => x.id === id);
   nivelElegido = id;
-  const hecho = getNiveles()[id];
-  const est = hecho ? "★".repeat(hecho.estrellas) + "☆".repeat(3 - hecho.estrellas) : "☆☆☆";
+  const r = getNiveles()[id];
   const abierto = nivelAbierto(n, getNiveles());
   const i = NIVELES.indexOf(n);
-  // Cerrado: si existe y falta pasar el anterior, se dice cual; si no existe, proximamente.
   const cierre = !n.listo ? t("proximamente")
-    : `🔒 ${t("superaAntes").replace("{n}", NIVELES[i - 1] ? NIVELES[i - 1].nombre : "")}`;
+    : t("superaAntes").replace("{n}", NIVELES[i - 1] ? NIVELES[i - 1].nombre : "");
+  const ingrediente = { nueva_york: "tortilla", pueblo: "maiz", washington: "taco_perfecto" }[n.id];
+  const atajo = n.id === "washington" && !NIVELES.slice(0, i).every((x) => x.listo) ? `<div class="miAtajo">${t("atajoDc")}</div>` : "";
   document.getElementById("mapaInfo").innerHTML =
-    `<div class="miNombre">${n.ingrediente || ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
+    `<div class="miNombre">${ingrediente ? `<img class="peg" src="${urlPegatina(ingrediente)}" alt="">` : ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
     + (n.historia ? `<div class="miHistoria">${n.historia[getLang()] || n.historia.es}</div>` : "")
-    + (abierto ? `<div class="miEstrellas">${est}</div><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
-      : `<div class="proximamente">${cierre}</div>`);
+    + atajo
+    + (abierto ? `<ul class="objetivos">${filaObjetivos(n, r)}</ul><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
+      : `<div class="proximamente">${icono("candado")} ${cierre}</div>`);
   const b = document.getElementById("mapaJugar");
   if (b) b.addEventListener("click", () => empezarNivel(n));
 }
@@ -326,14 +384,60 @@ async function empezarNivel(n) {
   for (const k of n.acera || []) { const [c, p] = k.split("/"); await cargarCarpeta(c, [p]); }
   nivelActual = n;
   unlockAudio();
-  startMusic();
+  startMusic(n.id);
+  intento = nuevoIntento();
   resetRun();
+  arrancar();
+}
+// Lo que dura todo un intento de un nivel (aunque se siga desde el punto de
+// control): si se ha chocado alguna vez, las chapas y cuantas veces se ha
+// pagado por seguir.
+let intento = null;
+function nuevoIntento() {
+  return { chocado: false, chapas: [false, false, false], control: null, pagos: 0 };
+}
+function arrancar() {
   gameState = "playing";
-  document.getElementById("mapaGira").classList.add("hidden");
-  document.getElementById("startScreen").classList.add("hidden");
+  pausado = false;
+  for (const id of ["mapaGira", "startScreen", "choqueNivel", "gameOverScreen", "nivelFin", "pausaOverlay"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
+  prepararBarra();
 }
 
+// ---- Barra de progreso del nivel (27/10/2026) ----
+// Isidro: «los niveles no se cuando acaban». Arriba, la calle entera: los
+// edificios famosos, el punto de control, la meta y por donde vas.
+const barras = [...document.querySelectorAll(".pgPista")];
+function prepararBarra() {
+  const n = nivelActual;
+  document.getElementById("hudProgreso").classList.toggle("hidden", !n);
+  document.getElementById("hudScore").classList.toggle("hidden", !!n);
+  document.getElementById("hudChapas").classList.toggle("hidden", !n || !n.chapas);
+  if (!n) return;
+  const marcas = hitosDeNivel(n).map((h) => `<i class="pgHito" style="left:${(100 * h.d / n.largo).toFixed(1)}%"></i>`).join("")
+    + (n.control ? `<i class="pgControl" style="left:${(100 * n.control / n.largo).toFixed(1)}%">${icono("control")}</i>` : "")
+    + `<i class="pgMeta">${icono("meta")}</i>`;
+  for (const b of barras) {
+    b.querySelector(".pgMarcas").innerHTML = marcas;
+    b.querySelector(".pgYo").innerHTML = `<img src="${urlPegatina("taco")}" alt="">`;
+  }
+  pintarChapas();
+}
+function pintarBarra(el, d) {
+  const n = nivelActual;
+  const k = Math.max(0, Math.min(1, d / n.largo));
+  el.querySelector(".pgLleno").style.transform = `scaleX(${k})`;
+  el.querySelector(".pgYo").style.left = `${(k * 100).toFixed(2)}%`;
+}
+function pintarChapas() {
+  const el = document.getElementById("hudChapas");
+  if (!nivelActual || !nivelActual.chapas) return;
+  const antes = (getNiveles()[nivelActual.id] || {}).chapas || [];
+  el.innerHTML = [0, 1, 2].map((i) => {
+    const clase = intento && intento.chapas[i] ? "cogida" : antes[i] ? "antes" : "falta";
+    return `<span class="chapaHud ${clase}"><img src="${urlPegatina("chapa")}" alt=""></span>`;
+  }).join("");
+}
 // ---- Llegada a la Casa Blanca: unos 10 segundos ----
 // 0 frena y anda hasta la escalinata · 1 sube al portico y llega a la puerta
 // · 2 se da la vuelta y saluda · 3 se gira y entra · 4 se cierran las puertas.
@@ -351,6 +455,7 @@ function iniciarFinal() {
 }
 function frameFinal(dt) {
   fin.t += dt;
+  animarPremio(dt);
   const cb = world.getCasaBlanca();
   if (!cb) { completarNivel(); return; }
   if (nivelActual.final === "camion") { finalCamion(dt, cb); return; }
@@ -372,14 +477,14 @@ function frameFinal(dt) {
     dz = 2.6 * dt;
     py = Math.min(1, Math.max(0, zPasos / 1.8));
     character.updateRun(dt, 0.45);
-    if (zPuerta + dz >= -1.4) { fin.fase = 2; fin.t = 0; showBubble(t("finCasaBlanca")); vibrate([30, 40, 30]); }
+    if (zPuerta + dz >= -1.4) { fin.fase = 2; fin.t = 0; showBubble(t("finCasaBlanca")); vibrate([30, 40, 30]); mostrarPremio("taco_perfecto"); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
     if (fin.t > 2.6) { fin.fase = 3; fin.t = 0; }
   } else if (fin.fase === 3) {
     character.object3D.rotation.y += (0 - character.object3D.rotation.y) * Math.min(1, dt * 6);
-    if (fin.t > 0.45) { dz = 2.2 * dt; character.updateRun(dt, 0.4); }
+    if (fin.t > 0.45) { dz = 2.2 * dt; character.updateRun(dt, 0.4); if (mazorca) mazorca.visible = false; }
     if (zPuerta + dz > 0.9) { fin.fase = 4; fin.t = 0; character.object3D.visible = false; }
   } else if (fin.fase === 4) {
     const k = Math.min(1, fin.t / 0.9);
@@ -408,7 +513,7 @@ function finalCamion(dt, flat) {
     fin.v = Math.max(5, Math.min(fin.v - dt * 6, -zParada * 1.5 + 4));
     dz = fin.v * dt;
     character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
-    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); }
+    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); mostrarPremio("tortilla"); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
@@ -428,20 +533,33 @@ function finalCamion(dt, flat) {
 
 // Mitin en el juzgado (Findlay): frena, sube los escalones del escenario, se
 // planta en medio, se da la vuelta y saluda; el maiz aparece por encima.
+// 27/10: el ingrediente recuperado es una pegatina como el taco (antes el
+// emoji, que en cada movil sale distinto), y sale en los tres finales.
 let mazorca = null;
-function hacerMazorca() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 256;
-  const x = c.getContext("2d");
-  x.font = '200px "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-  x.textAlign = "center"; x.textBaseline = "middle";
-  x.fillText("🌽", 128, 140);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
-  m.renderOrder = 10;
-  scene.add(m);
-  return m;
+const texPremio = {};
+function mostrarPremio(nombre) {
+  if (!texPremio[nombre]) {
+    texPremio[nombre] = new THREE.CanvasTexture(lienzoPegatina(nombre));
+    texPremio[nombre].colorSpace = THREE.SRGBColorSpace;
+  }
+  if (!mazorca) {
+    mazorca = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false }));
+    mazorca.renderOrder = 10;
+    scene.add(mazorca);
+  }
+  mazorca.material.map = texPremio[nombre];
+  mazorca.material.needsUpdate = true;
+  mazorca.scale.setScalar(0.01);
+  mazorca.visible = true;
+  mazorca.userData.t = 0;
+}
+// Encima de la cabeza: crece con un saltito y flota.
+function animarPremio(dt) {
+  if (!mazorca || !mazorca.visible) return;
+  mazorca.userData.t += dt;
+  const k = Math.min(1, mazorca.userData.t / 0.6);
+  mazorca.scale.setScalar(1.6 * k * (2 - k));
+  mazorca.position.set(character.object3D.position.x, py + 3.0 + 0.5 * k + Math.sin(mazorca.userData.t * 3) * 0.08, character.object3D.position.z);
 }
 function finalMitin(dt, cb) {
   const zPie = cb.position.z + 18.4;      // pie de los escalones del escenario
@@ -460,16 +578,12 @@ function finalMitin(dt, cb) {
       fin.fase = 2; fin.t = 0;
       showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es);
       vibrate([30, 40, 30]);
-      if (!mazorca) mazorca = hacerMazorca();
-      mazorca.visible = true;
+      mostrarPremio("maiz");
       spawnConfetti(30);
     }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
-    const k = Math.min(1, fin.t / 0.6);
-    mazorca.scale.setScalar(1.6 * k * (2 - k));
-    mazorca.position.set(playerX, py + 3.0 + 0.5 * k + Math.sin(fin.t * 3) * 0.08, 0);
     if (fin.t > 3.2) { fin.fase = 5; completarNivel(); }
   }
   if (dz) world.update(dz);
@@ -490,20 +604,42 @@ function completarNivel() {
   gameState = "completado";
   const n = nivelActual;
   const tacos = Math.floor(tacosThisRun);
-  const estrellas = n.estrellas.filter((e) => tacos >= e).length;
+  const antes = getNiveles();
+  const abiertosAntes = NIVELES.filter((x) => nivelAbierto(x, antes)).map((x) => x.id);
+  const sinFinAntes = sinFinAbierto(antes);
   addTacos(tacos);
-  guardarNivel(n.id, estrellas);
+  const r = guardarNivel(n.id, { sinChocar: !intento.chocado, chapas: intento.chapas });
+  misiones.fijarDisponibles(misionPosible);
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
   document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca")
-    : n.fin ? (n.fin[getLang()] || n.fin.es) : t("nivelSuperado");
+    : n.fin ? (n.fin[getLang()] || n.fin.es).replace(/\p{Extended_Pictographic}/gu, "").trim() : t("nivelSuperado");
+  const ingrediente = { nueva_york: "tortilla", pueblo: "maiz", washington: "taco_perfecto" }[n.id] || "taco";
+  document.getElementById("nivelFinPremio").src = urlPegatina(ingrediente);
   pintarSinFin();
-  document.getElementById("nivelFinEstrellas").textContent = "★".repeat(estrellas) + "☆".repeat(3 - estrellas);
+  const est = estrellasDe(r);
+  document.getElementById("nivelFinEstrellas").innerHTML = [0, 1, 2].map((i) => icono(i < est ? "estrella" : "estrellaVacia")).join("");
+  // Los tres objetivos: lo de este intento, y las chapas que ya tenias.
+  const chapasYa = r.chapas.filter(Boolean).length;
+  const objetivos = [
+    [true, t("objMeta")],
+    [!intento.chocado || r.sinChocar, t("objSinChocar")],
+    [chapasYa === 3, `${t("objChapas")} (${chapasYa}/3)`],
+  ];
+  document.getElementById("nivelFinObjetivos").innerHTML = objetivos.map(([ok, txt]) => `<li>${icono(ok ? "check" : "cruz")}<span>${txt}</span></li>`).join("");
   document.getElementById("nivelFinTacos").textContent = tacos;
+  // ¿Se ha abierto algo nuevo?
+  const ahora = getNiveles();
+  const nuevos = NIVELES.filter((x) => nivelAbierto(x, ahora) && !abiertosAntes.includes(x.id));
+  const avisos = nuevos.map((x) => t("nivelDesbloqueado").replace("{n}", x.nombre));
+  if (!sinFinAntes && sinFinAbierto(ahora)) avisos.push(t("sinFinDesbloqueado"));
+  const des = document.getElementById("nivelFinDesbloqueo");
+  des.innerHTML = avisos.map((a) => `<div>${icono("candado").replace("#9aa4b8", "#2fa84f").replace("#9aa4b8", "#2fa84f")} ${a}</div>`).join("");
+  des.classList.toggle("hidden", !avisos.length);
   pintarMisiones("misionesNivel");
   document.getElementById("nivelFin").classList.remove("hidden");
   spawnConfetti(45);
+  sndFanfarria();
 }
-
 // ---- Jefe: barra de vida y premio ----
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
@@ -514,7 +650,8 @@ world.onJefe((evento, vida) => {
   } else if (evento === "derrotado") {
     document.getElementById("bossFill").style.width = "0%";
     tacosThisRun += 150;
-    showBubble(t("jefeVencido") + " +150 🌮");
+    showBubble(t("jefeVencido"));
+    avisoVerde(`+150 ${TACO_IMG()}`);
     spawnConfetti(30);
     triggerCameraShake(0.06);
     vibrate([40, 30, 80]);
@@ -605,16 +742,7 @@ let nextJefeAt = JEFE_PRIMERO, misionesReloj = 0;
 let frasesCargas = 0, microVisto = false;
 const MAX_FRASES = 3;
 // Lo que suelta segun lo que tenga delante (la pieza del obstaculo).
-const FRASES = {
-  es: { furgoneta: "¡FAKE NEWS!", patrulla: "¡CAZA DE BRUJAS!", guardaespaldas: "¡ESTÁS DESPEDIDO!",
-    barricada: "¡TOTAL DESASTRE!", conos: "¡TOTAL DESASTRE!", pancarta: "¡TRISTE!", globos: "¡TRISTE!",
-    barril: "¡HECHO EN CHINA!", jefe: "¡CHINA! ¡CHINA!",
-    nada: ["¡CRÉEME!", "¡ENORME!", "¡COVFEFE!", "¡NADIE LO HACE MEJOR!"] },
-  en: { furgoneta: "FAKE NEWS!", patrulla: "WITCH HUNT!", guardaespaldas: "YOU'RE FIRED!",
-    barricada: "TOTAL DISASTER!", conos: "TOTAL DISASTER!", pancarta: "SAD!", globos: "SAD!",
-    barril: "MADE IN CHINA!", jefe: "CHINA! CHINA!",
-    nada: ["BELIEVE ME!", "HUGE!", "COVFEFE!", "NOBODY DOES IT BETTER!"] },
-};
+// (Las frases estan en frases.js.)
 let frasesPintadas = "";
 function pintarFrases() {
   // Solo toca la pagina si algo ha cambiado (se llama en cada fotograma).
@@ -622,7 +750,7 @@ function pintarFrases() {
   if (clave === frasesPintadas) return;
   frasesPintadas = clave;
   const el = document.getElementById("hudFrases");
-  el.innerHTML = Array.from({ length: MAX_FRASES }, (_, i) => `<span class="${i < frasesCargas ? "lleno" : "vacio"}">🎤</span>`).join("");
+  el.innerHTML = Array.from({ length: MAX_FRASES }, (_, i) => `<span class="${i < frasesCargas ? "lleno" : "vacio"}">${icono(i < frasesCargas ? "micro" : "microVacio")}</span>`).join("");
   el.classList.toggle("hidden", gameState !== "playing" || (frasesCargas === 0 && !microVisto));
 }
 function lanzarFrase() {
@@ -635,6 +763,7 @@ function lanzarFrase() {
   else { texto = f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = null; }
   frasesCargas--;
   world.lanzarFrase(currentLane, texto, objetivo);
+  hablar(texto);
   if (objetivo && objetivo !== "jefe") tacosThisRun += 3 * multiplier;
   flashExpression("determined", 0.6);
   triggerCameraShake(0.02);
@@ -649,12 +778,19 @@ let streak = 0, multiplier = 1, lastTacoTime = 0;
 let shieldActive = false;
 let magnetTimeLeft = 0;
 let boostTimeLeft = 0;
+// 27/10: pausa, caida al chocar, parpadeo al seguir, el tramo que se ha
+// anunciado y el jefe de los niveles.
+let pausado = false, cuenta = 0, cayendo = 0, invulnerable = 0;
+let tramoMostrado = null, jefeLanzado = false;
+let mostrarTutorial = false;
 
-function resetRun() {
+// `desde`: metros desde los que se empieza (el punto de control); 0 = desde el principio.
+function resetRun(desde = 0) {
   if (mazorca) mazorca.visible = false;
   currentLane = 1;
   playerX = 0;
-  elapsed = 0; speed = BASE_SPEED; distance = 0; tacosThisRun = 0;
+  elapsed = 0; speed = BASE_SPEED; distance = desde;
+  tacosThisRun = desde && intento && intento.control ? intento.control.tacos : 0;
   isJumping = false; jumpElapsed = 0;
   py = 0; vy = 0; enSuelo = true; camY = 0;
   megaTimeLeft = 0; character.setMega(1);
@@ -663,12 +799,15 @@ function resetRun() {
   if (monturaCohete) monturaCohete.visible = false;
   world.setCielo(false);
   document.getElementById("bossBar").classList.add("hidden");
-  misiones.empezarPartida();
+  if (!desde) misiones.empezarPartida();
   isSliding = false; slideElapsed = 0;
   streak = 0; multiplier = 1; lastTacoTime = 0;
   shieldActive = false; magnetTimeLeft = 0; boostTimeLeft = 0;
-  lastTacoShown = 0;
+  lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
+  pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
+  tramoMostrado = null; jefeLanzado = false;
+  mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
   character.object3D.rotation.set(0, 0, 0);
   character.object3D.scale.set(1, 1, 1);
@@ -688,10 +827,14 @@ function resetRun() {
   const zonas = ["city", "desert", "town", "dc"];
   const zonaSinFin = zoneChoice === "auto" ? zonas[Math.floor(Math.random() * zonas.length)] : zoneChoice;
   world.setForcedZone(nivelActual ? nivelActual.zona : zonaSinFin);
-  world.reset();
+  world.reset(desde);
   character.object3D.visible = true;
   fin = null;
-  if (nivelActual) mostrarBanner(nivelActual);
+  if (nivelActual && !desde) mostrarBanner(nivelActual);
+  if (nivelActual && nivelActual.cameoJefe && !desde) {
+    world.cameoJefe();
+    setTimeout(() => { if (gameState === "playing") showBubble(t("robaTortilla"), 2600); }, 700);
+  }
   setCameraMode("race");
   camBaseX = camera.position.x;
   camera.fov = BASE_FOV;
@@ -760,6 +903,7 @@ function popupScore(delta) {
 }
 
 let lastTacoShown = 0;
+let hudFaltaPintada = -1;
 function updateHud() {
   const tacoFloor = Math.floor(tacosThisRun);
   if (tacoFloor !== lastTacoShown) {
@@ -769,31 +913,71 @@ function updateHud() {
     pulse(document.getElementById("hudTacos"));
   }
   document.getElementById("hudTacoCount").textContent = tacoFloor;
-  document.getElementById("hudScoreValue").textContent = Math.floor(distance);
+  if (nivelActual) {
+    // La barra: por donde vas y cuanto falta para la meta.
+    pintarBarra(barras[0], distance);
+    const falta = Math.max(0, Math.ceil((nivelActual.largo - distance) / 10) * 10);
+    if (falta !== hudFaltaPintada) {
+      hudFaltaPintada = falta;
+      document.querySelector("#hudProgreso .pgTexto").textContent = t("faltanM").replace("{n}", falta.toLocaleString(getLang() === "en" ? "en" : "es"));
+    }
+  } else document.getElementById("hudScoreValue").textContent = Math.floor(distance);
   const streakEl = document.getElementById("hudStreak");
   if (multiplier > 1) { streakEl.textContent = "x" + multiplier; streakEl.classList.remove("hidden"); }
   else { streakEl.classList.add("hidden"); }
 }
 
+// 27/10: cada potenciador con su icono y una barrita que se vacia (antes un
+// emoji y los segundos con decimales, que no se leian corriendo).
+let badgePintado = "";
 function updatePowerupBadge() {
   const badge = document.getElementById("powerupBadge");
-  if (rocketTimeLeft > 0) { badge.textContent = "🚀 " + t("powerupRocket") + " " + rocketTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
-  else if (megaTimeLeft > 0) { badge.textContent = "🧢 " + t("powerupMega") + " " + megaTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
-  else if (freezeTimeLeft > 0) { badge.textContent = "🧊 " + t("powerupFreeze") + " " + freezeTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
-  else if (shieldActive) { badge.textContent = "🛡 " + t("powerupShield"); badge.classList.remove("hidden"); }
-  else if (magnetTimeLeft > 0) { badge.textContent = "🧲 " + t("powerupMagnet") + " " + magnetTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
-  else if (boostTimeLeft > 0) { badge.textContent = "🚀 " + t("powerupBoost") + " " + boostTimeLeft.toFixed(1) + "s"; badge.classList.remove("hidden"); }
-  else { badge.classList.add("hidden"); }
+  let p = null;
+  if (rocketTimeLeft > 0) p = ["cohete", rocketTimeLeft / ROCKET_DURATION, t("powerupRocket")];
+  else if (megaTimeLeft > 0) p = ["gorra", megaTimeLeft / MEGA_DURATION, t("powerupMega")];
+  else if (freezeTimeLeft > 0) p = ["hielo", freezeTimeLeft / FREEZE_DURATION, t("powerupFreeze")];
+  else if (shieldActive) p = ["escudo", 1, t("powerupShield")];
+  else if (magnetTimeLeft > 0) p = ["iman", magnetTimeLeft / MAGNET_DURATION, t("powerupMagnet")];
+  else if (boostTimeLeft > 0) p = ["boost", boostTimeLeft / BOOST_DURATION, t("powerupBoost")];
+  if (!p) { badge.classList.add("hidden"); badgePintado = ""; return; }
+  const [tipo, quedan, nombre] = p;
+  if (badgePintado !== tipo + getLang()) {
+    badge.innerHTML = `${icono(tipo)}<span>${nombre}</span><i class="pbBarra"><b></b></i>`;
+    badgePintado = tipo + getLang();
+  }
+  badge.querySelector(".pbBarra b").style.transform = `scaleX(${quedan.toFixed(3)})`;
+  badge.classList.remove("hidden");
 }
 
 // ---------- Globo de frases ----------
 let bubbleTimeout = null;
-function showBubble(text) {
+function showBubble(text, ms = 1300) {
   const el = document.getElementById("speechBubble");
   el.textContent = text;
   el.classList.add("show");
   if (bubbleTimeout) clearTimeout(bubbleTimeout);
-  bubbleTimeout = setTimeout(() => el.classList.remove("show"), 1300);
+  bubbleTimeout = setTimeout(() => el.classList.remove("show"), ms);
+  hablar(text);
+}
+
+// ---- Cartel de cada tramo y avisos del tutorial (27/10/2026) ----
+function mostrarTramo(texto, claro = false) {
+  const el = document.getElementById("tramoBanner");
+  el.textContent = texto;
+  el.classList.toggle("sprint", claro);
+  el.classList.remove("hidden");
+  el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  clearTimeout(mostrarTramo.t);
+  mostrarTramo.t = setTimeout(() => el.classList.add("hidden"), 2400);
+}
+const GESTOS = { carril: "lados", saltar: "arriba", agachar: "abajo", frase: "toque" };
+function mostrarGesto(tipo) {
+  const el = document.getElementById("avisoGesto");
+  el.dataset.gesto = GESTOS[tipo] || "toque";
+  el.querySelector(".gestoTexto").textContent = t("av_" + tipo);
+  el.classList.remove("hidden");
+  clearTimeout(mostrarGesto.t);
+  mostrarGesto.t = setTimeout(() => el.classList.add("hidden"), 2300);
 }
 
 // ---------- Confeti ----------
@@ -814,8 +998,9 @@ function spawnConfetti(count) {
 }
 
 // ---------- Controles ----------
-initControls(document.getElementById("touchControls"), (action) => {
-  if (gameState !== "playing") return;
+function accionJugador(action) {
+  if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
+  if (gameState !== "playing" || pausado) return;
   if (action === "left" && currentLane > 0) { currentLane--; sndLaneSwitch(); }
   else if (action === "right" && currentLane < 2) { currentLane++; sndLaneSwitch(); }
   else if (action === "frase") lanzarFrase();
@@ -829,7 +1014,8 @@ initControls(document.getElementById("touchControls"), (action) => {
     if (isSliding) { slideElapsed = 0; }
     else { isSliding = true; slideElapsed = 0; sndSlide(); }
   }
-});
+}
+initControls(document.getElementById("touchControls"), accionJugador);
 
 // ---------- Colisiones ----------
 const HIT_LANE_TOLERANCE = 0.85; // menos que medio ancho de carril (1.1): rozar el borde durante un cambio de carril no cuenta como choque
@@ -864,6 +1050,11 @@ function checkCollisions() {
         continue;
       }
       if (o.alto !== undefined && py > o.alto - 0.1) continue;   // le pasas por encima
+    }
+    if (invulnerable > 0) {
+      // Recien seguido tras chocar: lo que hay delante se aparta.
+      world.smash(o);
+      continue;
     }
     if (o.congelado) {
       // Congelado por el rayo: se rompe al tocarlo.
@@ -962,6 +1153,23 @@ function checkCollectibles(dt) {
   }
 }
 
+// Chapas de campaña: hay que pasar justo por su sitio (no las atrae el iman).
+function checkChapas() {
+  for (const c of world.chapas) {
+    if (c.collected || c.lane !== currentLane) continue;
+    if (c.z < -0.9 || c.z > 0.9) continue;
+    if (Math.abs(c.baseY - (py + 1.0)) > 0.8) continue;
+    c.collected = true;
+    if (!intento) continue;
+    intento.chapas[c.idx] = true;
+    pintarChapas();
+    sndChapa();
+    vibrate([20, 30, 20]);
+    const n = intento.chapas.filter(Boolean).length;
+    avisoVerde(`<img class="peg" src="${urlPegatina("chapa")}" alt=""> ${t("chapaCogida").replace("{n}", n)}`);
+  }
+}
+
 function checkPowerups() {
   for (const p of world.powerups) {
     if (p.collected || p.lane !== currentLane) continue;
@@ -1011,7 +1219,7 @@ function checkPowerups() {
 const PRUEBA = /prueba/.test(location.search);
 if (PRUEBA) {
   window.__juego = {
-    world, character, inmortal: false, choques: 0,
+    world, character, renderer, scene, inmortal: false, choques: 0,
     estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
@@ -1025,30 +1233,189 @@ if (PRUEBA) {
     // Adelanta la partida hasta la distancia `d` a saltos cortos (los reciclajes de la pista van de 129 en 129).
     saltarA: (d) => { while (distance < d) { const dz = Math.min(30, d - distance); distance += dz; world.update(dz, 1 / 60); } },
     misiones,
+    intento: () => intento, tramo: () => tramoMostrado, velocidad: () => speed,
+    // Pulsa como el jugador (carril, saltar, agacharse): para el piloto automatico de las pruebas.
+    accion: (a) => accionJugador(a),
     paso: (n = 1, dt = 1 / 60) => { for (let i = 0; i < n; i++) frame(dt); },
   };
 }
 
+// ---- Chocar (27/10/2026) ----
+// Antes: se quedaba congelado y salia la pantalla del sin fin («¡Te
+// atraparon!», el record de metros y confeti aunque se hubiera perdido) y el
+// nivel volvia a empezar de cero. Ahora se cae de espaldas y, en un nivel,
+// sale cuanto faltaba para la meta y se puede seguir pagando tacos, desde el
+// punto de control o desde el principio.
 function triggerGameOver() {
   if (PRUEBA && window.__juego.inmortal) { window.__juego.choques++; return; }
-  gameState = "gameover";
+  if (invulnerable > 0 || gameState !== "playing") return;
+  gameState = "cayendo";
+  cayendo = 0;
+  if (intento) intento.chocado = true;
   speedLinesEl.style.opacity = "0";
+  isSliding = false;
   sndHit();
   vibrate([80, 40, 80]);
-  addTacos(Math.floor(tacosThisRun));
-  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
-  pintarMisiones("misionesFin");
-  document.getElementById("bossBar").classList.add("hidden");
-  const isRecord = reportRunScore(Math.floor(distance));
-  document.getElementById("finalScore").textContent = Math.floor(distance);
-  document.getElementById("finalTacos").textContent = Math.floor(tacosThisRun);
-  const bestLine = document.getElementById("bestLine");
-  bestLine.textContent = isRecord ? "🏆 " + getSave().bestScore + " m" : "";
+  for (let d = 0; d < 8; d++) spawnDust(character.object3D.position.x, 0.4, 0);
+}
+function terminarCaida() {
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("powerupBadge").classList.add("hidden");
-  document.getElementById("gameOverScreen").classList.remove("hidden");
-  spawnConfetti(isRecord ? 40 : 18);
+  document.getElementById("bossBar").classList.add("hidden");
+  gameState = "gameover";
+  if (nivelActual) mostrarChoqueNivel();
+  else mostrarFinSinFin();
 }
+// Seguir cuesta tacos (los guardados mas los de esta partida), cada vez el doble.
+function precioSeguir() {
+  return PRECIO_SEGUIR * Math.pow(2, intento ? intento.pagos : 0);
+}
+function puedePagar(precio) {
+  return getSave().totalTacos + Math.floor(tacosThisRun) >= precio;
+}
+function pagar(precio) {
+  if (!puedePagar(precio)) return false;
+  const deGuardados = Math.min(getSave().totalTacos, precio);
+  spendTacos(deGuardados);
+  tacosThisRun -= precio - deGuardados;
+  lastTacoShown = Math.floor(tacosThisRun);
+  return true;
+}
+function botonSeguir(id) {
+  const b = document.getElementById(id);
+  const precio = precioSeguir();
+  b.innerHTML = `${t("seguirAqui").replace("{n}", precio)} ${TACO_IMG()}`;
+  b.disabled = !puedePagar(precio);
+  b.classList.toggle("apagado", b.disabled);
+}
+function mostrarChoqueNivel() {
+  const n = nivelActual;
+  document.getElementById("choqueTitulo").textContent = t("chocaste");
+  const falta = Math.max(0, Math.round(n.largo - distance));
+  document.getElementById("choqueFalta").textContent = t("faltaban")
+    .replace("{n}", falta.toLocaleString(getLang() === "en" ? "en" : "es"))
+    .replace("{m}", n.metaNombre ? (n.metaNombre[getLang()] || n.metaNombre.es) : "");
+  pintarBarra(barras[1], distance);
+  document.getElementById("choqueTacos").textContent = Math.floor(tacosThisRun);
+  botonSeguir("choqueSeguirAqui");
+  document.getElementById("choqueControl").classList.toggle("hidden", !intento.control);
+  document.getElementById("choqueNivel").classList.remove("hidden");
+}
+function mostrarFinSinFin() {
+  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+  pintarMisiones("misionesFin");
+  const record = Math.floor(distance) > getSave().bestScore;
+  document.getElementById("finalScore").textContent = Math.floor(distance);
+  document.getElementById("finalTacos").textContent = Math.floor(tacosThisRun);
+  document.getElementById("bestLine").innerHTML = record ? `${icono("estrella")} ${t("newRecord")}` : "";
+  botonSeguir("seguirSinFin");
+  document.getElementById("gameOverScreen").classList.remove("hidden");
+  if (record) spawnConfetti(40);
+}
+// Cerrar la carrera: se guardan los tacos de esta partida (y el record del sin fin).
+function cerrarCarrera() {
+  if (gameState === "cerrada" || gameState === "completado") return;
+  addTacos(Math.floor(tacosThisRun));
+  if (!nivelActual) reportRunScore(Math.floor(distance));
+  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+  gameState = "cerrada";
+}
+// Seguir justo donde se choco: lo de delante se aparta y se parpadea un rato.
+function seguirAqui() {
+  if (!pagar(precioSeguir())) return;
+  if (!intento) intento = nuevoIntento();
+  intento.pagos++;
+  for (const o of world.obstacles) if (!o.smashed && o.z > -6 && o.z < 4) world.smash(o);
+  character.setSlidePose(false);
+  invulnerable = INVULNERABLE;
+  gameState = "playing";
+  for (const id of ["choqueNivel", "gameOverScreen"]) document.getElementById(id).classList.add("hidden");
+  document.getElementById("hud").classList.remove("hidden");
+  if (world.jefeActivo()) document.getElementById("bossBar").classList.remove("hidden");
+  sndPoint();
+  empezarCuenta();
+}
+
+// ---- Pausa (27/10/2026): boton arriba a la derecha, y sola al salir de la app ----
+function pausar() {
+  if (gameState !== "playing" || pausado) return;
+  pausado = true;
+  cuenta = 0;
+  document.getElementById("cuentaAtras").classList.add("hidden");
+  const info = nivelActual
+    ? `${t("nivel")} ${nivelActual.numero} · ${nivelActual.nombre}<br>${t("faltanM").replace("{n}", Math.max(0, Math.round(nivelActual.largo - distance)))}`
+    : `${Math.floor(distance)} m`;
+  document.getElementById("pausaInfo").innerHTML = info;
+  pintarBotonesSonido();
+  document.getElementById("pausaOverlay").classList.remove("hidden");
+  pausarMusica(true);
+}
+function reanudar() {
+  if (!pausado) return;
+  document.getElementById("pausaOverlay").classList.add("hidden");
+  pausarMusica(false);
+  empezarCuenta();
+}
+// 3, 2, 1 antes de volver a correr (para no chocar nada mas quitar la pausa).
+function empezarCuenta() {
+  pausado = true;
+  cuenta = 1.5;
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && !PRUEBA) pausar(); });
+window.addEventListener("blur", () => { if (!PRUEBA) pausar(); });
+document.getElementById("pausaBtn").addEventListener("click", () => pausar());
+document.getElementById("pausaSeguir").addEventListener("click", reanudar);
+document.getElementById("pausaRepetir").addEventListener("click", () => {
+  document.getElementById("pausaOverlay").classList.add("hidden");
+  pausarMusica(false);
+  cerrarCarrera();
+  if (nivelActual) intento = nuevoIntento();
+  resetRun();
+  arrancar();
+});
+document.getElementById("pausaSalir").addEventListener("click", () => {
+  document.getElementById("pausaOverlay").classList.add("hidden");
+  pausarMusica(false);
+  pausado = false;
+  cerrarCarrera();
+  const habiaNivel = !!nivelActual;
+  volverAlMenu();
+  if (habiaNivel) abrirMapa();
+});
+function pintarBotonesSonido() {
+  const s = getSettings();
+  document.getElementById("pausaMusica").innerHTML = icono(s.musicMuted ? "musicaNo" : "musica");
+  document.getElementById("pausaSonido").innerHTML = icono(s.sfxMuted ? "sonidoNo" : "sonido");
+  document.getElementById("musicMuteBtn").innerHTML = icono(s.musicMuted ? "musicaNo" : "musica");
+  document.getElementById("sfxMuteBtn").innerHTML = icono(s.sfxMuted ? "sonidoNo" : "sonido");
+}
+document.getElementById("pausaMusica").addEventListener("click", () => {
+  const m = !getSettings().musicMuted; setMusicMuted(m); updateSettings({ musicMuted: m }); pintarBotonesSonido();
+});
+document.getElementById("pausaSonido").addEventListener("click", () => {
+  const m = !getSettings().sfxMuted; setSfxMuted(m); updateSettings({ sfxMuted: m }); pintarBotonesSonido();
+});
+
+// Botones de la pantalla de choque del nivel y del fin del sin fin.
+document.getElementById("choqueSeguirAqui").addEventListener("click", seguirAqui);
+document.getElementById("seguirSinFin").addEventListener("click", seguirAqui);
+document.getElementById("choqueControl").addEventListener("click", () => {
+  if (!intento.control) return;
+  resetRun(salidaControl(nivelActual));
+  arrancar();
+  avisoVerde(`${icono("control")} ${t("controlGuardado")}`);
+});
+document.getElementById("choqueRepetir").addEventListener("click", () => {
+  cerrarCarrera();
+  intento = nuevoIntento();
+  resetRun();
+  arrancar();
+});
+document.getElementById("choqueMapa").addEventListener("click", () => {
+  cerrarCarrera();
+  volverAlMenu();
+  abrirMapa();
+});
 
 // ---------- Loop ----------
 const clock = new THREE.Clock();
@@ -1068,9 +1435,35 @@ function frame(dtFijo) {
   if (PRUEBA && window.__juego && window.__juego.pausa && dtFijo === undefined) { renderer.render(scene, camera); return; }
   const dt = dtFijo !== undefined ? dtFijo : Math.min(clock.getDelta(), 0.05);
 
+  // En pausa se sigue dibujando (quieto); al quitarla, 3-2-1 y a correr.
+  if (pausado) {
+    if (cuenta > 0) {
+      cuenta -= dt;
+      const el = document.getElementById("cuentaAtras");
+      const n = String(Math.max(1, Math.ceil(cuenta / 0.5)));
+      if (el.textContent !== n || el.classList.contains("hidden")) {
+        el.textContent = n;
+        el.classList.remove("hidden");
+        el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+      }
+      if (cuenta <= 0) { pausado = false; el.classList.add("hidden"); }
+    }
+    renderer.render(scene, camera);
+    return;
+  }
+
   if (gameState === "playing") {
     elapsed += dt;
-    speed = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);
+    if (nivelActual) {
+      // Nivel: la velocidad va con lo recorrido (y un poco mas en el sprint).
+      const k = Math.min(1, distance / nivelActual.largo);
+      speed = BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k;
+      if (tramoMostrado && tramoMostrado.tipo === "sprint") speed *= SPRINT_EXTRA;
+    } else speed = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);
+    if (invulnerable > 0) {
+      invulnerable = Math.max(0, invulnerable - dt);
+      character.object3D.visible = invulnerable === 0 || Math.floor(invulnerable * 12) % 2 === 0;
+    }
     if (magnetTimeLeft > 0) { magnetTimeLeft = Math.max(0, magnetTimeLeft - dt); updatePowerupBadge(); }
     if (boostTimeLeft > 0) { boostTimeLeft = Math.max(0, boostTimeLeft - dt); updatePowerupBadge(); }
     const frameSpeed = speed * (boostTimeLeft > 0 ? BOOST_MULT : 1);
@@ -1109,6 +1502,33 @@ function frame(dtFijo) {
     // ---- El Burrito-Bot llega cada tantos metros ----
     world.setJugador(currentLane);
     if (nivelActual && distance >= nivelActual.largo - 1) { iniciarFinal(); return; }
+
+    // ---- Tramos: el cartel al entrar, el jefe de los niveles y el punto de control ----
+    const tramo = world.tramoEn(distance);
+    if (tramo !== tramoMostrado) {
+      tramoMostrado = tramo;
+      const titulo = tramo.titulo ? t("tr_" + tramo.titulo) : "";
+      if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
+      if (tramo.tipo === "sprint") { sndFanfarria(true); vibrate([20, 30, 20]); }
+    }
+    if (nivelActual && tramo.tipo === "jefe" && !jefeLanzado && distance > tramo.desde + 25 && rocketTimeLeft === 0 && !world.jefeActivo()) {
+      if (world.iniciarJefe()) {
+        jefeLanzado = true;
+        document.getElementById("bossFill").style.width = "100%";
+        document.getElementById("bossBar").classList.remove("hidden");
+        showBubble(t("jefeLlega"), 2200);
+        triggerCameraShake(0.04);
+      }
+    }
+    // En un nivel el Burrito-Bot se va cuando se acaba su tramo.
+    if (nivelActual && tramo.tipo !== "jefe" && world.jefeActivo()) world.despedirJefe();
+    if (nivelActual && nivelActual.control && intento && !intento.control && distance >= nivelActual.control) {
+      intento.control = { tacos: Math.floor(tacosThisRun) };
+      avisoVerde(`${icono("control")} ${t("controlGuardado")}`);
+      vibrate(20);
+    }
+    const av = world.tomarAviso(distance);
+    if (av && mostrarTutorial) mostrarGesto(av.tipo);
     if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
       nextJefeAt = distance + JEFE_CADA;
       document.getElementById("bossFill").style.width = "100%";
@@ -1172,6 +1592,7 @@ function frame(dtFijo) {
     }
     checkCollisions();
     checkCollectibles(dt);
+    checkChapas();
     checkPowerups();
     updateExpression(dt);
     updateHud();
@@ -1217,18 +1638,25 @@ function frame(dtFijo) {
       }
     }
     updateDust(dt);
+  } else if (gameState === "cayendo") {
+    // Se cae de espaldas; la calle se para en seco y sale la pantalla de choque.
+    cayendo += dt;
+    character.setCaida(cayendo);
+    world.update(Math.max(0, 0.2 - cayendo) * speed * dt);
+    updateDust(dt);
+    if (cayendo > 1.15) terminarCaida();
   } else if (gameState === "final") {
     frameFinal(dt);
   } else if (gameState === "menu") {
     idlePhase += dt;
-    character.object3D.rotation.y = Math.sin(idlePhase * 0.5) * 0.5;
+    character.object3D.rotation.y = Math.PI + Math.sin(idlePhase * 0.5) * 0.4;
     character.setIdlePose(idlePhase);
     shadowBlob.position.set(0, 0.015, 0);
     shadowBlob.scale.setScalar(1);
     updateDust(dt);
   }
 
-  renderer.render(scene, camera);
+  if (!(PRUEBA && window.__juego && window.__juego.sinDibujar)) renderer.render(scene, camera);
   if (firstFrame) {
     firstFrame = false;
     const loadingScreen = document.getElementById("loadingScreen");
@@ -1253,7 +1681,7 @@ function avisoMenu(texto) {
 function pintarSinFin() {
   const abierto = sinFinAbierto(getNiveles());
   const b = document.getElementById("sinFinBtn");
-  b.textContent = abierto ? t("sinFin") : "🔒 " + t("sinFin").replace("♾️ ", "");
+  b.innerHTML = `${icono(abierto ? "infinito" : "candado")}<span>${t("sinFin")}</span>`;
   b.classList.toggle("cerrado", !abierto);
 }
 document.getElementById("sinFinBtn").addEventListener("click", () => {
@@ -1266,13 +1694,12 @@ document.getElementById("sinFinCerrar").addEventListener("click", () => {
   document.getElementById("sinFinOverlay").classList.add("hidden");
 });
 document.getElementById("sinFinCorrer").addEventListener("click", () => {
-  startMusic();
+  startMusic("sinfin");
   nivelActual = null;
+  intento = nuevoIntento();
   resetRun();
-  gameState = "playing";
   document.getElementById("sinFinOverlay").classList.add("hidden");
-  document.getElementById("startScreen").classList.add("hidden");
-  document.getElementById("hud").classList.remove("hidden");
+  arrancar();
 });
 // Idioma en ajustes: marcar el elegido como los demas selectores.
 function marcarIdioma() {
@@ -1282,39 +1709,49 @@ function marcarIdioma() {
 }
 function volverAlMenu() {
   gameState = "menu";
+  pausado = false;
   idlePhase = 0;
+  if (mazorca) mazorca.visible = false;
   character.object3D.visible = true;
   character.object3D.position.set(0, 0, 0);
   character.object3D.rotation.set(0, 0, 0);
+  character.setSlidePose(false);
   setCameraMode("menu");
-  for (const id of ["gameOverScreen", "nivelFin", "mapaGira", "hud", "bossBar", "bannerNivel"]) document.getElementById(id).classList.add("hidden");
+  for (const id of ["gameOverScreen", "nivelFin", "mapaGira", "hud", "bossBar", "bannerNivel", "choqueNivel", "pausaOverlay", "cuentaAtras", "tramoBanner", "avisoGesto", "powerupBadge"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("startScreen").classList.remove("hidden");
   pintarMisiones("misionesMenu");
   pintarSinFin();
+  stopMusic();
 }
 document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
 document.getElementById("nivelFinMapa").addEventListener("click", () => { volverAlMenu(); abrirMapa(); });
 document.getElementById("nivelFinRepetir").addEventListener("click", () => {
-  document.getElementById("nivelFin").classList.add("hidden");
+  intento = nuevoIntento();
   resetRun();
-  gameState = "playing";
-  document.getElementById("hud").classList.remove("hidden");
+  arrancar();
 });
 
 document.getElementById("retryBtn").addEventListener("click", () => {
+  cerrarCarrera();
+  intento = nuevoIntento();
   resetRun();
-  gameState = "playing";
-  document.getElementById("gameOverScreen").classList.add("hidden");
-  document.getElementById("hud").classList.remove("hidden");
+  arrancar();
 });
 
-document.getElementById("menuBtn").addEventListener("click", volverAlMenu);
+document.getElementById("menuBtn").addEventListener("click", () => { cerrarCarrera(); volverAlMenu(); });
 
-document.getElementById("langToggle").addEventListener("click", () => { toggleLang(); updatePowerupBadge(); });
-document.getElementById("startLangBtn").addEventListener("click", () => { toggleLang(); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
+function cambiarIdioma(lang) {
+  if (lang) setLang(lang); else toggleLang();
+  pintarIconos();
+  marcarIdioma();
+  pintarMisiones("misionesMenu");
+  pintarSinFin();
+}
+document.getElementById("startLangBtn").addEventListener("click", () => cambiarIdioma());
 
-// Fase 2/4 todavia no implementadas: ocultar accesos por ahora.
-document.getElementById("startShopBtn").style.display = "none";
+// La tienda (27/10/2026): los tacos ya sirven para algo.
+document.getElementById("startShopBtn").addEventListener("click", () => { unlockAudio(); abrirTienda(character); });
+// El ranking mundial necesita un servidor: sigue oculto.
 document.getElementById("startRankBtn").style.display = "none";
 
 // ---------- Ajustes ----------
@@ -1334,8 +1771,7 @@ const sfxMuteBtn = document.getElementById("sfxMuteBtn");
 musicVolRange.value = Math.round(settings.musicVol * 100);
 sfxVolRange.value = Math.round(settings.sfxVol * 100);
 sensitivityRange.value = settings.swipeSensitivity;
-musicMuteBtn.textContent = settings.musicMuted ? "🔇" : "🔊";
-sfxMuteBtn.textContent = settings.sfxMuted ? "🔇" : "🔊";
+pintarBotonesSonido();
 
 document.getElementById("startSettingsBtn").addEventListener("click", () => {
   document.getElementById("settingsOverlay").classList.remove("hidden");
@@ -1364,17 +1800,17 @@ musicMuteBtn.addEventListener("click", () => {
   const muted = !s.musicMuted;
   setMusicMuted(muted);
   updateSettings({ musicMuted: muted });
-  musicMuteBtn.textContent = muted ? "🔇" : "🔊";
+  pintarBotonesSonido();
 });
 sfxMuteBtn.addEventListener("click", () => {
   const s = getSettings();
   const muted = !s.sfxMuted;
   setSfxMuted(muted);
   updateSettings({ sfxMuted: muted });
-  sfxMuteBtn.textContent = muted ? "🔇" : "🔊";
+  pintarBotonesSonido();
 });
-document.getElementById("settingsLangEs").addEventListener("click", () => { setLang("es"); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
-document.getElementById("settingsLangEn").addEventListener("click", () => { setLang("en"); marcarIdioma(); pintarMisiones("misionesMenu"); pintarSinFin(); });
+document.getElementById("settingsLangEs").addEventListener("click", () => cambiarIdioma("es"));
+document.getElementById("settingsLangEn").addEventListener("click", () => cambiarIdioma("en"));
 marcarIdioma();
 
 const qualityBtns = {
@@ -1414,6 +1850,10 @@ for (const btn of zoneBtns) {
 }
 
 applyI18n();
+pintarIconos();
+pintarPegatinas();
+pintarBotonesSonido();
+aplicarTienda(character);
 requestAnimationFrame(tick);
 
 // Para poder instalar el juego en el movil (26/10/2026): ver sw.js.

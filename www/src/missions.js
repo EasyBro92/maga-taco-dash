@@ -26,7 +26,7 @@ function estado() {
   const s = getSave();
   if (!s.misiones) {
     s.misiones = {
-      activas: [{ tipo: "tacos", nivel: 0, hecho: 0 }, { tipo: "saltos", nivel: 0, hecho: 0 }, { tipo: "autobus", nivel: 0, hecho: 0 }],
+      activas: [{ tipo: "tacos", nivel: 0, hecho: 0 }, { tipo: "saltos", nivel: 0, hecho: 0 }, { tipo: "deslizar", nivel: 0, hecho: 0 }],
       niveles: {},
       cumplidas: 0,
     };
@@ -74,12 +74,28 @@ export function evento(tipo, valor = 1) {
   return cumplidas;
 }
 
+// ---- Solo misiones que se puedan hacer (27/10/2026) ----
+// Antes salian misiones imposibles: subirse a autobuses en Nueva York (alli no
+// hay) o vencer al jefe sin haberlo visto nunca. main.js dice que se puede
+// hacer con lo que hay abierto; las que no, se cambian por otras.
+let sePuede = () => true;
+export function fijarDisponibles(fn) {
+  sePuede = fn;
+  const e = estado();
+  let cambio = false;
+  for (let i = 0; i < e.activas.length; i++) {
+    if (!sePuede(e.activas[i].tipo)) { e.activas[i] = siguiente(null); cambio = true; }
+  }
+  if (cambio) persistSave();
+}
+
 // La siguiente mision tras cumplir una: el mismo tipo un nivel mas arriba la
 // mitad de las veces; si no, un tipo que no este ya entre las activas.
 function siguiente(tipoCumplido) {
   const e = estado();
   const usados = new Set(e.activas.map((m) => m.tipo));
-  const libres = Object.keys(TIPOS).filter((t) => !usados.has(t));
-  const tipo = Math.random() < 0.5 || !libres.length ? tipoCumplido : libres[Math.floor(Math.random() * libres.length)];
+  const libres = Object.keys(TIPOS).filter((t) => !usados.has(t) && sePuede(t));
+  const repetir = tipoCumplido && sePuede(tipoCumplido) && (Math.random() < 0.5 || !libres.length);
+  const tipo = repetir ? tipoCumplido : libres.length ? libres[Math.floor(Math.random() * libres.length)] : "tacos";
   return { tipo, nivel: e.niveles[tipo] || 0, hecho: 0 };
 }

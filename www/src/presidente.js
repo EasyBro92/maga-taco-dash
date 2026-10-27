@@ -58,6 +58,66 @@ export function crearPresidente(gltf) {
   const huesos = {};
   modelo.traverse((o) => { if (o.isBone) huesos[o.name] = o; });
 
+  // ---- La tienda (27/10/2026): sombreros y trajes ----
+  // Donde va un sombrero: en lo alto de la cabeza, calculado en reposo (antes
+  // de que se mueva nada) y en el espacio del hueso de la cabeza, para que se
+  // mueva con ella al correr. El sombrero viene mirando a +z y con la base en
+  // y = 0; aqui se gira para que mire adonde mira el presidente.
+  let marcoCabeza = null, sombreroPuesto = null;
+  if (huesos.Head) {
+    root.updateMatrixWorld(true);
+    const h = huesos.Head;
+    const qInv = h.getWorldQuaternion(new THREE.Quaternion()).invert();
+    const s = h.getWorldScale(new THREE.Vector3()).x;
+    const arriba = new THREE.Vector3(0, 1, 0).applyQuaternion(qInv).normalize();
+    const delante0 = new THREE.Vector3(0, 0, -1).applyQuaternion(qInv);
+    const lado = new THREE.Vector3().crossVectors(arriba, delante0).normalize();
+    const delante = new THREE.Vector3().crossVectors(lado, arriba).normalize();
+    const quat = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(lado, arriba, delante));
+    const punta = huesos.head_end ? huesos.head_end.position.clone() : new THREE.Vector3(0, 0.22 / s, 0);
+    marcoCabeza = { punta, quat, escala: 1 / s };
+  }
+  // El traje se tiñe cambiando, en la textura, los pixeles azul marino del
+  // traje por el color nuevo (conservando sus luces y sombras).
+  const mapaOriginal = malla.material.map;
+  const texturasTraje = {};
+  let pixelesTraje = null;
+  function texturaTraje(color) {
+    if (texturasTraje[color]) return texturasTraje[color];
+    const im = mapaOriginal.image;
+    const c = document.createElement("canvas");
+    c.width = im.width; c.height = im.height;
+    const x = c.getContext("2d");
+    x.drawImage(im, 0, 0);
+    const datos = x.getImageData(0, 0, c.width, c.height);
+    const d = datos.data;
+    if (!pixelesTraje) {
+      // Azul marino: el azul manda, poco rojo, y oscuro.
+      pixelesTraje = [];
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        if (b === max && b - r > 18 && b - g > 6 && max < 170 && (max - min) / (max || 1) > 0.18) pixelesTraje.push(i);
+      }
+    }
+    const obj = new THREE.Color(color);
+    const or = obj.r * 255, og = obj.g * 255, ob = obj.b * 255;
+    const claro = (or + og + ob) / 3 > 150;
+    for (const i of pixelesTraje) {
+      const l = (d[i] * 0.3 + d[i + 1] * 0.5 + d[i + 2] * 0.2) / 70;   // luz de ese punto del traje (≈1 de media)
+      const k = claro ? 0.55 + 0.45 * Math.min(1.6, l) : Math.min(1.6, 0.35 + 0.85 * l);
+      d[i] = Math.min(255, or * k); d[i + 1] = Math.min(255, og * k); d[i + 2] = Math.min(255, ob * k);
+    }
+    x.putImageData(datos, 0, 0);
+    const tex = new THREE.CanvasTexture(c);
+    tex.flipY = mapaOriginal.flipY;
+    tex.colorSpace = mapaOriginal.colorSpace;
+    tex.wrapS = mapaOriginal.wrapS; tex.wrapT = mapaOriginal.wrapT;
+    tex.anisotropy = 4;
+    texturasTraje[color] = tex;
+    return tex;
+  }
+
   // Escudo (Orden Ejecutiva)
   const shield = new THREE.Mesh(
     new THREE.SphereGeometry(0.95, 16, 12),
@@ -115,7 +175,7 @@ export function crearPresidente(gltf) {
       correr.timeScale = 0.75 + 0.45 * Math.max(0, speedFactor - 1) + 0.25;
       andar.timeScale = 1.1;
       pose.rotation.set(0, 0, 0);
-      pose.position.y = 0;
+      pose.position.set(0, 0, 0);   // (27/10: tambien z: tras deslizarse se quedaba medio metro atras)
       root.scale.lerp(NEUTRAL, Math.min(1, dt * 8));
       mixer.update(dt);
     },
@@ -187,11 +247,55 @@ export function crearPresidente(gltf) {
         base = { brazo: brazo ? brazo.quaternion.clone() : null, ante: ante ? ante.quaternion.clone() : null };
       }
       pose.rotation.set(0, 0, 0);
-      pose.position.y = 0;
+      pose.position.set(0, 0, 0);   // (27/10: tambien z: tras deslizarse se quedaba medio metro atras)
       if (brazo) brazo.quaternion.copy(base.brazo).multiply(q.setFromAxisAngle(EJE_Z, -2.5 + Math.sin(t * 6) * 0.08));
       if (ante) ante.quaternion.copy(base.ante).multiply(q.setFromAxisAngle(EJE_Z, -0.9 + Math.sin(t * 7) * 0.5));
       const breathe = 1 + Math.sin(t * 1.6) * 0.012;
       root.scale.set(mega / breathe, mega * breathe, mega / breathe);
+    },
+
+    // 27/10: al chocar se cae de espaldas, con los brazos y las piernas al
+    // aire (antes se quedaba congelado en la postura de correr). `t`: segundos
+    // desde el choque.
+    setCaida(t) {
+      base = null;
+      mezclar(1, 0);
+      correr.timeScale = 0;
+      mixer.update(0);
+      const k = Math.min(1, t / 0.38);
+      const e = k * k * (3 - 2 * k);
+      const bote = t < 0.38 ? Math.sin(k * Math.PI) * 0.45 : Math.max(0, Math.sin(((t - 0.38) / 0.22) * Math.PI)) * 0.08 * (t < 0.6 ? 1 : 0);
+      pose.rotation.set(-1.32 * e, 0, Math.sin(t * 9) * 0.04 * (1 - e));
+      pose.position.set(0, -0.12 * e + bote, 0.75 * e);
+      root.scale.set(mega, mega, mega);
+      root.updateMatrixWorld(true);
+      const kk = Math.min(1, 0.25 + t);
+      apuntar("RightArm", "RightForeArm", 0.95, 0.35, 0.25, kk);
+      apuntar("RightForeArm", "RightHand", 0.6, 0.8, 0.1, kk);
+      apuntar("LeftArm", "LeftForeArm", -0.95, 0.35, 0.25, kk);
+      apuntar("LeftForeArm", "LeftHand", -0.6, 0.8, 0.1, kk);
+      apuntar("RightUpLeg", "RightLeg", 0.2, 0.75, -1, kk);
+      apuntar("RightLeg", "RightFoot", 0.15, 0.9, -0.6, kk);
+      apuntar("LeftUpLeg", "LeftLeg", -0.2, 0.45, -1, kk);
+      apuntar("LeftLeg", "LeftFoot", -0.15, 0.7, -0.8, kk);
+    },
+
+    ponerSombrero(obj) {
+      if (sombreroPuesto && sombreroPuesto.parent) sombreroPuesto.parent.remove(sombreroPuesto);
+      sombreroPuesto = null;
+      if (!obj || !marcoCabeza) return;
+      const pivote = new THREE.Group();
+      pivote.position.copy(marcoCabeza.punta).multiplyScalar(0.74);
+      pivote.quaternion.copy(marcoCabeza.quat);
+      pivote.scale.setScalar(marcoCabeza.escala * 1.4);   // la cabeza de caricatura es grande
+      pivote.add(obj);
+      huesos.Head.add(pivote);
+      sombreroPuesto = pivote;
+    },
+    teñirTraje(color) {
+      if (!mapaOriginal || !mapaOriginal.image) return;
+      malla.material.map = color === null || color === undefined ? mapaOriginal : texturaTraje(color);
+      malla.material.needsUpdate = true;
     },
 
     setShieldActive(active) { shield.visible = active; },

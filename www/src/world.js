@@ -3,7 +3,10 @@ import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo } from "./models.js";
 import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel } from "./levels.js";
-import { construirEdificio } from "./edificios.js";
+import { construirEdificio, soltarEdificio } from "./edificios.js";
+import { lienzo as lienzoPegatina } from "./pegatinas.js";
+import { crearHorizonte } from "./horizonte.js";
+import { t as tr } from "./i18n.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -278,6 +281,21 @@ function makeShingleTexture() {
   return tex;
 }
 
+// La bandera de EE. UU. de las astas de la acera (27/10/2026).
+function texturaBandera() {
+  if (typeof document === 'undefined') return null;
+  const c = document.createElement('canvas');
+  c.width = 190; c.height = 100;
+  const x = c.getContext('2d');
+  for (let i = 0; i < 13; i++) { x.fillStyle = i % 2 ? '#ffffff' : '#c8303a'; x.fillRect(0, (i * 100) / 13, 190, 100 / 13 + 1); }
+  x.fillStyle = '#2a3f8f'; x.fillRect(0, 0, 80, 54);
+  x.fillStyle = '#ffffff';
+  for (let f = 0; f < 5; f++) for (let k = 0; k < 6; k++) { x.beginPath(); x.arc(8 + k * 13 + (f % 2) * 6, 7 + f * 10, 2.2, 0, Math.PI * 2); x.fill(); }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 export function createWorld(scene) {
   const group = new THREE.Group();
   scene.add(group);
@@ -375,117 +393,15 @@ export function createWorld(scene) {
     dc: { sky: 0xbfe0ff, skyTop: 0x4a8fd6, ground: 0xe6dcc6, fog: 0xbfe0ff, road: 0x5a5f6d, horizon: 0x74879f, sidewalk: 0xf0e9dc },
   };
 
-  // ---- Horizonte lejano permanente: una cordillera que nunca se crea ni se
-  // destruye durante la partida (igual que el domo del cielo, hija de la
-  // escena y no del grupo que hace scroll -- a esta distancia el movimiento
-  // relativo real seria imperceptible de todos modos). Referencia: el fondo
-  // de montañas siempre visible en Subway Surfers -- la idea es que el mundo
-  // se sienta continuo mas alla de la pista, en vez de que las cosas
-  // aparezcan de la nada. Sin niebla (fog:false) y con un color desaturado
-  // que imita la perspectiva atmosferica, asi que se ve bien sin depender de
-  // que la niebla este calibrada. Nunca puede hacer "pop" porque nunca nace:
-  // existe desde el primer frame y solo cambia de color al cruzar de zona. ----
-  const horizonMat = new THREE.MeshBasicMaterial({ color: BIOME_COLORS.city.horizon, fog: false });
-  // Dos filas de cumbres. A z=-78 y con FOV 55 la camara abarca unos +-50 en
-  // X, pero la fila anterior solo llegaba a +-34: quedaban huecos de cielo
-  // limpio en los laterales por donde se veia nacer a los edificios. Ahora
-  // cubre +-56 con holgura, y la segunda fila (mas lejos, mas clara) da
-  // profundidad y tapa los valles entre cumbres de la primera.
-  const horizonFarMat = new THREE.MeshBasicMaterial({ color: BIOME_COLORS.city.horizon, fog: false });
-  horizonFarMat.color.lerp(new THREE.Color(BIOME_COLORS.city.sky), 0.45);
-  const HORIZON_ROWS = [
-    { count: 26, span: 150, z: -112, hMin: 15, hMax: 28, wMin: 10, wMax: 9, mat: horizonMat },
-    { count: 20, span: 158, z: -124, hMin: 21, hMax: 20, wMin: 13, wMax: 10, mat: horizonFarMat },
-  ];
-  for (const row of HORIZON_ROWS) {
-    for (let i = 0; i < row.count; i++) {
-      const h = row.hMin + Math.random() * row.hMax;
-      const w = row.wMin + Math.random() * row.wMax;
-      const peak = new THREE.Mesh(new THREE.ConeGeometry(w, h, 5), row.mat);
-      peak.position.set(
-        -row.span / 2 + (i / (row.count - 1)) * row.span + (Math.random() - 0.5) * 4,
-        h * 0.3,
-        row.z - Math.random() * 6
-      );
-      peak.rotation.y = Math.random() * Math.PI;
-      scene.add(peak);
-    }
-  }
-
-  // ---- Capa intermedia de profundidad ----
-  // Entre las fachadas de la calle (x~10) y la cordillera (z~-80) no habia
-  // nada: se pasaba del detalle cercano al fondo lejano de golpe, y eso es lo
-  // que hace que el mundo se sienta plano y como un decorado. Esta capa son
-  // siluetas grandes y sin detalle, muy separadas de la pista, que llenan ese
-  // salto. Van en `scene` (no en `group`) y no se mueven ni reciclan, asi que
-  // nunca pueden hacer "pop"; solo cambian de forma y color al cambiar de
-  // zona. Sin niebla, con color mezclado hacia el cielo segun lo lejos que
-  // esten, imitando la perspectiva atmosferica.
-  const midLayerGroups = { city: new THREE.Group(), town: new THREE.Group(), dc: new THREE.Group(), desert: new THREE.Group() };
-  const midMats = {};
-  for (const zone in midLayerGroups) {
-    const base = new THREE.Color(BIOME_COLORS[zone].horizon);
-    const sky = new THREE.Color(BIOME_COLORS[zone].sky);
-    // Dos profundidades: la de delante mas definida, la de atras mas lavada.
-    midMats[zone] = [
-      new THREE.MeshBasicMaterial({ color: base.clone().lerp(sky, 0.25), fog: false }),
-      new THREE.MeshBasicMaterial({ color: base.clone().lerp(sky, 0.5), fog: false }),
-    ];
-    const g = midLayerGroups[zone];
-    g.visible = false;
-    scene.add(g);
-
-    for (let i = 0; i < 26; i++) {
-      const far = i % 2;
-      const mat = midMats[zone][far];
-      const side = i % 2 === 0 ? -1 : 1;
-      const x = side * (20 + Math.random() * 16 + far * 10);
-      const z = -22 - Math.random() * 46;
-      let mesh;
-      if (zone === "city" || zone === "dc") {
-        // Torres de fondo: bloques altos y anonimos que insinuan una ciudad
-        // detras de la primera linea de edificios.
-        const h = 12 + Math.random() * 20;
-        mesh = new THREE.Mesh(new THREE.BoxGeometry(3 + Math.random() * 3, h, 3 + Math.random() * 3), mat);
-        mesh.position.set(x, h / 2, z);
-        if (zone === "dc" && Math.random() < 0.3) {
-          const dome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), mat);
-          dome.position.set(x, h, z);
-          g.add(dome);
-        }
-      } else if (zone === "town") {
-        // Arboledas: masas de copa redondeada, mas bajas.
-        const h = 5 + Math.random() * 6;
-        mesh = new THREE.Mesh(new THREE.SphereGeometry(h * 0.5, 8, 6), mat);
-        mesh.scale.y = 0.85;
-        mesh.position.set(x, h * 0.42, z);
-      } else {
-        // Desierto: mesetas y cerros lejanos.
-        const h = 4 + Math.random() * 7;
-        mesh = new THREE.Mesh(new THREE.CylinderGeometry(2.6 + Math.random() * 2, 3.4 + Math.random() * 2, h, 6), mat);
-        mesh.position.set(x, h / 2, z);
-        mesh.rotation.y = Math.random() * Math.PI;
-      }
-      g.add(mesh);
-    }
-  }
-  // D.C.: el obelisco de Blender, fijo al fondo como el horizonte. Material
-  // propio sin niebla (a esa distancia la niebla lo dejaria blanco del todo)
-  // y algo lavado hacia el cielo, como el resto de esta capa.
-  const obelisco = modelo("dc/monumento");
-  if (obelisco) {
-    const malla = obelisco.children[0];
-    malla.material = malla.material.clone();
-    malla.material.fog = false;
-    malla.material.color.set(0xffffff).lerp(new THREE.Color(BIOME_COLORS.dc.sky), 0.2);
-    obelisco.scale.setScalar(1.7);
-    obelisco.position.set(-24, 0, -64);
-    midLayerGroups.dc.add(obelisco);
-  }
+  // ---- Horizonte pintado y nubes altas (27/10/2026, ver horizonte.js) ----
+  // Sustituye a la cordillera de conos grises y a los bloques sueltos del fondo.
+  const horizonte = typeof document !== 'undefined' ? crearHorizonte(scene) : null;
+  const SITIO_DE_ZONA = { city: 'manhattan', desert: 'desierto', town: 'pueblo', dc: 'dc' };
   function showMidLayer(zone) {
-    for (const z in midLayerGroups) midLayerGroups[z].visible = z === zone;
+    if (!horizonte) return;
+    const sitio = (nivel && nivel.horizonte) || SITIO_DE_ZONA[zone] || 'manhattan';
+    horizonte.pintar(sitio, BIOME_COLORS[zone].sky, BIOME_COLORS[zone].fog);
   }
-  showMidLayer("city");
 
   // Zona forzada: si esta activa, toda la partida se queda en esa zona (sin
   // rotar) -- se usa para el selector de zona del menu. null = rotacion
@@ -544,7 +460,7 @@ export function createWorld(scene) {
       roadLines.push(m);
     }
   }
-  for (let z = 0; z > SPAWN_Z; z -= 3) spawnRoadLine(z);
+  // (27/10: sin estas lineas amarillas: quedaban pintadas sobre el suelo, mas alla de la acera.)
 
   // Acera de hormigon a ambos lados, entre la calzada y donde estan los
   // props (antes el suelo era una sola superficie sin ninguna referencia).
@@ -632,7 +548,7 @@ export function createWorld(scene) {
       }
     }
   }
-  for (let z = 0; z > SPAWN_Z; z -= 5) spawnBunting(z);
+  // (27/10: sin banderines: flotaban sueltos, sin cuerda.)
 
   // ---- Franjas divisorias de carril (pool reciclado) ----
   const stripes = [];
@@ -640,25 +556,31 @@ export function createWorld(scene) {
   // discontinuas pasaban a 10 por segundo como una luz estroboscopica.
   const stripeGeo = new THREE.BoxGeometry(0.1, 0.02, 3.02);
   const stripeMat = toon(0xeae6dc);
-  function spawnStripe(z) {
-    for (const laneEdge of [-LANE_WIDTH / 2, LANE_WIDTH / 2]) {
-      const m = new THREE.Mesh(stripeGeo, stripeMat);
-      m.position.set(laneEdge, 0.07, z);
-      group.add(m);
-      stripes.push(m);
-    }
+  // 27/10: dos rayas largas en vez de ~190 trocitos de 3 (eran casi 200
+  // llamadas de dibujo). Como son continuas, no hace falta moverlas: solo se
+  // recortan donde acaba la calle del nivel.
+  const rayaGeo = new THREE.BoxGeometry(0.1, 0.02, 1);
+  rayaGeo.translate(0, 0, -0.5);            // de z = 0 hacia -z
+  for (const laneEdge of [-LANE_WIDTH / 2, LANE_WIDTH / 2]) {
+    const m = new THREE.Mesh(rayaGeo, stripeMat);
+    m.position.set(laneEdge, 0.07, 8);
+    m.scale.z = 8 - SPAWN_Z;
+    group.add(m);
+    stripes.push(m);
   }
-  for (let z = 0; z > SPAWN_Z; z -= 3) spawnStripe(z);
 
   // ---- Banderas + publico decorativo (pool reciclado) ----
   const decor = [];
+  const banderaMat = toon(0xffffff, { side: THREE.DoubleSide, shininess: 10, map: texturaBandera() });
+  const banderaGeo = new THREE.PlaneGeometry(0.95, 0.58);
   function makeFlagPole() {
     const g = new THREE.Group();
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3, 6), toon(0xd8dde3));
     pole.position.y = 1.5;
     g.add(pole);
-    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.5), toon(0x2f6bff, { side: THREE.DoubleSide }));
-    flag.position.set(0.4, 2.6, 0);
+    // 27/10: la bandera de EE. UU. (antes un rectangulo azul liso que parecia un cartel en blanco).
+    const flag = new THREE.Mesh(banderaGeo, banderaMat);
+    flag.position.set(0.47, 2.62, 0);
     g.add(flag);
     g.userData.kind = "flag";
     g.userData.flagMesh = flag;
@@ -685,8 +607,9 @@ export function createWorld(scene) {
   const HOMBROS = { ejecutivo: [0.272, 1.368], senora: [0.23, 1.277], chico: [0.158, 0.874],
     abuelo: [0.262, 1.262], turista: [0.239, 1.322], fan: [0.233, 1.292] };
   const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_brazo`));
-  function personaPixar() {
-    const n = PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
+  function personaPixar(lista) {
+    const vale = (lista || PERSONAS).filter((x) => PERSONAS.includes(x));
+    const n = vale.length ? vale[Math.floor(Math.random() * vale.length)] : PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
     const g = new THREE.Group();
     const c = medidas(`publico/${n}_cuerpo`), b = medidas(`publico/${n}_brazo`);
     g.add(new THREE.Mesh(c.geometry, c.material));
@@ -700,8 +623,8 @@ export function createWorld(scene) {
     g.userData.ritmo = 0.8 + Math.random() * 0.5;
     return g;
   }
-  function makePerson() {
-    if (PUBLICO_PIXAR) return personaPixar();
+  function makePerson(lista) {
+    if (PUBLICO_PIXAR) return personaPixar(lista);
     const g = new THREE.Group();
     const shirtMat = shirtMats[Math.floor(Math.random() * shirtMats.length)];
     const pantsMat = pantsMats[Math.floor(Math.random() * pantsMats.length)];
@@ -794,43 +717,56 @@ export function createWorld(scene) {
     return g;
   }
 
-  function spawnDecorCluster(z) {
-    const left = makeFlagPole(); left.position.set(-4.6, 0, z);
-    const right = makeFlagPole(); right.position.set(4.6, 0, z); right.rotation.y = Math.PI;
-    group.add(left, right);
-    decor.push(left, right);
-    const porLado = PUBLICO_PIXAR ? 2 : 4;
-    for (let i = 0; i < porLado; i++) {
-      const pL = makePerson();
-      pL.position.set(-4.6 - 0.4 - i * (PUBLICO_PIXAR ? 0.9 : 0.4), 0, z + i * (PUBLICO_PIXAR ? 1.2 : 0.45) - 0.6);
-      pL.rotation.y = 0.4;
-      group.add(pL);
-      decor.push(pL);
-      const pR = makePerson();
-      pR.position.set(4.6 + 0.4 + i * (PUBLICO_PIXAR ? 0.9 : 0.4), 0, z + i * (PUBLICO_PIXAR ? 1.2 : 0.45) - 0.6);
-      pR.rotation.y = -0.4;
-      group.add(pR);
-      decor.push(pR);
-    }
-    if (!PUBLICO_PIXAR && Math.random() < 0.6) {
-      const bL = makeBleacher(); bL.position.set(-6.6, 0, z - 1); bL.rotation.y = 0.5;
-      group.add(bL); decor.push(bL);
-      const bR = makeBleacher(); bR.position.set(6.6, 0, z - 1); bR.rotation.y = -0.5;
-      group.add(bR); decor.push(bR);
-    }
-    // 2 nubes por cluster y esparcidas mucho mas ancho que antes (+-22 en vez
-    // de +-10): con el mundo alargado (ronda 15) el hueco lateral del cielo
-    // (por encima de los edificios del borde) se nota si las nubes no llegan
-    // hasta ahi. Tienen su propio fundido corto (ver "cloud" en el update loop
-    // mas abajo) para que sigan poblando el horizonte incluso recien nacidas.
-    for (let i = 0; i < 2; i++) {
-      const cloud = makeCloud();
-      cloud.position.set((Math.random() - 0.5) * 44, 8 + Math.random() * 4, z - 10 - Math.random() * 8);
-      group.add(cloud);
-      decor.push(cloud);
+  function spawnDecorCluster(z, i, conf) {
+    // Grupos alternos: unos con publico (detras de su valla) y otros con un
+    // par de banderas; asi la acera no es la misma fila repetida.
+    const conPublico = conf.personas && i % (conf.cada || 2) === 0;
+    for (const side of [-1, 1]) {
+      if (!conPublico) {
+        if (conf.banderas === false) continue;
+        const f = makeFlagPole();
+        f.position.set(side * 4.45, 0, z - Math.random() * 3);
+        f.rotation.y = side > 0 ? Math.PI : 0;
+        group.add(f); decor.push(f);
+        continue;
+      }
+      if (conf.valla && hayModelo("publico/" + conf.valla)) {
+        const v = modelo("publico/" + conf.valla);
+        v.position.set(side * 4.35, 0, z - 1);
+        v.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        v.userData.kind = "valla";
+        group.add(v); decor.push(v);
+      }
+      const n = 2 + Math.floor(Math.random() * 2);
+      for (let k = 0; k < n; k++) {
+        const p = makePerson(conf.personas);
+        p.position.set(side * (4.95 + Math.random() * 0.5 + (k % 2) * 0.55), 0, z - k * 0.95 + (Math.random() - 0.5) * 0.3);
+        p.rotation.y = side < 0 ? 0.35 + Math.random() * 0.3 : -0.35 - Math.random() * 0.3;
+        group.add(p); decor.push(p);
+      }
     }
   }
-  for (let z = -5; z > SPAWN_Z; z -= 11) spawnDecorCluster(z);
+  // Publico y banderas segun el sitio: el de cada nivel, o el de su zona en el sin fin.
+  const PUBLICO_ZONA = {
+    city: { personas: PERSONAS, valla: "valla_policia", cada: 2 },
+    town: { personas: ["abuelo", "senora", "chico", "fan"], cada: 3 },
+    dc: { personas: ["ejecutivo", "fan", "turista", "senora"], valla: "verja", cada: 2 },
+    desert: { personas: null, banderas: false },
+  };
+  const VALLAS = { policia: "valla_policia", verja: "verja", banderas: null };
+  let decorDe = null;
+  function montarDecor() {
+    const conf = nivel && nivel.publico
+      ? { ...nivel.publico, valla: VALLAS[nivel.publico.valla] }
+      : PUBLICO_ZONA[currentZoneName(0)] || PUBLICO_ZONA.city;
+    const clave = JSON.stringify(conf);
+    if (clave === decorDe) return;
+    decorDe = clave;
+    for (const d of decor) group.remove(d);
+    decor.length = 0;
+    let i = 0;
+    for (let z = -5; z > SPAWN_Z; z -= 11) spawnDecorCluster(z, i++, conf);
+  }
 
   // ---- Props del anillo exterior, por bioma ----
 
@@ -1768,11 +1704,13 @@ export function createWorld(scene) {
     }
   }
   function prepararCalle() {
-    for (const p of calleViva) group.remove(p.mesh);
+    for (const p of calleViva) { group.remove(p.mesh); soltarEdificio(p.mesh); }
     calleViva.length = 0;
     casaBlanca = null;
     calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
     siguientePieza = 0;
+    // Siguiendo desde el punto de control: lo que ya quedo atras no se pone.
+    while (siguientePieza < calle.length && calle[siguientePieza].d + (calle[siguientePieza].ancho || 10) < totalScrolled - 15) siguientePieza++;
     azar = nivel ? azarConSemilla(nivel.semilla) : Math.random;
   }
   // Retranqueo: lo que sobresale mucho (porticos, plazas) se mete hacia
@@ -1786,6 +1724,7 @@ export function createWorld(scene) {
       p.mesh.position.z += dz;
       if (p.mesh.position.z > DESPAWN_Z + p.fin && p.mesh !== casaBlanca) {
         group.remove(p.mesh);
+        soltarEdificio(p.mesh);
         calleViva.splice(i, 1);
       }
     }
@@ -1798,6 +1737,14 @@ export function createWorld(scene) {
         m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
         group.add(m);
         calleViva.push({ mesh: m, fin: 10 });
+        continue;
+      }
+      if (p.arco) {
+        // El arco del punto de control, de lado a lado de la calle.
+        const a = construirArco();
+        a.position.set(0, 0, -(p.d - totalScrolled));
+        group.add(a);
+        calleViva.push({ mesh: a, fin: 20 });
         continue;
       }
       const clave = `${nivel.carpeta}/${p.pieza}`;
@@ -1840,9 +1787,10 @@ export function createWorld(scene) {
       outerPools["nivel_" + nivel.id] = acerasNivel[nivel.id];
     }
     const pools = acerasNivel[nivel.id];
+    aceraNivel.n = (aceraNivel.n || 0) + 1;
     for (const side of [-1, 1]) {
-      for (let k = 0; k < 2; k++) {
-        const idx = k % pools.length;
+      for (let k = 0; k < 1; k++) {
+        const idx = (aceraNivel.n + (side > 0 ? 1 : 0)) % pools.length;
         const mesh = pools[idx].acquire();
         if (!mesh) continue;
         mesh.visible = true;
@@ -1854,6 +1802,60 @@ export function createWorld(scene) {
     }
   }
   function getCasaBlanca() { return casaBlanca; }
+
+  // ---- Arco del punto de control (27/10/2026) ----
+  // Dos columnas hinchables con rayas rojas y blancas y un cartel azul con
+  // estrellas: se ve venir de lejos y al pasar por debajo se guarda el sitio.
+  const arcoRojo = toon(0xe8463c), arcoBlanco = toon(0xffffff), arcoAzul = toon(0x2350c8), arcoOro = toon(GOLD);
+  const arcoSegGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.78, 16);
+  let arcoTex = null, arcoTexLang = null;
+  function texturaArco() {
+    const lang = tr("puntoControl");
+    if (arcoTex && arcoTexLang === lang) return arcoTex;
+    const c = document.createElement("canvas");
+    c.width = 1024; c.height = 160;
+    const x = c.getContext("2d");
+    x.fillStyle = "#2350c8"; x.fillRect(0, 0, 1024, 160);
+    x.strokeStyle = "#ffffff"; x.lineWidth = 10; x.strokeRect(10, 10, 1004, 140);
+    x.fillStyle = "#ffffff";
+    x.font = '700 84px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif';
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText(lang.toUpperCase(), 512, 86);
+    x.fillStyle = "#ffd23f";
+    for (const px of [60, 964]) {
+      x.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 16 : 38, a = -Math.PI / 2 + (i * Math.PI) / 5;
+        x.lineTo(px + Math.cos(a) * r, 80 + Math.sin(a) * r);
+      }
+      x.closePath(); x.fill();
+    }
+    arcoTex = new THREE.CanvasTexture(c);
+    arcoTex.colorSpace = THREE.SRGBColorSpace;
+    arcoTex.anisotropy = 4;
+    arcoTexLang = lang;
+    return arcoTex;
+  }
+  function construirArco() {
+    const g = new THREE.Group();
+    for (const s of [-1, 1]) {
+      for (let i = 0; i < 7; i++) {
+        const seg = new THREE.Mesh(arcoSegGeo, i % 2 ? arcoBlanco : arcoRojo);
+        seg.position.set(s * 4.55, 0.39 + i * 0.78, 0);
+        g.add(seg);
+      }
+      const bola = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), arcoOro);
+      bola.position.set(s * 4.55, 5.75, 0);
+      g.add(bola);
+    }
+    const cartel = new THREE.Mesh(new THREE.BoxGeometry(9.4, 1.5, 0.35), arcoAzul);
+    cartel.position.y = 4.85;
+    g.add(cartel);
+    const letrero = new THREE.Mesh(new THREE.PlaneGeometry(9.0, 1.4), new THREE.MeshBasicMaterial({ map: texturaArco() }));
+    letrero.position.set(0, 4.85, 0.18);
+    g.add(letrero);
+    return g;
+  }
   const cebraGeo = new THREE.BoxGeometry(0.55, 0.02, 4.2);
   const cebraMat = toon(0xf2efe6);
   const lineaGeo = new THREE.BoxGeometry(7.6, 0.02, 0.35);
@@ -2166,9 +2168,26 @@ export function createWorld(scene) {
     // Lo lanza el jefe: cae del cielo y rueda hacia el jugador. Se salta.
     barril: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
   };
+  // 27/10: los de cada ciudad (blender/obstaculos2.py). Si alguno no carga,
+  // se usan los de siempre.
+  const TIPOS_LOCALES = {
+    taxi: { choque: "full", medio: 1.4, alto: 1.5, centro: -1.4 },
+    alcantarilla: { choque: "low", medio: 0.55, alto: 0.8 },
+    andamio: { choque: "high", medio: 0.45, alto: 2.5 },
+    contenedor: { choque: "full", medio: 1.15, alto: 1.35, centro: -1.15 },
+    paca: { choque: "low", medio: 0.45, alto: 0.9 },
+    tractor: { choque: "full", medio: 1.35, alto: 2.2, centro: -1.35 },
+    carroza: { choque: "full", medio: 1.75, alto: 2.5, centro: -1.75 },
+    guirnalda: { choque: "high", medio: 0.3, alto: 2.5 },
+    valla_metal: { choque: "low", medio: 0.4, alto: 0.95 },
+    protesta: { choque: "high", medio: 0.35, alto: 2.2 },
+    agentes: { choque: "full", medio: 0.5, alto: 2.1, centro: 0 },
+    suv: { choque: "full", medio: 1.5, alto: 1.6, centro: -1.5, mueve: 7 },
+  };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
   const USAR_BLENDER = Object.keys(TIPOS).every((n) => hayModelo("obstaculos/" + n)) && hayModelo("obstaculos/gorra");
+  for (const n in TIPOS_LOCALES) if (USAR_BLENDER && hayModelo("obstaculos/" + n)) TIPOS[n] = TIPOS_LOCALES[n];
   const EXTRAS = ["rayo", "cohete", "chile", "jefe"].every((n) => hayModelo("obstaculos/" + n));
 
   // Sombra suave bajo cada obstaculo: lo "asienta" en el suelo y ayuda a
@@ -2209,8 +2228,45 @@ export function createWorld(scene) {
       g.add(roja, azul);
       g.userData.sirena = [roja, azul];
     }
+    if (nombre === "suv") {
+      // Las luces de la comitiva, en la calandra (rojas y azules, alternas).
+      const roja = new THREE.Mesh(sirenaGeo, sirenaRoja);
+      const azul = new THREE.Mesh(sirenaGeo, sirenaAzul);
+      roja.scale.set(0.8, 0.8, 0.4); azul.scale.set(0.8, 0.8, 0.4);
+      roja.position.set(-0.28, 0.58, 0.06);
+      azul.position.set(0.28, 0.58, 0.06);
+      g.add(roja, azul);
+      g.userData.sirena = [roja, azul];
+    }
+    if (nombre === "alcantarilla") {
+      // El vapor que sale de la alcantarilla: tres bocanadas que suben y se deshacen.
+      const vapor = [];
+      for (let i = 0; i < 3; i++) {
+        const s = new THREE.Sprite(vaporMat.clone());
+        s.position.set(0, 0.4, 0);
+        g.add(s);
+        vapor.push(s);
+      }
+      g.userData.vapor = vapor;
+    }
     return g;
   }
+  // Textura de una bocanada de vapor (redonda, blanca y difuminada).
+  const vaporMat = new THREE.SpriteMaterial({
+    map: (() => {
+      if (typeof document === "undefined") return null;
+      const c = document.createElement("canvas");
+      c.width = c.height = 64;
+      const x = c.getContext("2d");
+      const gr = x.createRadialGradient(32, 32, 2, 32, 32, 32);
+      gr.addColorStop(0, "rgba(255,255,255,0.9)");
+      gr.addColorStop(0.5, "rgba(245,248,252,0.5)");
+      gr.addColorStop(1, "rgba(240,244,250,0)");
+      x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(c);
+    })(),
+    transparent: true, depthWrite: false,
+  });
   if (USAR_BLENDER) {
     for (const nombre in TIPOS) obstaclePools[nombre] = makePool(() => construirObstaculo(nombre));
   }
@@ -2346,80 +2402,18 @@ export function createWorld(scene) {
   // se va a cruzar un coche que viene de frente con lo que ya hay en la pista.
   let ritmo = 17;
 
-  // ---- Taco en 2D, como el 🌮 del menu (26/10/2026) ----
+  // ---- Taco en 2D, como el del menu (26/10/2026) ----
   // Isidro: el de piezas 3D «parece de Playmobil». Ahora es un dibujo plano
-  // tipo pegatina (borde blanco y contorno marron) que siempre mira a la
-  // camara: concha dorada con motas tostadas, carne, lechuga, tomate y queso.
-  function texturaTaco() {
-    const c = document.createElement("canvas");
-    c.width = c.height = 256;
-    const x = c.getContext("2d");
-    const cx = 128, cy = 112, r = 96;
-    const contorno = "#5b3412";
-    x.lineJoin = x.lineCap = "round";
-    // Relleno que asoma por arriba: lechuga ondulada, carne, tomate y queso.
-    const relleno = () => {
-      x.beginPath();
-      x.moveTo(cx - r, cy);
-      for (let i = 0; i <= 8; i++) {
-        const px = cx - r + (2 * r * i) / 8;
-        x.quadraticCurveTo(px - r / 8, cy - 46 - (i % 2) * 12, px, cy - 26);
-      }
-      x.lineTo(cx + r, cy);
-      x.closePath();
-    };
-    // Pegatina: borde blanco grueso alrededor de todo.
-    x.save();
-    x.strokeStyle = "#ffffff"; x.lineWidth = 26;
-    relleno(); x.stroke();
-    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath(); x.stroke();
-    x.restore();
-    // Lechuga
-    relleno();
-    x.fillStyle = "#5cc93c"; x.fill();
-    x.lineWidth = 7; x.strokeStyle = contorno; x.stroke();
-    // Carne
-    x.fillStyle = "#8b4a22";
-    for (const [px, py, pr] of [[-60, -14, 20], [-22, -20, 22], [18, -16, 21], [56, -18, 19]]) {
-      x.beginPath(); x.arc(cx + px, cy + py, pr, 0, Math.PI * 2); x.fill();
-    }
-    // Tomate
-    for (const [px, py] of [[-44, -34], [6, -40], [46, -36]]) {
-      x.beginPath(); x.arc(cx + px, cy + py, 13, 0, Math.PI * 2);
-      x.fillStyle = "#ee3b2f"; x.fill();
-      x.lineWidth = 4; x.strokeStyle = contorno; x.stroke();
-      x.beginPath(); x.arc(cx + px - 4, cy + py - 4, 4, 0, Math.PI * 2);
-      x.fillStyle = "#ffb3a8"; x.fill();
-    }
-    // Queso rallado
-    x.strokeStyle = "#ffd84a"; x.lineWidth = 6;
-    for (const [px, py, ang] of [[-70, -24, 0.4], [-30, -40, -0.5], [28, -28, 0.6], [70, -26, -0.3], [-6, -24, 0.2]]) {
-      x.beginPath();
-      x.moveTo(cx + px - Math.cos(ang) * 10, cy + py - Math.sin(ang) * 10);
-      x.lineTo(cx + px + Math.cos(ang) * 10, cy + py + Math.sin(ang) * 10);
-      x.stroke();
-    }
-    // Concha: media luna dorada con degradado y motas tostadas.
-    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath();
-    const grad = x.createLinearGradient(0, cy, 0, cy + r);
-    grad.addColorStop(0, "#ffd35c"); grad.addColorStop(1, "#f0a42a");
-    x.fillStyle = grad; x.fill();
-    x.save(); x.clip();
-    x.fillStyle = "rgba(196,110,30,0.55)";
-    for (const [px, py, pr] of [[-56, 26, 7], [-20, 52, 6], [24, 34, 8], [60, 18, 6], [8, 74, 5], [-48, 60, 5], [52, 56, 6]]) {
-      x.beginPath(); x.arc(cx + px, cy + py, pr, 0, Math.PI * 2); x.fill();
-    }
-    // Brillo de arriba
-    x.strokeStyle = "rgba(255,255,255,0.55)"; x.lineWidth = 9;
-    x.beginPath(); x.arc(cx, cy, r - 18, Math.PI * 0.62, Math.PI * 0.86); x.stroke();
-    x.restore();
-    x.lineWidth = 8; x.strokeStyle = contorno;
-    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath(); x.stroke();
-    const tex = new THREE.CanvasTexture(c);
+  // tipo pegatina que siempre mira a la camara (el dibujo esta en pegatinas.js,
+  // que tambien pinta la chapa de campaña y lo que sale en la interfaz).
+  function texturaPegatina(nombre) {
+    const tex = new THREE.CanvasTexture(lienzoPegatina(nombre));
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
     return tex;
   }
+  function texturaTaco() { return texturaPegatina("taco"); }
+  function texturaChapa() { return texturaPegatina("chapa"); }
   const tacoMat = typeof document !== "undefined"
     ? new THREE.SpriteMaterial({ map: texturaTaco(), transparent: true, alphaTest: 0.05, fog: true })
     : new THREE.SpriteMaterial({ color: 0xffc94d });
@@ -2436,13 +2430,9 @@ export function createWorld(scene) {
 
   function buildTaco() {
     const g = new THREE.Group();
-    // Brillo suave detras del taco
-    const glow = new THREE.Sprite(tacoGlowMat);
-    glow.scale.setScalar(0.85);
-    glow.position.set(0, -0.02, -0.08);
-    glow.renderOrder = -1;
-    g.add(glow);
-    g.userData.glow = glow;
+    // 27/10: sin el brillo de detras (quedaba tapado por el propio taco y
+    // costaba otra llamada de dibujo por cada taco de la pista).
+    g.userData.glow = null;
     const taco = new THREE.Sprite(tacoMat);
     taco.scale.setScalar(0.95);
     g.add(taco);
@@ -2649,6 +2639,12 @@ export function createWorld(scene) {
   function setJugador(l) { jugadorCarril = l; }
   function onJefe(fn) { alEventoJefe = fn; }
   function jefeActivo() { return jefe.activo && !jefe.saliendo; }
+  // En un nivel, al acabarse su tramo se va (sin premio).
+  function despedirJefe() {
+    if (!jefeActivo()) return;
+    jefe.saliendo = true;
+    if (alEventoJefe) alEventoJefe("escapa", 0);
+  }
   function iniciarJefe() {
     if (jefe.activo || !EXTRAS) return false;
     if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
@@ -2739,112 +2735,356 @@ export function createWorld(scene) {
     } else if (alEventoJefe) alEventoJefe("golpe", jefe.vida);
   }
 
-  function spawnRow(z) {
-    const lanes = [0, 1, 2];
+  // ================================================================
+  // ---- La pista por tramos (27/10/2026) ----
+  // Antes cada fila salia al azar de principio a fin y todo el nivel era
+  // igual. Ahora el nivel va por partes (levels.js: tramos), cada una con su
+  // forma: un respiro de tacos, vallas, slalom, autobuses, lo propio de cada
+  // ciudad, el jefe y el sprint final. El sin fin encadena tramos al azar.
+  // Cada fila de un nivel sale de su propia semilla (la de su metro), asi que
+  // al seguir desde el punto de control la calle es la misma.
+  // ================================================================
+  const LANES = [0, 1, 2];
+  const elegirDe = (l) => l[Math.floor(Math.random() * l.length)];
+  // Obstaculos de cada sitio: los del nivel, o los de la zona en el sin fin.
+  const LOCALES_ZONA = {
+    city: { low: ["conos", "barricada", "alcantarilla"], high: ["pancarta", "andamio", "globos"], full: ["taxi", "taxi", "furgoneta", "contenedor", "guardaespaldas"] },
+    town: { low: ["paca", "paca", "conos", "barricada"], high: ["guirnalda", "pancarta", "globos"], full: ["tractor", "carroza", "furgoneta"] },
+    dc: { low: ["valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"], full: ["agentes", "furgoneta", "guardaespaldas"] },
+    desert: DE_TIPO,
+  };
+  // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
+  let carrilOcupado = -1;
+  function nombreObstaculo(type, d, lista) {
+    const deNivel = nivel && nivel.obstaculos ? nivel.obstaculos[type] : null;
+    const set = lista || deNivel || (LOCALES_ZONA[currentZoneName(d)] || DE_TIPO)[type] || DE_TIPO[type];
+    const vale = set.filter((n) => obstaclePools[n]);
+    return elegirDe(vale.length ? vale : DE_TIPO[type]);
+  }
+  // Carril que se deja libre un trecho (detras de una chapa escondida).
+  let reserva = null;
+  function obst(lane, type, z, d, lista) {
+    if (lane === carrilOcupado) return null;
+    if (reserva && lane === reserva.lane && d > reserva.desde && d <= reserva.hasta) return null;
+    return spawnObstacle(lane, type, z, USAR_BLENDER ? nombreObstaculo(type, d, lista) : undefined);
+  }
+  function tacosEn(lane, z, n = 4, y = 0.9, paso = 1.1) {
+    if (lane === carrilOcupado) return;
+    for (let i = 0; i < n; i++) spawnTaco(lane, z - i * paso, y);
+  }
+
+  // Autobus de campaña con rampa: subirse y correr por el techo lleno de tacos.
+  // `chapa`: en vez del ultimo taco del techo, una chapa escondida.
+  function filaBus(z, d, lane, chapa) {
+    spawnObstacle(lane, "bus", z, "autobus");
+    busCarril = lane; busFilas = 2;
+    const n = chapa !== undefined ? 6 : 7;
+    for (let i = 0; i < n; i++) spawnTaco(lane, z - BUS_RAMPA - 0.6 - i * 1.15, BUS_TECHO + 0.9);
+    if (chapa !== undefined) spawnChapa(lane, z - BUS_RAMPA - 0.6 - 6 * 1.15 - 0.4, BUS_TECHO + 1.0, chapa);
+    const otros = LANES.filter((l) => l !== lane);
+    const lado = elegirDe(otros);
+    obst(lado, Math.random() < 0.5 ? "full" : "low", z, d);
+    otros.filter((l) => l !== lado).forEach((l) => tacosEn(l, z, 1));
+  }
+
+  // La fila de siempre (al azar), con la densidad que diga el tramo.
+  function filaMixta(z, d, densidad) {
     const roll = Math.random();
-    let obstacleChance = z > EASY_ZONE_Z ? 0 : 0.55;
-    // En un nivel la avenida empieza tranquila y se va llenando.
-    if (nivel) obstacleChance *= 0.55 + 0.5 * Math.min(1, (totalScrolled - z) / nivel.largo);
+    const ocupado = carrilOcupado;
+    const coche = (nivel && nivel.coche) || "patrulla";
+    if (USAR_BLENDER && !(nivel && nivel.sinBus) && roll < densidad && ocupado < 0 && d > 220 && Math.random() < 0.12) {
+      filaBus(z, d, Math.floor(Math.random() * 3));
+      return;
+    }
+    if (USAR_BLENDER && !(nivel && nivel.sinPatrulla) && roll < densidad && d > 300 && Math.random() < 0.1) {
+      const opciones = LANES.filter((l) => l !== ocupado && cocheCabe(l, z, TIPOS[coche].mueve));
+      if (opciones.length) {
+        const lane = elegirDe(opciones);
+        spawnObstacle(lane, "full", z, coche);
+        LANES.filter((l) => l !== lane).forEach((l) => { if (Math.random() < 0.6) tacosEn(l, z, 1); });
+        return;
+      }
+    }
+    if (roll < densidad) {
+      const libres = LANES.filter((l) => l !== ocupado);
+      const blockCount = ocupado >= 0 ? 1 : (Math.random() < 0.5 ? 1 : 2);
+      const blocked = libres.slice().sort(() => Math.random() - 0.5).slice(0, blockCount);
+      blocked.forEach((lane) => {
+        const typeRoll = Math.random();
+        const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 ? "high" : "full";
+        obst(lane, type, z, d);
+        if (type === "low" && Math.random() < 0.45) arcoDeTacos(lane, z);
+      });
+      const free = libres.filter((l) => !blocked.includes(l));
+      let powerupLane = null;
+      if (Math.random() < 0.08 && free.length > 0) {
+        powerupLane = elegirDe(free);
+        const kinds = !USAR_BLENDER ? ["shield", "magnet", "boost"]
+          : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
+        spawnPowerup(powerupLane, z, elegirDe(nivel && nivel.potenciadores ? nivel.potenciadores : kinds));
+      }
+      if (powerupLane === null && free.length && USAR_BLENDER && Math.random() < 0.12) {
+        powerupLane = elegirDe(free);
+        spawnPowerup(powerupLane, z, "micro");
+      }
+      free.forEach((lane) => { if (lane !== powerupLane && Math.random() < 0.7) tacosEn(lane, z, 1); });
+    } else {
+      tacosEn(elegirDe(LANES.filter((l) => l !== ocupado)), z, 4);
+    }
+  }
+
+  // Cada forma de tramo: (z de la fila, d = metro de la partida, el tramo, k = fila dentro del tramo).
+  const SERPIENTE = [1, 1, 0, 0, 1, 1, 2, 2];
+  const PATRONES = {
+    // Un respiro: una hilera de tacos que va culebreando de carril.
+    calma(z, d, t, k) {
+      const lane = SERPIENTE[k % SERPIENTE.length];
+      for (let i = 0; i < 5; i++) if (lane !== carrilOcupado) spawnTaco(lane, z - i * 1.4, 0.9 + Math.sin((k * 5 + i) * 0.45) * 0.25);
+      if (k % 9 === 4 && USAR_BLENDER) spawnPowerup((lane + 1) % 3, z, "micro");
+    },
+    // El primer nivel enseña los gestos uno a uno (main.js pone el aviso).
+    tutorial(z, d, t, k) {
+      if (k === 8) { obst(1, "full", z, d); tacosEn(0, z); tacosEn(2, z); aviso(d, "carril"); }
+      else if (k === 17) { for (const l of LANES) obst(l, "low", z, d); arcoDeTacos(1, z); aviso(d, "saltar"); }
+      else if (k === 26) { for (const l of LANES) obst(l, "high", z, d); aviso(d, "agachar"); }
+      else if (k === 34 && USAR_BLENDER) { spawnPowerup(1, z, "micro"); tacosEn(0, z, 3); tacosEn(2, z, 3); aviso(d, "frase"); }
+      else if (k > 2 && ![7, 9, 16, 18, 25, 27, 33, 35].includes(k)) tacosEn(1, z, 4);
+    },
+    suave(z, d, t) { filaMixta(z, d, t.densidad || 0.4); },
+    mixto(z, d, t) { filaMixta(z, d, t.densidad || 0.55); },
+    // Filas enteras: o se salta, o se pasa agachado (o se elige carril).
+    vallas(z, d, t, k) {
+      if (k % 3 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 3); return; }
+      if (k % 3 === 2) return;
+      const r = Math.random();
+      if (r < 0.4) { for (const l of LANES) obst(l, "low", z, d, t.low); arcoDeTacos(Math.floor(Math.random() * 3), z); }
+      else if (r < 0.75) { for (const l of LANES) obst(l, "high", z, d, t.high); tacosEn(Math.floor(Math.random() * 3), z - 1.5, 3, 0.6); }
+      else {
+        const tipos = ["low", "high", Math.random() < 0.5 ? "low" : "high"].sort(() => Math.random() - 0.5);
+        LANES.forEach((l, i) => obst(l, tipos[i], z, d, tipos[i] === "high" ? t.high : t.low));
+      }
+    },
+    // Dos carriles cerrados; el libre va cambiando de uno en uno.
+    slalom(z, d, t, k) {
+      if (k % 2 === 1) return;
+      const seq = [1, 1, 0, 0, 1, 2, 2, 1, 0, 1, 2, 2];
+      const libre = seq[(k / 2) % seq.length];
+      for (const l of LANES) if (l !== libre) obst(l, "full", z, d, t.full);
+      tacosEn(libre, z + 1.5, 4);
+    },
+    // Un autobus tras otro, cambiando de carril: se va de techo en techo.
+    autobuses(z, d, t, k) {
+      if (k % 4 === 0 && busFilas === 0 && USAR_BLENDER) filaBus(z, d, [1, 0, 2, 1, 2, 0][(k / 4) % 6]);
+      else if (k % 4 === 2) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        obst(l, Math.random() < 0.5 ? "low" : "high", z, d);
+      }
+    },
+    // Un potenciador seguro y lluvia de tacos por los tres carriles.
+    festin(z, d, t, k) {
+      if (k === 1) {
+        if (USAR_BLENDER || ["shield", "magnet", "boost"].includes(t.potenciador)) spawnPowerup(1, z, t.potenciador);
+        tacosEn(0, z); tacosEn(2, z);
+        return;
+      }
+      const valla = k > 4 && k % 4 === 0 ? Math.floor(Math.random() * 3) : -1;
+      for (const l of LANES) {
+        if (l === valla) { obst(l, "low", z, d); arcoDeTacos(l, z); } else tacosEn(l, z, 4);
+      }
+    },
+    // El ultimo tramo: tacos en los tres carriles y obstaculos sueltos.
+    sprint(z, d, t, k) {
+      if (nivel && d > nivel.largo - 80) { tacosEn(1, z, 5, 0.9, 1.4); return; }
+      const ob = k % 2 === 0 ? Math.floor(Math.random() * 3) : -1;
+      for (const l of LANES) {
+        if (l === ob) obst(l, Math.random() < 0.5 ? "low" : "high", z, d);
+        else tacosEn(l, z, 4);
+      }
+    },
+    // Nueva York: un carril cortado por obras que va cambiando, y alcantarillas.
+    obras(z, d, t, k) {
+      const bloque = Math.floor(k / 7), paso = k % 7;
+      const cerrado = [0, 2, 1, 0, 2, 1][bloque % 6];
+      if (paso <= 4) obst(cerrado, paso % 2 === 0 ? "full" : "low", z, d, paso % 2 === 0 ? ["contenedor"] : ["conos"]);
+      const otros = LANES.filter((l) => l !== cerrado || paso > 4);
+      if (paso === 2 || (t.low && paso === 4)) {
+        const l = elegirDe(otros);
+        obst(l, "low", z, d, t.low || ["alcantarilla"]);
+        otros.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
+      } else otros.forEach((l) => { if (Math.random() < 0.5) tacosEn(l, z, 3); });
+    },
+    // Findlay: el desfile de Flag City, carrozas y pacas de paja.
+    desfile(z, d, t, k) {
+      if (k % 3 === 0) {
+        const p = [1, 0, 2, 1, 2, 0][(k / 3) % 6];
+        obst(p, "full", z, d, ["carroza"]);
+        const otros = LANES.filter((l) => l !== p);
+        obst(otros[k % 2], "low", z, d, ["paca"]);
+        tacosEn(otros[1 - (k % 2)], z, 4);
+      } else if (k % 3 === 2 && Math.random() < 0.6) obst(Math.floor(Math.random() * 3), "high", z, d, ["guirnalda"]);
+    },
+    // Washington: la comitiva viene de frente y los agentes cortan el paso.
+    comitiva(z, d, t, k) {
+      if (k % 3 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 3); return; }
+      if (k % 3 === 2) return;
+      const coche = obstaclePools.suv ? "suv" : "patrulla";
+      const opciones = USAR_BLENDER ? LANES.filter((l) => l !== carrilOcupado && cocheCabe(l, z, TIPOS[coche].mueve)) : [];
+      if (opciones.length) {
+        const l = elegirDe(opciones);
+        spawnObstacle(l, "full", z, coche);
+        const otros = LANES.filter((x) => x !== l);
+        if (Math.random() < 0.6) obst(elegirDe(otros), "full", z, d, ["agentes"]);
+      } else obst(Math.floor(Math.random() * 3), "full", z, d, ["agentes"]);
+    },
+    // El Burrito-Bot: sin obstaculos normales (solo sus barriles), tacos y chiles.
+    jefe(z, d, t, k) {
+      const lane = Math.floor(Math.random() * 3);
+      tacosEn(lane, z, 4);
+      if (EXTRAS && Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, "chile");
+    },
+  };
+
+  // ---- Los tramos del nivel, o los del sin fin (al azar, se van añadiendo) ----
+  let tramos = [];
+  // Fuera de los tramos del nivel (el final de la calle): siempre el mismo objeto.
+  const TRAMO_FINAL = { desde: 0, hasta: 1e9, tipo: "calma" }, TRAMO_MIXTO = { desde: 0, hasta: 1e9, tipo: "mixto" };
+  const SIN_FIN = [["suave", 2], ["mixto", 4], ["slalom", 2], ["vallas", 2], ["autobuses", 2], ["festin", 1], ["calma", 1], ["local", 2]];
+  const LOCAL_DE_ZONA = { city: "obras", town: "desfile", dc: "comitiva", desert: "mixto" };
+  function prepararTramos() {
+    tramos = nivel && nivel.tramos ? nivel.tramos.map(([desde, hasta, tipo, op]) => ({ desde, hasta, tipo, ...(op || {}) })) : [];
+  }
+  function tramoEn(d) {
+    if (nivel) {
+      for (const t of tramos) if (d >= t.desde && d < t.hasta) return t;
+      return nivel.tramos ? TRAMO_FINAL : TRAMO_MIXTO;
+    }
+    while (!tramos.length || tramos[tramos.length - 1].hasta <= d) {
+      const ant = tramos[tramos.length - 1];
+      const desde = ant ? ant.hasta : 0;
+      if (!ant) { tramos.push({ desde: 0, hasta: 150, tipo: "calma" }); continue; }
+      let tipo;
+      do {
+        let r = Math.random() * SIN_FIN.reduce((n, [, p]) => n + p, 0);
+        tipo = SIN_FIN.find(([, p]) => (r -= p) < 0)[0];
+      } while (tipo === ant.tipo || (tipo === "calma" && ant.tipo === "festin") || (tipo === "festin" && ant.tipo === "calma"));
+      if (tipo === "local") tipo = LOCAL_DE_ZONA[currentZoneName(desde + 150)] || "mixto";
+      const corto = tipo === "calma" || tipo === "festin";
+      const kinds = EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost"];
+      tramos.push({ desde, hasta: desde + (corto ? 120 + Math.random() * 50 : 240 + Math.random() * 170), tipo,
+        densidad: 0.45 + Math.min(0.2, desde / 12000), potenciador: elegirDe(kinds), titulo: tipo === "festin" ? "festin" : null });
+      if (tramos.length > 40) tramos.splice(0, 10);
+    }
+    for (let i = tramos.length - 1; i >= 0; i--) if (d >= tramos[i].desde) return tramos[i];
+    return tramos[0];
+  }
+
+  // ---- Avisos del tutorial: main.js los enseña un poco antes de llegar ----
+  const avisos = [];
+  function aviso(d, tipo) { avisos.push({ d, tipo }); }
+  function tomarAviso(distancia) {
+    const i = avisos.findIndex((a) => distancia >= a.d - 30);
+    return i < 0 ? null : avisos.splice(i, 1)[0];
+  }
+
+  // ---- Chapas de campaña: tres escondidas en cada nivel ----
+  const chapas = [];
+  let chapasHechas = new Set();     // ya puestas (o cogidas antes del punto de control)
+  const chapaPool = makePool(() => {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaChapa(), transparent: true, depthWrite: false }));
+    s.scale.set(1.15, 1.15, 1);
+    const brillo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaBrillo(), color: 0xffe9a0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    brillo.scale.set(2.2, 2.2, 1);
+    brillo.renderOrder = -1;
+    const g = new THREE.Group();
+    g.add(brillo, s);
+    g.userData.brillo = brillo;
+    return g;
+  });
+  function spawnChapa(lane, z, y, idx) {
+    if (lane === carrilOcupado && y < 1.5) return;
+    const mesh = chapaPool.acquire();
+    mesh.visible = true;
+    mesh.position.set(LANE_X[lane], y, z);
+    if (!mesh.parent) group.add(mesh);
+    chapas.push({ mesh, lane, z, baseY: y, idx, collected: false, phase: Math.random() * 6 });
+  }
+  function filaChapa(z, d, tipo, idx) {
+    if (tipo === "bus" && USAR_BLENDER && busFilas === 0) { filaBus(z, d, 1, idx); return; }
+    if (tipo === "carril") {
+      const l = Math.random() < 0.5 ? 0 : 2;
+      const o = obst(l, "full", z, d);
+      const atras = o ? o.centro - o.medio : -1.4;
+      spawnChapa(l, z + atras - 3.6, 0.95, idx);
+      reserva = { lane: l, desde: d, hasta: d + 15 };
+      tacosEn(1, z + 1, 4);
+      tacosEn(2 - l, z + 1, 2);
+      return;
+    }
+    // arco: vallas en los tres carriles y la chapa alta sobre la del medio.
+    for (const l of LANES) obst(l, "low", z, d);
+    arcoDeTacos(0, z); arcoDeTacos(2, z);
+    spawnChapa(1, z, 2.45, idx);
+  }
+
+  // Una fila de la pista a la distancia `d` de la partida.
+  const SALIDA_LIMPIA_Z = -52;      // las primeras filas de cada salida, sin obstaculos
+  function generarFila(z) {
+    const d = totalScrolled - z;
+    if (nivel && d > nivel.largo - 30) return;
     if (cielo) {
       // Volando en cohete: una hilera de tacos en el cielo que va cambiando de carril.
       if (Math.random() < 0.5) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
       for (let i = 0; i < 5; i++) spawnTaco(carrilCielo, z - i * 1.4, CIELO_Y + 0.9);
       return;
     }
-    if (jefeActivo()) {
-      // Durante el jefe no hay obstaculos normales (solo sus barriles): tacos y chiles.
-      const lane = Math.floor(Math.random() * 3);
-      for (let i = 0; i < 4; i++) spawnTaco(lane, z - i * 1.1, 0.9);
-      if (Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, "chile");
-      return;
-    }
-    // Carril que el autobus de la fila anterior sigue ocupando.
-    const ocupado = busFilas > 0 ? busCarril : -1;
+    carrilOcupado = busFilas > 0 ? busCarril : -1;
     if (busFilas > 0) busFilas--;
-    const tramo = totalScrolled - z;           // distancia de la partida a la que llegara esta fila
-    if (USAR_BLENDER && !(nivel && nivel.sinBus) && roll < obstacleChance && ocupado < 0 && tramo > 220 && Math.random() < 0.14) {
-      // Autobus de campaña con rampa: subirse y correr por el techo lleno de tacos.
-      const lane = Math.floor(Math.random() * 3);
-      spawnObstacle(lane, "bus", z, "autobus");
-      busCarril = lane; busFilas = 2;
-      for (let i = 0; i < 7; i++) spawnTaco(lane, z - BUS_RAMPA - 0.6 - i * 1.15, BUS_TECHO + 0.9);
-      const otros = lanes.filter((l) => l !== lane);
-      // A un lado, algo que obligue a decidir (o subir o esquivar).
-      const lado = otros[Math.floor(Math.random() * 2)];
-      spawnObstacle(lado, Math.random() < 0.5 ? "full" : "low", z);
-      otros.filter((l) => l !== lado).forEach((l) => spawnTaco(l, z, 0.9));
-      return;
-    }
-    if (USAR_BLENDER && !(nivel && nivel.sinPatrulla) && roll < obstacleChance && tramo > 300 && Math.random() < 0.12) {
-      // Coche patrulla que viene de frente con la sirena puesta.
-      const opciones = lanes.filter((l) => l !== ocupado && cocheCabe(l, z, TIPOS.patrulla.mueve));
-      if (opciones.length) {
-        const lane = opciones[Math.floor(Math.random() * opciones.length)];
-        spawnObstacle(lane, "full", z, "patrulla");
-        lanes.filter((l) => l !== lane && l !== ocupado).forEach((l) => { if (Math.random() < 0.6) spawnTaco(l, z, 0.9); });
-        return;
+    try {
+      if (!nivel && jefeActivo()) { PATRONES.jefe(z, d, null, 0); return; }
+      if (z > SALIDA_LIMPIA_Z) { if (z < -20) PATRONES.calma(z, d, null, 0); return; }
+      if (nivel && nivel.chapas) {
+        const i = nivel.chapas.findIndex(([cd]) => Math.abs(cd - d) <= ROW_SPACING / 2);
+        if (i >= 0 && !chapasHechas.has(i)) { chapasHechas.add(i); filaChapa(z, d, nivel.chapas[i][1], i); return; }
       }
-    }
-    if (roll < obstacleChance) {
-      const libres = lanes.filter((l) => l !== ocupado);
-      // Junto al autobus, como mucho un obstaculo mas: siempre queda un hueco.
-      const blockCount = ocupado >= 0 ? 1 : (Math.random() < 0.5 ? 1 : 2);
-      const shuffled = libres.slice().sort(() => Math.random() - 0.5);
-      const blocked = shuffled.slice(0, blockCount);
-      blocked.forEach((lane) => {
-        const typeRoll = Math.random();
-        const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 ? "high" : "full";
-        spawnObstacle(lane, type, z);
-        if (type === "low" && Math.random() < 0.45) arcoDeTacos(lane, z);
-      });
-      const free = libres.filter((l) => !blocked.includes(l));
-      let powerupLane = null;
-      if (Math.random() < 0.1 && free.length > 0) {
-        powerupLane = free[Math.floor(Math.random() * free.length)];
-        const kinds = !USAR_BLENDER ? ["shield", "magnet", "boost"]
-          : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
-        const lista = nivel && nivel.potenciadores ? nivel.potenciadores : kinds;
-        const kind = lista[Math.floor(Math.random() * lista.length)];
-        spawnPowerup(powerupLane, z, kind);
-      }
-      // Microfonos para las frases: aparte de los potenciadores, para que no escaseen.
-      if (powerupLane === null && free.length && USAR_BLENDER && Math.random() < 0.13) {
-        powerupLane = free[Math.floor(Math.random() * free.length)];
-        spawnPowerup(powerupLane, z, "micro");
-      }
-      free.forEach((lane) => { if (lane !== powerupLane && Math.random() < 0.7) spawnTaco(lane, z, 0.9); });
-    } else {
-      const sitio = lanes.filter((l) => l !== ocupado);       // no meter tacos dentro del autobus
-      const lane = sitio[Math.floor(Math.random() * sitio.length)];
-      for (let i = 0; i < 4; i++) {
-        spawnTaco(lane, z - i * 1.1, 0.9 + Math.sin(i * 0.8) * 0.3);
-      }
-    }
+      const t = tramoEn(d);
+      const k = Math.round((d - t.desde) / ROW_SPACING);
+      (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
+    } finally { carrilOcupado = -1; }
   }
 
   function ensureRows() {
     while (lastRowZ > SPAWN_Z) {
-      if (!nivel) spawnRow(lastRowZ);
+      if (!nivel) generarFila(lastRowZ);
       else {
-        // Nivel: el mismo reparto en cada intento (azar con semilla). Al final
-        // de la avenida solo tacos, y pasada la verja nada.
-        const tramo = totalScrolled - lastRowZ;
-        if (tramo < nivel.largo - 30) {
-          const r = Math.random;
-          Math.random = azar;
-          try {
-            if (tramo > nivel.largo - 190) filaDeTacos(lastRowZ);
-            else spawnRow(lastRowZ);
-          } finally { Math.random = r; }
-        }
+        // Nivel: cada fila con la semilla de su metro (la misma en cada intento).
+        const r = Math.random;
+        Math.random = azarConSemilla(nivel.semilla * 100003 + Math.round(totalScrolled - lastRowZ));
+        try { generarFila(lastRowZ); } finally { Math.random = r; }
       }
       lastRowZ -= ROW_SPACING;
     }
   }
-  function filaDeTacos(z) {
-    for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
-  }
   ensureRows();
+
+  // ---- El Burrito-Bot se escapa al empezar Nueva York (se lleva la tortilla) ----
+  const cameo = { t: -1 };
+  function cameoJefe() {
+    if (!EXTRAS) return;
+    if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
+    jefe.mesh.visible = true;
+    if (!jefe.mesh.parent) group.add(jefe.mesh);
+    cameo.t = 0;
+  }
+  function actualizarCameo(dt) {
+    if (cameo.t < 0 || jefe.activo) return;
+    cameo.t += dt;
+    const k = cameo.t, m = jefe.mesh;
+    // Se planta delante, se ríe y sale volando calle abajo.
+    const huye = Math.max(0, k - 1.4);
+    m.position.set(Math.sin(k * 2.2) * 0.6, 2.4 + Math.sin(k * 3) * 0.2 + huye * 1.6, -16 - huye * huye * 9);
+    m.rotation.set(0, Math.min(Math.PI, huye * 4), Math.sin(k * 4) * 0.08);
+    if (k > 5) { m.visible = false; m.rotation.set(0, 0, 0); cameo.t = -1; }
+  }
 
   function update(dz, dtFijo) {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -2893,10 +3133,6 @@ export function createWorld(scene) {
       for (const t of goldTrims) t.visible = zoneNow !== "desert";
       for (const b of dirtBerms) b.visible = zoneNow === "desert";
       showMidLayer(zoneNow);
-      horizonMat.color.set(c.horizon);
-      // La fila lejana se recolorea igual pero mezclada hacia el cielo, para
-      // mantener la perspectiva atmosferica en todas las zonas.
-      horizonFarMat.color.set(c.horizon).lerp(new THREE.Color(c.sky), 0.45);
     }
 
     lastOuterZ += dz;
@@ -2931,10 +3167,10 @@ export function createWorld(scene) {
     // Cada marca consulta la zona en SU propia posicion (no la del jugador)
     // porque conviven varias franjas de bioma a lo largo del recorrido.
     for (const s of stripes) {
-      // Se recicla 43 tramos x 3 = 129 atras (no 128): asi la linea continua no
-      // se solapa consigo misma en la costura (el solape parpadeaba).
-      s.position.z += dz; if (s.position.z > 4) s.position.z -= TRAMOS_RAYA;
-      s.visible = currentZoneName(totalScrolled - s.position.z) !== "desert" && !(nivel && totalScrolled - s.position.z > nivel.largo);
+      // Hasta donde llega la calle del nivel (o hasta el horizonte).
+      const hasta = nivel ? Math.min(8 - SPAWN_Z, Math.max(0.01, 8 + nivel.largo - totalScrolled)) : 8 - SPAWN_Z;
+      s.scale.z = hasta;
+      s.visible = currentZoneName(totalScrolled) !== "desert";
     }
     for (const rl of roadLines) {
       rl.position.z += dz; if (rl.position.z > 4) rl.position.z -= TRAMOS_RAYA;
@@ -2991,6 +3227,16 @@ export function createWorld(scene) {
         o.mesh.userData.sirena[0].visible = on;
         o.mesh.userData.sirena[1].visible = !on;
       }
+      if (o.mesh.userData.vapor) {
+        // El vapor de la alcantarilla sube, crece y se deshace.
+        o.mesh.userData.vapor.forEach((s, k) => {
+          const f = (animClock * 0.7 + k / 3 + o.phase) % 1;
+          s.position.y = 0.2 + f * 2.6;
+          s.position.x = Math.sin((f + k) * 5) * 0.15;
+          s.scale.setScalar(0.7 + f * 1.6);
+          s.material.opacity = Math.sin(f * Math.PI) * 0.8;
+        });
+      }
       if (o.mueve) {
         // El coche se lleva por delante los tacos de su carril.
         for (const t of tacos) {
@@ -3010,13 +3256,27 @@ export function createWorld(scene) {
       it.mesh.rotation.y += 0.08;
       it.mesh.position.y = it.baseY + Math.sin(animClock * 3 + it.phase) * 0.08;
       const glowPulse = 1 + Math.sin(animClock * 4 + it.phase) * 0.18;
-      it.mesh.userData.glow.scale.setScalar(glowPulse * 0.85);
+      if (it.mesh.userData.glow) it.mesh.userData.glow.scale.setScalar(glowPulse * 0.85);
       if (it.z > DESPAWN_Z || it.collected) {
         if (it.collected) burstSparkles(it.mesh.position.x, it.mesh.position.y, it.mesh.position.z);
         tacoPool.release(it.mesh);
         tacos.splice(i, 1);
       }
     }
+    // Chapas de campaña: flotan y brillan mas que un taco.
+    for (let i = chapas.length - 1; i >= 0; i--) {
+      const c = chapas[i];
+      c.z += dz; c.mesh.position.z = c.z;
+      c.mesh.position.y = c.baseY + Math.sin(animClock * 2.6 + c.phase) * 0.1;
+      c.mesh.userData.brillo.material.opacity = 0.55 + Math.sin(animClock * 5 + c.phase) * 0.25;
+      if (c.z > DESPAWN_Z || c.collected) {
+        if (c.collected) for (let k = 0; k < 3; k++) burstSparkles(c.mesh.position.x, c.mesh.position.y, c.mesh.position.z);
+        chapaPool.release(c.mesh);
+        chapas.splice(i, 1);
+      }
+    }
+    actualizarCameo(dt);
+    if (horizonte) horizonte.animar(dt);
     for (let i = powerups.length - 1; i >= 0; i--) {
       const p = powerups[i];
       p.z += dz; p.mesh.position.z = p.z;
@@ -3054,10 +3314,19 @@ export function createWorld(scene) {
     return curveX;
   }
 
-  function reset() {
-    totalScrolled = 0;
+  // `desde`: seguir desde el punto de control (los metros de la partida en
+  // los que se empieza). `chapasHechas`: las chapas que ya no hay que poner.
+  function reset(desde = 0, opciones = {}) {
+    totalScrolled = desde;
     curveX = 0;
     group.position.x = 0;
+    chapas.forEach((c) => chapaPool.release(c.mesh));
+    chapas.length = 0;
+    chapasHechas = new Set(opciones.chapasHechas || []);
+    avisos.length = 0;
+    reserva = null;
+    cameo.t = -1;
+    prepararTramos();
     obstacles.forEach((o) => { o.mesh.position.y = 0; if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; } obstaclePools[o.pool].release(o.mesh); });
     acabarJefe(); cielo = false;
     for (const f of frases) group.remove(f.sprite);
@@ -3075,6 +3344,7 @@ export function createWorld(scene) {
     lastRowZ = -14;
     lastOuterZ = -4;
     prepararCalle();
+    montarDecor();
     lastZoneName = forcedZone || "city";
     const startColors = BIOME_COLORS[lastZoneName];
     updateSkyColors(startColors.skyTop, startColors.sky);
@@ -3088,15 +3358,17 @@ export function createWorld(scene) {
     for (const t of goldTrims) t.visible = lastZoneName !== "desert";
     for (const b of dirtBerms) b.visible = lastZoneName === "desert";
     showMidLayer(lastZoneName);
-    horizonMat.color.set(startColors.horizon);
-    horizonFarMat.color.set(startColors.horizon).lerp(new THREE.Color(startColors.sky), 0.45);
     scene.fog.color.set(startColors.fog);
     scene.background.set(startColors.sky);
     ensureRows();
     ensureOuterProps();
   }
 
-  return { group, obstacles, tacos, powerups, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
+  // Lo de la acera y el horizonte, ya para el menu (luego se rehacen en cada partida).
+  montarDecor();
+  showMidLayer("city");
+
+  return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
-    setNivel, getNivel, setLuz, getCasaBlanca };
+    setNivel, getNivel, setLuz, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe };
 }

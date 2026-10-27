@@ -18,16 +18,59 @@ function cuadras(n) {
 // Edificio del kit con aire oficial (Washington).
 const FED = { federal: true, minPlantas: 5, maxPlantas: 7 };
 
+// ---- Tramos (27/10/2026) ----
+// Isidro: «los niveles no sé cuándo acaban, son muy repetitivos». Antes cada
+// fila salía al azar de principio a fin. Ahora cada nivel va por partes, cada
+// una con su forma y su nombre (lo que sale en el cartel al entrar):
+//   [desde, hasta, tipo, opciones]
+//   tutorial  enseña los gestos (solo el nivel 1)
+//   calma     solo tacos: un respiro
+//   suave / mixto   lo de siempre, con más o menos obstáculos (densidad)
+//   vallas    filas enteras que hay que saltar o pasar agachado
+//   slalom    dos carriles cerrados y el libre va cambiando de sitio
+//   autobuses autobuses con tacos en el techo, uno tras otro
+//   festin    un potenciador seguro y lluvia de tacos
+//   obras · desfile · comitiva   lo propio de cada ciudad
+//   jefe      llega el Burrito-Bot (tacos y chiles para darle)
+//   sprint    el último tramo, con aviso: ya se ve la meta
+// `control` es el punto de control (se puede seguir desde ahí si se choca) y
+// `chapas` las tres chapas de campaña escondidas, cada una con su truco:
+//   arco (se coge saltando sobre una valla), carril (justo detrás de un
+//   obstáculo) o bus (en el techo de un autobús).
+// Las estrellas: llegar · llegar sin chocar · las tres chapas.
+
 export const NIVELES = [
   {
-    id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: true, mapa: [88, 25],
+    id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: true, mapa: [88, 25], etiqueta: [0, -5],
     ingrediente: "🫓", historia: { es: "¡Empieza la carrera a la Casa Blanca! Sal de tu torre y recupera la tortilla.", en: "The race to the White House begins! Leave your tower and get the tortilla back." },
     fin: { es: "¡Tortilla recuperada! 🫓", en: "Tortilla recovered! 🫓" },
     zona: "city", carpeta: "nueva_york", luz: "manana", semilla: 725,
-    largo: 3200, estrellas: [300, 600, 950], linea: 11.5,
+    largo: 3200, linea: 11.5, velMax: 20,
     // Primer nivel: lo basico. Sin autobuses ni coches patrulla; iman y microfonos.
     sinBus: true, sinPatrulla: true, potenciadores: ["magnet", "magnet", "shield", "boost"],
     kit: { minPlantas: 5, maxPlantas: 11 },
+    horizonte: "manhattan", cameoJefe: true,
+    obstaculos: { low: ["conos", "barricada", "alcantarilla"], high: ["pancarta", "andamio", "globos"],
+      full: ["taxi", "taxi", "furgoneta", "contenedor", "guardaespaldas"] },
+    publico: { personas: ["ejecutivo", "turista", "chico", "senora", "turista"], valla: "policia", cada: 2 },
+    tramos: [
+      [0, 280, "tutorial"],
+      [280, 620, "suave", { densidad: 0.4, titulo: "quinta" }],
+      [620, 760, "festin", { potenciador: "magnet", titulo: "festin" }],
+      [760, 1150, "slalom", { full: ["taxi"], titulo: "atasco" }],
+      [1150, 1290, "calma"],
+      [1290, 1580, "obras", { titulo: "obras" }],
+      [1580, 1680, "calma"],
+      [1680, 2100, "vallas", { titulo: "vallas" }],
+      [2100, 2240, "festin", { potenciador: "shield", titulo: "festin" }],
+      [2240, 2650, "mixto", { densidad: 0.55, titulo: "hora_punta" }],
+      [2650, 2900, "obras", { low: ["alcantarilla"], titulo: "vapor" }],
+      [2900, 3170, "sprint", { titulo: "sprint" }],
+    ],
+    control: 1610,
+    chapas: [[700, "arco"], [1430, "carril"], [2520, "arco"]],
+    hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
+    meta: "flatiron", metaNombre: { es: "el Flatiron", en: "the Flatiron" },
     // Bajando por la Quinta Avenida desde la calle 56: el este queda a la izquierda.
     // Cada cuadra entre dos calles son edificios unicos del kit; los monumentos en su esquina.
     izquierda: [
@@ -48,15 +91,35 @@ export const NIVELES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
   },
   {
-    id: "pueblo", numero: 2, nombre: "Main Street", lugar: "Findlay, Ohio", listo: true, mapa: [73, 29],
+    id: "pueblo", numero: 2, nombre: "Main Street", lugar: "Findlay, Ohio", listo: true, mapa: [73, 29], etiqueta: [-4, 6.4],
     ingrediente: "🌽", historia: { es: "Mitin en Findlay, la ciudad de las banderas. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses y llega al juzgado!", en: "Rally in Findlay, Flag City USA. Burrito-Bot hid the corn: ride the buses and reach the courthouse!" },
     fin: { es: "¡Maíz recuperado! 🌽 ¡Ohio es tuyo!", en: "Corn recovered! 🌽 Ohio is yours!" },
     zona: "city", carpeta: "findlay", luz: "mediodia", semilla: 1888,
-    largo: 3200, estrellas: [320, 650, 1000], linea: 11.5,
+    largo: 3200, linea: 11.5, velMax: 21.5,
     // Segundo nivel: entran los autobuses de campaña (por el techo hay tacos).
     sinPatrulla: true, potenciadores: ["magnet", "shield", "boost", "magnet"],
     // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
     kit: { pueblo: true, minPlantas: 1, maxPlantas: 3 },
+    horizonte: "ohio",
+    obstaculos: { low: ["paca", "paca", "conos", "barricada"], high: ["guirnalda", "pancarta", "globos"],
+      full: ["tractor", "carroza", "furgoneta"] },
+    publico: { personas: ["abuelo", "senora", "fan", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 200, "calma", { titulo: "main_street" }],
+      [200, 560, "suave", { densidad: 0.42 }],
+      [560, 860, "autobuses", { titulo: "autobuses" }],
+      [860, 1000, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [1000, 1400, "desfile", { titulo: "desfile" }],
+      [1400, 1540, "calma"],
+      [1540, 2300, "jefe", { titulo: "jefe" }],
+      [2300, 2650, "slalom", { full: ["tractor"], titulo: "tractores" }],
+      [2650, 2900, "autobuses", { titulo: "autobuses" }],
+      [2900, 3170, "sprint", { titulo: "sprint" }],
+    ],
+    control: 1547,
+    chapas: [[700, "bus"], [1253, "arco"], [2786, "bus"]],
+    hitos: ["courier", "heladeria", "deposito_agua", "davis"],
+    meta: "juzgado_final", metaNombre: { es: "el juzgado", en: "the courthouse" },
     // Subiendo por South Main Street hacia el norte: el oeste queda a la izquierda.
     izquierda: [
       40, ["kit", 3], 14, ["courier", 1], ["kit", 2], 14,
@@ -73,22 +136,44 @@ export const NIVELES = [
     final: "mitin",
     acera: ["findlay/farola_bandera", "ciudad/arbol_ciudad"],
   },
-  { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45],
+  { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45], etiqueta: [0, 6.4],
     ingrediente: "🌶️", historia: { es: "Ruta 66 por el desierto. ¡La policía te persigue! Es una caza de brujas.", en: "Route 66 through the desert. The police are after you! It is a witch hunt." } },
-  { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38],
+  { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38], etiqueta: [0, -5],
     ingrediente: "🥫", historia: { es: "Debate en Las Vegas contra el Burrito-Bot, el candidato hecho en China. ¡Gánale!", en: "Debate in Las Vegas against Burrito-Bot, the made-in-China candidate. Beat him!" } },
   {
-    id: "washington", numero: 5, nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true, mapa: [85, 33],
+    id: "washington", numero: 5, nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true, mapa: [85, 33], etiqueta: [2, 6.4],
     ingrediente: "🏛️", historia: { es: "La recta final. Corre por Pennsylvania Avenue y entra en la Casa Blanca: ¡el taco perfecto te espera!", en: "The home stretch. Run down Pennsylvania Avenue into the White House: the perfect taco awaits!" },
     zona: "dc",
     carpeta: "washington",
     luz: "atardecer",
     semilla: 1600,                 // el mismo reparto de obstaculos cada vez
     largo: 3300,                   // donde esta la verja de la Casa Blanca
-    estrellas: [350, 700, 1100],   // tacos para 1, 2 y 3 estrellas
     linea: 11.5,                   // x de las fachadas
+    velMax: 23,
     // Edificios del kit: 6-10 plantas (en Washington no se puede subir mas que el Capitolio).
     kit: { minPlantas: 6, maxPlantas: 10 },
+    horizonte: "dc",
+    potenciadores: ["magnet", "shield", "boost", "mega", "freeze", "rocket"],
+    obstaculos: { low: ["valla_metal", "valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"],
+      full: ["agentes", "agentes", "furgoneta", "guardaespaldas"] },
+    publico: { personas: ["ejecutivo", "fan", "turista", "senora", "ejecutivo"], valla: "verja", cada: 2 },
+    tramos: [
+      [0, 200, "calma", { titulo: "pennsylvania" }],
+      [200, 560, "mixto", { densidad: 0.5 }],
+      [560, 900, "comitiva", { titulo: "comitiva" }],
+      [900, 1060, "festin", { potenciador: "rocket", titulo: "cohete" }],
+      [1060, 1450, "vallas", { high: ["protesta"], titulo: "protesta" }],
+      [1450, 1680, "autobuses", { titulo: "autobuses" }],
+      [1680, 1750, "calma"],
+      [1750, 2450, "jefe", { titulo: "jefe_final" }],
+      [2450, 2600, "festin", { potenciador: "freeze", titulo: "hielo" }],
+      [2600, 3000, "slalom", { full: ["agentes", "furgoneta"], titulo: "recta" }],
+      [3000, 3270, "sprint", { titulo: "sprint_dc" }],
+    ],
+    control: 1694,
+    chapas: [[1204, "arco"], [1561, "bus"], [2751, "carril"]],
+    hitos: ["archivos_portico", "fbi", "irs", "correos_torre", "willard", "tesoro"],
+    meta: "casa_blanca_final", metaNombre: { es: "la Casa Blanca", en: "the White House" }, coche: "suv",
     // Hacia el oeste: el sur queda a la izquierda y el norte a la derecha.
     // 26/10: los monumentos de verdad en su sitio, sus fachadas en tramos
     // cortos con patios entre medias, y el resto edificios unicos del kit
@@ -190,7 +275,25 @@ export function colocarNivel(nivel, anchoDe) {
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
   recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
   for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, ancho: anchoDe(f.pieza) });
+  // El arco del punto de control, de lado a lado de la calle.
+  if (nivel.control) salida.push({ pieza: "arco_control", d: nivel.control, lado: 0, arco: true, ancho: 2 });
   return salida.sort((a, b) => a.d - b.d);
+}
+
+// Los edificios famosos que salen en la barra de progreso: { pieza, d } con
+// la d en el centro de su fachada (la primera vez que aparece cada uno).
+export function hitosDeNivel(nivel) {
+  const lista = colocarNivel(nivel, (k) => ANCHO[k] || 20);
+  return (nivel.hitos || []).map((h) => {
+    const e = lista.find((x) => x.pieza === h);
+    return e ? { pieza: h, d: e.d + e.ancho / 2 } : null;
+  }).filter(Boolean);
+}
+
+// El punto de control en metros redondos de fila (7): si se sigue desde ahi,
+// las filas caen en el mismo sitio que la primera vez.
+export function salidaControl(nivel) {
+  return Math.floor((nivel.control - 25) / 7) * 7;
 }
 
 // Lo largo que es cada lado (para comprobar que llegan a donde toca).

@@ -1,5 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { medidas } from "./models.js";
+import { mergeGeometries } from "../vendor/BufferGeometryUtils.js";
 
 // Edificios de relleno únicos (25/10/2026), montados con el kit de blender/kit.py.
 //
@@ -142,7 +143,50 @@ export function construirEdificio(azar, ancho, opciones = {}) {
       if (re) { re.position.y = alto - (estilo.cornisa === "cornisa_simple" ? 0.7 : 0); col.add(re); }
     }
   }
-  g.userData.ancho = ancho;
-  g.userData.frente = 1.3;
-  return g;
+  return juntarPorMaterial(g, ancho);
+}
+
+// 27/10/2026: las piezas que comparten material (todas las plantas iguales,
+// los tres toldos...) se juntan en una sola malla. Un edificio pasaba de ~15
+// llamadas de dibujo a ~6, y en la calle hay unos treinta a la vez. El rotulo
+// (textura propia) va aparte. Lo juntado es de este edificio solo: al quitarlo
+// de la calle hay que soltarlo (soltarEdificio).
+function juntarPorMaterial(g, ancho) {
+  g.updateMatrixWorld(true);
+  const porMat = new Map();
+  const aparte = [];
+  g.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.material.isMeshBasicMaterial) { aparte.push(o); return; }
+    if (!porMat.has(o.material)) porMat.set(o.material, []);
+    porMat.get(o.material).push(o);
+  });
+  const nuevo = new THREE.Group();
+  for (const [mat, mallas] of porMat) {
+    const geos = mallas.map((m) => m.geometry.clone().applyMatrix4(m.matrixWorld));
+    const junta = mallas.length > 1 ? mergeGeometries(geos, false) : geos[0];
+    if (mallas.length > 1) geos.forEach((x) => x.dispose());
+    const malla = new THREE.Mesh(junta || mallas[0].geometry, mat);
+    malla.userData.propia = !!junta;
+    nuevo.add(malla);
+  }
+  for (const o of aparte) {
+    const c = new THREE.Mesh(o.geometry, o.material);
+    c.applyMatrix4(o.matrixWorld);
+    nuevo.add(c);
+  }
+  nuevo.userData.ancho = ancho;
+  nuevo.userData.frente = 1.3;
+  nuevo.userData.kit = true;
+  return nuevo;
+}
+
+// Suelta de la memoria lo que era solo de un edificio del kit.
+export function soltarEdificio(g) {
+  if (!g.userData.kit) return;
+  g.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.userData.propia) o.geometry.dispose();
+    o.material.dispose();
+  });
 }

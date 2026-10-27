@@ -742,6 +742,15 @@ function crearMuneco(cosmetics) {
       shield.visible = active;
     },
 
+    // 27/10: se cae de espaldas al chocar (el presidente de Meshy hace lo mismo).
+    setCaida(t) {
+      const k = Math.min(1, t / 0.38);
+      const e = k * k * (3 - 2 * k);
+      hips.rotation.x = -1.3 * e;
+      leftArm.rotation.z = 1.6 * e; rightArm.rotation.z = -1.6 * e;
+      leftLeg.rotation.x = -0.9 * e; rightLeg.rotation.x = -0.5 * e;
+    },
+
     // name: "normal" | "surprised" | "happy"
     setExpression(name) {
       applyExpression(name);
