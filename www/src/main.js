@@ -341,9 +341,20 @@ function abrirMapa() {
   const actual = [...NIVELES].reverse().find((n) => nivelAbierto(n, hechos)) || NIVELES[0];
   svg.querySelector(".ruta").insertAdjacentHTML("afterend", `<circle class="actual" cx="${actual.mapa[0]}" cy="${actual.mapa[1]}" r="4.8"/>`);
   svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
+  pintarReceta(hechos);
   elegirNivel(nivelElegido || actual.id);
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("mapaGira").classList.remove("hidden");
+}
+// La receta (27/10/2026): los ingredientes que robo el Burrito-Bot, uno por
+// nivel. Los recuperados salen en color; los que faltan, en gris.
+const RECETA = [["nueva_york", "tortilla"], ["pueblo", "maiz"], ["ruta66", "chile"], ["vegas", "salsa"], ["washington", "taco_perfecto"]];
+function pintarReceta(hechos) {
+  const fila = RECETA.map(([id, peg], i) => {
+    const signo = i === RECETA.length - 1 ? '<span class="recetaIgual">=</span>' : i ? '<span class="recetaMas">+</span>' : "";
+    return signo + `<img class="recetaPeg ${hechos[id] ? "tengo" : "falta"}" src="${urlPegatina(peg)}" alt="">`;
+  }).join("");
+  document.getElementById("receta").innerHTML = `<div class="recetaTitulo">${t("receta")}</div><div class="recetaFila">${fila}</div>`;
 }
 // Las tres estrellas de un nivel, cada una con su objetivo.
 function filaObjetivos(n, r) {
@@ -1507,7 +1518,8 @@ function frame(dtFijo) {
     const tramo = world.tramoEn(distance);
     if (tramo !== tramoMostrado) {
       tramoMostrado = tramo;
-      const titulo = tramo.titulo ? t("tr_" + tramo.titulo) : "";
+      // (El del primer tramo no: saldria encima del cartel del nivel.)
+      const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
       if (tramo.tipo === "sprint") { sndFanfarria(true); vibrate([20, 30, 20]); }
     }

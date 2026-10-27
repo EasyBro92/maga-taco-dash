@@ -85,6 +85,7 @@ const DICT = {
     av_carril: "Desliza a un lado para cambiar de carril", av_saltar: "Desliza hacia arriba para saltar",
     av_agachar: "Desliza hacia abajo para agacharte", av_frase: "Coge el micrófono y toca la pantalla",
     estrellasNuevas: "Estrellas: llegar · sin chocar · 3 chapas",
+    receta: "La receta del taco perfecto",
     tiendaGorras: "Gorras", tiendaTrajes: "Trajes", tiendaPuesto: "Puesto", tiendaPonerse: "Ponérselo",
   },
   en: {
@@ -172,6 +173,7 @@ const DICT = {
     av_carril: "Swipe sideways to change lanes", av_saltar: "Swipe up to jump",
     av_agachar: "Swipe down to duck", av_frase: "Grab the mic and tap the screen",
     estrellasNuevas: "Stars: finish · no crash · 3 buttons",
+    receta: "The perfect taco recipe",
     tiendaGorras: "Hats", tiendaTrajes: "Suits", tiendaPuesto: "Wearing", tiendaPonerse: "Wear it",
   },
 };

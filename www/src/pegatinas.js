@@ -170,6 +170,54 @@ const DIBUJOS = {
     x.beginPath(); x.ellipse(cx, cy, 108, 90, 0, 0, Math.PI * 2); x.stroke();
   },
 
+  // El chile (el ingrediente de Arizona).
+  chile(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(0.6);
+    const cuerpo = () => {
+      x.beginPath();
+      x.moveTo(-20, -70);
+      x.bezierCurveTo(40, -80, 52, -10, 30, 40);
+      x.bezierCurveTo(14, 78, -18, 96, -34, 100);
+      x.bezierCurveTo(-20, 70, -36, 10, -40, -30);
+      x.bezierCurveTo(-42, -56, -34, -66, -20, -70);
+      x.closePath();
+    };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cuerpo(); x.stroke();
+    cuerpo();
+    const g = x.createLinearGradient(-40, 0, 50, 0);
+    g.addColorStop(0, "#ff4a3a"); g.addColorStop(1, "#c81e1e");
+    x.fillStyle = g; x.fill();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; x.stroke();
+    x.strokeStyle = "rgba(255,255,255,0.6)"; x.lineWidth = 9;
+    x.beginPath(); x.moveTo(-26, -48); x.quadraticCurveTo(-30, 0, -22, 40); x.stroke();
+    x.fillStyle = "#3fae3a";                                         // el rabito
+    x.beginPath(); x.ellipse(-4, -74, 30, 14, 0.1, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 6; x.strokeStyle = CONTORNO; x.stroke();
+    x.lineWidth = 10; x.strokeStyle = "#3fae3a";
+    x.beginPath(); x.moveTo(-4, -82); x.quadraticCurveTo(4, -104, 26, -108); x.stroke();
+    x.restore();
+  },
+
+  // La lata de salsa (el ingrediente de Las Vegas).
+  salsa(x) {
+    const lata = () => { x.beginPath(); x.roundRect(64, 52, 128, 160, 18); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; lata(); x.stroke();
+    lata();
+    const g = x.createLinearGradient(64, 0, 192, 0);
+    g.addColorStop(0, "#d63a2e"); g.addColorStop(0.5, "#f05a40"); g.addColorStop(1, "#b52a22");
+    x.fillStyle = g; x.fill();
+    x.fillStyle = "#ffe066"; x.fillRect(64, 104, 128, 58);           // la etiqueta
+    x.fillStyle = "#c81e1e";
+    x.font = '700 34px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif';
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText("SALSA", 128, 134);
+    x.fillStyle = "#cfd5dc"; x.fillRect(64, 52, 128, 14); x.fillRect(64, 198, 128, 14);   // tapa y culo
+    x.strokeStyle = "rgba(255,255,255,0.55)"; x.lineWidth = 9;
+    x.beginPath(); x.moveTo(84, 74); x.lineTo(84, 96); x.moveTo(84, 172); x.lineTo(84, 190); x.stroke();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; lata(); x.stroke();
+  },
+
   // El taco perfecto de la Casa Blanca: el taco con estrellas doradas.
   taco_perfecto(x) {
     x.drawImage(lienzo("taco"), 0, 18);
