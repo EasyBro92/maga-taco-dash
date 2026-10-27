@@ -2801,6 +2801,7 @@ export function createWorld(scene) {
   }
 
   // La fila de siempre (al azar), con la densidad que diga el tramo.
+  let ultimaFilaLlena = -1e9;
   function filaMixta(z, d, densidad) {
     const roll = Math.random();
     const ocupado = carrilOcupado;
@@ -2822,12 +2823,20 @@ export function createWorld(scene) {
       const libres = LANES.filter((l) => l !== ocupado);
       const blockCount = ocupado >= 0 ? 1 : (Math.random() < 0.5 ? 1 : 2);
       const blocked = libres.slice().sort(() => Math.random() - 0.5).slice(0, blockCount);
+      // Justa (27/10): si la fila de antes (a 7 m) cerro dos carriles con algo
+      // que hay que esquivar, en esta no hay nada de eso. Si no, podian salir
+      // dos filas seguidas con el hueco en lados opuestos: cruzar dos carriles
+      // en 7 m, con un deslizamiento por carril, es casi imposible.
+      const trasLlena = d > ultimaFilaLlena && d - ultimaFilaLlena <= ROW_SPACING + 0.5;
+      let llenas = 0;
       blocked.forEach((lane) => {
         const typeRoll = Math.random();
-        const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 ? "high" : "full";
+        const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 || trasLlena ? "high" : "full";
+        if (type === "full") llenas++;
         obst(lane, type, z, d);
         if (type === "low" && Math.random() < 0.45) arcoDeTacos(lane, z);
       });
+      if (llenas >= 2) ultimaFilaLlena = d;
       const free = libres.filter((l) => !blocked.includes(l));
       let powerupLane = null;
       if (Math.random() < 0.08 && free.length > 0) {

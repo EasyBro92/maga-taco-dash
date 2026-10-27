@@ -422,6 +422,23 @@ function arrancar() {
 // ---- Barra de progreso del nivel (27/10/2026) ----
 // Isidro: «los niveles no se cuando acaban». Arriba, la calle entera: los
 // edificios famosos, el punto de control, la meta y por donde vas.
+// 27/10 (2): no la veia («pon una barra arriba»): iba fina y apretada entre
+// los tacos y la pausa. Ahora va en su propia fila, a todo lo ancho, con
+// «Faltan X m para el Flatiron», el porcentaje y la bandera de cuadros; y al
+// pasar cada edificio famoso sale su nombre debajo.
+const NOMBRE_HITO = {
+  es: { rockefeller: "Rockefeller Center", catedral: "Catedral de San Patricio", biblioteca: "Biblioteca Pública", empire: "Empire State",
+    madison: "Madison Square", courier: "The Courier", heladeria: "Heladería Dietsch", deposito_agua: "El depósito de agua",
+    davis: "Edificio Davis", archivos_portico: "Archivos Nacionales", fbi: "Edificio del FBI", irs: "Edificio de Hacienda",
+    correos_torre: "La antigua Oficina de Correos", willard: "Hotel Willard", tesoro: "Departamento del Tesoro",
+    san_carlos: "Hotel San Carlos", westward_ho: "Westward Ho", biblioteca_barr: "Biblioteca Burton Barr", museo_arte: "Museo de Arte de Phoenix",
+    museo_heard: "Museo Heard" },
+  en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
+    archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
+    tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
+    heladeria: "Dietsch Brothers" },
+};
+let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
 function prepararBarra() {
   const n = nivelActual;
@@ -429,7 +446,12 @@ function prepararBarra() {
   document.getElementById("hudScore").classList.toggle("hidden", !!n);
   document.getElementById("hudChapas").classList.toggle("hidden", !n || !n.chapas);
   if (!n) return;
-  const marcas = hitosDeNivel(n).map((h) => `<i class="pgHito" style="left:${(100 * h.d / n.largo).toFixed(1)}%"></i>`).join("")
+  hitosBarra = hitosDeNivel(n);
+  hitoAvisado = hitosBarra.filter((h) => h.d < distance).length;
+  mitadAvisada = distance > n.largo / 2;
+  hudFaltaPintada = -1;
+  document.querySelector("#hudProgreso .pgHitoNombre").classList.add("hidden");
+  const marcas = hitosBarra.map((h) => `<i class="pgHito" style="left:${(100 * h.d / n.largo).toFixed(1)}%"></i>`).join("")
     + (n.control ? `<i class="pgControl" style="left:${(100 * n.control / n.largo).toFixed(1)}%">${icono("control")}</i>` : "")
     + `<i class="pgMeta">${icono("meta")}</i>`;
   for (const b of barras) {
@@ -941,7 +963,28 @@ function updateHud() {
     const falta = Math.max(0, Math.ceil((nivelActual.largo - distance) / 10) * 10);
     if (falta !== hudFaltaPintada) {
       hudFaltaPintada = falta;
-      document.querySelector("#hudProgreso .pgTexto").textContent = t("faltanM").replace("{n}", falta.toLocaleString(getLang() === "en" ? "en" : "es"));
+      const meta = nivelActual.metaNombre ? (nivelActual.metaNombre[getLang()] || nivelActual.metaNombre.es) : "";
+      document.querySelector("#hudProgreso .pgTexto").textContent = (meta ? t("faltanPara").replace("{m}", meta) : t("faltanM"))
+        .replace("{n}", falta.toLocaleString(getLang() === "en" ? "en" : "es"));
+      document.querySelector("#hudProgreso .pgPorcentaje").textContent = `${Math.min(100, Math.floor((100 * distance) / nivelActual.largo))} %`;
+    }
+    // El nombre de cada edificio famoso al pasarlo, y el aviso de la mitad.
+    if (hitoAvisado < hitosBarra.length && distance >= hitosBarra[hitoAvisado].d - 25) {
+      const hito = hitosBarra[hitoAvisado++];
+      const el = document.querySelector("#hudProgreso .pgHitoNombre");
+      el.textContent = (NOMBRE_HITO[getLang()] || {})[hito.pieza] || NOMBRE_HITO.es[hito.pieza] || "";
+      el.classList.toggle("hidden", !el.textContent);
+      el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+      clearTimeout(updateHud.tHito);
+      updateHud.tHito = setTimeout(() => el.classList.add("hidden"), 2600);
+      document.querySelectorAll("#hudProgreso .pgHito")[hitoAvisado - 1]?.classList.add("pasado");
+    }
+    // La mitad del camino: la barra late (el aviso es el del punto de control, que esta ahi mismo).
+    if (!mitadAvisada && distance >= nivelActual.largo / 2) {
+      mitadAvisada = true;
+      if (!nivelActual.control) avisoVerde(t("mitadCamino"));
+      const p = document.getElementById("hudProgreso");
+      p.classList.remove("late"); void p.offsetWidth; p.classList.add("late");
     }
   } else document.getElementById("hudScoreValue").textContent = Math.floor(distance);
   const streakEl = document.getElementById("hudStreak");
