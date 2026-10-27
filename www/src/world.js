@@ -1699,6 +1699,10 @@ export function createWorld(scene) {
     if (luz === "mediodia") {
       Object.assign(BIOME_COLORS.city, { sky: 0xb4dcff, skyTop: 0x2f7fe6, fog: 0xc4e2ff, horizon: 0x7f9fc8 });
     }
+    if (luz === "tarde") {
+      // Tarde dorada en el desierto (Phoenix): cielo calido y bruma de arena.
+      Object.assign(BIOME_COLORS.city, { sky: 0xffd9a8, skyTop: 0x5f8fd6, fog: 0xf5d8b0, horizon: 0xc79a74, ground: 0xe3c9a6, sidewalk: 0xefdcc0 });
+    }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
@@ -2183,6 +2187,12 @@ export function createWorld(scene) {
     protesta: { choque: "high", medio: 0.35, alto: 2.2 },
     agentes: { choque: "full", medio: 0.5, alto: 2.1, centro: 0 },
     suv: { choque: "full", medio: 1.5, alto: 1.6, centro: -1.5, mueve: 7 },
+    // Phoenix (27/10): la rodadora viene rodando hacia el jugador.
+    nopal: { choque: "low", medio: 0.5, alto: 0.95 },
+    rodadora: { choque: "low", medio: 0.45, alto: 0.9, mueve: 4 },
+    saguaro: { choque: "full", medio: 0.45, alto: 3.0, centro: 0 },
+    pickup: { choque: "full", medio: 1.5, alto: 1.6, centro: -1.5 },
+    arco_neon: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2589,8 +2599,11 @@ export function createWorld(scene) {
   // carril tiene que estar libre en todas ellas, y no puede cruzarse cerca del
   // jugador con una fila que ya tape los otros dos carriles.
   function cocheCabe(lane, z, mueve) {
+    // 27/10: solo cuenta lo que el coche llega a alcanzar antes de llegar al
+    // jugador (antes miraba toda la calle visible y casi nunca salia ninguno).
+    const alcance = (mueve * Math.abs(z)) / (Math.max(8, ritmo) + mueve) + 14;
     for (const o of obstacles) {
-      if (o.smashed || o.z <= z) continue;
+      if (o.smashed || o.z <= z || o.z > z + alcance) continue;
       if (o.lane === lane) return false;
     }
     const filas = {};
@@ -2751,7 +2764,7 @@ export function createWorld(scene) {
     city: { low: ["conos", "barricada", "alcantarilla"], high: ["pancarta", "andamio", "globos"], full: ["taxi", "taxi", "furgoneta", "contenedor", "guardaespaldas"] },
     town: { low: ["paca", "paca", "conos", "barricada"], high: ["guirnalda", "pancarta", "globos"], full: ["tractor", "carroza", "furgoneta"] },
     dc: { low: ["valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"], full: ["agentes", "furgoneta", "guardaespaldas"] },
-    desert: DE_TIPO,
+    desert: { low: ["nopal", "nopal", "conos", "barricada"], high: ["arco_neon", "pancarta", "globos"], full: ["saguaro", "pickup", "furgoneta"] },
   };
   // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
   let carrilOcupado = -1;
@@ -2936,6 +2949,32 @@ export function createWorld(scene) {
         if (Math.random() < 0.6) obst(elegirDe(otros), "full", z, d, ["agentes"]);
       } else obst(Math.floor(Math.random() * 3), "full", z, d, ["agentes"]);
     },
+    // Phoenix: rodadoras que vienen rodando y saguaros plantados en medio.
+    rodadoras(z, d, t, k) {
+      if (k % 2 === 0 && obstaclePools.rodadora) {
+        // Va solo un poco mas rapida que la pista: basta con que su carril este
+        // libre en los 60 m de delante (los que le da tiempo a alcanzar).
+        const opciones = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60));
+        if (opciones.length) spawnObstacle(elegirDe(opciones), "low", z, "rodadora");
+      }
+      if (k % 3 === 1) {
+        const l = Math.floor(Math.random() * 3);
+        obst(l, "full", z, d, ["saguaro"]);
+        tacosEn((l + 1 + Math.floor(Math.random() * 2)) % 3, z, 4);
+      }
+    },
+    // La policia te persigue: coches patrulla de frente, uno detras de otro.
+    persecucion(z, d, t, k) {
+      if (k % 3 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 4); return; }
+      if (k % 3 === 2) return;
+      const opciones = USAR_BLENDER ? LANES.filter((l) => l !== carrilOcupado && cocheCabe(l, z, TIPOS.patrulla.mueve)) : [];
+      if (opciones.length) {
+        const l = elegirDe(opciones);
+        spawnObstacle(l, "full", z, "patrulla");
+        const otros = LANES.filter((x) => x !== l);
+        if (Math.random() < 0.5) obst(elegirDe(otros), Math.random() < 0.5 ? "low" : "full", z, d);
+      } else obst(Math.floor(Math.random() * 3), "low", z, d);
+    },
     // El Burrito-Bot: sin obstaculos normales (solo sus barriles), tacos y chiles.
     jefe(z, d, t, k) {
       const lane = Math.floor(Math.random() * 3);
@@ -2949,7 +2988,7 @@ export function createWorld(scene) {
   // Fuera de los tramos del nivel (el final de la calle): siempre el mismo objeto.
   const TRAMO_FINAL = { desde: 0, hasta: 1e9, tipo: "calma" }, TRAMO_MIXTO = { desde: 0, hasta: 1e9, tipo: "mixto" };
   const SIN_FIN = [["suave", 2], ["mixto", 4], ["slalom", 2], ["vallas", 2], ["autobuses", 2], ["festin", 1], ["calma", 1], ["local", 2]];
-  const LOCAL_DE_ZONA = { city: "obras", town: "desfile", dc: "comitiva", desert: "slalom" };
+  const LOCAL_DE_ZONA = { city: "obras", town: "desfile", dc: "comitiva", desert: "rodadoras" };
   function prepararTramos() {
     tramos = nivel && nivel.tramos ? nivel.tramos.map(([desde, hasta, tipo, op]) => ({ desde, hasta, tipo, ...(op || {}) })) : [];
   }
@@ -3212,6 +3251,7 @@ export function createWorld(scene) {
         if (o.mesh.position.y === 0) o.cae = null;
       }
       if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
+      if (o.pool === "rodadora") { o.mesh.rotation.x += dt * 7; o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.25; }
       if (o.smashed) {
         // Sale volando dando vueltas y cae fuera de la pista.
         const s = o.smashed;

@@ -1,3 +1,9 @@
+/* Letras del juego dentro del propio juego (27/10/2026): antes venian de Google
+   Fonts y sin internet salia la letra del sistema. Fredoka y Nunito son de
+   licencia libre (SIL Open Font License); solo el juego de caracteres latino. */
+@font-face { font-family: "Fredoka"; font-style: normal; font-weight: 300 700; font-display: swap; src: url(fonts/fredoka.woff2) format("woff2"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 200 1000; font-display: swap; src: url(fonts/nunito.woff2) format("woff2"); }
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0a0a12; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
 
@@ -697,3 +703,11 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .recetaPeg.falta { filter: grayscale(1) brightness(1.15); opacity: 0.35; }
 .recetaPeg.tengo { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25)); }
 .recetaMas, .recetaIgual { font-family: var(--letra-titulo); font-weight: 700; color: var(--tinta-suave); font-size: 16px; }
+
+/* La policia te persigue (Phoenix): luces rojas y azules por los bordes */
+#sirenas { position: absolute; inset: 0; z-index: 3; pointer-events: none; animation: sirenas 0.6s steps(1) infinite; }
+#sirenas.hidden { display: none !important; }
+@keyframes sirenas {
+  0% { box-shadow: inset 34px 0 50px -20px rgba(255, 40, 40, 0.75), inset -34px 0 50px -20px rgba(40, 90, 255, 0); }
+  50% { box-shadow: inset 34px 0 50px -20px rgba(255, 40, 40, 0), inset -34px 0 50px -20px rgba(40, 90, 255, 0.75); }
+}

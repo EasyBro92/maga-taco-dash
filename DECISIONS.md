@@ -756,3 +756,14 @@ Isidro pidió revisar todo el juego a fondo («los niveles no sé cuándo acaban
 - **Rendimiento**: de ~2.000 llamadas de dibujo a 520-620 (sin contornos ni montañas, rayas de carril en una pieza, un dibujo por taco, edificios del kit juntados por material y soltados al quitarlos).
 - Comprobado con un piloto automático (`?prueba`: `__juego.accion`, `sinDibujar`): los tres niveles y el sin fin se recorren enteros, con sus tramos, el jefe y el punto de control.
 - Pendiente: las fuentes Fredoka y Nunito siguen viniendo de Google (sin internet, la letra del sistema); bajarlas necesita su permiso. El ranking mundial sigue oculto (necesita servidor). Las caras de Meshy no tienen gestos.
+
+### Nivel 3: Central Avenue de Phoenix, y lo que faltaba (2026-10-27)
+
+Isidro: «¿Falta algo más? Si es así, continúa». Para el nivel 3 dijo que la gira va a la capital o a la ciudad más famosa de cada estado (lista en `GIRA.md`), con obstáculos que se irán desvelando; final en un diner de carretera y luz de tarde dorada. Dio permiso para bajar las letras de los menús y una voz en inglés.
+
+- **Nivel 3, Phoenix** (`blender/phoenix.py`, levels.js): subiendo por Central Avenue. Hotel San Carlos con su letrero en el tejado, la torre Westward Ho con la antena roja, la biblioteca Burton Barr de cobre, el museo de arte y el Museo Heard (colonial, con torre de azulejo). Palmeras y saguaros en maceta en la acera, kit con estilo `desierto` (estuco cálido), horizonte con South Mountain y Camelback, luz `tarde`. Obstáculos nuevos: nopales, rodadoras que vienen rodando, saguaros, camioneta de los 50 y arco de neón «PHOENIX». Tramos propios: «¡Tormenta de rodadoras!» y dos persecuciones de la policía (coches de frente, luces rojas y azules por los bordes y sirena). Final `parada` en el diner de acero con un chile gigante en el tejado; sale «¡Chile recuperado!». Canción del Oeste.
+- Los coches que vienen de frente (patrulla, comitiva de Washington) casi no salían: miraban toda la calle visible; ahora solo el trozo que alcanzan.
+- Autobús de campaña con techo de bandera y trasera con detalles (antes una caja gris); receta del taco perfecto en el mapa (pegatinas nuevas de chile y salsa); el primer tramo ya no tapa el cartel del nivel.
+- Letras Fredoka y Nunito dentro del juego (`www/fonts/`, 69 KB, licencia OFL): ya no dependen de internet. Voz en inglés (Piper `en_US-ryan-medium`, 63 MB fuera de git): las 40 frases en los dos idiomas.
+- Washington ahora pide pasar Phoenix (el atajo dice que solo falta Las Vegas).
+- Pendiente: el nivel 4, Las Vegas.

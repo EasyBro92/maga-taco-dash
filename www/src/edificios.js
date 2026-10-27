@@ -111,6 +111,17 @@ export function construirEdificio(azar, ancho, opciones = {}) {
       remate: azar() < 0.12 ? "remate_deposito" : null };
   }
 
+  if (opciones.desierto) {
+    // Centro de Phoenix (27/10): estuco de colores calidos del desierto
+    // (arena, terracota, melocoton, adobe), tiendas con toldo y alguna
+    // torre de cristal. Tambien se elige despues de lo normal.
+    const p = elegir(azar, ["planta_lisa", "planta_lisa", "planta_balcones", "planta_cristal", "planta_miradores"]);
+    const c = p === "planta_cristal" ? elegir(azar, [0xd9dbe0, 0xcfd8de]) : elegir(azar, [0xe8cfa6, 0xd9a877, 0xf0c9a0, 0xc98e66, 0xf3ece0, 0xe6b88a, 0xd8c2a0, 0xe9d6b8]);
+    estilo = { planta: p, noble: p, color: c, colorBajo: azar() < 0.5 ? c : elegir(azar, [0xf3ece0, 0xe8cfa6, 0xc98e66]),
+      bajo: azar() < 0.75 ? "bajo_tiendas" : "bajo_grande", cornisa: p === "planta_cristal" ? "cornisa_simple" : (azar() < 0.6 ? "cornisa_simple" : "cornisa_deco"),
+      remate: azar() < 0.15 ? "remate_antena" : azar() < 0.15 ? "remate_atico" : null };
+  }
+
   for (let c = 0; c < columnas; c++) {
     const col = new THREE.Group();
     col.position.x = -ancho / 2 + anchoCol * (c + 0.5);

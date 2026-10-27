@@ -136,8 +136,54 @@ export const NIVELES = [
     final: "mitin",
     acera: ["findlay/farola_bandera", "ciudad/arbol_ciudad"],
   },
-  { id: "ruta66", numero: 3, nombre: "Ruta 66", lugar: "Arizona", listo: false, mapa: [27, 45], etiqueta: [0, 6.4],
-    ingrediente: "🌶️", historia: { es: "Ruta 66 por el desierto. ¡La policía te persigue! Es una caza de brujas.", en: "Route 66 through the desert. The police are after you! It is a witch hunt." } },
+  {
+    // 27/10/2026: Isidro quiere la capital o la ciudad mas famosa de cada
+    // estado (ver GIRA.md); en Arizona, Phoenix. Final en un diner, luz de tarde dorada.
+    id: "phoenix", numero: 3, nombre: "Central Avenue", lugar: "Phoenix, Arizona", listo: true, mapa: [27, 45], etiqueta: [0, 6.4],
+    ingrediente: "🌶️", historia: { es: "Phoenix, en pleno desierto. El Burrito-Bot ha llamado a la policía: ¡te persiguen! Es una caza de brujas. Llega al diner y recupera el chile.", en: "Phoenix, in the middle of the desert. Burrito-Bot called the police: they are after you! It is a witch hunt. Reach the diner and get the chili back." },
+    fin: { es: "¡Chile recuperado! ¡Arizona es tuya!", en: "Chili recovered! Arizona is yours!" },
+    zona: "city", carpeta: "phoenix", luz: "tarde", semilla: 1912,
+    largo: 3200, linea: 11.5, velMax: 22,
+    potenciadores: ["magnet", "shield", "boost", "mega"],
+    // Centro de Phoenix: estuco de colores calidos, de dos a nueve plantas.
+    kit: { desierto: true, minPlantas: 2, maxPlantas: 9 },
+    horizonte: "phoenix",
+    obstaculos: { low: ["nopal", "nopal", "conos", "barricada"], high: ["arco_neon", "pancarta", "globos"],
+      full: ["saguaro", "pickup", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
+    tramos: [
+      [0, 200, "calma", { titulo: "central" }],
+      [200, 560, "suave", { densidad: 0.42 }],
+      [560, 860, "rodadoras", { titulo: "rodadoras" }],
+      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
+      [1000, 1400, "persecucion", { titulo: "persecucion" }],
+      [1400, 1540, "calma"],
+      [1540, 1950, "vallas", { high: ["arco_neon"], titulo: "neones" }],
+      [1950, 2300, "autobuses", { titulo: "autobuses" }],
+      [2300, 2450, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [2450, 2900, "persecucion", { titulo: "caza_brujas" }],
+      [2900, 3170, "sprint", { titulo: "sprint_diner" }],
+    ],
+    control: 1547,
+    chapas: [[707, "arco"], [2100, "bus"], [2604, "carril"]],
+    hitos: ["san_carlos", "westward_ho", "biblioteca_barr", "museo_arte", "museo_heard"],
+    meta: "diner_final", metaNombre: { es: "el diner", en: "the diner" }, coche: "patrulla",
+    // Subiendo por Central Avenue hacia el norte: el oeste queda a la izquierda.
+    izquierda: [
+      40, ["kit", 2], ["san_carlos", 1], ["kit", 1], 14,
+      ...cuadras(8), ["biblioteca_barr", 1], ["kit", 2], 14,
+      ...cuadras(17), ["kit", 4],
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(3), ["westward_ho", 1], ["kit", 2], 14,
+      ...cuadras(8), ["museo_arte", 1], ["kit", 2], 14,
+      ...cuadras(7), ["museo_heard", 1], ["kit", 2], 14,
+      ...cuadras(6), ["kit", 2],
+    ],
+    fondo: [{ pieza: "diner_final", d: 3245, centro: true }],
+    final: "parada", parada: 3.2,
+    acera: ["phoenix/palmera", "phoenix/saguaro_maceta"],
+  },
   { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38], etiqueta: [0, -5],
     ingrediente: "🥫", historia: { es: "Debate en Las Vegas contra el Burrito-Bot, el candidato hecho en China. ¡Gánale!", en: "Debate in Las Vegas against Burrito-Bot, the made-in-China candidate. Beat him!" } },
   {
@@ -222,6 +268,8 @@ export const ANCHO = {
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
   // Findlay
   courier: 24, heladeria: 20, deposito_agua: 20, davis: 20, marathon: 40, juzgado_final: 62,
+  // Phoenix
+  san_carlos: 30, westward_ho: 30, biblioteca_barr: 40, museo_arte: 40, museo_heard: 40, diner_final: 30,
 };
 
 // ¿Se puede jugar este nivel? Como en AlienZ: en orden. El primero siempre;

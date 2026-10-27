@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida,
+  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida, sirena,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe } from "./save.js";
@@ -293,6 +293,10 @@ function aplicarLuz(luz) {
     // Mediodia (Findlay): sol alto y blanco, sombras cortas, cielo azul fuerte.
     sun.color.set(0xfffaf0); sun.intensity = 1.3; sun.position.set(2.5, 12, -2);
     hemi.color.set(0xe8f3ff); hemi.groundColor.set(0x8c8270);
+  } else if (luz === "tarde") {
+    // Tarde dorada (Phoenix): sol bajo, naranja, desde el oeste (a la izquierda).
+    sun.color.set(0xffc98a); sun.intensity = 1.3; sun.position.set(-8, 6, -1);
+    hemi.color.set(0xffe4c4); hemi.groundColor.set(0x8a6a4e);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -348,7 +352,7 @@ function abrirMapa() {
 }
 // La receta (27/10/2026): los ingredientes que robo el Burrito-Bot, uno por
 // nivel. Los recuperados salen en color; los que faltan, en gris.
-const RECETA = [["nueva_york", "tortilla"], ["pueblo", "maiz"], ["ruta66", "chile"], ["vegas", "salsa"], ["washington", "taco_perfecto"]];
+const RECETA = [["nueva_york", "tortilla"], ["pueblo", "maiz"], ["phoenix", "chile"], ["vegas", "salsa"], ["washington", "taco_perfecto"]];
 function pintarReceta(hechos) {
   const fila = RECETA.map(([id, peg], i) => {
     const signo = i === RECETA.length - 1 ? '<span class="recetaIgual">=</span>' : i ? '<span class="recetaMas">+</span>' : "";
@@ -374,7 +378,7 @@ function elegirNivel(id) {
   const i = NIVELES.indexOf(n);
   const cierre = !n.listo ? t("proximamente")
     : t("superaAntes").replace("{n}", NIVELES[i - 1] ? NIVELES[i - 1].nombre : "");
-  const ingrediente = { nueva_york: "tortilla", pueblo: "maiz", washington: "taco_perfecto" }[n.id];
+  const ingrediente = INGREDIENTE[n.id];
   const atajo = n.id === "washington" && !NIVELES.slice(0, i).every((x) => x.listo) ? `<div class="miAtajo">${t("atajoDc")}</div>` : "";
   document.getElementById("mapaInfo").innerHTML =
     `<div class="miNombre">${ingrediente ? `<img class="peg" src="${urlPegatina(ingrediente)}" alt="">` : ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
@@ -454,6 +458,7 @@ function pintarChapas() {
 // · 2 se da la vuelta y saluda · 3 se gira y entra · 4 se cierran las puertas.
 function iniciarFinal() {
   gameState = "final";
+  apagarSirenas();
   fin = { fase: 0, t: 0, v: speed, look: new THREE.Vector3(0, 0.4, -18) };
   currentLane = 1;
   isSliding = false; character.setSlidePose(false);
@@ -471,6 +476,7 @@ function frameFinal(dt) {
   if (!cb) { completarNivel(); return; }
   if (nivelActual.final === "camion") { finalCamion(dt, cb); return; }
   if (nivelActual.final === "mitin") { finalMitin(dt, cb); return; }
+  if (nivelActual.final === "parada") { finalCamion(dt, cb, cb.position.z + (nivelActual.parada || 3)); return; }
   const zPasos = cb.position.z + 8.8;     // pie de la escalinata del portico norte
   const zPuerta = cb.position.z + 0.06;
   // Por el camino de coches: en el jardin la fuente queda en medio, asi que
@@ -516,15 +522,16 @@ function frameFinal(dt) {
 }
 // Llegada al camion de tacos (Nueva York): frena, se planta delante, se da la
 // vuelta y saluda con la tortilla recuperada.
-function finalCamion(dt, flat) {
-  const zParada = flat.position.z + 21.6 + 1.6;   // delante del morro del camion
+// (27/10: tambien el del diner de Phoenix, con `zParada` propia.)
+function finalCamion(dt, flat, zParadaDada) {
+  const zParada = zParadaDada !== undefined ? zParadaDada : flat.position.z + 21.6 + 1.6;   // delante del morro del camion
   playerX += (0 - playerX) * Math.min(1, dt * 4);
   let dz = 0;
   if (fin.fase === 0) {
     fin.v = Math.max(5, Math.min(fin.v - dt * 6, -zParada * 1.5 + 4));
     dz = fin.v * dt;
     character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
-    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); mostrarPremio("tortilla"); spawnConfetti(30); }
+    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); mostrarPremio(INGREDIENTE[nivelActual.id] || "tortilla"); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
@@ -535,8 +542,10 @@ function finalCamion(dt, flat) {
   character.object3D.position.set(playerX, 0, 0);
   shadowBlob.position.set(playerX, 0.015, 0);
   const cerca = fin.fase >= 2;
-  const objetivo = cerca ? new THREE.Vector3(2.0, 3.2, 9.5) : new THREE.Vector3(0, 4.6, 11);
-  const mira = cerca ? new THREE.Vector3(0, 2.2, -3) : new THREE.Vector3(0, 2.4, -8);
+  // En el diner, mas lejos y mas alto: que se vea el chile gigante del tejado.
+  const lejos = zParadaDada !== undefined;
+  const objetivo = cerca ? (lejos ? new THREE.Vector3(2.6, 4.6, 16) : new THREE.Vector3(2.0, 3.2, 9.5)) : new THREE.Vector3(0, 4.6, 11);
+  const mira = cerca ? (lejos ? new THREE.Vector3(0, 4.4, -6) : new THREE.Vector3(0, 2.2, -3)) : new THREE.Vector3(0, 2.4, -8);
   camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
   fin.look.lerp(mira, Math.min(1, dt * 1.6));
   camera.lookAt(fin.look);
@@ -548,6 +557,7 @@ function finalCamion(dt, flat) {
 // emoji, que en cada movil sale distinto), y sale en los tres finales.
 let mazorca = null;
 const texPremio = {};
+const INGREDIENTE = { nueva_york: "tortilla", pueblo: "maiz", phoenix: "chile", vegas: "salsa", washington: "taco_perfecto" };
 function mostrarPremio(nombre) {
   if (!texPremio[nombre]) {
     texPremio[nombre] = new THREE.CanvasTexture(lienzoPegatina(nombre));
@@ -624,7 +634,7 @@ function completarNivel() {
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
   document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca")
     : n.fin ? (n.fin[getLang()] || n.fin.es).replace(/\p{Extended_Pictographic}/gu, "").trim() : t("nivelSuperado");
-  const ingrediente = { nueva_york: "tortilla", pueblo: "maiz", washington: "taco_perfecto" }[n.id] || "taco";
+  const ingrediente = INGREDIENTE[n.id] || "taco";
   document.getElementById("nivelFinPremio").src = urlPegatina(ingrediente);
   pintarSinFin();
   const est = estrellasDe(r);
@@ -818,6 +828,7 @@ function resetRun(desde = 0) {
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
   tramoMostrado = null; jefeLanzado = false;
+  if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
   character.object3D.rotation.set(0, 0, 0);
@@ -1269,7 +1280,12 @@ function triggerGameOver() {
   vibrate([80, 40, 80]);
   for (let d = 0; d < 8; d++) spawnDust(character.object3D.position.x, 0.4, 0);
 }
+function apagarSirenas() {
+  document.getElementById("sirenas").classList.add("hidden");
+  sirena(false);
+}
 function terminarCaida() {
+  apagarSirenas();
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("powerupBadge").classList.add("hidden");
   document.getElementById("bossBar").classList.add("hidden");
@@ -1351,6 +1367,7 @@ function seguirAqui() {
 function pausar() {
   if (gameState !== "playing" || pausado) return;
   pausado = true;
+  sirena(false);
   cuenta = 0;
   document.getElementById("cuentaAtras").classList.add("hidden");
   const info = nivelActual
@@ -1363,6 +1380,7 @@ function pausar() {
 }
 function reanudar() {
   if (!pausado) return;
+  if (tramoMostrado && tramoMostrado.tipo === "persecucion") sirena(true);
   document.getElementById("pausaOverlay").classList.add("hidden");
   pausarMusica(false);
   empezarCuenta();
@@ -1522,6 +1540,11 @@ function frame(dtFijo) {
       const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
       if (tramo.tipo === "sprint") { sndFanfarria(true); vibrate([20, 30, 20]); }
+      // La policia te persigue: luces rojas y azules por los bordes y la sirena.
+      const persigue = tramo.tipo === "persecucion";
+      document.getElementById("sirenas").classList.toggle("hidden", !persigue);
+      sirena(persigue);
+      if (persigue) setTimeout(() => { if (gameState === "playing") showBubble(FRASES[getLang()].patrulla, 1800); }, 900);
     }
     if (nivelActual && tramo.tipo === "jefe" && !jefeLanzado && distance > tramo.desde + 25 && rocketTimeLeft === 0 && !world.jefeActivo()) {
       if (world.iniciarJefe()) {
@@ -1721,6 +1744,7 @@ function marcarIdioma() {
 }
 function volverAlMenu() {
   gameState = "menu";
+  apagarSirenas();
   pausado = false;
   idlePhase = 0;
   if (mazorca) mazorca.visible = false;

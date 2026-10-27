@@ -117,6 +117,41 @@ const SITIOS = {
     x.fillStyle = c.lejos;
     x.beginPath(); x.arc(2700, SUELO - 70, 34, Math.PI, 0); x.fill(); x.fillRect(2660, SUELO - 70, 80, 70);
   },
+  phoenix(x, c, r) {
+    // Las montanas que rodean Phoenix: South Mountain, larga y con antenas, a
+    // la izquierda; Camelback (la joroba y la cabeza del camello) a la derecha.
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 60; i++) {
+      const u = i / 60;
+      const h = 70 + Math.sin(u * 9) * 14 + Math.sin(u * 23) * 6 + (u < 0.4 ? 30 * Math.sin((u / 0.4) * Math.PI) : 0);
+      x.lineTo(u * ANCHO, SUELO - h - r() * 5);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    for (const ax of [520, 610, 700]) { x.fillRect(ax, SUELO - 170, 3, 50); x.fillRect(ax - 6, SUELO - 160, 15, 2); }
+    x.fillStyle = c.cerca;
+    x.beginPath(); x.moveTo(2500, SUELO);                              // Camelback
+    x.bezierCurveTo(2650, SUELO - 40, 2700, SUELO - 175, 2880, SUELO - 170);
+    x.bezierCurveTo(3000, SUELO - 165, 3020, SUELO - 95, 3080, SUELO - 100);
+    x.bezierCurveTo(3150, SUELO - 120, 3190, SUELO - 125, 3230, SUELO - 95);
+    x.bezierCurveTo(3300, SUELO - 50, 3400, SUELO - 20, 3500, SUELO);
+    x.fill();
+    // Ciudad baja, palmeras y saguaros por delante.
+    let cx = 0;
+    while (cx < ANCHO) { const w = 40 + r() * 80, h = 14 + r() * 26; x.fillStyle = c.lejos; x.fillRect(cx, SUELO - h, w, h + 2); cx += w + r() * 40; }
+    x.fillStyle = c.arbol;
+    for (let i = 0; i < 40; i++) {
+      const px = r() * ANCHO, h = 40 + r() * 40;
+      x.fillRect(px, SUELO - h, 3, h);
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; x.beginPath(); x.ellipse(px + 1.5 + Math.cos(a) * 9, SUELO - h + Math.sin(a) * 3, 10, 2.5, a, 0, Math.PI * 2); x.fill(); }
+    }
+    for (let i = 0; i < 30; i++) {
+      const px = r() * ANCHO, h = 22 + r() * 22;
+      x.fillRect(px, SUELO - h, 6, h);
+      x.fillRect(px - 8, SUELO - h * 0.7, 4, h * 0.35); x.fillRect(px - 8, SUELO - h * 0.45, 10, 3);
+      x.fillRect(px + 10, SUELO - h * 0.8, 4, h * 0.4); x.fillRect(px + 4, SUELO - h * 0.5, 10, 3);
+    }
+  },
   desierto(x, c, r) {
     for (const [color, hBase, n] of [[c.lejos, 70, 7], [c.cerca, 45, 9]]) {
       for (let i = 0; i < n; i++) {
@@ -144,7 +179,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -215,7 +250,7 @@ export function crearHorizonte(scene) {
       g.addColorStop(0, col.suelo); g.addColorStop(1, new THREE.Color(niebla).getStyle());
       x.fillStyle = g; x.fillRect(0, SUELO - 2, ANCHO, ALTO - SUELO + 2);
       tex.needsUpdate = true;
-      const blanco = sitio === "desierto" ? 0xfff2e0 : 0xffffff;
+      const blanco = sitio === "desierto" || sitio === "phoenix" ? 0xfff2e0 : 0xffffff;
       for (const n of nubes) n.material.color.set(blanco);
     },
     animar(dt) {

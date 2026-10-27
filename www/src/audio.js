@@ -193,6 +193,11 @@ const CANCIONES = {
     melodia: [67, null, 72, null, 72, 74, 76, null, 76, null, 74, 72, 74, null, 67, null,
       69, null, 74, null, 74, 76, 77, null, 76, 74, 72, 71, 72, null, null, null],
     timbre: "metal" },
+  // Phoenix: del Oeste, en menor, con trompeta de mariachi y guitarra.
+  phoenix: { bpm: 124, swing: 0.5, acordes: [Am, G, F, E7], bateria: "country", bajo: "alterna",
+    melodia: [69, null, 72, 76, null, 74, 72, null, 71, null, 67, 71, 74, null, null, null,
+      69, null, 72, 76, null, 77, 76, 74, 72, null, 71, 68, 69, null, null, null],
+    timbre: "metal" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,
@@ -379,4 +384,30 @@ export async function hablar(texto) {
       musicGainNode.gain.setTargetAtTime(volumenMusica(), ac.currentTime + src.buffer.duration, 0.2);
     }
   } catch (er) {}
+}
+
+// ---------- La sirena de la policia (Phoenix, 27/10/2026) ----------
+// Un aullido que sube y baja mientras te persiguen; suave, para no tapar la musica.
+let sirenaNodos = null;
+export function sirena(on) {
+  try {
+    const ac = audio();
+    if (on && !sirenaNodos) {
+      const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = 760;
+      const lfo = ac.createOscillator(); lfo.frequency.value = 0.55;
+      const lg = ac.createGain(); lg.gain.value = 170;
+      lfo.connect(lg).connect(o.frequency);
+      const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 1500;
+      const g = ac.createGain(); g.gain.value = 0.0001;
+      g.gain.exponentialRampToValueAtTime(0.035, ac.currentTime + 0.4);
+      o.connect(f).connect(g).connect(ensureSfxGain());
+      o.start(); lfo.start();
+      sirenaNodos = { o, lfo, g };
+    } else if (!on && sirenaNodos) {
+      const { o, lfo, g } = sirenaNodos;
+      sirenaNodos = null;
+      g.gain.setTargetAtTime(0.0001, ac.currentTime, 0.15);
+      o.stop(ac.currentTime + 0.8); lfo.stop(ac.currentTime + 0.8);
+    }
+  } catch (e) {}
 }

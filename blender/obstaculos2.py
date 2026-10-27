@@ -276,6 +276,75 @@ def suv():
         caja(negro(), 0, -0.04, 0.44 + k * 0.07, 0.8, 0.02, 0.025)
     caja(negro(), 0, -0.05, 0.22, W + 0.05, 0.12, 0.18)
 
+# ---------------------------------------------------------------- Phoenix
+def costillas(x0):
+    return mat_franjas('costillas_obst', 0x4f8f45, 0x3f7a38, 14, eje='X', z0=x0, alto=1.0)
+
+def nopal():
+    """Nopales en un montoncito de arena: se saltan (y pinchan)."""
+    cil(mat('arena_obst', 0xd9b47a, 0.9), 0, 0, 0, 0.9, 0.12, 16, r2=0.75)
+    pala = mat('nopal', 0x5a9a45, 0.6)
+    for x, z, sx, giro in ((-0.45, 0.12, 0.34, 0.2), (0.4, 0.12, 0.3, -0.25), (0, 0.4, 0.3, 0.05), (-0.3, 0.55, 0.22, 0.6), (0.3, 0.62, 0.2, -0.5)):
+        o = esfera(pala, x, 0, z + 0.25, 0.3, 2, esc=(sx / 0.3, 0.32, 1.0))
+        o.rotation_euler = (0, giro, 0)
+    for k in range(6):                                                  # flores amarillas
+        esfera(mat('flor_nopal', 0xffd23f, 0.5), -0.5 + k * 0.2, -0.12, 0.75 + (k % 2) * 0.12, 0.05, 1)
+
+def rodadora():
+    """Rodadora del desierto: una bola de ramas secas que viene rodando."""
+    seca = mat('rama_seca', 0xb08a55, 0.9)
+    import random
+    rnd = random.Random(7)
+    for k in range(46):
+        a, b = rnd.uniform(0, math.pi * 2), rnd.uniform(-1, 1)
+        c, d = rnd.uniform(0, math.pi * 2), rnd.uniform(-1, 1)
+        p0 = (0.42 * math.cos(a) * math.sqrt(1 - b * b), 0.42 * math.sin(a) * math.sqrt(1 - b * b), 0.45 + 0.42 * b)
+        p1 = (0.42 * math.cos(c) * math.sqrt(1 - d * d), 0.42 * math.sin(c) * math.sqrt(1 - d * d), 0.45 + 0.42 * d)
+        rama(seca, p0, p1, 0.022, 0.016, 4)
+
+def saguaro():
+    """Un saguaro enorme en mitad del carril: hay que esquivarlo."""
+    cil(mat('arena_obst', 0xd9b47a, 0.9), 0, 0, 0, 0.85, 0.15, 16, r2=0.65)
+    piel = costillas(-0.5)
+    cil(piel, 0, 0, 0, 0.36, 2.6, 14, r2=0.32)
+    esfera(piel, 0, 0, 2.6, 0.32, 2)
+    for s, h in ((-1, 1.1), (1, 1.5)):
+        rama(piel, (0, 0, h), (s * 0.62, 0, h + 0.12), 0.21, 0.21, 10)
+        cil(piel, s * 0.62, 0, h, 0.21, 0.85, 10)
+        esfera(piel, s * 0.62, 0, h + 0.85, 0.21, 1)
+    esfera(mat('flor_saguaro', 0xfff3e0, 0.5), 0, -0.1, 2.85, 0.09, 1)
+
+def pickup():
+    """Camioneta de los años 50, turquesa, vista por detrás."""
+    cuerpo = mat('turquesa_pickup', 0x3fb8b0, 0.3)
+    W, L = 1.75, 3.0
+    caja(cuerpo, 0, 0.75, 0.35, W, 1.5, 0.6)                             # la caja de carga
+    caja(mat('fondo_caja', 0x2f8f88, 0.5), 0, 0.75, 0.7, W - 0.15, 1.35, 0.06)
+    caja(cuerpo, 0, 2.3, 0.35, W, 1.6, 0.65)                             # el morro
+    caja(cuerpo, 0, 1.85, 0.95, W - 0.25, 0.85, 0.7)                     # la cabina
+    caja(cristal(), 0, 1.41, 1.05, W - 0.55, 0.04, 0.45)
+    caja(mat('cromo_pickup', 0xd8dde3, 0.2), 0, -0.04, 0.25, W + 0.06, 0.1, 0.16)
+    caja(blanco(), 0, -0.02, 0.4, 0.42, 0.02, 0.14)
+    texto(azul(), 'ARIZONA', 0, -0.035, 0.47, tam=0.07, prof=0.01)
+    for s in (-1, 1):
+        caja(piloto(), s * 0.72, -0.01, 0.55, 0.16, 0.04, 0.2)
+        cil(cuerpo, s * (W / 2 - 0.05), 0.6, 0.45, 0.42, 0.3, 14, eje='X')     # guardabarros
+        rueda(s * (W / 2 - 0.1), 0.6, 0.34, 0.26)
+        rueda(s * (W / 2 - 0.1), L - 0.5, 0.34, 0.26)
+
+def arco_neon():
+    """Arco de neón «PHOENIX» sobre el carril: se pasa agachado."""
+    hierro = mat('hierro_neon', 0x2a2d33, 0.4)
+    for s in (-1, 1):
+        cil(hierro, s * 0.95, 0, 0, 0.06, 2.4, 8)
+        caja(gris(), s * 0.95, 0, 0, 0.3, 0.3, 0.08)
+    caja(mat('fondo_neon', 0x1d2b46, 0.5), 0, 0, 1.25, 1.95, 0.1, 0.6)
+    texto(mat('neon_rosa', 0xff4fa0, 0.15), 'PHOENIX', 0, -0.06, 1.55, tam=0.3, prof=0.04)
+    for k in range(9):                                                  # bombillas
+        esfera(mat('bombilla_neon', 0xffe066, 0.2), -0.88 + k * 0.22, -0.05, 1.95, 0.05, 1)
+    sol = mat('sol_neon', 0xffa21a, 0.2)
+    cil(sol, 0, -0.06, 2.1, 0.28, 0.04, 16, eje='Y')
+
 # ---------------------------------------------------------------- acera
 def valla_policia():
     """Caballete azul de la policía de Nueva York, delante del público."""
@@ -312,6 +381,11 @@ PIEZAS = {
     'protesta':      (protesta,      'obstaculos', dict(lado=512, bisel=0.0)),
     'agentes':       (agentes,       'obstaculos', dict(lado=512, bisel=0.0)),
     'suv':           (suv,           'obstaculos', dict(lado=512)),
+    'nopal':         (nopal,         'obstaculos', dict(lado=256, bisel=0.0)),
+    'rodadora':      (rodadora,      'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'saguaro':       (saguaro,       'obstaculos', dict(lado=512, bisel=0.0)),
+    'pickup':        (pickup,        'obstaculos', dict(lado=512)),
+    'arco_neon':     (arco_neon,     'obstaculos', dict(lado=512, bisel=0.0)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),
     'verja':         (verja,         'publico',    dict(lado=256, bisel=0.0)),
 }

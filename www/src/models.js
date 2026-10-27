@@ -22,7 +22,9 @@ const LISTA = {
     "rayo", "cohete", "barril", "chile", "jefe",
     // 27/10: los de cada ciudad (blender/obstaculos2.py)
     "taxi", "alcantarilla", "andamio", "contenedor", "paca", "tractor", "carroza", "guirnalda",
-    "valla_metal", "protesta", "agentes", "suv"],
+    "valla_metal", "protesta", "agentes", "suv",
+    // y los de Phoenix
+    "nopal", "rodadora", "saguaro", "pickup", "arco_neon"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
