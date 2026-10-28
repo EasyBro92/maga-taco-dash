@@ -24,7 +24,9 @@ const LISTA = {
     "taxi", "alcantarilla", "andamio", "contenedor", "paca", "tractor", "carroza", "guirnalda",
     "valla_metal", "protesta", "agentes", "suv",
     // y los de Phoenix
-    "nopal", "rodadora", "saguaro", "pickup", "arco_neon"],
+    "nopal", "rodadora", "saguaro", "pickup", "arco_neon",
+    // 28/10: botas de salto y caja sorpresa (ideas de Subway Surfers)
+    "botas", "caja_sorpresa"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

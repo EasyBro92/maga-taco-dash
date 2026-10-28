@@ -318,6 +318,45 @@ def jefe():
     texto(mat('letra_jefe', 0xff2030, 0.3), 'BURRITO-BOT', 0, -1.12, 1.2, tam=0.22, prof=0.03)
 
 
+# ---------------------------------------------------------------- 28/10: ideas de Subway Surfers
+def bota(x, cuero, puntera, estrella):
+    """Una bota de vaquero de pie: caña hacia arriba, puntera hacia -y."""
+    caja(cuero, x, 0.02, 0.28, 0.2, 0.2, 0.42)                          # caña
+    caja(puntera, x, 0.02, 0.66, 0.22, 0.22, 0.06)                      # boca de la caña
+    caja(cuero, x, -0.1, 0.0, 0.2, 0.44, 0.22)                          # pie
+    o = esfera(puntera, x, -0.32, 0.1, 0.11, 2, esc=(0.95, 1.5, 0.9))   # puntera
+    caja(negro(), x, 0.06, -0.02, 0.2, 0.14, 0.12)                      # tacon
+    caja(negro(), x, -0.12, -0.03, 0.21, 0.46, 0.04)                    # suela
+    cil(estrella, x, -0.09, 0.4, 0.07, 0.03, 5, eje='Y')                # estrella en la caña
+    for k in range(3):                                                   # pespuntes
+        caja(puntera, x, -0.085, 0.18 + k * 0.08, 0.16, 0.01, 0.012)
+
+def botas():
+    """Botas de vaquero rojas con estrella: un rato de saltos altos."""
+    cuero = mat('cuero_rojo', 0xd8262f, 0.45)
+    puntera = mat('cuero_blanco', 0xf4efe6, 0.5)
+    bota(-0.13, cuero, puntera, oro())
+    bota(0.13, cuero, puntera, oro())
+    for s in (-1, 1):                                                    # alitas doradas
+        caja(oro(), s * 0.27, 0.06, 0.42, 0.14, 0.05, 0.1, giro=0, inclina=0)
+        caja(oro(), s * 0.31, 0.06, 0.5, 0.12, 0.05, 0.08)
+
+def caja_sorpresa():
+    """Caja sorpresa azul con lazo rojo y blanco y una interrogación dorada."""
+    azul_c = mat('caja_azul', 0x1f4fb0, 0.4)
+    caja(azul_c, 0, 0, 0, 0.62, 0.62, 0.58)
+    caja(azul_c, 0, 0, 0.58, 0.68, 0.68, 0.12)                          # tapa
+    lazo = mat('lazo_rojo', 0xe8303a, 0.4)
+    caja(lazo, 0, 0, 0, 0.14, 0.645, 0.705)
+    caja(lazo, 0, 0, 0, 0.645, 0.14, 0.705)
+    caja(blanco(), 0, 0, 0, 0.04, 0.65, 0.71)
+    for s in (-1, 1):                                                    # el lazo de arriba
+        esfera(lazo, s * 0.13, 0, 0.78, 0.11, 2, esc=(1.2, 0.5, 0.8))
+    esfera(lazo, 0, 0, 0.75, 0.06, 1)
+    for x in (-0.18, 0.18):                                              # una a cada lado del lazo
+        texto(oro(), '?', x, -0.333, 0.3, tam=0.34, prof=0.05)
+
+
 PIEZAS = {
     'rayo':           (rayo,           'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
     'cohete':         (cohete,         'obstaculos', dict(lado=512, bisel=0.0, suelo=False)),
@@ -333,6 +372,8 @@ PIEZAS = {
     'patrulla':       (patrulla,       'obstaculos', dict(lado=512)),
     'autobus':        (autobus,        'obstaculos', dict(lado=1024)),
     'gorra':          (gorra,          'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'botas':          (botas,          'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'caja_sorpresa':  (caja_sorpresa,  'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
 }
 
 correr(PIEZAS)

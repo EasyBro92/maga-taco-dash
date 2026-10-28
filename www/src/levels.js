@@ -43,7 +43,7 @@ export const NIVELES = [
   {
     id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: true, mapa: [88, 25], etiqueta: [0, -5],
     ingrediente: "🫓", historia: { es: "¡Empieza la carrera a la Casa Blanca! Sal de tu torre y recupera la tortilla.", en: "The race to the White House begins! Leave your tower and get the tortilla back." },
-    fin: { es: "¡Tortilla recuperada! 🫓", en: "Tortilla recovered! 🫓" },
+    fin: { es: "¡Tortilla recuperada!", en: "Tortilla recovered!" },
     zona: "city", carpeta: "nueva_york", luz: "manana", semilla: 725,
     largo: 3200, linea: 11.5, velMax: 20,
     // Primer nivel: lo basico. Sin autobuses ni coches patrulla; iman y microfonos.
@@ -67,7 +67,7 @@ export const NIVELES = [
       [2650, 2900, "obras", { low: ["alcantarilla"], titulo: "vapor" }],
       [2900, 3170, "sprint", { titulo: "sprint" }],
     ],
-    control: 1610,
+    control: 1610, caja: 1100,
     chapas: [[700, "arco"], [1430, "carril"], [2520, "arco"]],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
     meta: "flatiron", metaNombre: { es: "el Flatiron", en: "the Flatiron" },
@@ -93,11 +93,11 @@ export const NIVELES = [
   {
     id: "pueblo", numero: 2, nombre: "Main Street", lugar: "Findlay, Ohio", listo: true, mapa: [73, 29], etiqueta: [-4, 6.4],
     ingrediente: "🌽", historia: { es: "Mitin en Findlay, la ciudad de las banderas. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses y llega al juzgado!", en: "Rally in Findlay, Flag City USA. Burrito-Bot hid the corn: ride the buses and reach the courthouse!" },
-    fin: { es: "¡Maíz recuperado! 🌽 ¡Ohio es tuyo!", en: "Corn recovered! 🌽 Ohio is yours!" },
+    fin: { es: "¡Maíz recuperado! ¡Ohio es tuyo!", en: "Corn recovered! Ohio is yours!" },
     zona: "city", carpeta: "findlay", luz: "mediodia", semilla: 1888,
     largo: 3200, linea: 11.5, velMax: 21.5,
     // Segundo nivel: entran los autobuses de campaña (por el techo hay tacos).
-    sinPatrulla: true, potenciadores: ["magnet", "shield", "boost", "magnet"],
+    sinPatrulla: true, potenciadores: ["magnet", "shield", "boost", "magnet", "botas"],
     // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
     kit: { pueblo: true, minPlantas: 1, maxPlantas: 3 },
     horizonte: "ohio",
@@ -116,7 +116,7 @@ export const NIVELES = [
       [2650, 2900, "autobuses", { titulo: "autobuses" }],
       [2900, 3170, "sprint", { titulo: "sprint" }],
     ],
-    control: 1547,
+    control: 1547, caja: 1000,
     chapas: [[700, "bus"], [1253, "arco"], [2786, "bus"]],
     hitos: ["courier", "heladeria", "deposito_agua", "davis"],
     meta: "juzgado_final", metaNombre: { es: "el juzgado", en: "the courthouse" },
@@ -144,7 +144,7 @@ export const NIVELES = [
     fin: { es: "¡Chile recuperado! ¡Arizona es tuya!", en: "Chili recovered! Arizona is yours!" },
     zona: "city", carpeta: "phoenix", luz: "tarde", semilla: 1912,
     largo: 3200, linea: 11.5, velMax: 22,
-    potenciadores: ["magnet", "shield", "boost", "mega"],
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     // Centro de Phoenix: estuco de colores calidos, de dos a nueve plantas.
     kit: { desierto: true, minPlantas: 2, maxPlantas: 9 },
     horizonte: "phoenix",
@@ -164,7 +164,7 @@ export const NIVELES = [
       [2450, 2900, "persecucion", { titulo: "caza_brujas" }],
       [2900, 3170, "sprint", { titulo: "sprint_diner" }],
     ],
-    control: 1547,
+    control: 1547, caja: 1150,
     chapas: [[707, "arco"], [2100, "bus"], [2604, "carril"]],
     hitos: ["san_carlos", "westward_ho", "biblioteca_barr", "museo_arte", "museo_heard"],
     meta: "diner_final", metaNombre: { es: "el diner", en: "the diner" }, coche: "patrulla",
@@ -199,7 +199,7 @@ export const NIVELES = [
     // Edificios del kit: 6-10 plantas (en Washington no se puede subir mas que el Capitolio).
     kit: { minPlantas: 6, maxPlantas: 10 },
     horizonte: "dc",
-    potenciadores: ["magnet", "shield", "boost", "mega", "freeze", "rocket"],
+    potenciadores: ["magnet", "shield", "boost", "mega", "freeze", "rocket", "botas"],
     obstaculos: { low: ["valla_metal", "valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"],
       full: ["agentes", "agentes", "furgoneta", "guardaespaldas"] },
     publico: { personas: ["ejecutivo", "fan", "turista", "senora", "ejecutivo"], valla: "verja", cada: 2 },
@@ -216,7 +216,7 @@ export const NIVELES = [
       [2600, 3000, "slalom", { full: ["agentes", "furgoneta"], titulo: "recta" }],
       [3000, 3270, "sprint", { titulo: "sprint_dc" }],
     ],
-    control: 1694,
+    control: 1694, caja: 950,
     chapas: [[1204, "arco"], [1561, "bus"], [2751, "carril"]],
     hitos: ["archivos_portico", "fbi", "irs", "correos_torre", "willard", "tesoro"],
     meta: "casa_blanca_final", metaNombre: { es: "la Casa Blanca", en: "the White House" }, coche: "suv",

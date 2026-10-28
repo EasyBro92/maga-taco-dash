@@ -767,3 +767,29 @@ Isidro: «¿Falta algo más? Si es así, continúa». Para el nivel 3 dijo que l
 - Letras Fredoka y Nunito dentro del juego (`www/fonts/`, 69 KB, licencia OFL): ya no dependen de internet. Voz en inglés (Piper `en_US-ryan-medium`, 63 MB fuera de git): las 40 frases en los dos idiomas.
 - Washington ahora pide pasar Phoenix (el atajo dice que solo falta Las Vegas).
 - Pendiente: el nivel 4, Las Vegas.
+
+## Ideas de Subway Surfers y repaso (2026-10-28)
+
+Isidro: «sigue buscando fallos… revisa Subway Surfers y juegos del mismo estilo
+para copiar ideas que encajen». Lo que entra:
+
+- **Tropezón** (el revisor de Subway Surfers): darse de lado contra algo al
+  cambiar de carril ya no acaba la carrera. Rebota al carril de antes, pierde la
+  racha y le sigue un coche de policía del nivel (patrulla o todoterreno, con
+  luces y sirena) 7 s. Si vuelve a tropezar mientras, le pillan. De frente sigue
+  siendo chocar. Al pagar para seguir, la policía se va.
+- **Caída rápida**: deslizar hacia abajo en el aire baja de golpe y rueda al
+  tocar suelo. Y ya no se pierden toques: un salto pulsado justo antes de
+  aterrizar salta al caer, se puede saltar estando agachado y un instante
+  después de caer del techo del autobús.
+- **Botas Saltarinas** (las súper zapatillas): 10 s de saltos de 2,9 m, por
+  encima de los coches. Desde Ohio y en el sin fin. Modelo en
+  `blender/obstaculos.py` (botas).
+- **Caja sorpresa**: una por nivel en un sitio fijo antes del punto de control
+  (NY 1100 m, Findlay 1000, Phoenix 1150, Washington 950) y hasta dos en el sin
+  fin. Se guarda al cogerla y se abre al acabar con una ruleta como la de las
+  cajas de AlienZ: tacos (50 a 1500) o una prenda de la tienda. Si quedan sin
+  abrir, hay botón en el menú. `src/cajas.js`, modelo `caja_sorpresa`.
+- **Premio del día**: siete días seguidos con premio que crece (50 → 400 y el
+  séptimo una caja + 500); si se salta un día, vuelve al primero.
+- Repaso: los textos de fin de nivel aún llevaban emojis en el bocadillo.

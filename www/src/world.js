@@ -2567,13 +2567,16 @@ export function createWorld(scene) {
       return g;
     }),
     chile: makePool(() => { const g = modeloConContorno("obstaculos/chile") || buildPowerupIcon("shield"); g.scale.setScalar(1.4); g.position.y = -0.4; return g; }),
+    // 28/10: botas de vaquero (saltos altos) y caja sorpresa.
+    botas: makePool(() => { const g = modeloConContorno("obstaculos/botas") || buildPowerupIcon("shield"); g.scale.setScalar(1.45); return g; }),
+    caja: makePool(() => { const g = modeloConContorno("obstaculos/caja_sorpresa") || buildPowerupIcon("shield"); g.scale.setScalar(1.25); return g; }),
   };
 
   function spawnPowerup(lane, z, kind) {
     const mesh = powerupPools[kind].acquire();
     mesh.visible = true;
     mesh.rotation.y = 0;
-    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.02 : 1.0, z);
+    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.02 : kind === "caja" ? 0.35 : 1.0, z);
     if (!mesh.parent) group.add(mesh);
     powerups.push({ mesh, lane, z, kind, collected: false });
   }
@@ -2650,6 +2653,61 @@ export function createWorld(scene) {
   let jugadorCarril = 1;
   let alEventoJefe = null;
   function setJugador(l) { jugadorCarril = l; }
+
+  // ---- 28/10: el coche que te sigue tras un tropezon (el revisor de Subway Surfers) ----
+  // El de cada nivel (patrulla o todoterreno), dado la vuelta, pegado detras.
+  const perseguidor = { mesh: null, clave: "", z: 18, x: 0, on: false, t: 0, luces: null };
+  let _texLuz = null;
+  function texturaLuz() {
+    if (_texLuz) return _texLuz;
+    const c = document.createElement("canvas"); c.width = c.height = 64;
+    const g = c.getContext("2d");
+    const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.35, "rgba(255,255,255,0.7)"); r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+    _texLuz = new THREE.CanvasTexture(c);
+    return _texLuz;
+  }
+  function perseguir(on, deGolpe = false) {
+    perseguidor.on = on;
+    if (deGolpe) { perseguidor.z = 18; if (perseguidor.mesh) perseguidor.mesh.visible = false; }
+  }
+  function moverPerseguidor(dt, x) {
+    const clave = "obstaculos/" + ((nivel && nivel.coche) || "patrulla");
+    if (perseguidor.on && perseguidor.clave !== clave) {
+      if (perseguidor.mesh) group.remove(perseguidor.mesh);
+      perseguidor.mesh = modelo(clave);
+      perseguidor.clave = clave;
+      perseguidor.z = 18; perseguidor.x = x;
+      if (perseguidor.mesh) {
+        perseguidor.mesh.rotation.y = Math.PI;
+        group.add(perseguidor.mesh);
+        // Luces de sirena encima (desde la camara solo se ve el techo).
+        const caja = new THREE.Box3().setFromObject(perseguidor.mesh);
+        const alto = caja.max.y, fondo = perseguidor.mesh.userData.fondo || 4;
+        perseguidor.luces = [0xff2a2a, 0x2a6bff].map((color, i) => {
+          const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaLuz(), color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+          sp.scale.setScalar(1.9);
+          sp.position.set(i ? 0.35 : -0.35, alto + 0.15, -fondo * 0.4);
+          perseguidor.mesh.add(sp);
+          return sp;
+        });
+      }
+    }
+    const m = perseguidor.mesh;
+    if (!m) return;
+    perseguidor.t += dt;
+    if (perseguidor.luces) {
+      const fase = Math.floor(perseguidor.t * 6) % 2;
+      perseguidor.luces[0].material.opacity = fase ? 1 : 0.15;
+      perseguidor.luces[1].material.opacity = fase ? 0.15 : 1;
+    }
+    const meta = perseguidor.on ? 1.3 : 18;
+    perseguidor.z += (meta - perseguidor.z) * Math.min(1, dt * (perseguidor.on ? 2.5 : 0.9));
+    perseguidor.x += (x - perseguidor.x) * Math.min(1, dt * 3);
+    m.visible = perseguidor.z < 16;
+    m.position.set(perseguidor.x, 0, perseguidor.z);
+  }
   function onJefe(fn) { alEventoJefe = fn; }
   function jefeActivo() { return jefe.activo && !jefe.saliendo; }
   // En un nivel, al acabarse su tramo se va (sin premio).
@@ -2801,7 +2859,7 @@ export function createWorld(scene) {
   }
 
   // La fila de siempre (al azar), con la densidad que diga el tramo.
-  let ultimaFilaLlena = -1e9;
+  let ultimaFilaLlena = -1e9, cajasCarrera = 0;
   function filaMixta(z, d, densidad) {
     const roll = Math.random();
     const ocupado = carrilOcupado;
@@ -2842,12 +2900,19 @@ export function createWorld(scene) {
       if (Math.random() < 0.08 && free.length > 0) {
         powerupLane = elegirDe(free);
         const kinds = !USAR_BLENDER ? ["shield", "magnet", "boost"]
-          : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket"] : ["shield", "magnet", "boost", "mega"];
+          : EXTRAS ? ["shield", "magnet", "boost", "mega", "freeze", "rocket", "botas"] : ["shield", "magnet", "boost", "mega", "botas"];
         spawnPowerup(powerupLane, z, elegirDe(nivel && nivel.potenciadores ? nivel.potenciadores : kinds));
       }
       if (powerupLane === null && free.length && USAR_BLENDER && Math.random() < 0.12) {
         powerupLane = elegirDe(free);
         spawnPowerup(powerupLane, z, "micro");
+      }
+      // 28/10: caja sorpresa en el sin fin, hasta dos por carrera (en los
+      // niveles va en su sitio fijo: `caja` en levels.js).
+      if (!nivel && powerupLane === null && free.length && USAR_BLENDER && cajasCarrera < 2 && d > 500 && Math.random() < 0.012) {
+        powerupLane = elegirDe(free);
+        spawnPowerup(powerupLane, z, "caja");
+        cajasCarrera++;
       }
       free.forEach((lane) => { if (lane !== powerupLane && Math.random() < 0.7) tacosEn(lane, z, 1); });
     } else {
@@ -3093,6 +3158,14 @@ export function createWorld(scene) {
       if (nivel && nivel.chapas) {
         const i = nivel.chapas.findIndex(([cd]) => Math.abs(cd - d) <= ROW_SPACING / 2);
         if (i >= 0 && !chapasHechas.has(i)) { chapasHechas.add(i); filaChapa(z, d, nivel.chapas[i][1], i); return; }
+      }
+      // 28/10: la caja sorpresa del nivel, sola en su fila con tacos a los lados.
+      if (nivel && nivel.caja && USAR_BLENDER && cajasCarrera === 0 && Math.abs(nivel.caja - d) <= ROW_SPACING / 2) {
+        cajasCarrera = 1;
+        const l = carrilOcupado === 1 ? 0 : 1;
+        spawnPowerup(l, z, "caja");
+        LANES.filter((x) => x !== l && x !== carrilOcupado).forEach((x) => tacosEn(x, z + 2, 3));
+        return;
       }
       const t = tramoEn(d);
       const k = Math.round((d - t.desde) / ROW_SPACING);
@@ -3367,6 +3440,8 @@ export function createWorld(scene) {
   // los que se empieza). `chapasHechas`: las chapas que ya no hay que poner.
   function reset(desde = 0, opciones = {}) {
     totalScrolled = desde;
+    cajasCarrera = opciones.cajaHecha ? 1 : 0;
+    perseguir(false, true);
     curveX = 0;
     group.position.x = 0;
     chapas.forEach((c) => chapaPool.release(c.mesh));
@@ -3419,5 +3494,6 @@ export function createWorld(scene) {
 
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
-    setNivel, getNivel, setLuz, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe };
+    setNivel, getNivel, setLuz, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
+    perseguir, moverPerseguidor };
 }

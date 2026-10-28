@@ -108,6 +108,14 @@ export function sndHit() {
   tono(90, 0.25, { tipo: "square", vol: 0.06, glide: -40, filtro: 600 });
 }
 export const sndCaida = sndHit;
+// 28/10: tropezon (golpe flojo, no el de chocar) y el tic de la ruleta de la caja.
+export function sndTropiezo() {
+  tono(260, 0.16, { tipo: "triangle", vol: 0.22, glide: -110 });
+  soplo(0.16, { desde: 1400, hasta: 300, tipo: "lowpass", vol: 0.16, q: 0.7 });
+}
+export function sndTic() {
+  tono(2100, 0.025, { tipo: "square", vol: 0.035, filtro: 3200 });
+}
 export function sndPoint() {
   tono(880, 0.14, { tipo: "triangle", vol: 0.12 });
   tono(1318, 0.2, { tipo: "triangle", vol: 0.1, cuando: 0.07 });

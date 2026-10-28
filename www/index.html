@@ -116,6 +116,7 @@
     </div>
     <div class="card hoja">
       <div class="misiones" id="misionesMenu"></div>
+      <button id="cajaBtn" class="smallBtn cajaBtn hidden"></button>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
       <div class="filaInicio">
         <button id="sinFinBtn" class="smallBtn ancho">Sin fin</button>
@@ -183,6 +184,25 @@
 
       <button id="settingsClose" class="bigBtn" data-i18n="close">Cerrar</button>
       <button id="resetProgressBtn" class="enlaceRojo" data-i18n="resetProgress">Borrar progreso</button>
+    </div>
+  </div>
+
+  <!-- 28/10: caja sorpresa (ruleta) y premio del dia -->
+  <div id="cajaOverlay" class="overlay hidden">
+    <div class="card">
+      <h2 class="title small" data-i18n="cajaTitulo">Caja sorpresa</h2>
+      <div class="ruleta"><div class="ruletaCinta" id="ruletaCinta"></div><div class="ruletaMarca"></div></div>
+      <p class="statLine cajaPremio" id="cajaPremio"></p>
+      <button id="cajaVale" class="bigBtn hidden" data-i18n="genial">¡GENIAL!</button>
+      <button id="cajaOtra" class="smallBtn hidden"></button>
+    </div>
+  </div>
+  <div id="diarioOverlay" class="overlay hidden">
+    <div class="card">
+      <h2 class="title small" data-i18n="diarioTitulo">Premio del día</h2>
+      <p class="diarioTexto" data-i18n="diarioTexto">Entra cada día y el premio crece.</p>
+      <div class="diarioDias" id="diarioDias"></div>
+      <button id="diarioRecoger" class="bigBtn" data-i18n="recoger">¡RECOGER!</button>
     </div>
   </div>
 

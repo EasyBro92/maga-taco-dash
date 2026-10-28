@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida, sirena,
+  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida, sirena, sndTropiezo,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe } from "./save.js";
@@ -19,6 +19,7 @@ import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
 import * as misiones from "./missions.js";
 import { FRASES } from "./frases.js";
+import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
 
 initErrorReporting();
 
@@ -55,6 +56,14 @@ const SPRINT_EXTRA = 1.08;
 // Seguir tras chocar: cuesta tacos, cada vez el doble.
 const PRECIO_SEGUIR = 300;
 const INVULNERABLE = 2.2;    // segundos de parpadeo al seguir: lo de delante no cuenta
+// ---- 28/10/2026: ideas de Subway Surfers ----
+const BOTAS_DURATION = 10;    // botas de vaquero: saltos altos (las «súper zapatillas»)
+const BOTAS_ALTURA = 2.9;     // con ellas se salta por encima de los coches
+const V_SALTO_BOTAS = Math.sqrt(2 * GRAVEDAD * BOTAS_ALTURA);
+const RECUERDA_GESTO = 0.22;  // un salto pulsado justo antes de tocar suelo no se pierde
+const COYOTE = 0.12;          // al caer del techo del autobus aun se puede saltar un instante
+const CAIDA_RAPIDA = -16;     // deslizar en el aire: baja de golpe y rueda al tocar suelo
+const PERSIGUE = 7;           // segundos que te sigue la policia tras un tropezon
 
 // ---------- Soporte WebGL ----------
 function hasWebGL() {
@@ -682,6 +691,7 @@ function completarNivel() {
   document.getElementById("nivelFin").classList.remove("hidden");
   spawnConfetti(45);
   sndFanfarria();
+  abrirCajasLuego(1800);
 }
 // ---- Jefe: barra de vida y premio ----
 world.onJefe((evento, vida) => {
@@ -821,6 +831,10 @@ let streak = 0, multiplier = 1, lastTacoTime = 0;
 let shieldActive = false;
 let magnetTimeLeft = 0;
 let boostTimeLeft = 0;
+// 28/10: botas, gesto recordado, tropezon y el coche que te persigue.
+let botasTimeLeft = 0;
+let gestoGuardado = null, gestoReloj = 0, coyote = 0;
+let carrilAntes = 1, tropiezo = 0, persigueLeft = 0;
 // 27/10: pausa, caida al chocar, parpadeo al seguir, el tramo que se ha
 // anunciado y el jefe de los niveles.
 let pausado = false, cuenta = 0, cayendo = 0, invulnerable = 0;
@@ -846,6 +860,8 @@ function resetRun(desde = 0) {
   isSliding = false; slideElapsed = 0;
   streak = 0; multiplier = 1; lastTacoTime = 0;
   shieldActive = false; magnetTimeLeft = 0; boostTimeLeft = 0;
+  botasTimeLeft = 0; gestoGuardado = null; gestoReloj = 0; coyote = 0;
+  carrilAntes = 1; tropiezo = 0; persigueLeft = 0; world.perseguir(false, true);
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -871,7 +887,7 @@ function resetRun(desde = 0) {
   const zonas = ["city", "desert", "town", "dc"];
   const zonaSinFin = zoneChoice === "auto" ? zonas[Math.floor(Math.random() * zonas.length)] : zoneChoice;
   world.setForcedZone(nivelActual ? nivelActual.zona : zonaSinFin);
-  world.reset(desde);
+  world.reset(desde, { cajaHecha: !!(desde && intento && intento.caja) });
   character.object3D.visible = true;
   fin = null;
   if (nivelActual && !desde) mostrarBanner(nivelActual);
@@ -1001,6 +1017,7 @@ function updatePowerupBadge() {
   if (rocketTimeLeft > 0) p = ["cohete", rocketTimeLeft / ROCKET_DURATION, t("powerupRocket")];
   else if (megaTimeLeft > 0) p = ["gorra", megaTimeLeft / MEGA_DURATION, t("powerupMega")];
   else if (freezeTimeLeft > 0) p = ["hielo", freezeTimeLeft / FREEZE_DURATION, t("powerupFreeze")];
+  else if (botasTimeLeft > 0) p = ["botas", botasTimeLeft / BOTAS_DURATION, t("powerupBotas")];
   else if (shieldActive) p = ["escudo", 1, t("powerupShield")];
   else if (magnetTimeLeft > 0) p = ["iman", magnetTimeLeft / MAGNET_DURATION, t("powerupMagnet")];
   else if (boostTimeLeft > 0) p = ["boost", boostTimeLeft / BOOST_DURATION, t("powerupBoost")];
@@ -1066,31 +1083,89 @@ function spawnConfetti(count) {
 function accionJugador(action) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
-  if (action === "left" && currentLane > 0) { currentLane--; sndLaneSwitch(); }
-  else if (action === "right" && currentLane < 2) { currentLane++; sndLaneSwitch(); }
+  if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); }
+  else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); }
   else if (action === "frase") lanzarFrase();
-  else if (action === "jump" && enSuelo && !isSliding) {
-    vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; sndJump(); vibrate(15);
+  else if (action === "jump") {
+    // 28/10: se puede saltar agachado (se levanta saltando), un instante
+    // despues de caer de un techo, y si se pulsa en el aire justo antes de
+    // tocar suelo, salta al aterrizar (antes ese toque se perdia).
+    if (rocketTimeLeft > 0) return;
+    if (enSuelo || coyote > 0) saltar();
+    else { gestoGuardado = "jump"; gestoReloj = RECUERDA_GESTO; }
   }
   // Deslizarse otra vez mientras ya te deslizas REINICIA el cronometro en vez
   // de ignorarse: con dos vallas seguidas el jugador da al boton por segunda
   // vez y antes se levantaba igual en medio de la segunda valla.
-  else if (action === "slide" && !isJumping) {
-    if (isSliding) { slideElapsed = 0; }
+  else if (action === "slide") {
+    if (rocketTimeLeft > 0) return;
+    if (!enSuelo) {
+      // 28/10, como en Subway Surfers: en el aire baja de golpe y rueda al tocar suelo.
+      vy = Math.min(vy, CAIDA_RAPIDA);
+      gestoGuardado = "slide"; gestoReloj = 1;
+    } else if (isSliding) { slideElapsed = 0; }
     else { isSliding = true; slideElapsed = 0; sndSlide(); }
   }
+}
+function saltar() {
+  vy = botasTimeLeft > 0 ? V_SALTO_BOTAS : V_SALTO;
+  enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0;
+  gestoGuardado = null; gestoReloj = 0;
+  if (isSliding) { isSliding = false; character.setSlidePose(false); }
+  sndJump(); vibrate(15);
 }
 initControls(document.getElementById("touchControls"), accionJugador);
 
 // ---------- Colisiones ----------
 const HIT_LANE_TOLERANCE = 0.85; // menos que medio ancho de carril (1.1): rozar el borde durante un cambio de carril no cuenta como choque
-function checkCollisions() {
+// Tropezon (28/10/2026, como en Subway Surfers): darse DE LADO contra algo al
+// cambiar de carril ya no acaba la carrera. Rebota al carril de antes, pierde
+// la racha y le sigue un coche de policia unos segundos; si vuelve a tropezar
+// mientras, le pillan. Chocar de frente sigue siendo chocar.
+function esDeLado(o, paso) {
+  if (carrilAntes === currentLane || Math.abs(playerX - LANE_X[currentLane]) < 0.15) return false;
+  if (o.type === "bus") return true;
+  const zc = o.z + (o.centro || 0), medio = o.medio || 0.7;
+  // Ya lo tenia al lado (no le ha llegado de frente este fotograma).
+  return zc > -medio + 0.35 + paso * 2;
+}
+function tropezar(o) {
+  o.rozado = true;
+  const vuelta = carrilAntes;
+  carrilAntes = currentLane;
+  currentLane = vuelta;
+  streak = 0; multiplier = 1;
+  tropiezo = 0.5;
+  sndTropiezo();
+  vibrate([25, 40, 25]);
+  triggerCameraShake(0.03);
+  flashExpression("surprised", 0.9);
+  if (PRUEBA && window.__juego) window.__juego.tropiezos++;
+  if (persigueLeft > 0) {
+    // Segundo tropezon con la policia detras: te pillan.
+    showBubble(t("tePillaron"), 1600);
+    triggerGameOver();
+    return;
+  }
+  persigueLeft = PERSIGUE;
+  world.perseguir(true);
+  ponerSirenas();
+  showBubble(t("tePersiguen"), 1600);
+}
+// Luces y sirena: en el tramo de persecucion y mientras te sigue el coche.
+function ponerSirenas() {
+  const on = gameState === "playing" && !pausado && ((tramoMostrado && tramoMostrado.tipo === "persecucion") || persigueLeft > 0);
+  document.getElementById("sirenas").classList.toggle("hidden", !on);
+  sirena(on);
+}
+
+function checkCollisions(paso = 0) {
   if (rocketTimeLeft > 0) return;          // en el cohete se vuela por encima de todo
   for (const o of world.obstacles) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
-    if (o.smashed) continue;
+    if (o.smashed || o.rozado) continue;
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
     if (o.type === "bus") {
       // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
@@ -1115,6 +1190,8 @@ function checkCollisions() {
         continue;
       }
       if (o.alto !== undefined && py > o.alto - 0.1) continue;   // le pasas por encima
+      // Con las botas se salta por encima de los coches y de todo lo que se esquiva.
+      if (botasTimeLeft > 0 && o.type === "full" && py > (o.alto !== undefined ? o.alto : 1.8) - 0.1) continue;
     }
     if (invulnerable > 0) {
       // Recien seguido tras chocar: lo que hay delante se aparta.
@@ -1140,6 +1217,7 @@ function checkCollisions() {
       avisarMisiones(misiones.evento("gigante"));
       continue;
     }
+    if (esDeLado(o, paso)) { tropezar(o); return; }
     if (shieldActive) {
       shieldActive = false;
       character.setShieldActive(false);
@@ -1244,6 +1322,15 @@ function checkPowerups() {
     if (p.kind === "shield") { shieldActive = true; character.setShieldActive(true); showBubble(t("powerupShield") + "!"); }
     else if (p.kind === "magnet") { magnetTimeLeft = MAGNET_DURATION; showBubble(t("powerupMagnet") + "!"); }
     else if (p.kind === "boost") { boostTimeLeft = BOOST_DURATION; showBubble(t("powerupBoost") + "!"); }
+    else if (p.kind === "botas") { botasTimeLeft = BOTAS_DURATION; showBubble(t("powerupBotas") + "!"); vibrate([20, 20, 40]); }
+    else if (p.kind === "caja") {
+      // Caja sorpresa: se guarda y se abre al acabar (con ruleta).
+      guardarCaja();
+      if (intento) intento.caja = true;   // al seguir desde el control no vuelve a salir
+      sndChapa();
+      vibrate([20, 30, 20]);
+      avisoVerde(`${icono("regalo")} ${t("cajaCogida")}`);
+    }
     else if (p.kind === "mega") {
       megaTimeLeft = MEGA_DURATION;
       character.setMega(MEGA_SCALE);
@@ -1284,8 +1371,11 @@ function checkPowerups() {
 const PRUEBA = /prueba/.test(location.search);
 if (PRUEBA) {
   window.__juego = {
-    world, character, renderer, scene, inmortal: false, choques: 0,
-    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, currentLane, tacos: tacosThisRun, distancia: distance }),
+    world, character, renderer, scene, inmortal: false, choques: 0, tropiezos: 0,
+    botas: () => { botasTimeLeft = BOTAS_DURATION; },
+    perseguido: () => persigueLeft,
+    cajas: { abrir: () => abrirCaja(pintarCajaBtn), guardar: guardarCaja, diario: () => premioDiario(pintarCajaBtn), pintar: () => pintarCajaBtn() },
+    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, botasTimeLeft, isSliding, currentLane, playerX, tacos: tacosThisRun, distancia: distance }),
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
@@ -1381,6 +1471,7 @@ function mostrarFinSinFin() {
   botonSeguir("seguirSinFin");
   document.getElementById("gameOverScreen").classList.remove("hidden");
   if (record) spawnConfetti(40);
+  abrirCajasLuego(900);
 }
 // Cerrar la carrera: se guardan los tacos de esta partida (y el record del sin fin).
 function cerrarCarrera() {
@@ -1398,7 +1489,12 @@ function seguirAqui() {
   for (const o of world.obstacles) if (!o.smashed && o.z > -6 && o.z < 4) world.smash(o);
   character.setSlidePose(false);
   invulnerable = INVULNERABLE;
+  // 28/10: la policia se va (si no, el siguiente roce volvia a pillarle) y,
+  // si sigue en el tramo de persecucion, vuelven sus luces.
+  persigueLeft = 0; tropiezo = 0; gestoGuardado = null;
+  world.perseguir(false);
   gameState = "playing";
+  ponerSirenas();
   for (const id of ["choqueNivel", "gameOverScreen"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
   if (world.jefeActivo()) document.getElementById("bossBar").classList.remove("hidden");
@@ -1423,7 +1519,7 @@ function pausar() {
 }
 function reanudar() {
   if (!pausado) return;
-  if (tramoMostrado && tramoMostrado.tipo === "persecucion") sirena(true);
+  if ((tramoMostrado && tramoMostrado.tipo === "persecucion") || persigueLeft > 0) sirena(true);
   document.getElementById("pausaOverlay").classList.add("hidden");
   pausarMusica(false);
   empezarCuenta();
@@ -1538,6 +1634,11 @@ function frame(dtFijo) {
     }
     if (magnetTimeLeft > 0) { magnetTimeLeft = Math.max(0, magnetTimeLeft - dt); updatePowerupBadge(); }
     if (boostTimeLeft > 0) { boostTimeLeft = Math.max(0, boostTimeLeft - dt); updatePowerupBadge(); }
+    if (botasTimeLeft > 0) { botasTimeLeft = Math.max(0, botasTimeLeft - dt); updatePowerupBadge(); }
+    if (persigueLeft > 0) {
+      persigueLeft = Math.max(0, persigueLeft - dt);
+      if (persigueLeft === 0) { world.perseguir(false); ponerSirenas(); }
+    }
     const frameSpeed = speed * (boostTimeLeft > 0 ? BOOST_MULT : 1);
     distance += frameSpeed * dt;
 
@@ -1545,7 +1646,12 @@ function frame(dtFijo) {
     const prevX = playerX;
     playerX += (targetX - playerX) * Math.min(1, dt * 10);
     character.object3D.position.x = playerX;
-    character.setLean((playerX - prevX) * 12);
+    // Tropezon: un tambaleo corto.
+    let tambaleo = 0;
+    if (tropiezo > 0) { tropiezo = Math.max(0, tropiezo - dt); tambaleo = Math.sin(tropiezo * 30) * 0.6 * (tropiezo / 0.5); }
+    character.setLean((playerX - prevX) * 12 + tambaleo);
+    if (Math.abs(playerX - targetX) < 0.15) carrilAntes = currentLane;
+    world.moverPerseguidor(dt, playerX);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -1585,8 +1691,7 @@ function frame(dtFijo) {
       if (tramo.tipo === "sprint") { sndFanfarria(true); vibrate([20, 30, 20]); }
       // La policia te persigue: luces rojas y azules por los bordes y la sirena.
       const persigue = tramo.tipo === "persecucion";
-      document.getElementById("sirenas").classList.toggle("hidden", !persigue);
-      sirena(persigue);
+      ponerSirenas();
       if (persigue) setTimeout(() => { if (gameState === "playing") showBubble(FRASES[getLang()].patrulla, 1800); }, 900);
     }
     if (nivelActual && tramo.tipo === "jefe" && !jefeLanzado && distance > tramo.desde + 25 && rocketTimeLeft === 0 && !world.jefeActivo()) {
@@ -1626,9 +1731,11 @@ function frame(dtFijo) {
     // ---- Altura: suelo, rampa y techo del autobus ----
     const suelo = world.surfaceAt(playerX);
     if (enSuelo) {
-      if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; } // se acabo el techo: a caer
+      if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; coyote = COYOTE; } // se acabo el techo: a caer
       else py = suelo;                                                    // por la rampa se sube andando
     }
+    if (coyote > 0) coyote = Math.max(0, coyote - dt);
+    if (gestoReloj > 0) { gestoReloj -= dt; if (gestoReloj <= 0) gestoGuardado = null; }
     if (!enSuelo && rocketTimeLeft === 0) {
       vy -= GRAVEDAD * dt;
       py += vy * dt;
@@ -1638,6 +1745,11 @@ function frame(dtFijo) {
         // Aterrizaje con peso: nube de polvo a los pies + vibracion corta.
         for (let d = 0; d < 5; d++) spawnDust(character.object3D.position.x, character.object3D.position.z, py);
         vibrate(10);
+        // Lo que se pulso en el aire: saltar otra vez o rodar al caer.
+        const g = gestoGuardado;
+        gestoGuardado = null; gestoReloj = 0;
+        if (g === "jump") saltar();
+        else if (g === "slide") { isSliding = true; slideElapsed = 0; sndSlide(); }
       }
     }
     character.object3D.position.y = py;
@@ -1668,7 +1780,7 @@ function frame(dtFijo) {
       py = Math.max(py, world.surfaceAt(playerX));
       character.object3D.position.y = py;
     }
-    checkCollisions();
+    checkCollisions(frameSpeed * dt);
     checkCollectibles(dt);
     checkChapas();
     checkPowerups();
@@ -1720,6 +1832,7 @@ function frame(dtFijo) {
     // Se cae de espaldas; la calle se para en seco y sale la pantalla de choque.
     cayendo += dt;
     character.setCaida(cayendo);
+    world.moverPerseguidor(dt, playerX);
     world.update(Math.max(0, 0.2 - cayendo) * speed * dt);
     updateDust(dt);
     if (cayendo > 1.15) terminarCaida();
@@ -1740,6 +1853,8 @@ function frame(dtFijo) {
     const loadingScreen = document.getElementById("loadingScreen");
     if (loadingScreen) loadingScreen.classList.add("fadeOut");
     if (loadingScreen) setTimeout(() => loadingScreen.remove(), 350);
+    pintarCajaBtn();
+    setTimeout(mostrarDiario, 700);
   }
 }
 
@@ -1800,7 +1915,24 @@ function volverAlMenu() {
   document.getElementById("startScreen").classList.remove("hidden");
   pintarMisiones("misionesMenu");
   pintarSinFin();
+  pintarCajaBtn();
   stopMusic();
+}
+// 28/10: cajas sorpresa sin abrir (se cogen en la calle) y premio del dia.
+function pintarCajaBtn() {
+  const n = cajasPendientes();
+  const b = document.getElementById("cajaBtn");
+  b.classList.toggle("hidden", !n);
+  b.innerHTML = `${icono("regalo")} ${t("cajaAbrir")}${n > 1 ? " (" + n + ")" : ""}`;
+}
+document.getElementById("cajaBtn").addEventListener("click", () => abrirCaja(pintarCajaBtn));
+function abrirCajasLuego(ms) {
+  if (!cajasPendientes()) return;
+  setTimeout(() => { if (cajasPendientes() && (gameState === "completado" || gameState === "gameover")) abrirCaja(pintarCajaBtn); }, ms);
+}
+function mostrarDiario() {
+  if (PRUEBA) return;
+  premioDiario(() => pintarCajaBtn());
 }
 document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
 document.getElementById("nivelFinMapa").addEventListener("click", () => { volverAlMenu(); abrirMapa(); });
