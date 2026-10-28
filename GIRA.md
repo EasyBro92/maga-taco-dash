@@ -4,6 +4,9 @@ Isidro (27/10/2026): la carrera a la presidencia va a la capital o a la ciudad
 más famosa de cada estado, con obstáculos que se irán desvelando. Por ahora se
 hacen los cinco niveles de la primera gira; esta es la lista para los siguientes.
 
+El orden de los niveles y lo que pasa en cada uno está en `HISTORIA.md`
+(propuesta del 28/10/2026).
+
 ## La primera gira (la de ahora)
 
 | Nivel | Estado | Ciudad | Estado del nivel |
