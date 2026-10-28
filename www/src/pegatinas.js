@@ -93,6 +93,33 @@ const DIBUJOS = {
     x.beginPath(); x.arc(cx, cy, r, 0, Math.PI); x.closePath(); x.stroke();
   },
 
+  // Urna con la papeleta (28/10/2026): cada estado ganado. Sustituye a los
+  // ingredientes del taco de la historia de antes.
+  voto(x) {
+    const caja = () => { x.beginPath(); x.roundRect(46, 112, 164, 112, 14); };
+    const papel = () => { x.beginPath(); x.roundRect(-46, -66, 92, 112, 8); };
+    x.save();                                                           // borde blanco
+    x.strokeStyle = "#ffffff"; x.lineWidth = 26;
+    caja(); x.stroke();
+    x.translate(128, 86); x.rotate(-0.12); papel(); x.stroke();
+    x.restore();
+    x.save();                                                           // la papeleta con la cruz roja
+    x.translate(128, 86); x.rotate(-0.12);
+    papel(); x.fillStyle = "#ffffff"; x.fill(); x.lineWidth = 7; x.strokeStyle = CONTORNO; x.stroke();
+    x.lineWidth = 6; x.strokeStyle = "#c9d2e0";
+    for (const yy of [16, 30]) { x.beginPath(); x.moveTo(-28, yy); x.lineTo(28, yy); x.stroke(); }
+    x.lineWidth = 16; x.strokeStyle = "#e8463c";
+    x.beginPath(); x.moveTo(-24, -24); x.lineTo(-6, -4); x.lineTo(26, -44); x.stroke();
+    x.restore();
+    caja();                                                             // la urna, por delante
+    const g = x.createLinearGradient(0, 112, 0, 224);
+    g.addColorStop(0, "#3f7ef0"); g.addColorStop(1, "#1f4fb0");
+    x.fillStyle = g; x.fill(); x.lineWidth = 8; x.strokeStyle = CONTORNO; x.stroke();
+    x.fillStyle = "#16306e"; x.beginPath(); x.roundRect(82, 121, 92, 10, 5); x.fill();   // ranura
+    x.fillStyle = "#ffffff"; x.fillRect(50, 160, 156, 30);             // franja con estrella
+    estrella(x, 128, 176, 20, 8); x.fillStyle = "#e8463c"; x.fill();
+  },
+
   // Chapa de campaña: roja, blanca y azul con la estrella en medio.
   chapa(x) {
     const cx = 128, cy = 128;

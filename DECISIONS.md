@@ -793,3 +793,24 @@ para copiar ideas que encajen». Lo que entra:
 - **Premio del día**: siete días seguidos con premio que crece (50 → 400 y el
   séptimo una caja + 500); si se salta un día, vuelve al primero.
 - Repaso: los textos de fin de nivel aún llevaban emojis en el bocadillo.
+
+## La historia de los 50 estados, aplicada (2026-10-28)
+
+Isidro aprobó `HISTORIA.md` («aplícalo y ya cambiaremos si algo no quedó bien»).
+
+- **Orden**: 51 paradas (`src/historia.js`), una por estado, y Washington la
+  última (antes era la 5). `levels.js` solo guarda las calles hechas; las demás
+  salen con candado. Washington sigue abierta al pasar Phoenix, como «avance del
+  final».
+- **Mapa**: los 50 estados y D.C. en casillas (en el móvil se ven igual Texas
+  que Rhode Island). Ganado = rojo, más intenso con más estrellas; punto negro
+  en los niveles con jefe. Debajo, los votos electorales (x/538, marca en 270).
+- **Prólogo** de 4 pantallas la primera vez que se abre el mapa (el mote
+  «TACO», el taco bowl, la Liga del Pantano, tacos = votantes); se repite con
+  el botón «Historia».
+- **Al ganar**: bocadillo «¡Arizona vota rojo!», la urna encima de la cabeza
+  (en la Casa Blanca, el taco bowl), tipo de victoria por estrellas (por los
+  pelos / clara / aplastante), «+11 votos electorales» y un mensaje del
+  Candidato como en su red social.
+- Fuera los ingredientes del taco. En Washington el Burrito-Bot viene mandado
+  por la Liga del Pantano (falta el Monstruo del Pantano de verdad).

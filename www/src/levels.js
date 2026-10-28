@@ -1,5 +1,9 @@
 // La gira de campaña hasta la Casa Blanca (24/10/2026). Ver DECISIONS.md.
 //
+// 28/10/2026: la historia nueva (HISTORIA.md, src/historia.js) pone el orden:
+// 51 paradas, una por estado, y Washington la última. Aquí solo están las
+// calles de los niveles ya hechos; los demás salen en el mapa con candado.
+//
 // Cinco niveles con calles de verdad. Cada lado de la calle es una lista de
 // edificios EN SU ORDEN REAL, uno detras de otro: [pieza, veces] repite un
 // tramo de fachada (los edificios federales son muy largos), y un numero
@@ -39,11 +43,11 @@ const FED = { federal: true, minPlantas: 5, maxPlantas: 7 };
 //   obstáculo) o bus (en el techo de un autobús).
 // Las estrellas: llegar · llegar sin chocar · las tres chapas.
 
-export const NIVELES = [
+import { PARADAS } from "./historia.js";
+
+const CALLES = [
   {
-    id: "nueva_york", numero: 1, nombre: "Quinta Avenida", lugar: "Nueva York", listo: true, mapa: [88, 25], etiqueta: [0, -5],
-    ingrediente: "🫓", historia: { es: "¡Empieza la carrera a la Casa Blanca! Sal de tu torre y recupera la tortilla.", en: "The race to the White House begins! Leave your tower and get the tortilla back." },
-    fin: { es: "¡Tortilla recuperada!", en: "Tortilla recovered!" },
+    id: "nueva_york", nombre: "Quinta Avenida", lugar: "Nueva York", listo: true,
     zona: "city", carpeta: "nueva_york", luz: "manana", semilla: 725,
     largo: 3200, linea: 11.5, velMax: 20,
     // Primer nivel: lo basico. Sin autobuses ni coches patrulla; iman y microfonos.
@@ -91,9 +95,7 @@ export const NIVELES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
   },
   {
-    id: "pueblo", numero: 2, nombre: "Main Street", lugar: "Findlay, Ohio", listo: true, mapa: [73, 29], etiqueta: [-4, 6.4],
-    ingrediente: "🌽", historia: { es: "Mitin en Findlay, la ciudad de las banderas. El Burrito-Bot ha escondido el maíz: ¡súbete a los autobuses y llega al juzgado!", en: "Rally in Findlay, Flag City USA. Burrito-Bot hid the corn: ride the buses and reach the courthouse!" },
-    fin: { es: "¡Maíz recuperado! ¡Ohio es tuyo!", en: "Corn recovered! Ohio is yours!" },
+    id: "pueblo", nombre: "Main Street", lugar: "Findlay, Ohio", listo: true,
     zona: "city", carpeta: "findlay", luz: "mediodia", semilla: 1888,
     largo: 3200, linea: 11.5, velMax: 21.5,
     // Segundo nivel: entran los autobuses de campaña (por el techo hay tacos).
@@ -139,9 +141,7 @@ export const NIVELES = [
   {
     // 27/10/2026: Isidro quiere la capital o la ciudad mas famosa de cada
     // estado (ver GIRA.md); en Arizona, Phoenix. Final en un diner, luz de tarde dorada.
-    id: "phoenix", numero: 3, nombre: "Central Avenue", lugar: "Phoenix, Arizona", listo: true, mapa: [27, 45], etiqueta: [0, 6.4],
-    ingrediente: "🌶️", historia: { es: "Phoenix, en pleno desierto. El Burrito-Bot ha llamado a la policía: ¡te persiguen! Es una caza de brujas. Llega al diner y recupera el chile.", en: "Phoenix, in the middle of the desert. Burrito-Bot called the police: they are after you! It is a witch hunt. Reach the diner and get the chili back." },
-    fin: { es: "¡Chile recuperado! ¡Arizona es tuya!", en: "Chili recovered! Arizona is yours!" },
+    id: "phoenix", nombre: "Central Avenue", lugar: "Phoenix, Arizona", listo: true,
     zona: "city", carpeta: "phoenix", luz: "tarde", semilla: 1912,
     largo: 3200, linea: 11.5, velMax: 22,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
@@ -184,11 +184,8 @@ export const NIVELES = [
     final: "parada", parada: 3.2,
     acera: ["phoenix/palmera", "phoenix/saguaro_maceta"],
   },
-  { id: "vegas", numero: 4, nombre: "El Strip", lugar: "Las Vegas", listo: false, mapa: [17, 38], etiqueta: [0, -5],
-    ingrediente: "🥫", historia: { es: "Debate en Las Vegas contra el Burrito-Bot, el candidato hecho en China. ¡Gánale!", en: "Debate in Las Vegas against Burrito-Bot, the made-in-China candidate. Beat him!" } },
   {
-    id: "washington", numero: 5, nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true, mapa: [85, 33], etiqueta: [2, 6.4],
-    ingrediente: "🏛️", historia: { es: "La recta final. Corre por Pennsylvania Avenue y entra en la Casa Blanca: ¡el taco perfecto te espera!", en: "The home stretch. Run down Pennsylvania Avenue into the White House: the perfect taco awaits!" },
+    id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
     luz: "atardecer",
@@ -256,6 +253,13 @@ export const NIVELES = [
     acera: ["dc/farola", "pueblo/roble"],
   },
 ];
+
+// Las 51 paradas de la historia, con la calle de las que ya existen.
+// (`jefe` de la historia pasa a `esJefe`: el jefe de verdad es el tramo «jefe».)
+export const NIVELES = PARADAS.map(({ jefe, ...p }) => {
+  const calle = CALLES.find((c) => c.id === p.id);
+  return calle ? { ...calle, ...p, esJefe: jefe } : { ...p, esJefe: jefe, listo: false };
+});
 
 // Ancho de cada pieza a lo largo de la calle (el de su fachada, sin contar lo
 // que sobresale la cornisa: asi los tramos encajan sin pisarse).

@@ -86,9 +86,24 @@
     <div class="card wide">
       <div class="title small"><span data-icono="mapa"></span> <span data-i18n="gira">La gira</span></div>
       <svg id="mapaSvg" viewBox="0 0 100 62" class="mapaSvg"></svg>
-      <div id="receta" class="receta"></div>
+      <div id="votos" class="votos"></div>
       <div id="mapaInfo" class="mapaInfo"></div>
-      <button id="mapaCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
+      <div class="filaInicio">
+        <button id="mapaHistoria" class="smallBtn ancho" data-i18n="historiaBtn">Historia</button>
+        <button id="mapaCerrar" class="smallBtn ancho" data-i18n="close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 28/10: el prologo de la historia (TACO y la Liga del Pantano) -->
+  <div id="prologo" class="overlay hidden">
+    <div class="card prologoCard">
+      <div class="prologoImg" id="prologoImg"></div>
+      <h2 class="title small" id="prologoTitulo"></h2>
+      <p class="prologoTexto" id="prologoTexto"></p>
+      <div class="prologoPuntos" id="prologoPuntos"></div>
+      <button id="prologoSigue" class="bigBtn"></button>
+      <button id="prologoSalta" class="smallBtn" data-i18n="prologoSalta">Saltar</button>
     </div>
   </div>
 
@@ -97,8 +112,10 @@
       <img id="nivelFinPremio" class="premioNivel" alt="">
       <h2 class="title small" id="nivelFinTitulo"></h2>
       <div class="estrellas" id="nivelFinEstrellas"></div>
+      <div class="victoria" id="nivelFinVictoria"></div>
+      <div class="post" id="nivelFinPost"></div>
       <ul class="objetivos" id="nivelFinObjetivos"></ul>
-      <p class="statLine"><img class="peg" data-peg="taco" alt=""> <span id="nivelFinTacos">0</span></p>
+      <p class="statLine"><img class="peg" data-peg="taco" alt=""> <span id="nivelFinTacos">0</span> <span data-i18n="votantes">votantes</span></p>
       <div class="desbloqueo hidden" id="nivelFinDesbloqueo"></div>
       <div class="misiones" id="misionesNivel"></div>
       <button id="nivelFinMapa" class="bigBtn" data-i18n="mapa">MAPA</button>

@@ -7,7 +7,8 @@ import {
   sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida, sirena, sndTropiezo,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
-import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe } from "./save.js";
+import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
+import { ESTADOS, ACTOS, PROLOGO, TOTAL_VOTOS, PARA_GANAR, nombreEstado, votosGanados, postDe } from "./historia.js";
 import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl } from "./levels.js";
 import { icono, pintarIconos } from "./iconos.js";
 import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
@@ -326,48 +327,47 @@ function mostrarBanner(n) {
   mostrarBanner.t = setTimeout(() => el.classList.add("hidden"), 2800);
 }
 
-// ---- El mapa de la gira ----
-const SILUETA_EEUU = "8,8 6,14 5,22 7,30 10,38 14,45 20,47 26,50 33,52 38,51 44,54 47,60 52,57 55,52 60,50 66,51 72,52 76,58 79,57 77,50 80,44 84,40 86,34 90,28 94,22 96,16 95,12 88,16 82,20 76,18 70,14 60,12 40,10 20,8";
+// ---- El mapa de la gira (28/10/2026: los 50 estados en casillas) ----
+// Cada estado es una casilla; al ganarlo se pinta de rojo (más intenso con más
+// estrellas). Debajo, los votos electorales: 270 para ser presidente.
 let nivelElegido = null;
-// 27/10: las etiquetas van cada una en su sitio (antes «Findlay, Ohio» tapaba
-// a «Nueva York») y el ultimo viaje, de Las Vegas a Washington, va en avion
-// con un arco por encima (antes una linea cruzaba el pais de lado a lado).
+const CASILLA = 9;
+// El que toca jugar: el primero abierto sin pasar (o el último ganado).
+function nivelEnCurso(hechos) {
+  return NIVELES.find((n) => nivelAbierto(n, hechos) && !hechos[n.id])
+    || [...NIVELES].reverse().find((n) => hechos[n.id]) || NIVELES[0];
+}
 function abrirMapa() {
   const svg = document.getElementById("mapaSvg");
   const hechos = getNiveles();
-  const porTierra = NIVELES.slice(0, -1).map((n) => n.mapa.join(",")).join(" ");
-  const [vx, vy] = NIVELES[NIVELES.length - 2].mapa, [wx, wy] = NIVELES[NIVELES.length - 1].mapa;
-  const arco = `M${vx},${vy} Q${(vx + wx) / 2},${Math.min(vy, wy) - 26} ${wx},${wy}`;
-  svg.innerHTML = `<polygon class="tierra" points="${SILUETA_EEUU}"/><polyline class="ruta" points="${porTierra}"/>`
-    + `<path class="rutaAvion" d="${arco}"/>`
-    + `<g transform="translate(${(vx + wx) / 2 - 3},${Math.min(vy, wy) - 17}) scale(0.26)">${icono("avion").replace(/<\/?svg[^>]*>/g, "")}</g>`
-    + NIVELES.map((n) => {
-      const [x, y] = n.mapa;
-      const [ex, ey] = n.etiqueta || [0, 6.2];
-      const abierto = nivelAbierto(n, hechos);
-      const color = hechos[n.id] ? "#2fa84f" : abierto ? "#e8463c" : "#a7b0c0";
-      return `<g class="parada" data-id="${n.id}"><circle cx="${x}" cy="${y}" r="3.2" fill="${color}"/>`
-        + `<text x="${x}" y="${y + 1.1}">${abierto || hechos[n.id] ? n.numero : "?"}</text>`
-        + `<text class="etiqueta" x="${x + ex}" y="${y + ey}">${n.lugar}</text></g>`;
-    }).join("");
-  // Donde vas: un anillo que late en el nivel abierto mas avanzado.
-  const actual = [...NIVELES].reverse().find((n) => nivelAbierto(n, hechos)) || NIVELES[0];
-  svg.querySelector(".ruta").insertAdjacentHTML("afterend", `<circle class="actual" cx="${actual.mapa[0]}" cy="${actual.mapa[1]}" r="4.8"/>`);
-  svg.querySelectorAll(".parada").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
-  pintarReceta(hechos);
+  const actual = nivelEnCurso(hechos);
+  svg.setAttribute("viewBox", `0 0 ${11 * CASILLA} ${8 * CASILLA}`);
+  svg.innerHTML = NIVELES.map((n) => {
+    const [c, f] = ESTADOS[n.estado];
+    const x = c * CASILLA + 0.45, y = f * CASILLA + 0.45, lado = CASILLA - 0.9;
+    const r = hechos[n.id];
+    const clase = r ? `ganado e${Math.max(1, estrellasDe(r))}` : nivelAbierto(n, hechos) ? "abierto" : n.listo ? "cerrado" : "futuro";
+    return `<g class="estado ${clase}" data-id="${n.id}"><rect x="${x}" y="${y}" width="${lado}" height="${lado}" rx="1.4"/>`
+      + `<text x="${x + lado / 2}" y="${y + lado / 2 + 1.05}">${n.estado}</text>`
+      + (n.esJefe ? `<circle class="marcaJefe" cx="${x + lado - 1.4}" cy="${y + 1.4}" r="0.9"/>` : "")
+      + "</g>";
+  }).join("");
+  const [ac, af] = ESTADOS[actual.estado];
+  svg.insertAdjacentHTML("beforeend", `<rect class="actual" x="${ac * CASILLA - 0.2}" y="${af * CASILLA - 0.2}" width="${CASILLA + 0.4}" height="${CASILLA + 0.4}" rx="2"/>`);
+  svg.querySelectorAll(".estado").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
+  pintarVotos(hechos);
   elegirNivel(nivelElegido || actual.id);
   document.getElementById("startScreen").classList.add("hidden");
   document.getElementById("mapaGira").classList.remove("hidden");
+  if (!getSave().prologo && !PRUEBA) mostrarPrologo();
 }
-// La receta (27/10/2026): los ingredientes que robo el Burrito-Bot, uno por
-// nivel. Los recuperados salen en color; los que faltan, en gris.
-const RECETA = [["nueva_york", "tortilla"], ["pueblo", "maiz"], ["phoenix", "chile"], ["vegas", "salsa"], ["washington", "taco_perfecto"]];
-function pintarReceta(hechos) {
-  const fila = RECETA.map(([id, peg], i) => {
-    const signo = i === RECETA.length - 1 ? '<span class="recetaIgual">=</span>' : i ? '<span class="recetaMas">+</span>' : "";
-    return signo + `<img class="recetaPeg ${hechos[id] ? "tengo" : "falta"}" src="${urlPegatina(peg)}" alt="">`;
-  }).join("");
-  document.getElementById("receta").innerHTML = `<div class="recetaTitulo">${t("receta")}</div><div class="recetaFila">${fila}</div>`;
+function pintarVotos(hechos) {
+  const v = votosGanados(NIVELES, hechos);
+  document.getElementById("votos").innerHTML =
+    `<div class="votosFila"><span>${t("votosElectorales")}</span><b>${v} / ${TOTAL_VOTOS}</b></div>`
+    + `<div class="votosBarra"><div class="votosLleno" style="width:${(100 * v) / TOTAL_VOTOS}%"></div>`
+    + `<div class="votosMarca" style="left:${(100 * PARA_GANAR) / TOTAL_VOTOS}%"></div></div>`
+    + `<div class="votosNota">${v >= PARA_GANAR ? t("yaPresidente") : t("paraGanar")}</div>`;
 }
 // Las tres estrellas de un nivel, cada una con su objetivo.
 function filaObjetivos(n, r) {
@@ -382,22 +382,50 @@ function filaObjetivos(n, r) {
 function elegirNivel(id) {
   const n = NIVELES.find((x) => x.id === id);
   nivelElegido = id;
-  const r = getNiveles()[id];
-  const abierto = nivelAbierto(n, getNiveles());
+  const hechos = getNiveles();
+  const r = hechos[id];
+  const abierto = nivelAbierto(n, hechos);
   const i = NIVELES.indexOf(n);
-  const cierre = !n.listo ? t("proximamente")
-    : t("superaAntes").replace("{n}", NIVELES[i - 1] ? NIVELES[i - 1].nombre : "");
-  const ingrediente = INGREDIENTE[n.id];
+  const L = getLang();
+  document.querySelectorAll("#mapaSvg .estado").forEach((g) => g.classList.toggle("elegido", g.dataset.id === id));
+  // Para abrirlo: el nivel hecho anterior que falta por pasar.
+  const falta = [...NIVELES.slice(0, i)].reverse().find((x) => x.listo && !hechos[x.id]);
+  const cierre = !n.listo ? t("proximamente") : t("superaAntes").replace("{n}", falta ? falta.nombre : "");
+  const acto = ACTOS[n.acto];
+  const cabecera = n.acto < 6 ? `${t("actoN")} ${n.acto} · ${acto[L] || acto.es}` : `${t("finalActo")} · ${acto[L] || acto.es}`;
+  const jefe = n.esJefe ? `<div class="miJefe">${icono("jefe")} ${t("jefeNivel").replace("{j}", acto.jefe[L] || acto.jefe.es)}</div>` : "";
   const atajo = n.id === "washington" && !NIVELES.slice(0, i).every((x) => x.listo) ? `<div class="miAtajo">${t("atajoDc")}</div>` : "";
   document.getElementById("mapaInfo").innerHTML =
-    `<div class="miNombre">${ingrediente ? `<img class="peg" src="${urlPegatina(ingrediente)}" alt="">` : ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div><div class="miLugar">${n.lugar}</div>`
-    + (n.historia ? `<div class="miHistoria">${n.historia[getLang()] || n.historia.es}</div>` : "")
-    + atajo
+    `<div class="miActo">${cabecera}</div>`
+    + `<div class="miNombre">${r ? `<img class="peg" src="${urlPegatina("voto")}" alt="">` : ""} ${t("nivel")} ${n.numero} · ${n.nombre}</div>`
+    + `<div class="miLugar">${n.lugar} · ${t("votosN").replace("{n}", n.votos)}</div>`
+    + `<div class="miHistoria">${n.historia[L] || n.historia.es}</div>`
+    + jefe + atajo
     + (abierto ? `<ul class="objetivos">${filaObjetivos(n, r)}</ul><button id="mapaJugar" class="bigBtn">${t("jugarNivel")}</button>`
       : `<div class="proximamente">${icono("candado")} ${cierre}</div>`);
   const b = document.getElementById("mapaJugar");
   if (b) b.addEventListener("click", () => empezarNivel(n));
 }
+// ---- El prólogo (28/10/2026): la primera vez que se abre el mapa ----
+function mostrarPrologo() {
+  const ov = document.getElementById("prologo");
+  let i = 0;
+  const pintar = () => {
+    const p = PROLOGO[i];
+    const [titulo, texto] = p[getLang()] || p.es;
+    document.getElementById("prologoImg").innerHTML = p.peg ? `<img src="${urlPegatina(p.peg)}" alt="">` : icono(p.icono);
+    document.getElementById("prologoTitulo").textContent = titulo;
+    document.getElementById("prologoTexto").textContent = texto;
+    document.getElementById("prologoPuntos").innerHTML = PROLOGO.map((_, k) => `<span class="${k === i ? "on" : ""}"></span>`).join("");
+    document.getElementById("prologoSigue").textContent = i < PROLOGO.length - 1 ? t("prologoSigue") : t("prologoFin");
+  };
+  const cerrar = () => { ov.classList.add("hidden"); getSave().prologo = true; persistSave(); };
+  document.getElementById("prologoSigue").onclick = () => { if (i < PROLOGO.length - 1) { i++; pintar(); } else cerrar(); };
+  document.getElementById("prologoSalta").onclick = cerrar;
+  pintar();
+  ov.classList.remove("hidden");
+}
+document.getElementById("mapaHistoria").addEventListener("click", mostrarPrologo);
 async function empezarNivel(n) {
   if (!nivelAbierto(n, getNiveles()) && !PRUEBA) return;
   const boton = document.getElementById("mapaJugar");
@@ -562,7 +590,7 @@ function finalCamion(dt, flat, zParadaDada) {
     fin.v = Math.max(5, Math.min(fin.v - dt * 6, -zParada * 1.5 + 4));
     dz = fin.v * dt;
     character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
-    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es); vibrate([30, 40, 30]); mostrarPremio(INGREDIENTE[nivelActual.id] || "tortilla"); spawnConfetti(30); }
+    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(finTexto(nivelActual)); vibrate([30, 40, 30]); mostrarPremio(premioDe(nivelActual)); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
@@ -588,7 +616,10 @@ function finalCamion(dt, flat, zParadaDada) {
 // emoji, que en cada movil sale distinto), y sale en los tres finales.
 let mazorca = null;
 const texPremio = {};
-const INGREDIENTE = { nueva_york: "tortilla", pueblo: "maiz", phoenix: "chile", vegas: "salsa", washington: "taco_perfecto" };
+// 28/10: ya no hay ingredientes: al ganar un estado sale la urna (en la Casa
+// Blanca, el taco bowl que se pide al llegar).
+function premioDe(n) { return n && n.id === "washington" ? "taco_perfecto" : "voto"; }
+function finTexto(n) { return t("votaRojo").replace("{e}", nombreEstado(n.estado, getLang())); }
 function mostrarPremio(nombre) {
   if (!texPremio[nombre]) {
     texPremio[nombre] = new THREE.CanvasTexture(lienzoPegatina(nombre));
@@ -628,9 +659,9 @@ function finalMitin(dt, cb) {
     character.updateRun(dt, 0.45);
     if (zParada + dz >= -0.02) {
       fin.fase = 2; fin.t = 0;
-      showBubble(nivelActual.fin[getLang()] || nivelActual.fin.es);
+      showBubble(finTexto(nivelActual));
       vibrate([30, 40, 30]);
-      mostrarPremio("maiz");
+      mostrarPremio(premioDe(nivelActual));
       spawnConfetti(30);
     }
   } else if (fin.fase === 2) {
@@ -659,16 +690,24 @@ function completarNivel() {
   const antes = getNiveles();
   const abiertosAntes = NIVELES.filter((x) => nivelAbierto(x, antes)).map((x) => x.id);
   const sinFinAntes = sinFinAbierto(antes);
+  const votosAntes = votosGanados(NIVELES, antes);
+  const estadoNuevo = !antes[n.id];   // (antes es el mismo objeto que se guarda: mirarlo ya)
   addTacos(tacos);
   const r = guardarNivel(n.id, { sinChocar: !intento.chocado, chapas: intento.chapas });
   misiones.fijarDisponibles(misionPosible);
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
-  document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca")
-    : n.fin ? (n.fin[getLang()] || n.fin.es).replace(/\p{Extended_Pictographic}/gu, "").trim() : t("nivelSuperado");
-  const ingrediente = INGREDIENTE[n.id] || "taco";
-  document.getElementById("nivelFinPremio").src = urlPegatina(ingrediente);
+  document.getElementById("nivelFinTitulo").textContent = n.id === "washington" ? t("llegadaCasaBlanca") : finTexto(n);
+  document.getElementById("nivelFinPremio").src = urlPegatina(premioDe(n));
   pintarSinFin();
   const est = estrellasDe(r);
+  const yaHechos = getNiveles();
+  const votosAhora = votosGanados(NIVELES, yaHechos);
+  const todoRojo = NIVELES.every((x) => x.id === "washington" || yaHechos[x.id]);
+  document.getElementById("nivelFinVictoria").innerHTML = `<b>${t("victoria" + Math.max(1, est))}</b>`
+    + (estadoNuevo ? ` · ${t("masVotos").replace("{n}", n.votos)}` : "")
+    + `<div>${t("llevasVotos").replace("{n}", votosAhora)}</div>`;
+  document.getElementById("nivelFinPost").innerHTML = `<div class="postCabeza"><img src="${urlPegatina("chapa")}" alt=""><div><b>${t("candidato")}</b><small>@ElCandidato</small></div></div>`
+    + `<p>${postDe(n, getLang(), votosAntes, votosAhora, todoRojo)}</p>`;
   document.getElementById("nivelFinEstrellas").innerHTML = [0, 1, 2].map((i) => icono(i < est ? "estrella" : "estrellaVacia")).join("");
   // Los tres objetivos: lo de este intento, y las chapas que ya tenias.
   const chapasYa = r.chapas.filter(Boolean).length;
@@ -694,6 +733,8 @@ function completarNivel() {
   abrirCajasLuego(1800);
 }
 // ---- Jefe: barra de vida y premio ----
+// 28/10: en Washington el Burrito-Bot viene mandado por la Liga del Pantano.
+function textoJefe(clave) { return t(nivelActual && nivelActual.id === "washington" ? clave + "Dc" : clave); }
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
   if (evento === "golpe") {
@@ -703,7 +744,7 @@ world.onJefe((evento, vida) => {
   } else if (evento === "derrotado") {
     document.getElementById("bossFill").style.width = "0%";
     tacosThisRun += 150;
-    showBubble(t("jefeVencido"));
+    showBubble(textoJefe("jefeVencido"));
     avisoVerde(`+150 ${TACO_IMG()}`);
     spawnConfetti(30);
     triggerCameraShake(0.06);
@@ -711,7 +752,7 @@ world.onJefe((evento, vida) => {
     avisarMisiones(misiones.evento("jefe"));
     setTimeout(() => barra.classList.add("hidden"), 1500);
   } else if (evento === "escapa") {
-    showBubble(t("jefeEscapa"));
+    showBubble(textoJefe("jefeEscapa"));
     setTimeout(() => barra.classList.add("hidden"), 1000);
   }
 });
@@ -1699,7 +1740,7 @@ function frame(dtFijo) {
         jefeLanzado = true;
         document.getElementById("bossFill").style.width = "100%";
         document.getElementById("bossBar").classList.remove("hidden");
-        showBubble(t("jefeLlega"), 2200);
+        showBubble(textoJefe("jefeLlega"), 2200);
         triggerCameraShake(0.04);
       }
     }
@@ -1716,7 +1757,7 @@ function frame(dtFijo) {
       nextJefeAt = distance + JEFE_CADA;
       document.getElementById("bossFill").style.width = "100%";
       document.getElementById("bossBar").classList.remove("hidden");
-      showBubble(t("jefeLlega"));
+      showBubble(textoJefe("jefeLlega"));
       triggerCameraShake(0.04);
     }
 

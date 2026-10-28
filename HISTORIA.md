@@ -1,6 +1,6 @@
 # La historia: la carrera a los 50 estados
 
-Propuesta del 28/10/2026, pendiente de que Isidro la apruebe. Sustituye a la de
+Aprobada por Isidro y aplicada el 28/10/2026 («aplícalo y ya cambiaremos si algo no quedó bien»). Sustituye a la de
 «recuperar los ingredientes del taco». Las ciudades salen de `GIRA.md`; aquí
 está el orden y lo que pasa en cada nivel.
 

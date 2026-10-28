@@ -762,3 +762,46 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .diarioDia.hecho > .ico:last-child { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; }
 .diarioDia.hoy { background: #fff4d6; box-shadow: 0 0 0 3px #ffc23c; transform: scale(1.06); }
 .diarioDia:nth-child(7) { grid-column: span 2; }
+
+/* 28/10: la historia de los 50 estados: mapa de casillas, votos, prologo y mensaje */
+.mapaSvg .estado { cursor: pointer; }
+.mapaSvg .estado rect { fill: #eef1f6; stroke: #d5dbe6; stroke-width: 0.4; }
+.mapaSvg .estado text { font-size: 2.9px; font-weight: 900; text-anchor: middle; fill: #b0b9c8; pointer-events: none; font-family: var(--letra-titulo); }
+.mapaSvg .estado.cerrado rect { fill: #e1e6ee; }
+.mapaSvg .estado.cerrado text { fill: #7f8a9e; }
+.mapaSvg .estado.abierto rect { fill: #ffffff; stroke: #e8463c; stroke-width: 0.8; }
+.mapaSvg .estado.abierto text { fill: #e8463c; }
+.mapaSvg .estado.ganado text { fill: #ffffff; }
+.mapaSvg .estado.e1 rect { fill: #f08a7e; stroke: #e0675a; }
+.mapaSvg .estado.e2 rect { fill: #e04a3c; stroke: #c63a2d; }
+.mapaSvg .estado.e3 rect { fill: #b51f2c; stroke: #8f1520; }
+.mapaSvg .estado.elegido rect { stroke: #1f2a44; stroke-width: 1; }
+.mapaSvg .marcaJefe { fill: #1f2a44; pointer-events: none; }
+.mapaSvg rect.actual { fill: none; pointer-events: none; stroke-width: 0.9; }
+.votos { margin: 0 4px 10px; }
+.votosFila { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--letra-titulo); font-weight: 700; font-size: 13px; color: var(--tinta-suave); text-transform: uppercase; letter-spacing: 0.5px; }
+.votosFila b { color: #c63a2d; font-size: 17px; }
+.votosBarra { position: relative; height: 12px; margin-top: 4px; border-radius: 6px; background: #e1e6ee; }
+.votosLleno { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #f08a7e, #c63a2d); }
+.votosMarca { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; background: #1f2a44; border-radius: 2px; }
+.votosMarca::after { content: "270"; position: absolute; top: 17px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 900; color: #1f2a44; }
+.votosNota { font-size: 12px; color: var(--tinta-suave); margin-top: 14px; text-align: center; }
+.mapaInfo .miActo { font-family: var(--letra-titulo); font-weight: 700; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: #c63a2d; }
+.miJefe { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #1f2a44; background: #fff4d6; border-radius: 10px; padding: 3px 10px; margin-bottom: 6px; }
+.miJefe .ico { width: 20px; height: 20px; }
+#prologo { z-index: 61; }
+.prologoImg { display: flex; justify-content: center; margin: 4px 0 2px; }
+.prologoImg img, .prologoImg .ico { width: 96px; height: 96px; }
+.prologoTexto { font-size: 15px; line-height: 1.45; color: var(--tinta); margin: 6px 4px 12px; text-align: center; font-weight: 600; }
+.prologoPuntos { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.prologoPuntos span { width: 8px; height: 8px; border-radius: 50%; background: #d5dbe6; }
+.prologoPuntos span.on { background: #e8463c; }
+.victoria { text-align: center; font-size: 15px; color: var(--tinta); margin: 2px 0 4px; }
+.victoria b { color: #c63a2d; font-family: var(--letra-titulo); }
+.victoria div { font-size: 12px; color: var(--tinta-suave); }
+.post { text-align: left; background: #f4f7fb; border: 1px solid #dfe5ee; border-radius: 14px; padding: 10px 12px; margin: 8px 2px 10px; }
+.postCabeza { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.postCabeza img { width: 30px; height: 30px; }
+.postCabeza b { display: block; font-size: 14px; color: var(--tinta); }
+.postCabeza small { font-size: 12px; color: var(--tinta-suave); }
+.post p { margin: 0; font-size: 14px; line-height: 1.35; color: var(--tinta); font-weight: 600; }
