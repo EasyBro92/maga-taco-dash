@@ -152,6 +152,35 @@ const SITIOS = {
       x.fillRect(px + 10, SUELO - h * 0.8, 4, h * 0.4); x.fillRect(px + 4, SUELO - h * 0.5, 10, 3);
     }
   },
+  vegas(x, c, r) {
+    // Las Vegas al anochecer (29/10): las montañas moradas de alrededor, la
+    // ciudad con las ventanitas encendidas y la torre STRAT al norte. Las
+    // luces son fijas (nada parpadea).
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 80; i++) {
+      const u = i / 80;
+      const h = 85 + Math.sin(u * 7) * 22 + Math.sin(u * 19 + 1) * 9 + (u > 0.6 && u < 0.85 ? 45 * Math.sin(((u - 0.6) / 0.25) * Math.PI) : 0);
+      x.lineTo(u * ANCHO, SUELO - h - r() * 6);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    let cx = 0;
+    while (cx < ANCHO) {
+      const w = 30 + r() * 70, h = 18 + r() * 75;
+      x.fillStyle = c.cerca; x.fillRect(cx, SUELO - h, w, h + 2);
+      x.fillStyle = r() < 0.5 ? "rgba(255,214,120,0.85)" : "rgba(255,240,205,0.7)";
+      for (let wy = SUELO - h + 5; wy < SUELO - 4; wy += 7) for (let wx = cx + 4; wx < cx + w - 4; wx += 7) if (r() < 0.5) x.fillRect(wx, wy, 3, 3);
+      cx += w + r() * 30;
+    }
+    const tx = 2050, th = 290;
+    x.fillStyle = c.cerca;
+    x.beginPath(); x.moveTo(tx - 16, SUELO); x.lineTo(tx - 8, SUELO - th); x.lineTo(tx + 8, SUELO - th); x.lineTo(tx + 16, SUELO); x.fill();
+    x.beginPath(); x.ellipse(tx, SUELO - th - 12, 40, 22, 0, 0, Math.PI * 2); x.fill();
+    x.fillRect(tx - 3, SUELO - th - 100, 6, 80);
+    x.fillStyle = "rgba(255,90,210,0.95)"; x.fillRect(tx - 38, SUELO - th - 14, 76, 4);
+    x.fillStyle = "rgba(255,230,140,0.95)"; x.fillRect(tx - 30, SUELO - th - 4, 60, 3);
+    x.fillStyle = "rgba(255,60,60,1)"; x.beginPath(); x.arc(tx, SUELO - th - 102, 4, 0, Math.PI * 2); x.fill();
+  },
   desierto(x, c, r) {
     for (const [color, hBase, n] of [[c.lejos, 70, 7], [c.cerca, 45, 9]]) {
       for (let i = 0; i < n; i++) {
@@ -179,7 +208,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -250,7 +279,7 @@ export function crearHorizonte(scene) {
       g.addColorStop(0, col.suelo); g.addColorStop(1, new THREE.Color(niebla).getStyle());
       x.fillStyle = g; x.fillRect(0, SUELO - 2, ANCHO, ALTO - SUELO + 2);
       tex.needsUpdate = true;
-      const blanco = sitio === "desierto" || sitio === "phoenix" ? 0xfff2e0 : 0xffffff;
+      const blanco = sitio === "desierto" || sitio === "phoenix" ? 0xfff2e0 : sitio === "vegas" ? 0xffc8e4 : 0xffffff;
       for (const n of nubes) n.material.color.set(blanco);
     },
     animar(dt) {

@@ -814,3 +814,43 @@ Isidro aprobó `HISTORIA.md` («aplícalo y ya cambiaremos si algo no quedó bie
   Candidato como en su red social.
 - Fuera los ingredientes del taco. En Washington el Burrito-Bot viene mandado
   por la Liga del Pantano (falta el Monstruo del Pantano de verdad).
+
+## Nivel 4: el Strip de Las Vegas, el debate (2026-10-29)
+
+Isidro: «sigue con el nivel de Las Vegas: el debate contra el Burrito-Bot».
+Eligió final en la torre dorada del hotel Trump, luz de anochecer con los
+neones encendidos y ganar el debate con micrófonos.
+
+- **La calle** (`blender/vegas.py`): subiendo por el Strip desde el cartel
+  «Welcome to Fabulous Las Vegas». A la izquierda, la pirámide negra con su rayo
+  de luz y la esfinge, el castillo de torres de colores, el lago de las fuentes
+  y el palacio romano; a la derecha, la torre Eiffel encendida con el globo, la
+  noria gigante y el campanario de Venecia con su góndola. Sin nombres de
+  casinos en los letreros. El resto son hoteles del kit con estilo `vegas`
+  (claros, con rótulos de neón y un letrero grande en el tejado). Horizonte con
+  las montañas moradas, la ciudad encendida y la torre STRAT.
+- **Luces que brillan solas**: `luz()` y `ventanas_luz()` en `comun.py`
+  hornean una segunda textura (la de luz) que en el juego va de emisiva
+  (`models.js`). Todo fijo: nada parpadea (se marea).
+- **Luz `anochecer`**: cielo morado arriba y rosa abajo, bruma malva, sol bajo y
+  rosado. Música de orquesta de casino.
+- **Obstáculos nuevos**: dados gigantes que vienen rodando (tramo «¡Lluvia de
+  dados!»), fichas de casino, tragaperras con el JACKPOT encendido, limusinas
+  blancas (tramo «¡Atasco de limusinas!») y la marquesina «DEBATE» (se pasa
+  agachado).
+- **El debate**: el Burrito-Bot llega subido a su atril (rojo, con las
+  estrellas y «2028»). En vez de chiles salen micrófonos: cada uno que coges le
+  lanza una frase («¡La marioneta eres tú!», «¡Falso!», «¡Qué robot tan
+  desagradable!», «¡Fake news!», «¡Hecho en China!»; las dos primeras las dijo
+  de verdad en el debate de Las Vegas de 2016). La barra del jefe es la
+  encuesta: empieza 50-50 y cada frase sube un 10 %. Al vencerlo: «¡Hecho en
+  China, roto en América!».
+- **Final** `parada` en la alfombra roja del hotel Trump (marquesina dorada con
+  las letras encendidas, banderas, fuentes y palmeras), con cámara propia
+  (`camaraFinal`) que mira hacia arriba para que se vea la torre.
+- Voces: 15 frases nuevas en cada idioma (`herramientas/voces.mjs`, que fallaba
+  desde la historia nueva porque leía `levels.js`).
+- Washington ahora pide pasar también Las Vegas.
+- Comprobado con el piloto automático: el nivel entero, los tramos y obstáculos
+  nuevos, el debate (encuesta del 50 al 100 %) y el final («¡Nevada vota rojo!»,
+  +6 votos). Pendiente: su veredicto en el móvil.

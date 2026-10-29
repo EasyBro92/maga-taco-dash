@@ -33,7 +33,6 @@ fs.mkdirSync(crudo, { recursive: true });
 const src = (f) => { const d = path.join(crudo, f.replace(/\.js$/, ".mjs")); fs.copyFileSync(path.join(raiz, "www/src", f), d); return pathToFileURL(d); };
 const { FRASES } = await import(src("frases.js"));
 const { CATCHPHRASES, t, setLang } = await import(src("i18n.js"));
-const { NIVELES } = await import(src("levels.js"));
 
 const limpiar = (s) => s.normalize("NFC").replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s+/g, " ").trim();
 function textosDe(lang) {
@@ -41,9 +40,12 @@ function textosDe(lang) {
   const textos = new Set();
   for (const v of Object.values(FRASES[lang])) for (const s of [].concat(v)) textos.add(limpiar(s));
   for (const s of CATCHPHRASES[lang]) textos.add(limpiar(s));
-  for (const k of ["robaTortilla", "finCasaBlanca", "jefeLlega", "jefeVencido", "jefeEscapa"]) textos.add(limpiar(t(k)));
+  // 29/10: los del jefe en Washington y en el debate de Las Vegas. (Los textos
+  // de cada nivel ya no salen de levels.js: desde la historia nueva el final
+  // de cada estado es «¡X vota rojo!», que cambia con el estado.)
+  for (const k of ["robaTortilla", "finCasaBlanca", "jefeLlega", "jefeVencido", "jefeEscapa", "jefeLlegaDc", "jefeVencidoDc",
+    "jefeEscapaDc", "jefeLlegaVegas", "jefeVencidoVegas", "jefeEscapaVegas"]) if (t(k) !== k) textos.add(limpiar(t(k)));
   for (const k of ["powerupShield", "powerupMagnet", "powerupBoost", "powerupMega", "powerupFreeze", "powerupRocket"]) textos.add(limpiar(t(k) + "!"));
-  for (const n of NIVELES) if (n.fin) textos.add(limpiar(n.fin[lang] || n.fin.es));
   return [...textos];
 }
 

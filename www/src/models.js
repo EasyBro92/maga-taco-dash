@@ -26,12 +26,26 @@ const LISTA = {
     // y los de Phoenix
     "nopal", "rodadora", "saguaro", "pickup", "arco_neon",
     // 28/10: botas de salto y caja sorpresa (ideas de Subway Surfers)
-    "botas", "caja_sorpresa"],
+    "botas", "caja_sorpresa",
+    // 29/10: los de Las Vegas y el atril del debate
+    "dado", "fichas", "tragaperras", "limusina", "marquesina", "atril"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
 
 const plantillas = {};
+
+// El material del juego para una pieza de Blender: su textura con la luz del
+// juego. 29/10: si trae textura de luz (neones, bombillas, ventanas encendidas
+// de Las Vegas), va de emisiva: brilla igual aunque la escena este oscura.
+function materialDe(original, shininess, specular) {
+  const mapa = original.map, luz = original.emissiveMap;
+  for (const t of [mapa, luz]) if (t) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; }
+  original.dispose();
+  if (!mapa) return toon(0xffffff, null);
+  return toon(0xffffff, luz ? { map: mapa, shininess, specular, emissiveMap: luz, emissive: 0xffffff }
+    : { map: mapa, shininess, specular });
+}
 
 export async function loadZoneModels(onProgress) {
   // ?sinblender: arrancar con las piezas antiguas, para comparar.
@@ -49,13 +63,7 @@ export async function loadZoneModels(onProgress) {
           const mallas = [];
           gltf.scene.traverse((o) => { if (o.isMesh) mallas.push(o); });
           mallas.forEach((malla, i) => {
-            const mapa = malla.material.map;
-            if (mapa) {
-              mapa.colorSpace = THREE.SRGBColorSpace;
-              mapa.anisotropy = 4;
-            }
-            malla.material.dispose();
-            malla.material = toon(0xffffff, mapa ? { map: mapa, shininess: 18, specular: 0x222222 } : null);
+            malla.material = materialDe(malla.material, 18, 0x222222);
             malla.geometry.computeBoundingBox();
             const caja = malla.geometry.boundingBox;
             const p = {
@@ -90,10 +98,7 @@ export async function cargarCarpeta(carpeta, nombres, onProgress) {
       let malla = null;
       gltf.scene.traverse((o) => { if (o.isMesh && !malla) malla = o; });
       if (!malla) return;
-      const mapa = malla.material.map;
-      if (mapa) { mapa.colorSpace = THREE.SRGBColorSpace; mapa.anisotropy = 4; }
-      malla.material.dispose();
-      malla.material = toon(0xffffff, mapa ? { map: mapa, shininess: 14, specular: 0x1a1a1a } : null);
+      malla.material = materialDe(malla.material, 14, 0x1a1a1a);
       malla.geometry.computeBoundingBox();
       const caja = malla.geometry.boundingBox;
       plantillas[`${carpeta}/${nombre}`] = {

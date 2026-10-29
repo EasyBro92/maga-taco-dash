@@ -307,6 +307,11 @@ function aplicarLuz(luz) {
     // Tarde dorada (Phoenix): sol bajo, naranja, desde el oeste (a la izquierda).
     sun.color.set(0xffc98a); sun.intensity = 1.3; sun.position.set(-8, 6, -1);
     hemi.color.set(0xffe4c4); hemi.groundColor.set(0x8a6a4e);
+  } else if (luz === "anochecer") {
+    // Anochecer (Las Vegas): el sol ya casi no esta, luz rosada y baja desde
+    // el oeste; el cielo morado da la luz de relleno. Lo demas lo ponen los neones.
+    sun.color.set(0xffb0a8); sun.intensity = 0.95; sun.position.set(-8, 4, -1);
+    hemi.color.set(0xb8a8e8); hemi.groundColor.set(0x5a4660);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -469,11 +474,15 @@ const NOMBRE_HITO = {
     davis: "Edificio Davis", archivos_portico: "Archivos Nacionales", fbi: "Edificio del FBI", irs: "Edificio de Hacienda",
     correos_torre: "La antigua Oficina de Correos", willard: "Hotel Willard", tesoro: "Departamento del Tesoro",
     san_carlos: "Hotel San Carlos", westward_ho: "Westward Ho", biblioteca_barr: "Biblioteca Burton Barr", museo_arte: "Museo de Arte de Phoenix",
-    museo_heard: "Museo Heard" },
+    museo_heard: "Museo Heard",
+    piramide: "La pirámide", castillo: "El castillo", torre_eiffel: "La torre Eiffel", fuentes: "Las fuentes",
+    cesar: "El palacio romano", noria: "La noria gigante", campanile: "El campanario de Venecia" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
-    heladeria: "Dietsch Brothers" },
+    heladeria: "Dietsch Brothers",
+    piramide: "The pyramid", castillo: "The castle", torre_eiffel: "The Eiffel Tower", fuentes: "The fountains",
+    cesar: "The Roman palace", noria: "The giant wheel", campanile: "The Venice bell tower" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -602,9 +611,11 @@ function finalCamion(dt, flat, zParadaDada) {
   shadowBlob.position.set(playerX, 0.015, 0);
   const cerca = fin.fase >= 2;
   // En el diner, mas lejos y mas alto: que se vea el chile gigante del tejado.
+  // 29/10: el nivel puede traer su propia camara (Las Vegas, mirando la torre).
   const lejos = zParadaDada !== undefined;
-  const objetivo = cerca ? (lejos ? new THREE.Vector3(2.6, 4.6, 16) : new THREE.Vector3(2.0, 3.2, 9.5)) : new THREE.Vector3(0, 4.6, 11);
-  const mira = cerca ? (lejos ? new THREE.Vector3(0, 4.4, -6) : new THREE.Vector3(0, 2.2, -3)) : new THREE.Vector3(0, 2.4, -8);
+  const cf = nivelActual && nivelActual.camaraFinal;
+  const objetivo = cerca ? (cf ? new THREE.Vector3(...cf.pos) : lejos ? new THREE.Vector3(2.6, 4.6, 16) : new THREE.Vector3(2.0, 3.2, 9.5)) : new THREE.Vector3(0, 4.6, 11);
+  const mira = cerca ? (cf ? new THREE.Vector3(...cf.mira) : lejos ? new THREE.Vector3(0, 4.4, -6) : new THREE.Vector3(0, 2.2, -3)) : new THREE.Vector3(0, 2.4, -8);
   camera.position.lerp(objetivo, Math.min(1, dt * 1.6));
   fin.look.lerp(mira, Math.min(1, dt * 1.6));
   camera.lookAt(fin.look);
@@ -734,15 +745,35 @@ function completarNivel() {
 }
 // ---- Jefe: barra de vida y premio ----
 // 28/10: en Washington el Burrito-Bot viene mandado por la Liga del Pantano.
-function textoJefe(clave) { return t(nivelActual && nivelActual.id === "washington" ? clave + "Dc" : clave); }
+// 29/10: en Las Vegas es un debate.
+function textoJefe(clave) {
+  const id = nivelActual && nivelActual.id;
+  return t(id === "washington" ? clave + "Dc" : id === "vegas" ? clave + "Vegas" : clave);
+}
+// La barra del jefe. En el debate es la encuesta: tú en rojo contra el robot
+// en amarillo; empieza 50-50 y cada frase que le da te sube un 10 %.
+function pintarBarraJefe(vida) {
+  const debate = !!(nivelActual && nivelActual.debate);
+  const barra = document.getElementById("bossBar");
+  barra.classList.toggle("debate", debate);
+  if (!debate) {
+    barra.querySelector(".bossName").textContent = "BURRITO-BOT";
+    document.getElementById("bossFill").style.width = `${(vida / 5) * 100}%`;
+    return;
+  }
+  const yo = 50 + (5 - vida) * 10;
+  barra.querySelector(".bossName").innerHTML = `<span class="yo">${t("encuestaYo")} ${yo} %</span> ${t("encuesta")} <span class="el">${100 - yo} % BOT</span>`;
+  document.getElementById("bossFill").style.width = `${yo}%`;
+}
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
   if (evento === "golpe") {
-    document.getElementById("bossFill").style.width = `${(vida / 5) * 100}%`;
+    pintarBarraJefe(vida);
     triggerCameraShake(0.03);
     flashExpression("happy", 0.5);
   } else if (evento === "derrotado") {
-    document.getElementById("bossFill").style.width = "0%";
+    if (nivelActual && nivelActual.debate) pintarBarraJefe(0);
+    else document.getElementById("bossFill").style.width = "0%";
     tacosThisRun += 150;
     showBubble(textoJefe("jefeVencido"));
     avisoVerde(`+150 ${TACO_IMG()}`);
@@ -833,7 +864,7 @@ let py = 0, vy = 0, enSuelo = true, camY = 0;
 let megaTimeLeft = 0, freezeTimeLeft = 0, rocketTimeLeft = 0;
 let nextJefeAt = JEFE_PRIMERO, misionesReloj = 0;
 // Frases (25/10): cargas de microfono, hasta 3.
-let frasesCargas = 0, microVisto = false;
+let frasesCargas = 0, microVisto = false, fraseDebate = 0;
 const MAX_FRASES = 3;
 // Lo que suelta segun lo que tenga delante (la pieza del obstaculo).
 // (Las frases estan en frases.js.)
@@ -1393,6 +1424,14 @@ function checkPowerups() {
       triggerCameraShake(0.05);
       vibrate([30, 30, 60]);
       avisarMisiones(misiones.evento("cohete"));
+    } else if (p.kind === "micro" && nivelActual && nivelActual.debate && world.jefeActivo()) {
+      // El debate (Las Vegas): el microfono no se guarda, la frase sale ya.
+      const lista = (FRASES[getLang()] || FRASES.es).debate;
+      const texto = lista[fraseDebate++ % lista.length];
+      world.lanzarFrase(currentLane, texto, "jefe");
+      hablar(texto);
+      flashExpression("determined", 0.6);
+      vibrate(20);
     } else if (p.kind === "micro") {
       frasesCargas = Math.min(MAX_FRASES, frasesCargas + 1);
       if (!microVisto) { microVisto = true; showBubble(t("microfono")); }
@@ -1738,7 +1777,7 @@ function frame(dtFijo) {
     if (nivelActual && tramo.tipo === "jefe" && !jefeLanzado && distance > tramo.desde + 25 && rocketTimeLeft === 0 && !world.jefeActivo()) {
       if (world.iniciarJefe()) {
         jefeLanzado = true;
-        document.getElementById("bossFill").style.width = "100%";
+        pintarBarraJefe(5);
         document.getElementById("bossBar").classList.remove("hidden");
         showBubble(textoJefe("jefeLlega"), 2200);
         triggerCameraShake(0.04);
@@ -1755,7 +1794,7 @@ function frame(dtFijo) {
     if (av && mostrarTutorial) mostrarGesto(av.tipo);
     if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
       nextJefeAt = distance + JEFE_CADA;
-      document.getElementById("bossFill").style.width = "100%";
+      pintarBarraJefe(5);
       document.getElementById("bossBar").classList.remove("hidden");
       showBubble(textoJefe("jefeLlega"));
       triggerCameraShake(0.04);

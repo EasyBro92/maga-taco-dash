@@ -8,6 +8,12 @@ export const FRASES = {
     taxi: "¡FUERA DE MI CALLE!", contenedor: "¡QUÉ DESASTRE!", alcantarilla: "¡QUÉ DESASTRE!", andamio: "¡CONSTRUIRÉ ALGO MEJOR!",
     saguaro: "¡CUIDADO, QUE PINCHA!", nopal: "¡CUIDADO, QUE PINCHA!", rodadora: "¡ESTO ES UN DESIERTO!",
     pickup: "¡HECHO EN AMÉRICA!", arco_neon: "¡BRILLA COMO YO!",
+    dado: "¡LA SUERTE ES MÍA!", fichas: "¡TODO AL ROJO!", tragaperras: "¡JACKPOT!", limusina: "¡LA MÍA ES MÁS LARGA!",
+    marquesina: "¡GANÉ EL DEBATE!",
+    // El debate de Las Vegas (29/10): lo que le suelta al Burrito-Bot con cada
+    // micrófono. «La marioneta eres tú» y «qué persona tan desagradable» los dijo
+    // de verdad en el debate de Las Vegas de 2016.
+    debate: ["¡LA MARIONETA ERES TÚ!", "¡FALSO!", "¡QUÉ ROBOT TAN DESAGRADABLE!", "¡FAKE NEWS!", "¡HECHO EN CHINA!"],
     tractor: "¡AMO A LOS GRANJEROS!", carroza: "¡EL MEJOR DESFILE!", paca: "¡AMO A LOS GRANJEROS!", guirnalda: "¡EL MEJOR DESFILE!",
     nada: ["¡CRÉEME!", "¡ENORME!", "¡COVFEFE!", "¡NADIE LO HACE MEJOR!"] },
   en: { furgoneta: "FAKE NEWS!", patrulla: "WITCH HUNT!", suv: "WITCH HUNT!", guardaespaldas: "YOU'RE FIRED!",
@@ -16,6 +22,9 @@ export const FRASES = {
     taxi: "GET OFF MY STREET!", contenedor: "WHAT A MESS!", alcantarilla: "WHAT A MESS!", andamio: "I'LL BUILD SOMETHING BETTER!",
     saguaro: "WATCH OUT, IT'S PRICKLY!", nopal: "WATCH OUT, IT'S PRICKLY!", rodadora: "WHAT A DESERT!",
     pickup: "MADE IN AMERICA!", arco_neon: "IT SHINES LIKE ME!",
+    dado: "LUCK IS MINE!", fichas: "ALL ON RED!", tragaperras: "JACKPOT!", limusina: "MINE IS LONGER!",
+    marquesina: "I WON THE DEBATE!",
+    debate: ["YOU'RE THE PUPPET!", "WRONG!", "SUCH A NASTY ROBOT!", "FAKE NEWS!", "MADE IN CHINA!"],
     tractor: "I LOVE FARMERS!", carroza: "THE BEST PARADE!", paca: "I LOVE FARMERS!", guirnalda: "THE BEST PARADE!",
     nada: ["BELIEVE ME!", "HUGE!", "COVFEFE!", "NOBODY DOES IT BETTER!"] },
 };

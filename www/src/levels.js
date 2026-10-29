@@ -185,6 +185,58 @@ const CALLES = [
     acera: ["phoenix/palmera", "phoenix/saguaro_maceta"],
   },
   {
+    // 29/10/2026: nivel 4, el debate contra el Burrito-Bot (jefe del acto 1).
+    // Isidro eligio final en la torre dorada del hotel Trump, luz de anochecer
+    // con los neones encendidos (fijos: nada parpadea) y ganar el debate con
+    // microfonos: cada uno que coges le lanza una frase al robot.
+    id: "vegas", nombre: "El Strip", lugar: "Las Vegas, Nevada", listo: true,
+    zona: "city", carpeta: "vegas", luz: "anochecer", semilla: 1905,
+    largo: 3200, linea: 11.5, velMax: 22.5,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    // Hoteles y casinos: altos, claros y con letreros de neon.
+    kit: { vegas: true, minPlantas: 4, maxPlantas: 12 },
+    horizonte: "vegas", debate: true,
+    obstaculos: { low: ["fichas", "fichas", "conos", "barricada"], high: ["marquesina", "pancarta", "globos"],
+      full: ["tragaperras", "limusina", "limusina", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "ejecutivo", "senora", "chico"], valla: "verja", cada: 2 },
+    tramos: [
+      [0, 200, "calma", { titulo: "strip" }],
+      [200, 560, "suave", { densidad: 0.42 }],
+      [560, 860, "dados", { titulo: "dados" }],
+      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
+      [1000, 1400, "slalom", { full: ["limusina"], titulo: "limusinas" }],
+      [1400, 1540, "calma"],
+      [1540, 2300, "jefe", { titulo: "debate" }],
+      [2300, 2450, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [2450, 2900, "vallas", { high: ["marquesina"], titulo: "neones_strip" }],
+      [2900, 3170, "sprint", { titulo: "sprint_trump" }],
+    ],
+    control: 1547, caja: 1100,
+    chapas: [[707, "arco"], [1253, "carril"], [2604, "arco"]],
+    hitos: ["piramide", "castillo", "torre_eiffel", "fuentes", "cesar", "noria", "campanile"],
+    meta: "hotel_trump", metaNombre: { es: "el hotel Trump", en: "Trump Hotel" }, coche: "patrulla",
+    // Subiendo por el Strip hacia el norte desde el cartel de bienvenida: el
+    // oeste queda a la izquierda. Los casinos en su orden de verdad.
+    izquierda: [
+      40, ["cartel_vegas", 1], 30, ["piramide", 1], ["kit", 1], 14, ...cuadras(1), ["kit", 2], ["castillo", 1], 14,
+      ...cuadras(4), ["fuentes", 1], ["kit", 1], 14,
+      ...cuadras(5), ["cesar", 1], ["kit", 2], 14,
+      ...cuadras(13), ["kit", 2],
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(5), ["torre_eiffel", 1], ["kit", 2], 14,
+      ...cuadras(7), ["noria", 1], ["kit", 2], 14,
+      ...cuadras(5), ["campanile", 1], ["kit", 2], 14,
+      ...cuadras(6), ["kit", 2],
+    ],
+    // Al fondo, la torre dorada con la alfombra roja hasta la acera.
+    fondo: [{ pieza: "hotel_trump", d: 3252, centro: true }],
+    final: "parada", parada: 11,
+    // Para el final: mas abajo y mirando hacia arriba, que se vea la torre.
+    camaraFinal: { pos: [3.0, 2.3, 19], mira: [0, 9, -12] },
+    acera: ["phoenix/palmera", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -274,6 +326,9 @@ export const ANCHO = {
   courier: 24, heladeria: 20, deposito_agua: 20, davis: 20, marathon: 40, juzgado_final: 62,
   // Phoenix
   san_carlos: 30, westward_ho: 30, biblioteca_barr: 40, museo_arte: 40, museo_heard: 40, diner_final: 30,
+  // Las Vegas
+  cartel_vegas: 10, piramide: 60, castillo: 48, fuentes: 58, cesar: 44, torre_eiffel: 40, noria: 44,
+  campanile: 50, hotel_trump: 44,
 };
 
 // ¿Se puede jugar este nivel? Como en AlienZ: en orden. El primero siempre;

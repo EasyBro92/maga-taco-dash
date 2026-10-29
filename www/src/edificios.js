@@ -30,12 +30,19 @@ const TOLDOS = [0x2d5a3a, 0x7a2a32, 0x22314f, 0xb8862b, 0x8a3a6a, 0x3a6a8a, 0x2a
 const ROTULOS = ["DELI", "BAGELS", "PIZZA", "JEWELRY", "BOUTIQUE", "BOOKS", "SHOES", "PHARMACY", "CAFÉ", "FLOWERS",
   "TOYS", "BANK", "GIFTS", "HATS", "DONUTS", "CHOCOLATE", "WATCHES", "PERFUME", "TAILOR", "CANDY", "BAKERY", "MUSIC"];
 
+// Las Vegas (29/10): letreros de neon (fijos, sin parpadeo) y colores de hotel.
+const ROTULOS_VEGAS = ["CASINO", "SLOTS", "BUFFET", "POKER", "JACKPOT", "BINGO", "SHOWS", "WEDDING CHAPEL", "MOTEL",
+  "LIVE MUSIC", "OPEN 24H", "BLACKJACK", "LUCKY 7", "KENO", "STEAKHOUSE", "MAGIC SHOW", "ELVIS"];
+const GRANDES_VEGAS = ["CASINO", "HOTEL", "SLOTS", "RESORT", "JACKPOT", "LUCKY 7", "GOLD", "STARS", "DIAMOND", "ROYAL"];
+const NEONES = ["#ff4fd8", "#46e0d0", "#ffe066", "#7cff6b", "#ff6a3a", "#6ab8ff"];
+const COLORES_VEGAS = [0xf6f1e6, 0xf3e6c8, 0xe9d6b8, 0xf2c7c0, 0xbfe3e0, 0xe8d08a, 0xd9dbe0, 0xd8c8f0, 0xf6dcc0];
+
 const elegir = (azar, lista) => lista[Math.floor(azar() * lista.length)];
 
 // Rotulo pintado: letras de color sobre fondo oscuro o claro.
 const rotulos = {};
-function texturaRotulo(texto, fondo, letra) {
-  const clave = texto + fondo + letra;
+function texturaRotulo(texto, fondo, letra, neon = false) {
+  const clave = texto + fondo + letra + neon;
   if (rotulos[clave]) return rotulos[clave];
   const c = document.createElement("canvas");
   c.width = 512; c.height = 96;
@@ -45,6 +52,13 @@ function texturaRotulo(texto, fondo, letra) {
   ctx.font = '700 60px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif';
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillStyle = letra;
+  if (texto.length > 11) ctx.font = '700 46px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif';
+  if (neon) {
+    // Neon: un halo del mismo color alrededor de las letras y un borde.
+    ctx.shadowColor = letra; ctx.shadowBlur = 14;
+    ctx.strokeStyle = letra; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.roundRect(10, 10, 492, 76, 12); ctx.stroke();
+  }
   ctx.fillText(texto, 256, 52);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -88,6 +102,7 @@ export function construirEdificio(azar, ancho, opciones = {}) {
   const rotulo = elegir(azar, ROTULOS);
   const fondoRotulo = azar() < 0.5 ? "#22304f" : "#2b2b2e";
   const letraRotulo = elegir(azar, ["#ffd23f", "#ffffff", "#f6c27a", "#e8f4ff"]);
+  let rotuloV = null;
   let estilo = { planta, noble, color, colorBajo, bajo, cornisa, remate };
   if (opciones.federal) {
     // Ministerio de Washington (26/10): piedra clara, sin tiendas, frontones
@@ -122,6 +137,20 @@ export function construirEdificio(azar, ancho, opciones = {}) {
       remate: azar() < 0.15 ? "remate_antena" : azar() < 0.15 ? "remate_atico" : null };
   }
 
+  let grande = null;
+  if (opciones.vegas) {
+    // Strip de Las Vegas (29/10): hoteles y casinos claros, de cristal o con
+    // balcones, entrada grande o tiendas, rotulos de neon y un letrero
+    // grande en el tejado. Se elige despues de lo normal, como los otros.
+    const p = elegir(azar, ["planta_cristal", "planta_balcones", "planta_lisa", "planta_miradores", "planta_cristal"]);
+    const c = p === "planta_cristal" ? elegir(azar, [0xe8d08a, 0xbfe3e0, 0xd9dbe0, 0xd8c8f0]) : elegir(azar, COLORES_VEGAS);
+    estilo = { planta: p, noble: p, color: c, colorBajo: azar() < 0.5 ? c : elegir(azar, COLORES_VEGAS),
+      bajo: azar() < 0.55 ? "bajo_tiendas" : "bajo_grande", cornisa: p === "planta_cristal" ? "cornisa_simple" : "cornisa_deco",
+      remate: azar() < 0.15 ? "remate_antena" : null };
+    rotuloV = { texto: elegir(azar, ROTULOS_VEGAS), fondo: elegir(azar, ["#1d1030", "#141826", "#2a0f22"]), letra: elegir(azar, NEONES) };
+    if (azar() < 0.7) grande = { texto: elegir(azar, GRANDES_VEGAS), letra: elegir(azar, NEONES) };
+  }
+
   for (let c = 0; c < columnas; c++) {
     const col = new THREE.Group();
     col.position.x = -ancho / 2 + anchoCol * (c + 0.5);
@@ -135,7 +164,8 @@ export function construirEdificio(azar, ancho, opciones = {}) {
         if (t) { t.position.set(x, 3.25, 0); col.add(t); }
       }
       // El rotulo, en la banda de encima de los escaparates (sin estirar).
-      const r = new THREE.Mesh(rotuloGeo, new THREE.MeshBasicMaterial({ map: texturaRotulo(rotulo, fondoRotulo, letraRotulo) }));
+      const tx = rotuloV ? texturaRotulo(rotuloV.texto, rotuloV.fondo, rotuloV.letra, true) : texturaRotulo(rotulo, fondoRotulo, letraRotulo);
+      const r = new THREE.Mesh(rotuloGeo, new THREE.MeshBasicMaterial({ map: tx }));
       r.scale.set(9 / sx, 0.75, 1);
       r.position.set(0, 4.17, 0.24);
       col.add(r);
@@ -149,6 +179,13 @@ export function construirEdificio(azar, ancho, opciones = {}) {
     const co = pieza(estilo.cornisa, tintes, estilo.color);
     if (co) { co.position.y = z; col.add(co); }
     const alto = z + 1.2;
+    if (grande && c === 0) {
+      // El letrero grande del tejado, de pie sobre la cornisa.
+      const r = new THREE.Mesh(rotuloGeo, new THREE.MeshBasicMaterial({ map: texturaRotulo(grande.texto, "#140c22", grande.letra, true) }));
+      r.scale.set(15 / sx, 2.8, 1);
+      r.position.set(0, alto + 1.5, 0.4);
+      col.add(r);
+    }
     if (estilo.remate && c === columnas - 1) {
       const re = pieza(estilo.remate, tintes, estilo.remate === "remate_mansarda" ? 0xb8c2cc : estilo.color);
       if (re) { re.position.y = alto - (estilo.cornisa === "cornisa_simple" ? 0.7 : 0); col.add(re); }

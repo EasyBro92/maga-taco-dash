@@ -103,6 +103,42 @@ def mat_ventanas(nombre, cristal, pared, paso_x=0.9, paso_z=1.1, hueco_x=0.5, hu
     return mat_bloques(nombre, cristal, pared, ancho=paso_x, alto=paso_z, grosor=grosor,
                        desfase=0.0, variacion=variacion)
 
+# ---- Luces (29/10/2026, Las Vegas al anochecer) ----
+# Lo que brilla solo (neones, bombillas, ventanas encendidas) se hornea además
+# en una segunda textura, la de luz: en el juego va de `emissiveMap` y se ve
+# encendido aunque la escena esté oscura. Fija: nada parpadea (Isidro se marea).
+_luces = set()
+
+def luz(nombre, color, fuerza=1.0):
+    """Color liso que brilla solo (neón, bombilla)."""
+    if nombre in _mats:
+        return _mats[nombre]
+    m = mat(nombre, color, 0.2)
+    b = _principled(m)
+    b.inputs['Emission Color'].default_value = (*lin(color), 1)
+    b.inputs['Emission Strength'].default_value = fuerza
+    _luces.add(nombre)
+    return m
+
+def ventanas_luz(nombre, cristal, pared, brillo=0.6, **kw):
+    """Como `mat_ventanas`, pero los cristales están encendidos (las paredes no)."""
+    if nombre in _mats:
+        return _mats[nombre]
+    m = mat_ventanas(nombre, cristal, pared, **kw)
+    nt = m.node_tree
+    br = next(n for n in nt.nodes if n.type == 'TEX_BRICK')
+    b = _principled(m)
+    inv = nt.nodes.new('ShaderNodeMath'); inv.operation = 'SUBTRACT'
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(br.outputs['Fac'], inv.inputs[1])            # Fac = 1 en la junta (la pared)
+    k = nt.nodes.new('ShaderNodeMath'); k.operation = 'MULTIPLY'
+    k.inputs[1].default_value = brillo
+    nt.links.new(inv.outputs[0], k.inputs[0])
+    nt.links.new(br.outputs['Color'], b.inputs['Emission Color'])
+    nt.links.new(k.outputs[0], b.inputs['Emission Strength'])
+    _luces.add(nombre)
+    return m
+
 def mat_franjas(nombre, c1, c2, n, eje='Z', z0=0.0, alto=1.0):
     """Franjas (la bandera): n franjas a lo largo de `eje` entre z0 y z0+alto."""
     if nombre in _mats:
@@ -333,7 +369,7 @@ def escalinata(m, x, y, z, w, n, huella=0.22, tabica=0.12, crece=0.0):
 # ---------------------------------------------------------------- horneado
 def empezar():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    _mats.clear(); _partes.clear()
+    _mats.clear(); _partes.clear(); _luces.clear()
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'
     sc.cycles.device = 'CPU'
@@ -431,6 +467,20 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, e
     fin.file_format = 'PNG'
     fin.save()
 
+    # Luces (29/10): lo que brilla solo, en otra textura (negra donde no hay luz).
+    brilla = None
+    if any(m.name in _luces for m in materiales):
+        em = _imagen(nombre + '_emit', lado)
+        _apuntar(materiales, em)
+        bpy.ops.object.bake(type='EMIT', use_clear=True)
+        e = np.array(em.pixels[:], np.float32).reshape(lado, lado, 4)
+        e[..., 3] = 1
+        brilla = bpy.data.images.new(nombre + '_luz', lado, lado, alpha=False)
+        brilla.pixels.foreach_set(np.clip(e, 0, 1).ravel())
+        brilla.filepath_raw = os.path.join(TMP, nombre + '_luz.png')
+        brilla.file_format = 'PNG'
+        brilla.save()
+
     # Material final: solo la textura
     m = bpy.data.materials.new(nombre)
     m.use_nodes = True
@@ -439,6 +489,11 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, e
     tx = m.node_tree.nodes.new('ShaderNodeTexImage')
     tx.image = fin
     m.node_tree.links.new(tx.outputs['Color'], b.inputs['Base Color'])
+    if brilla:
+        tl = m.node_tree.nodes.new('ShaderNodeTexImage')
+        tl.image = brilla
+        m.node_tree.links.new(tl.outputs['Color'], b.inputs['Emission Color'])
+        b.inputs['Emission Strength'].default_value = 1.0
     ob.data.materials.clear()
     ob.data.materials.append(m)
 

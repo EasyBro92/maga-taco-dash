@@ -13,8 +13,8 @@ El orden de los niveles y lo que pasa en cada uno está en `HISTORIA.md`
 |---|---|---|---|
 | 1 | Nueva York | Nueva York (Quinta Avenida) | hecho |
 | 2 | Ohio | Findlay (Main Street) | hecho (se eligió antes de esta regla; la capital es Columbus) |
-| 3 | Arizona | Phoenix (capital y la más famosa) | en marcha |
-| 4 | Nevada | Las Vegas (la más famosa; la capital es Carson City) | por hacer |
+| 3 | Arizona | Phoenix (capital y la más famosa) | hecho |
+| 4 | Nevada | Las Vegas (la más famosa; la capital es Carson City) | hecho (29/10: el Strip) |
 | 5 | Distrito de Columbia | Washington D.C. (Pennsylvania Avenue) | hecho |
 
 ## El resto de estados

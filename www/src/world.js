@@ -1703,6 +1703,11 @@ export function createWorld(scene) {
       // Tarde dorada en el desierto (Phoenix): cielo calido y bruma de arena.
       Object.assign(BIOME_COLORS.city, { sky: 0xffd9a8, skyTop: 0x5f8fd6, fog: 0xf5d8b0, horizon: 0xc79a74, ground: 0xe3c9a6, sidewalk: 0xefdcc0 });
     }
+    if (luz === "anochecer") {
+      // Las Vegas (29/10): cielo morado arriba y rosa en el horizonte, la
+      // bruma malva y la calzada oscura; los neones ponen la luz.
+      Object.assign(BIOME_COLORS.city, { sky: 0xf2a6b4, skyTop: 0x35307a, fog: 0xc89ab8, horizon: 0x5a4580, ground: 0xc9b9c4, sidewalk: 0xd9cbd4, road: 0x4a4d5c });
+    }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
@@ -2193,6 +2198,12 @@ export function createWorld(scene) {
     saguaro: { choque: "full", medio: 0.45, alto: 3.0, centro: 0 },
     pickup: { choque: "full", medio: 1.5, alto: 1.6, centro: -1.5 },
     arco_neon: { choque: "high", medio: 0.3, alto: 2.4 },
+    // Las Vegas (29/10): el dado viene rodando sobre sus aristas.
+    dado: { choque: "low", medio: 0.45, alto: 0.95, mueve: 4 },
+    fichas: { choque: "low", medio: 0.45, alto: 0.9 },
+    tragaperras: { choque: "full", medio: 0.5, alto: 2.9, centro: 0 },
+    limusina: { choque: "full", medio: 2.2, alto: 1.5, centro: -2.2 },
+    marquesina: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2722,6 +2733,13 @@ export function createWorld(scene) {
     jefe.mesh.visible = true;
     jefe.mesh.rotation.set(0, 0, 0);
     if (!jefe.mesh.parent) group.add(jefe.mesh);
+    // 29/10: en el debate de Las Vegas viene subido a su atril.
+    if (!jefe.atril && hayModelo("obstaculos/atril")) {
+      jefe.atril = modelo("obstaculos/atril");
+      jefe.atril.position.set(0, 0.3, 1.55);
+      jefe.mesh.add(jefe.atril);
+    }
+    if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
       saliendo: false, derrotado: false,
       // El primer barril espera a que pase lo que ya estaba en la pista
@@ -3049,11 +3067,25 @@ export function createWorld(scene) {
         if (Math.random() < 0.5) obst(elegirDe(otros), Math.random() < 0.5 ? "low" : "full", z, d);
       } else obst(Math.floor(Math.random() * 3), "low", z, d);
     },
+    // Las Vegas: dados gigantes que vienen rodando y tragaperras en medio.
+    dados(z, d, t, k) {
+      if (k % 2 === 0 && obstaclePools.dado) {
+        const opciones = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60));
+        if (opciones.length) spawnObstacle(elegirDe(opciones), "low", z, "dado");
+      }
+      if (k % 3 === 1) {
+        const l = Math.floor(Math.random() * 3);
+        obst(l, "full", z, d, ["tragaperras"]);
+        tacosEn((l + 1 + Math.floor(Math.random() * 2)) % 3, z, 4);
+      }
+    },
     // El Burrito-Bot: sin obstaculos normales (solo sus barriles), tacos y chiles.
+    // 29/10: en el debate de Las Vegas, microfonos en vez de chiles.
     jefe(z, d, t, k) {
       const lane = Math.floor(Math.random() * 3);
       tacosEn(lane, z, 4);
-      if (EXTRAS && Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, "chile");
+      const arma = nivel && nivel.debate ? "micro" : "chile";
+      if (EXTRAS && Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
   };
 
@@ -3194,6 +3226,7 @@ export function createWorld(scene) {
     if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
     jefe.mesh.visible = true;
     if (!jefe.mesh.parent) group.add(jefe.mesh);
+    if (jefe.atril) jefe.atril.visible = false;
     cameo.t = 0;
   }
   function actualizarCameo(dt) {
@@ -3334,6 +3367,11 @@ export function createWorld(scene) {
       }
       if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
       if (o.pool === "rodadora") { o.mesh.rotation.x += dt * 7; o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.25; }
+      if (o.pool === "dado" && !o.smashed) {
+        // Rueda de arista en arista: el centro sube y baja para no hundirse.
+        const a = (o.mesh.rotation.x += dt * 5);
+        o.mesh.position.y = 0.45 * (Math.abs(Math.cos(a)) + Math.abs(Math.sin(a)));
+      }
       if (o.smashed) {
         // Sale volando dando vueltas y cae fuera de la pista.
         const s = o.smashed;

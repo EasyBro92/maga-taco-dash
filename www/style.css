@@ -805,3 +805,11 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .postCabeza b { display: block; font-size: 14px; color: var(--tinta); }
 .postCabeza small { font-size: 12px; color: var(--tinta-suave); }
 .post p { margin: 0; font-size: 14px; line-height: 1.35; color: var(--tinta); font-weight: 600; }
+
+/* 29/10: el debate de Las Vegas. La barra del jefe es la encuesta: tú en
+   rojo contra el Burrito-Bot en amarillo (empieza 50-50). */
+#bossBar.debate .bossTrack { background: linear-gradient(90deg, #ffd23f, #ffb02e); }
+#bossBar.debate #bossFill { background: linear-gradient(90deg, #d8202a, #ff4a3a); }
+#bossBar.debate .bossName { font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+#bossBar.debate .bossName .yo { color: #ffd0cc; }
+#bossBar.debate .bossName .el { color: #ffe9a0; }

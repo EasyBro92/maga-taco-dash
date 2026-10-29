@@ -40,7 +40,7 @@ Jefe: **el Burrito-Bot**, el candidato robot «hecho en China».
 | 1 | Nueva York (Quinta Avenida) | +28 | Sale de su torre. Las Fake News le persiguen con sus furgonetas. *(hecho)* |
 | 2 | Findlay, Ohio | +17 | Mitin en el juzgado. El Burrito-Bot aparece por primera vez para reventarlo. *(hecho)* |
 | 3 | Phoenix, Arizona | +11 | La policía le persigue: «¡caza de brujas!». Trozos del muro que iba a pagar México. *(hecho)* |
-| 4 | Las Vegas, Nevada | +6 | **Jefe.** Debate en el Strip contra el Burrito-Bot. Al perder, el robot echa chispas: «hecho en China, roto en América». |
+| 4 | Las Vegas, Nevada | +6 | **Jefe.** Debate en el Strip contra el Burrito-Bot. Al perder, el robot echa chispas: «hecho en China, roto en América». *(hecho)* |
 
 ## Acto 2 — La guerra de los aranceles (Medio Oeste · 11 estados · 160 votos)
 

@@ -14,6 +14,10 @@
 #                carroza del desfile (esquivar) · guirnalda «FLAG CITY» (agacharse)
 #   Washington   valla metálica (saltar) · manifestantes del Burrito-Bot (agacharse)
 #                agentes del Servicio Secreto (esquivar) · todoterreno de la comitiva (viene de frente)
+#   Las Vegas    dado gigante (viene rodando: saltar) · fichas de casino (saltar)
+#                tragaperras (esquivar) · limusina blanca (esquivar)
+#                marquesina «DEBATE» (agacharse) · y el atril del Burrito-Bot
+#                (va pegado al jefe en el debate; los neones brillan solos)
 #   Acera        valla de policía azul y verja negra (delante del público)
 
 import os, sys, math
@@ -368,6 +372,122 @@ def verja():
         caja(hierro, s * 0.96, 0, 0, 0.08, 0.08, 1.15)
 
 
+# ---------------------------------------------------------------- Las Vegas (29/10/2026)
+def dado():
+    """Dado gigante rojo de casino que viene rodando: el centro en el origen
+    (el juego lo sube y lo hace girar sobre sí mismo)."""
+    caja(mat('dado_rojo', 0xd8202a, 0.25), 0, 0, -0.45, 0.9, 0.9, 0.9)
+    punto = mat('punto_dado', 0xffffff, 0.3)
+    caras = {  # (eje fijo, signo): puntos en las otras dos coordenadas
+        ('y', -1): [(0, 0)],
+        ('y', 1): [(-0.22, -0.22), (0.22, 0.22), (-0.22, 0.22), (0.22, -0.22), (-0.22, 0), (0.22, 0)],
+        ('x', 1): [(-0.22, -0.22), (0.22, 0.22)],
+        ('x', -1): [(-0.22, -0.22), (0, 0), (0.22, 0.22)],
+        ('z', 1): [(-0.22, -0.22), (0.22, 0.22), (-0.22, 0.22), (0.22, -0.22)],
+        ('z', -1): [(-0.22, -0.22), (0.22, 0.22), (-0.22, 0.22), (0.22, -0.22), (0, 0)],
+    }
+    for (eje, sg), pts in caras.items():
+        for a, b in pts:
+            if eje == 'y':
+                esfera(punto, a, sg * 0.45, b, 0.085, 1, esc=(1, 0.35, 1))
+            elif eje == 'x':
+                esfera(punto, sg * 0.45, a, b, 0.085, 1, esc=(0.35, 1, 1))
+            else:
+                esfera(punto, a, b, sg * 0.45, 0.085, 1, esc=(1, 1, 0.35))
+
+def fichas():
+    """Tres montones de fichas de casino: se saltan."""
+    colores = [0xd8202a, 0x1d1f25, 0x2f9a4a, 0x2350c8]
+    canto = mat('canto_ficha', 0xffffff, 0.4)
+    for k, (x, y, n) in enumerate(((-0.5, 0.05, 7), (0.05, -0.1, 9), (0.55, 0.1, 6))):
+        for i in range(n):
+            c = colores[(i + k) % 4]
+            cil(mat(f'ficha{c:06x}', c, 0.35), x, y, i * 0.095, 0.36, 0.085, 20)
+            for j in range(6):                                          # el canto a rayas
+                a = j / 6 * math.pi * 2
+                caja(canto, x + math.cos(a) * 0.355, y + math.sin(a) * 0.355, i * 0.095 + 0.01,
+                     0.06, 0.06, 0.065, giro=a)
+
+def tragaperras():
+    """Tragaperras gigante: cuerpo rojo y cromo, los tres rodillos con el 7,
+    la palanca y el letrero JACKPOT encendido arriba."""
+    cuerpo = mat('rojo_tragaperras', 0xc8202a, 0.3)
+    cromo = mat('cromo_tragaperras', 0xd8dde3, 0.15)
+    caja(cuerpo, 0, 0, 0, 1.7, 0.9, 2.2)
+    caja(cromo, 0, -0.02, 0.05, 1.75, 0.95, 0.12)
+    caja(cromo, 0, -0.02, 2.1, 1.75, 0.95, 0.12)
+    caja(cromo, 0, -0.5, 1.0, 1.4, 0.1, 0.95)                           # marco de los rodillos
+    for x in (-0.42, 0, 0.42):
+        caja(luz('rodillo', 0xfff6e0, 0.7), x, -0.56, 1.08, 0.36, 0.04, 0.8)
+        texto(luz('siete', 0xd8202a, 0.6), '7', x, -0.6, 1.47, tam=0.42, prof=0.03)
+    caja(mat('bandeja', 0x2a2d33, 0.4), 0, -0.5, 0.3, 1.0, 0.2, 0.25)
+    for k in range(4):
+        cil(mat('moneda_oro', 0xf2c23a, 0.25), -0.3 + k * 0.2, -0.55, 0.55, 0.08, 0.02, 12)
+    # la palanca
+    cil(cromo, 0.95, 0, 1.0, 0.07, 0.6, 8, eje='X')
+    rama(cromo, (1.05, 0, 1.0), (1.05, 0, 1.9), 0.05, 0.05, 8)
+    esfera(mat('bola_palanca', 0xe8202a, 0.3), 1.05, 0, 1.95, 0.13, 2)
+    # letrero
+    caja(mat('fondo_jackpot', 0x1d2b46, 0.4), 0, 0, 2.2, 1.8, 0.4, 0.55)
+    texto(luz('jackpot', 0xffe066, 1.0), 'JACKPOT', 0, -0.21, 2.47, tam=0.26, prof=0.03)
+    for k in range(8):
+        esfera(luz('bombilla_jp', 0xffe9a0, 1.0), -0.8 + k * 0.23, -0.21, 2.75, 0.05, 1)
+
+def limusina():
+    """Limusina blanca alargada, vista por detrás."""
+    cuerpo = mat('blanco_limo', 0xf6f6f2, 0.25)
+    W, L = 1.8, 4.4
+    caja(cuerpo, 0, L / 2, 0.3, W, L, 0.6)
+    caja(cuerpo, 0, L / 2 + 0.1, 0.9, W - 0.2, L - 1.6, 0.55)
+    caja(mat('cristal_limo', 0x1d2533, 0.15), 0, L / 2 + 0.1, 0.95, W - 0.18, L - 1.9, 0.38)
+    caja(mat('cromo_limo', 0xd8dde3, 0.2), 0, -0.04, 0.25, W + 0.06, 0.1, 0.14)
+    caja(blanco(), 0, -0.02, 0.42, 0.42, 0.02, 0.14)
+    texto(azul(), 'NEVADA', 0, -0.035, 0.49, tam=0.065, prof=0.01)
+    for s in (-1, 1):
+        caja(luz('piloto_limo', 0xff2a2a, 0.8), s * 0.75, -0.01, 0.55, 0.22, 0.04, 0.14)
+        rueda(s * (W / 2 - 0.1), 0.65, 0.3, 0.24)
+        rueda(s * (W / 2 - 0.1), L - 0.6, 0.3, 0.24)
+
+def marquesina():
+    """Marquesina de neón «DEBATE» con bombillas sobre el carril: se pasa agachado."""
+    hierro = mat('hierro_marq', 0x2a2d33, 0.4)
+    for s in (-1, 1):
+        cil(hierro, s * 0.95, 0, 0, 0.07, 2.5, 8)
+        caja(gris(), s * 0.95, 0, 0, 0.3, 0.3, 0.08)
+    caja(mat('fondo_marq', 0x2a1446, 0.5), 0, 0, 1.3, 1.98, 0.14, 0.7)
+    texto(luz('neon_debate', 0xff4fd8, 1.0), 'DEBATE', 0, -0.08, 1.65, tam=0.32, prof=0.04)
+    bombilla = luz('bombilla_marq', 0xffe066, 1.0)
+    for k in range(10):
+        esfera(bombilla, -0.9 + k * 0.2, -0.08, 2.08, 0.05, 1)
+        esfera(bombilla, -0.9 + k * 0.2, -0.08, 1.24, 0.05, 1)
+    for s in (-1, 1):
+        cil(luz('estrella_marq', 0x46e0d0, 1.0), s * 0.95, -0.05, 2.5, 0.18, 0.04, 5, eje='Y')
+
+def atril():
+    """El atril del Burrito-Bot para el debate: rojo con las estrellas
+    amarillas, dos micrófonos y propulsores debajo (flota con él). El origen
+    es el centro de la base; se pega delante del jefe en el juego."""
+    rojo_c = mat('rojo_atril', 0xd8202a, 0.4)
+    caja(mat('madera_atril', 0x6a3a22, 0.6), 0, 0, 0, 1.6, 0.8, 1.25)
+    caja(rojo_c, 0, -0.05, 0.08, 1.5, 0.75, 1.1)
+    caja(mat('tapa_atril', 0x3a2418, 0.6), 0, 0.05, 1.25, 1.8, 1.0, 0.1, inclina=-0.25)
+    estrella = luz('estrella_atril', 0xffd23f, 0.8)
+    cil(estrella, -0.4, -0.44, 0.85, 0.22, 0.04, 5, eje='Y')
+    for x, z in ((-0.08, 1.05), (0.04, 0.92), (0.04, 0.72), (-0.08, 0.6)):
+        cil(estrella, x, -0.44, z, 0.07, 0.04, 5, eje='Y')
+    texto(luz('letra_atril', 0xffd23f, 0.8), '2028', 0.35, -0.45, 0.4, tam=0.24, prof=0.03)
+    # micrófonos hacia la boca del robot
+    for s in (-1, 1):
+        rama(gris(), (s * 0.25, -0.2, 1.3), (s * 0.12, -0.5, 1.75), 0.025, 0.025, 6)
+        esfera(negro(), s * 0.12, -0.52, 1.8, 0.07, 1, esc=(1, 1, 1.4))
+    # propulsores
+    for x in (-0.5, 0.5):
+        cil(gris(), x, 0, -0.35, 0.22, 0.35, 12, r2=0.28)
+        o = cil(luz('fuego_atril', 0xffa21a, 1.0), x, 0, -0.35, 0.18, 0.5, 10, r2=0.0)
+        o.rotation_euler = (math.pi, 0, 0)
+        o.location = (x, 0, -0.35 - 0.25)
+
+
 PIEZAS = {
     'taxi':          (taxi,          'obstaculos', dict(lado=512)),
     'alcantarilla':  (alcantarilla,  'obstaculos', dict(lado=512, bisel=0.0)),
@@ -386,6 +506,12 @@ PIEZAS = {
     'saguaro':       (saguaro,       'obstaculos', dict(lado=512, bisel=0.0)),
     'pickup':        (pickup,        'obstaculos', dict(lado=512)),
     'arco_neon':     (arco_neon,     'obstaculos', dict(lado=512, bisel=0.0)),
+    'dado':          (dado,          'obstaculos', dict(lado=256, suelo=False)),
+    'fichas':        (fichas,        'obstaculos', dict(lado=256, bisel=0.0)),
+    'tragaperras':   (tragaperras,   'obstaculos', dict(lado=512)),
+    'limusina':      (limusina,      'obstaculos', dict(lado=512)),
+    'marquesina':    (marquesina,    'obstaculos', dict(lado=512, bisel=0.0)),
+    'atril':         (atril,         'obstaculos', dict(lado=512, suelo=False)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),
     'verja':         (verja,         'publico',    dict(lado=256, bisel=0.0)),
 }
