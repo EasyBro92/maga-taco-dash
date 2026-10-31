@@ -1,0 +1,14 @@
+Las voces del juego (31/10/2026)
+
+trump.*.mp3 / trump.json: frases dichas por Donald Trump, cortadas de grabaciones
+de dominio público de Wikimedia Commons (obras del gobierno de EE. UU.):
+  - «Trump Calls Russia 'Fake News'» (Voice of America, 16/02/2017)
+  - «Trump on 'fake news' and information leaks» (Voice of America, CPAC 2017)
+  - «Trump 'very sad' about Manafort conviction» (Voice of America, 21/08/2018)
+  - «We signed a tremendous trade deal» (The White House)
+  - «President Donald Trump's First Inaugural Address - January 20, 2017»
+  - «President Trump's First 100 Days» (Voice of America, 2017)
+Se cortan con herramientas/trump.mjs.
+
+es.*.mp3 / en.*.mp3 / indice.json: el resto de avisos, con voces de Piper
+(herramientas/voces.mjs).

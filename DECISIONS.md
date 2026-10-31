@@ -887,3 +887,44 @@ los mapas sean más dinámicos». De la lista que se le propuso eligió seis cos
   piezas cada una.
 - Comprobado con el piloto automático: los cinco niveles enteros, sin errores,
   con el helicóptero dos veces en cada uno. Pendiente: su veredicto en el móvil.
+
+## Cada mapa con sus obstáculos, y su voz de verdad (2026-10-31)
+
+Isidro: «falta que los obstáculos sean diferentes en cada mapa, algunos se
+pueden mantener, pero quiero que los mapas se sientan diferentes y más
+dinámicos; las voces a veces no se entienden, busca las frases originales de
+Trump y ponlas». Para las voces eligió «su voz de verdad» y dio permiso para
+bajar whisper.cpp, su modelo de inglés y seis grabaciones de Commons.
+
+- **Obstáculos por mapa** (`blender/obstaculos2.py`, levels.js): fuera conos,
+  barricadas, pancartas y globos de todos los mapas (los globos se quedan en
+  el desfile de Findlay y los conos en las obras de Nueva York). Solo la
+  furgoneta de las Fake News sale en todos, porque es de la historia.
+  - Nueva York: bolsas de basura, viga de grúa que se balancea un poco,
+    carrito de perritos y repartidores en bici que vienen de frente (tramo
+    «¡Repartidores a toda pastilla!», en lugar de «Hora punta»).
+  - Findlay: calabazas y vacas. En su tramo («¡Vacas sueltas!») cruzan la
+    calle y se paran en el centro de un carril antes de llegar al jugador.
+  - Phoenix: calavera de vaca y el cartel de la autopista I-10.
+  - Las Vegas: imitador de Elvis que baila.
+  - Washington: cajas de papeles «TOP SECRET».
+  - El modo sin fin usa los mismos por zona.
+- **Su voz de verdad**: 18 frases suyas, en inglés, de grabaciones de dominio
+  público (Voice of America y la Casa Blanca; ver `www/voces/LEEME.txt`):
+  «This is fake news!», «It's a witch hunt and it's a disgrace!», «America
+  first!», «We will make America great again!», «Tremendous!»… En castellano
+  sale la traducción debajo, en el bocadillo del micrófono y en el de arriba.
+  - Cómo se hizo: Blender pasa el audio a WAV (no hay FFmpeg en este PC),
+    whisper.cpp dice dónde va cada palabra (`herramientas/_trump/`, fuera de
+    git) y `herramientas/trump.mjs` corta y comprueba cada trozo con whisper.
+  - Los tiempos se repasaron a mano (`herramientas/trump-tiempos.json`): en la
+    investidura whisper se retrasaba hasta 3 s.
+  - Se quitaron dos frases demasiado largas, porque las dijo muy despacio y
+    con aplausos: «This American carnage…» y «Now arrives the hour of action».
+  - Faltan «You're fired» (es de la tele), «Covfefe» y «Sad!» (solo los
+    escribió). «Witch hunt» es la que peor se entiende: es una grabación al
+    aire libre.
+- Comprobado con el piloto automático: los cinco niveles enteros, sin
+  errores, cada uno con sus obstáculos; las vacas cruzan y cerca del jugador
+  siempre están en un carril. Pendiente: su veredicto en el móvil, y Des
+  Moines (en pausa).

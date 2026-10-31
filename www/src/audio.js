@@ -367,7 +367,9 @@ export function stopMusic() {
 let indiceVoces = null;
 const archivosVoz = {}, bufferVoz = {};
 let vozSonando = null;
-fetch("voces/indice.json").then((r) => (r.ok ? r.json() : null)).then((j) => { indiceVoces = j; }).catch(() => {});
+// 31/10: y las de su voz de verdad (herramientas/trump.mjs), en su propio indice.
+Promise.all(["voces/indice.json", "voces/trump.json"].map((u) => fetch(u).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))))
+  .then(([a, b]) => { indiceVoces = { ...a, ...b }; });
 function limpiar(texto) {
   return texto.normalize("NFC").replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s+/g, " ").trim();
 }

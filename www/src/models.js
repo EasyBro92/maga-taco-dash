@@ -30,7 +30,9 @@ const LISTA = {
     // 29/10: los de Las Vegas y el atril del debate
     "dado", "fichas", "tragaperras", "limusina", "marquesina", "atril",
     // 31/10: el helicoptero de la tele de las Fake News (decorado, en todos)
-    "helicoptero"],
+    "helicoptero",
+    // 31/10 (2): los propios de cada mapa
+    "basura", "viga", "perritos", "bici", "calabazas", "vaca", "calavera", "cartel_ruta", "elvis", "cajas"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

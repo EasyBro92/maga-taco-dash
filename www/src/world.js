@@ -7,7 +7,8 @@ import { construirEdificio, soltarEdificio } from "./edificios.js";
 import { lienzo as lienzoPegatina } from "./pegatinas.js";
 import { crearHorizonte } from "./horizonte.js";
 import { mergeGeometries } from "../vendor/BufferGeometryUtils.js";
-import { t as tr } from "./i18n.js";
+import { t as tr, getLang } from "./i18n.js";
+import { traduccion } from "./frases.js";
 
 export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
@@ -2328,6 +2329,18 @@ export function createWorld(scene) {
     tragaperras: { choque: "full", medio: 0.5, alto: 2.9, centro: 0 },
     limusina: { choque: "full", medio: 2.2, alto: 1.5, centro: -2.2 },
     marquesina: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 31/10: los propios de cada mapa. La bici viene de frente; la vaca, en su
+    // tramo, cruza la calle (y se para antes de llegar al jugador).
+    basura: { choque: "low", medio: 0.5, alto: 0.85 },
+    viga: { choque: "high", medio: 0.2, alto: 2.6 },
+    perritos: { choque: "full", medio: 0.45, alto: 2.5, centro: 0 },
+    bici: { choque: "full", medio: 0.9, alto: 2.0, centro: -0.9, mueve: 5 },
+    calabazas: { choque: "low", medio: 0.45, alto: 0.9 },
+    vaca: { choque: "full", medio: 0.45, alto: 1.6, centro: 0 },
+    calavera: { choque: "low", medio: 0.35, alto: 1.0 },
+    cartel_ruta: { choque: "high", medio: 0.1, alto: 2.3 },
+    elvis: { choque: "full", medio: 0.3, alto: 2.4, centro: 0 },
+    cajas: { choque: "low", medio: 0.35, alto: 0.95 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2419,13 +2432,32 @@ export function createWorld(scene) {
     for (const nombre in TIPOS) obstaclePools[nombre] = makePool(() => construirObstaculo(nombre));
   }
 
+  // La vaca de su tramo: anda de lado a lado mientras esta lejos; al
+  // acercarse se queda quieta en el carril mas cercano (con un pasito).
+  function moverVaca(o, dt) {
+    const m = o.mesh;
+    if (o.cruza && o.z < -26) {
+      m.position.x += o.cruza * dt;
+      if (Math.abs(m.position.x) > LANE_X[2]) { o.cruza = -o.cruza; m.rotation.y = o.cruza > 0 ? 0 : Math.PI; m.position.x = Math.sign(m.position.x) * LANE_X[2]; }
+      m.position.y = Math.abs(Math.sin(animClock * 6 + o.phase)) * 0.04;
+    } else {
+      if (o.cruza) o.cruza = 0;
+      m.position.x += (LANE_X[o.lane] - m.position.x) * Math.min(1, dt * 6);
+      m.position.y = 0;
+    }
+    // El carril para los choques: el mas cercano a donde esta.
+    let mejor = 0;
+    for (const l of LANES) if (Math.abs(LANE_X[l] - m.position.x) < Math.abs(LANE_X[mejor] - m.position.x)) mejor = l;
+    o.lane = mejor;
+  }
+
   function spawnObstacle(lane, type, z, nombre) {
     const pool = USAR_BLENDER ? (nombre || DE_TIPO[type][Math.floor(Math.random() * DE_TIPO[type].length)]) : type;
     const t = USAR_BLENDER ? TIPOS[pool] : { medio: 0.7, alto: type === "low" ? 0.6 : 3 };
     const obj = obstaclePools[pool].acquire();
     obj.visible = true;
     obj.position.set(LANE_X[lane], 0, z);
-    obj.rotation.set(0, 0, 0);
+    obj.rotation.set(0, nombre === "vaca" ? (Math.random() < 0.5 ? 0 : Math.PI) : 0, 0);
     if (!obj.parent) group.add(obj);
     const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
       medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
@@ -2451,8 +2483,11 @@ export function createWorld(scene) {
   // ---- Frases (25/10/2026): un bocadillo enorme que sale volando por el
   // carril y tumba lo primero que pilla (o le da al Burrito-Bot). ----
   const texturasFrase = {};
-  function texturaFrase(texto) {
-    if (texturasFrase[texto]) return texturasFrase[texto];
+  // 31/10: sus frases de verdad son en ingles y a veces largas: van en una o
+  // dos lineas, y en castellano con la traduccion debajo, mas pequeña.
+  function texturaFrase(texto, sub = "") {
+    const clave = texto + "|" + sub;
+    if (texturasFrase[clave]) return texturasFrase[clave];
     const c = document.createElement("canvas");
     c.width = 512; c.height = 192;
     const ctx = c.getContext("2d");
@@ -2460,15 +2495,39 @@ export function createWorld(scene) {
     ctx.beginPath(); ctx.roundRect(12, 12, 488, 140, 60); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(200, 148); ctx.lineTo(170, 186); ctx.lineTo(250, 148); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#ffffff"; ctx.fillRect(196, 140, 58, 14);
-    let tam = 74;
-    ctx.font = `900 ${tam}px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
-    while (ctx.measureText(texto).width > 440 && tam > 30) { tam -= 4; ctx.font = `900 ${tam}px Fredoka, Arial, sans-serif`; }
+    const fuente = (t) => `900 ${t}px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    const ancho = (s, t) => { ctx.font = fuente(t); return ctx.measureText(s).width; };
+    // Una linea si cabe con letra grande; si no, dos (partida por la palabra del medio).
+    let lineas = [texto], tam = sub ? 62 : 74;
+    while (ancho(texto, tam) > 450 && tam > 46) tam -= 4;
+    if (ancho(texto, tam) > 450) {
+      const p = texto.split(" ");
+      let mejor = 1, dif = 1e9;
+      for (let k = 1; k < p.length; k++) {
+        const d = Math.abs(ancho(p.slice(0, k).join(" "), 40) - ancho(p.slice(k).join(" "), 40));
+        if (d < dif) { dif = d; mejor = k; }
+      }
+      lineas = [p.slice(0, mejor).join(" "), p.slice(mejor).join(" ")];
+      tam = sub ? 44 : 52;
+      while (Math.max(...lineas.map((l) => ancho(l, tam))) > 450 && tam > 26) tam -= 2;
+    }
+    ctx.font = fuente(tam);
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.lineWidth = 8; ctx.strokeStyle = "#ffd23f"; ctx.strokeText(texto, 256, 84);
-    ctx.fillStyle = "#e8463c"; ctx.fillText(texto, 256, 84);
+    const centro = sub ? 66 : 84, paso = tam * 0.98;
+    lineas.forEach((l, i) => {
+      const y = centro + (i - (lineas.length - 1) / 2) * paso;
+      ctx.lineWidth = 8; ctx.strokeStyle = "#ffd23f"; ctx.strokeText(l, 256, y);
+      ctx.fillStyle = "#e8463c"; ctx.fillText(l, 256, y);
+    });
+    if (sub) {
+      let ts = 30;
+      ctx.font = `800 ${ts}px Nunito, Arial, sans-serif`;
+      while (ctx.measureText(sub).width > 450 && ts > 18) { ts -= 2; ctx.font = `800 ${ts}px Nunito, Arial, sans-serif`; }
+      ctx.fillStyle = "#22304f"; ctx.fillText(sub, 256, 128);
+    }
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
-    texturasFrase[texto] = tex;
+    texturasFrase[clave] = tex;
     return tex;
   }
   const frases = [];
@@ -2483,7 +2542,7 @@ export function createWorld(scene) {
     return mejor;
   }
   function lanzarFrase(lane, texto, objetivo) {
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaFrase(texto), transparent: true, depthTest: false }));
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaFrase(texto, traduccion(texto, getLang())), transparent: true, depthTest: false }));
     sprite.scale.set(4.2, 1.6, 1);
     sprite.position.set(LANE_X[lane], 2.6, -0.5);
     sprite.renderOrder = 5;
@@ -3027,10 +3086,11 @@ export function createWorld(scene) {
   const elegirDe = (l) => l[Math.floor(Math.random() * l.length)];
   // Obstaculos de cada sitio: los del nivel, o los de la zona en el sin fin.
   const LOCALES_ZONA = {
-    city: { low: ["conos", "barricada", "alcantarilla"], high: ["pancarta", "andamio", "globos"], full: ["taxi", "taxi", "furgoneta", "contenedor", "guardaespaldas"] },
-    town: { low: ["paca", "paca", "conos", "barricada"], high: ["guirnalda", "pancarta", "globos"], full: ["tractor", "carroza", "furgoneta"] },
-    dc: { low: ["valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"], full: ["agentes", "furgoneta", "guardaespaldas"] },
-    desert: { low: ["nopal", "nopal", "conos", "barricada"], high: ["arco_neon", "pancarta", "globos"], full: ["saguaro", "pickup", "furgoneta"] },
+    // 31/10: cada zona con los suyos (fuera conos, barricadas, pancartas y globos).
+    city: { low: ["alcantarilla", "basura"], high: ["andamio", "viga"], full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
+    town: { low: ["paca", "calabazas"], high: ["guirnalda", "globos"], full: ["tractor", "carroza", "vaca", "furgoneta"] },
+    dc: { low: ["valla_metal", "cajas"], high: ["protesta"], full: ["agentes", "furgoneta", "guardaespaldas"] },
+    desert: { low: ["nopal", "calavera"], high: ["arco_neon", "cartel_ruta"], full: ["saguaro", "pickup", "furgoneta"] },
   };
   // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
   let carrilOcupado = -1;
@@ -3256,6 +3316,35 @@ export function createWorld(scene) {
         const otros = LANES.filter((x) => x !== l);
         if (Math.random() < 0.5) obst(elegirDe(otros), Math.random() < 0.5 ? "low" : "full", z, d);
       } else obst(Math.floor(Math.random() * 3), "low", z, d);
+    },
+    // Nueva York (31/10): repartidores en bici que vienen de frente.
+    repartidores(z, d, t, k) {
+      if (k % 3 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 4); return; }
+      if (k % 3 === 2) return;
+      const opciones = USAR_BLENDER && obstaclePools.bici ? LANES.filter((l) => l !== carrilOcupado && cocheCabe(l, z, TIPOS.bici.mueve)) : [];
+      if (opciones.length) {
+        const l = elegirDe(opciones);
+        spawnObstacle(l, "full", z, "bici");
+        const otros = LANES.filter((x) => x !== l);
+        if (Math.random() < 0.5) obst(elegirDe(otros), "low", z, d);
+      } else obst(Math.floor(Math.random() * 3), "low", z, d);
+    },
+    // Findlay (31/10): vacas sueltas que cruzan la calle; se paran en un carril
+    // antes de llegar al jugador, asi que siempre se ve donde se quedan.
+    vacas(z, d, t, k) {
+      if (k % 3 === 0 && obstaclePools.vaca) {
+        const l = Math.random() < 0.5 ? 0 : 2;
+        if (l !== carrilOcupado) {
+          const o = spawnObstacle(l, "full", z, "vaca");
+          o.cruza = (l === 0 ? 1 : -1) * (1.1 + Math.random() * 0.4);
+          o.mesh.rotation.y = o.cruza > 0 ? 0 : Math.PI;
+        }
+        tacosEn(1, z - 3, 3);
+      } else if (k % 3 === 1) {
+        const l = Math.floor(Math.random() * 3);
+        obst(l, "low", z, d);
+        LANES.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
+      } else tacosEn(Math.floor(Math.random() * 3), z, 4);
     },
     // Las Vegas: dados gigantes que vienen rodando y tragaperras en medio.
     dados(z, d, t, k) {
@@ -3878,6 +3967,17 @@ export function createWorld(scene) {
       }
       if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
       if (o.pool === "rodadora") { o.mesh.rotation.x += dt * 7; o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.25; }
+      if (!o.smashed) {
+        if (o.pool === "elvis") {
+          // Baila: se contonea y da saltitos.
+          o.mesh.rotation.y = Math.sin(animClock * 4 + o.phase) * 0.35;
+          o.mesh.position.y = Math.abs(Math.sin(animClock * 8 + o.phase)) * 0.08;
+        } else if (o.pool === "viga") {
+          o.mesh.rotation.z = Math.sin(animClock * 1.3 + o.phase) * 0.03;
+        } else if (o.pool === "bici") {
+          o.mesh.position.y = Math.abs(Math.sin(animClock * 9 + o.phase)) * 0.03;
+        } else if (o.pool === "vaca") moverVaca(o, dt);
+      }
       if (o.pool === "dado" && !o.smashed) {
         // Rueda de arista en arista: el centro sube y baja para no hundirse.
         const a = (o.mesh.rotation.x += dt * 5);

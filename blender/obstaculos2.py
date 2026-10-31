@@ -543,6 +543,194 @@ def helicoptero():
     esfera(luz('baliza_heli', 0xff4a2a, 1.0), 0, 4.75, 2.3, 0.08, 1)
 
 
+# ---------------------------------------------------------------- 31/10: cada mapa con los suyos
+# Isidro: «falta que los obstáculos sean diferentes en cada mapa». Fuera los
+# de siempre (conos, barricadas, pancartas, globos) y estos en su lugar:
+#   Nueva York   bolsas de basura (saltar) · viga de grúa colgando (agacharse)
+#                carrito de perritos (esquivar) · repartidor en bici (viene de frente)
+#   Findlay      calabazas (saltar) · vaca (cruza la calle)
+#   Phoenix      calavera de vaca (saltar) · cartel de la autopista I-10 (agacharse)
+#   Las Vegas    imitador de Elvis (esquivar; baila)
+#   Washington   cajas de papeles secretos (saltar)
+
+def basura():
+    """Bolsas de basura negras y una caja de cartón en la acera de Nueva York."""
+    bolsa = mat('bolsa_basura', 0x26282e, 0.25)
+    for x, y, r, h in ((-0.55, 0.05, 0.36, 0.62), (0.05, -0.05, 0.4, 0.7), (0.55, 0.1, 0.34, 0.58), (-0.2, 0.25, 0.3, 0.52)):
+        esfera(bolsa, x, y, h * 0.5, r, 2, esc=(1, 1, h / (2 * r) * 1.05))
+        cil(bolsa, x, y, h * 0.92, 0.07, 0.14, 8, r2=0.03)               # el nudo
+        esfera(mat('brillo_bolsa', 0x5a5e68, 0.2), x - r * 0.35, y - r * 0.7, h * 0.62, r * 0.18, 1, esc=(1, 0.4, 1.5))
+    carton = mat('carton', 0xc8955a, 0.8)
+    caja(carton, 0.35, -0.25, 0, 0.5, 0.4, 0.38, giro=0.3)
+    caja(mat('cinta_carton', 0xe8d2a8, 0.6), 0.35, -0.25, 0.38, 0.52, 0.08, 0.01, giro=0.3)
+
+def viga():
+    """Viga de acero naranja colgando de la grúa por dos cables: se pasa agachado."""
+    naranja_v = mat('viga_naranja', 0xe8701a, 0.4)
+    caja(naranja_v, 0, 0, 1.28, 2.0, 0.3, 0.05)                           # ala de abajo
+    caja(naranja_v, 0, 0, 1.33, 2.0, 0.06, 0.34)                          # alma
+    caja(naranja_v, 0, 0, 1.67, 2.0, 0.3, 0.05)                           # ala de arriba
+    for x in (-0.7, -0.35, 0, 0.35, 0.7):
+        cil(mat('remache', 0xb85a14, 0.4), x, -0.04, 1.5, 0.03, 0.02, 8, eje='Y')
+    cable = mat('cable_grua', 0x2a2d33, 0.4)
+    for x in (-0.6, 0.6):
+        rama(cable, (x, 0, 1.72), (0, 0, 2.9), 0.02, 0.02, 6)
+    rama(cable, (0, 0, 2.9), (0, 0, 4.2), 0.03, 0.03, 6)
+    caja(mat('gancho', 0xf2c23a, 0.4), 0, 0, 2.85, 0.22, 0.12, 0.3)      # el gancho amarillo
+    # rayas de peligro en los extremos
+    for s in (-1, 1):
+        caja(rayas('peligro', 0x1d1f25, 0xffd23f, 6, s * 0.95 - 0.1, 0.2), s * 0.9, -0.17, 1.33, 0.2, 0.02, 0.34)
+
+def perritos():
+    """El carrito de perritos calientes con su sombrilla."""
+    acero = mat('acero_carrito', 0xd3d8de, 0.2)
+    caja(acero, 0, 0, 0.35, 1.6, 0.85, 0.75)
+    caja(mat('panel_carrito', 0xd8202a, 0.5), 0, -0.44, 0.45, 1.5, 0.02, 0.5)
+    texto(mat('letras_carrito', 0xffd23f, 0.4), 'HOT DOGS', 0, -0.46, 0.72, tam=0.2, prof=0.02)
+    caja(acero, 0, 0, 1.1, 1.65, 0.9, 0.06)
+    for x in (-0.55, 0.55):
+        cil(mat('olla', 0xaab2bc, 0.25), x, 0.05, 1.16, 0.18, 0.18, 14)
+    for s in (-1, 1):
+        rueda(s * 0.72, 0.25, 0.22, 0.12)
+        cil(neumatico(), s * 0.6, -0.3, 0, 0.04, 0.35, 6)                 # patas
+    cil(gris(), 0.0, 0.15, 1.16, 0.03, 1.15, 8)                          # el palo
+    sombrilla = mat_franjas('sombrilla', 0xffd23f, 0xd8202a, 8, eje='X', z0=-1.1, alto=2.2)
+    o = cil(sombrilla, 0.0, 0.15, 2.18, 1.05, 0.38, 16, r2=0.06)
+    texto(mat('mostaza', 0xf2c23a, 0.4), 'NYC', 0, -0.47, 0.28, tam=0.12, prof=0.015)
+
+def bici():
+    """Repartidor en bici con la mochila cúbica, que viene de frente hacia el
+    jugador (la rueda de delante en y = 0)."""
+    cuadro = mat('cuadro_bici', 0x2f9a4a, 0.4)
+    for y in (0.15, 1.25):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.33, minor_radius=0.05, major_segments=24, minor_segments=6,
+                                         location=(0, y, 0.38), rotation=(0, math.pi / 2, 0))
+        from comun import _partes, _poner
+        _poner(bpy.context.object, neumatico())
+    rama(cuadro, (0, 0.15, 0.38), (0, 0.55, 0.85), 0.03, 0.03, 6)
+    rama(cuadro, (0, 0.55, 0.85), (0, 1.25, 0.38), 0.03, 0.03, 6)
+    rama(cuadro, (0, 0.55, 0.85), (0, 0.95, 0.85), 0.03, 0.03, 6)
+    rama(cuadro, (0, 0.95, 0.85), (0, 1.25, 0.38), 0.03, 0.03, 6)
+    rama(gris(), (-0.3, 0.2, 1.0), (0.3, 0.2, 1.0), 0.025, 0.025, 6)      # manillar
+    rama(cuadro, (0, 0.15, 0.38), (0, 0.2, 1.0), 0.03, 0.03, 6)
+    # el repartidor, inclinado hacia delante
+    ropa = mat('ropa_repartidor', 0x2f9a4a, 0.6)
+    rama(ropa, (0, 0.9, 0.95), (0, 0.55, 1.55), 0.2, 0.18, 10)            # tronco
+    esfera(mat('piel_rep', 0xd9a77e, 0.6), 0, 0.45, 1.72, 0.16, 2)
+    esfera(mat('casco', 0xff7a1a, 0.4), 0, 0.47, 1.8, 0.17, 2, mitad=True)
+    for s in (-1, 1):
+        rama(ropa, (s * 0.15, 0.6, 1.45), (s * 0.28, 0.22, 1.02), 0.06, 0.05, 6)   # brazos al manillar
+        rama(mat('vaquero_rep', 0x3a4a6a, 0.6), (s * 0.1, 0.9, 0.95), (s * 0.12, 0.62, 0.62), 0.07, 0.06, 6)
+        rama(mat('vaquero_rep', 0x3a4a6a, 0.6), (s * 0.12, 0.62, 0.62), (s * 0.12, 0.62, 0.3), 0.06, 0.05, 6)
+    caja(mat('mochila_rep', 0xff7a1a, 0.5), 0, 0.98, 1.28, 0.55, 0.42, 0.55)   # la mochila cúbica
+    texto(blanco(), 'FAST', 0, 0.76, 1.55, tam=0.11, prof=0.015)
+
+def calabazas():
+    """Calabazas de la feria del pueblo encima de una paca baja."""
+    caja(mat('paja_baja', 0xe0c06a, 0.9), 0, 0.1, 0, 1.6, 0.6, 0.28)
+    gajos = mat_franjas('calabaza', 0xff8a1a, 0xe8701a, 10, eje='X', z0=-1, alto=2)
+    for x, y, r in ((-0.48, -0.05, 0.3), (0.12, 0.0, 0.36), (0.6, 0.12, 0.26), (-0.1, -0.35, 0.22)):
+        z = 0.28 if y > -0.2 else 0
+        esfera(gajos, x, y, z + r * 0.8, r, 2, esc=(1.15, 1.1, 0.85))
+        rama(mat('rabito_calabaza', 0x4f7a2a, 0.6), (x, y, z + r * 1.45), (x + 0.04, y, z + r * 1.75), 0.04, 0.025, 6)
+
+def vaca():
+    """Una vaca frisona que cruza la calle (camina hacia +x, la cabeza delante)."""
+    blanco_v = mat('blanco_vaca', 0xf6f4ee, 0.6)
+    negro_v = mat('mancha_vaca', 0x1d1e22, 0.6)
+    esfera(blanco_v, 0, 0, 1.0, 0.45, 3, esc=(1.9, 1.0, 0.95))            # el cuerpo
+    for x, y, z, r in ((-0.35, -0.38, 1.1, 0.22), (0.35, 0.38, 0.95, 0.25), (-0.5, 0.36, 1.15, 0.2), (0.2, -0.42, 0.85, 0.18)):
+        esfera(negro_v, x, y, z, r, 2, esc=(1.3, 0.25, 1))
+    for x in (-0.55, 0.55):
+        for y in (-0.22, 0.22):
+            cil(blanco_v, x, y, 0, 0.09, 0.62, 8, r2=0.1)
+            cil(negro_v, x, y, 0, 0.1, 0.08, 8)                           # pezuñas
+    esfera(blanco_v, 0.95, 0, 1.25, 0.24, 2, esc=(1.3, 0.95, 1.0))        # la cabeza
+    esfera(mat('hocico_vaca', 0xf2b6b0, 0.6), 1.22, 0, 1.18, 0.15, 2, esc=(0.9, 1.1, 0.8))
+    for s in (-1, 1):
+        esfera(negro_v, 1.05, s * 0.13, 1.33, 0.04, 1)                    # ojos (mirando de lado)
+        rama(mat('cuerno', 0xf3ece0, 0.5), (0.95, s * 0.12, 1.45), (0.98, s * 0.25, 1.58), 0.04, 0.015, 6)
+        esfera(blanco_v, 0.86, s * 0.25, 1.38, 0.08, 1, esc=(1, 1.6, 0.6))   # orejas
+    esfera(mat('ubre', 0xf2b6b0, 0.6), -0.2, 0, 0.62, 0.17, 2)
+    rama(blanco_v, (-0.85, 0, 1.2), (-0.98, 0, 0.7), 0.04, 0.03, 6)        # la cola
+    esfera(negro_v, -0.98, 0, 0.66, 0.06, 1)
+    cil(mat('cencerro', 0xd9a520, 0.3), 0.78, 0, 0.98, 0.07, 0.12, 8)
+
+def calavera():
+    """Calavera de vaca con cuernos sobre unas piedras del desierto."""
+    piedra_c = mat('piedra_desierto', 0xb88a5a, 0.9)
+    for x, y, r in ((-0.45, 0.05, 0.28), (0.4, 0.0, 0.3), (0.0, 0.18, 0.24), (0.7, 0.2, 0.18)):
+        esfera(piedra_c, x, y, r * 0.55, r, 1, esc=(1.2, 1, 0.7))
+    hueso = mat('hueso', 0xf3ece0, 0.6)
+    esfera(hueso, 0, -0.05, 0.5, 0.22, 2, esc=(0.9, 0.8, 1.2))
+    esfera(hueso, 0, -0.18, 0.3, 0.14, 2, esc=(0.8, 0.9, 1.0))            # el morro
+    for s in (-1, 1):
+        esfera(mat('cuenca', 0x2b2a2e, 0.8), s * 0.09, -0.22, 0.56, 0.06, 1)
+        rama(hueso, (s * 0.16, 0, 0.66), (s * 0.55, 0, 0.75), 0.06, 0.04, 8)
+        rama(hueso, (s * 0.55, 0, 0.75), (s * 0.68, 0, 0.98), 0.04, 0.015, 8)
+
+def cartel_ruta():
+    """Cartel verde de la autopista I-10 sobre el carril: se pasa agachado."""
+    poste = mat('poste_autopista', 0x9aa3ad, 0.3)
+    for s in (-1, 1):
+        cil(poste, s * 0.95, 0, 0, 0.07, 2.3, 8)
+        caja(gris(), s * 0.95, 0, 0, 0.3, 0.3, 0.08)
+    caja(mat('verde_autopista', 0x1f6b3a, 0.5), 0, 0, 1.25, 1.96, 0.08, 0.8)
+    caja(blanco(), 0, -0.045, 1.28, 1.86, 0.01, 0.74)
+    caja(mat('verde_autopista', 0x1f6b3a, 0.5), 0, -0.05, 1.31, 1.8, 0.01, 0.68)
+    # el escudo de la interestatal
+    escudo = mat('azul_escudo', 0x2350c8, 0.4)
+    cil(escudo, -0.6, -0.07, 1.65, 0.24, 0.02, 3, eje='Y')
+    caja(rojo(), -0.6, -0.075, 1.83, 0.4, 0.01, 0.08)
+    texto(blanco(), '10', -0.6, -0.09, 1.6, tam=0.18, prof=0.015)
+    texto(blanco(), 'PHOENIX', 0.25, -0.07, 1.72, tam=0.17, prof=0.015)
+    texto(blanco(), 'WEST', 0.25, -0.07, 1.48, tam=0.14, prof=0.015)
+
+def elvis():
+    """Imitador de Elvis con su traje blanco de estrella, el tupé, gafas de
+    oro y el micrófono (en el juego baila)."""
+    traje = mat('traje_elvis', 0xf8f6f0, 0.4)
+    oro_e = mat('oro_elvis', 0xf2c23a, 0.2)
+    piel = mat('piel_elvis', 0xe8b48e, 0.6)
+    for s in (-1, 1):
+        cil(traje, s * 0.13, 0, 0, 0.12, 0.95, 10, r2=0.09)               # pantalón de campana
+        caja(negro(), s * 0.13, -0.05, 0, 0.16, 0.3, 0.08)
+    cil(traje, 0, 0, 0.92, 0.27, 0.72, 14, r2=0.24)
+    caja(oro_e, 0, 0, 0.92, 0.58, 0.58, 0.1)                              # el cinturón
+    esfera(oro_e, 0, -0.29, 0.97, 0.08, 1)
+    for k in range(6):
+        esfera(oro_e, -0.15 + k * 0.06, -0.24, 1.3 + (k % 2) * 0.08, 0.025, 1)
+    # cuello alto y la cabeza con el tupé
+    cil(traje, 0, 0, 1.6, 0.16, 0.14, 12, r2=0.2)
+    esfera(piel, 0, 0, 1.86, 0.17, 2, esc=(1, 0.95, 1.1))
+    esfera(negro(), 0, 0.03, 1.98, 0.18, 2, esc=(1.05, 1.05, 0.7))
+    esfera(negro(), 0, -0.1, 2.06, 0.11, 2, esc=(1.1, 1.3, 0.7))          # el tupé
+    for s in (-1, 1):
+        caja(oro_e, s * 0.07, -0.16, 1.88, 0.11, 0.03, 0.06)               # las gafas
+        caja(negro(), s * 0.16, 0, 1.72, 0.04, 0.12, 0.22)                  # patillas
+    # brazos: uno arriba con el micro, otro señalando
+    rama(traje, (0.25, 0, 1.5), (0.5, -0.15, 1.85), 0.07, 0.06, 8)
+    rama(traje, (0.5, -0.15, 1.85), (0.45, -0.25, 2.15), 0.06, 0.05, 8)
+    cil(negro(), 0.45, -0.27, 2.12, 0.03, 0.18, 8)
+    esfera(gris(), 0.45, -0.27, 2.32, 0.05, 1)
+    rama(traje, (-0.25, 0, 1.5), (-0.55, -0.2, 1.3), 0.07, 0.06, 8)
+    esfera(piel, -0.58, -0.22, 1.28, 0.06, 1)
+    # la capa con el forro rojo
+    caja(mat('capa_elvis', 0xd8202a, 0.5), 0, 0.22, 0.9, 0.62, 0.04, 0.75)
+
+def cajas():
+    """Cajas de documentos secretos con papeles encima («TOP SECRET»)."""
+    carton = mat('carton_doc', 0xd9b382, 0.8)
+    for x, y, z, g in ((-0.45, 0, 0, 0.1), (0.42, 0.05, 0, -0.08), (-0.05, 0.05, 0.4, 0.05)):
+        caja(carton, x, y, z, 0.62, 0.45, 0.4, giro=g)
+        caja(mat('tapa_doc', 0xc49c6a, 0.8), x, y, z + 0.38, 0.64, 0.47, 0.05, giro=g)
+        texto(mat('sello_rojo', 0xd8202a, 0.5), 'TOP SECRET', x, y - 0.24, z + 0.2, tam=0.07, prof=0.01)
+    papel = mat('papel', 0xf8f6f0, 0.7)
+    for k, (x, y) in enumerate(((-0.1, -0.05), (0.05, 0.08), (0.12, -0.02))):
+        caja(papel, x, y, 0.84 + k * 0.012, 0.28, 0.36, 0.008, giro=0.3 * k - 0.2)
+    caja(mat('tachon', 0x1d1e22, 0.6), 0.12, -0.02, 0.88, 0.18, 0.04, 0.004, giro=0.2)
+
+
 PIEZAS = {
     'taxi':          (taxi,          'obstaculos', dict(lado=512)),
     'alcantarilla':  (alcantarilla,  'obstaculos', dict(lado=512, bisel=0.0)),
@@ -568,6 +756,16 @@ PIEZAS = {
     'marquesina':    (marquesina,    'obstaculos', dict(lado=512, bisel=0.0)),
     'atril':         (atril,         'obstaculos', dict(lado=512, suelo=False)),
     'helicoptero':   (helicoptero,   'obstaculos', dict(lado=512, bisel=0.0, suelo=False)),
+    'basura':       (basura,       'obstaculos', dict(lado=256, bisel=0.0)),
+    'viga':         (viga,         'obstaculos', dict(lado=512, bisel=0.0)),
+    'perritos':     (perritos,     'obstaculos', dict(lado=512)),
+    'bici':         (bici,         'obstaculos', dict(lado=512, bisel=0.0)),
+    'calabazas':    (calabazas,    'obstaculos', dict(lado=256, bisel=0.0)),
+    'vaca':         (vaca,         'obstaculos', dict(lado=512, bisel=0.0)),
+    'calavera':     (calavera,     'obstaculos', dict(lado=256, bisel=0.0)),
+    'cartel_ruta':  (cartel_ruta,  'obstaculos', dict(lado=512, bisel=0.0)),
+    'elvis':        (elvis,        'obstaculos', dict(lado=512, bisel=0.0)),
+    'cajas':        (cajas,        'obstaculos', dict(lado=256)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),
     'verja':         (verja,         'publico',    dict(lado=256, bisel=0.0)),
 }

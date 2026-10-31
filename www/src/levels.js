@@ -54,8 +54,9 @@ const CALLES = [
     sinBus: true, sinPatrulla: true, potenciadores: ["magnet", "magnet", "shield", "boost"],
     kit: { minPlantas: 5, maxPlantas: 11 },
     horizonte: "manhattan", cameoJefe: true,
-    obstaculos: { low: ["conos", "barricada", "alcantarilla"], high: ["pancarta", "andamio", "globos"],
-      full: ["taxi", "taxi", "furgoneta", "contenedor", "guardaespaldas"] },
+    // 31/10: cada mapa con sus obstaculos (Isidro: «que los mapas se sientan diferentes»).
+    obstaculos: { low: ["alcantarilla", "basura", "basura"], high: ["andamio", "viga"],
+      full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
     publico: { personas: ["ejecutivo", "turista", "chico", "senora", "turista"], valla: "policia", cada: 2 },
     tramos: [
       [0, 280, "tutorial"],
@@ -67,7 +68,7 @@ const CALLES = [
       [1580, 1680, "calma"],
       [1680, 2100, "vallas", { titulo: "vallas" }],
       [2100, 2240, "festin", { potenciador: "shield", titulo: "festin" }],
-      [2240, 2650, "mixto", { densidad: 0.55, titulo: "hora_punta" }],
+      [2240, 2650, "repartidores", { titulo: "repartidores" }],
       [2650, 2900, "obras", { low: ["alcantarilla"], titulo: "vapor" }],
       [2900, 3170, "sprint", { titulo: "sprint" }],
     ],
@@ -103,12 +104,12 @@ const CALLES = [
     // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
     kit: { pueblo: true, minPlantas: 1, maxPlantas: 3 },
     horizonte: "ohio",
-    obstaculos: { low: ["paca", "paca", "conos", "barricada"], high: ["guirnalda", "pancarta", "globos"],
-      full: ["tractor", "carroza", "furgoneta"] },
+    obstaculos: { low: ["paca", "calabazas", "calabazas"], high: ["guirnalda", "globos"],
+      full: ["tractor", "carroza", "vaca", "furgoneta"] },
     publico: { personas: ["abuelo", "senora", "fan", "chico", "abuelo"], valla: "banderas", cada: 2 },
     tramos: [
       [0, 200, "calma", { titulo: "main_street" }],
-      [200, 560, "suave", { densidad: 0.42 }],
+      [200, 560, "vacas", { titulo: "vacas" }],
       [560, 860, "autobuses", { titulo: "autobuses" }],
       [860, 1000, "festin", { potenciador: "mega", titulo: "gigante" }],
       [1000, 1400, "desfile", { titulo: "desfile" }],
@@ -148,7 +149,7 @@ const CALLES = [
     // Centro de Phoenix: estuco de colores calidos, de dos a nueve plantas.
     kit: { desierto: true, minPlantas: 2, maxPlantas: 9 },
     horizonte: "phoenix",
-    obstaculos: { low: ["nopal", "nopal", "conos", "barricada"], high: ["arco_neon", "pancarta", "globos"],
+    obstaculos: { low: ["nopal", "nopal", "calavera"], high: ["arco_neon", "cartel_ruta"],
       full: ["saguaro", "pickup", "pickup", "furgoneta"] },
     publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
     tramos: [
@@ -196,8 +197,8 @@ const CALLES = [
     // Hoteles y casinos: altos, claros y con letreros de neon.
     kit: { vegas: true, minPlantas: 4, maxPlantas: 12 },
     horizonte: "vegas", debate: true,
-    obstaculos: { low: ["fichas", "fichas", "conos", "barricada"], high: ["marquesina", "pancarta", "globos"],
-      full: ["tragaperras", "limusina", "limusina", "furgoneta"] },
+    obstaculos: { low: ["fichas", "fichas"], high: ["marquesina"],
+      full: ["tragaperras", "limusina", "elvis", "elvis", "furgoneta"] },
     publico: { personas: ["turista", "fan", "ejecutivo", "senora", "chico"], valla: "verja", cada: 2 },
     tramos: [
       [0, 200, "calma", { titulo: "strip" }],
@@ -250,7 +251,7 @@ const CALLES = [
     kit: { minPlantas: 6, maxPlantas: 10 },
     horizonte: "dc",
     potenciadores: ["magnet", "shield", "boost", "mega", "freeze", "rocket", "botas"],
-    obstaculos: { low: ["valla_metal", "valla_metal", "barricada", "conos"], high: ["protesta", "pancarta", "globos"],
+    obstaculos: { low: ["valla_metal", "cajas", "cajas"], high: ["protesta"],
       full: ["agentes", "agentes", "furgoneta", "guardaespaldas"] },
     publico: { personas: ["ejecutivo", "fan", "turista", "senora", "ejecutivo"], valla: "verja", cada: 2 },
     tramos: [

@@ -813,3 +813,6 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #bossBar.debate .bossName { font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 #bossBar.debate .bossName .yo { color: #ffd0cc; }
 #bossBar.debate .bossName .el { color: #ffe9a0; }
+
+/* 31/10: sus frases de verdad van en inglés; en castellano, la traducción debajo */
+#speechBubble small { display: block; font-size: 12px; font-weight: 700; color: #4a5470; margin-top: 3px; }

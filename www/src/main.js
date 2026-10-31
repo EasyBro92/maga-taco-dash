@@ -14,12 +14,12 @@ import { icono, pintarIconos } from "./iconos.js";
 import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
 import { abrirTienda, aplicarTienda } from "./tienda.js";
 import { PIEZAS_KIT } from "./edificios.js";
-import { applyI18n, toggleLang, setLang, t, randomCatchphrase, getLang } from "./i18n.js";
+import { applyI18n, toggleLang, setLang, t, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
 import * as misiones from "./missions.js";
-import { FRASES } from "./frases.js";
+import { FRASES, TRUMP, traduccion } from "./frases.js";
 import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
 
 initErrorReporting();
@@ -1109,9 +1109,18 @@ function updatePowerupBadge() {
 
 // ---------- Globo de frases ----------
 let bubbleTimeout = null;
+// 31/10: sus frases de verdad (en ingles) llevan la traduccion debajo en
+// castellano, y se quedan mas rato: son mas largas.
 function showBubble(text, ms = 1300) {
   const el = document.getElementById("speechBubble");
-  el.textContent = text;
+  const trad = traduccion(text, getLang());
+  if (trad) {
+    el.textContent = text;
+    const s = document.createElement("small");
+    s.textContent = trad;
+    el.appendChild(s);
+  } else el.textContent = text;
+  if (TRUMP[text]) ms = Math.max(ms, 2600);
   el.classList.add("show");
   if (bubbleTimeout) clearTimeout(bubbleTimeout);
   bubbleTimeout = setTimeout(() => el.classList.remove("show"), ms);
@@ -1318,7 +1327,8 @@ function registerTaco(amount) {
   const newMultiplier = Math.min(5, 1 + Math.floor(streak / 5));
   if (newMultiplier > multiplier) {
     multiplier = newMultiplier;
-    showBubble(randomCatchphrase());
+    const animo = (FRASES[getLang()] || FRASES.es).animo;
+    showBubble(animo[Math.floor(Math.random() * animo.length)]);
     sndPoint();
     flashExpression("happy", 0.6);
   }
