@@ -18,6 +18,7 @@
 #                tragaperras (esquivar) · limusina blanca (esquivar)
 #                marquesina «DEBATE» (agacharse) · y el atril del Burrito-Bot
 #                (va pegado al jefe en el debate; los neones brillan solos)
+#   Todos        el helicóptero de la tele de las Fake News (31/10, decorado)
 #   Acera        valla de policía azul y verja negra (delante del público)
 
 import os, sys, math
@@ -488,6 +489,60 @@ def atril():
         o.location = (x, 0, -0.35 - 0.25)
 
 
+# ---------------------------------------------------------------- 31/10: el helicóptero de las Fake News
+def texto_lado(m, cadena, x, y, z, tam, lado):
+    """Letras en un costado que mira a +x (lado 1) o a -x (lado -1)."""
+    o = texto(m, cadena, 0, 0, 0, tam=tam, prof=0.03)
+    o.rotation_euler = (math.pi / 2, 0, lado * math.pi / 2)
+    o.location = (x + lado * 0.015, y, z)
+    return o
+
+def helicoptero():
+    """Helicóptero de la tele de las Fake News: mira al jugador (el morro
+    hacia -y), cabina blanca con franja roja y azul, cristal, el cámara en la
+    puerta, el letrero en los dos costados, cola, patines y el foco debajo.
+    Las palas las pone el juego (un disco borroso que gira despacio)."""
+    blanco_h = mat('blanco_heli', 0xf4f6f8, 0.35)
+    azul_h = mat('azul_heli', 0x1f3c88, 0.4)
+    rojo_h = mat('rojo_heli', 0xd8202a, 0.4)
+    esfera(blanco_h, 0, 0, 1.2, 1.0, 3, esc=(0.95, 1.6, 0.85))              # la cabina
+    esfera(mat('cristal_heli', 0x2a4a6a, 0.1), 0, -0.8, 1.35, 0.85, 3, esc=(0.85, 0.95, 0.7))
+    caja(rojo_h, 0, 0.05, 0.62, 1.86, 2.6, 0.2)                            # franjas
+    caja(azul_h, 0, 0.05, 0.82, 1.84, 2.4, 0.14)
+    rama(blanco_h, (0, 1.2, 1.35), (0, 4.6, 1.7), 0.32, 0.14, 10)            # la cola
+    caja(azul_h, 0, 4.6, 1.7, 0.08, 0.7, 1.1, inclina=0.35)                  # deriva
+    caja(blanco_h, 0, 4.4, 1.75, 1.1, 0.35, 0.06)                           # estabilizador
+    cil(mat('rotor_cola', 0x3a3d44, 0.4), 0.16, 4.75, 2.05, 0.08, 0.12, 8, eje='X')
+    caja(mat('mastil_rotor', 0x3a3d44, 0.4), 0, 0.1, 2.0, 0.3, 0.5, 0.35)    # el mástil del rotor
+    cil(mat('buje', 0x2a2d33, 0.3), 0, 0.1, 2.35, 0.2, 0.18, 10)
+    # patines
+    patin = mat('patin', 0x3a3d44, 0.4)
+    for s in (-1, 1):
+        rama(patin, (s * 0.75, -1.3, 0.0), (s * 0.75, 1.3, 0.0), 0.06, 0.06, 6)
+        rama(patin, (s * 0.75, -1.3, 0.0), (s * 0.75, -1.55, 0.18), 0.06, 0.06, 6)
+        for y in (-0.6, 0.6):
+            rama(patin, (s * 0.75, y, 0.0), (s * 0.45, y, 0.55), 0.05, 0.05, 6)
+    # FAKE NEWS en los dos costados y en la cola
+    for lado in (-1, 1):
+        texto_lado(azul_h, 'FAKE', lado * 0.93, 0.15, 1.45, 0.36, lado)
+        texto_lado(rojo_h, 'NEWS', lado * 0.9, 0.15, 1.05, 0.3, lado)
+        texto_lado(rojo_h, 'TV', lado * 0.2, 3.1, 1.55, 0.26, lado)
+    # el cámara asomado por la puerta (lado que da a la calle, -x)
+    persona_x = -0.85
+    cil(mat('ropa_camara', 0x2a2d33, 0.6), persona_x, -0.1, 0.85, 0.2, 0.55, 10)
+    esfera(mat('piel_camara', 0xf0c8a0, 0.6), persona_x, -0.15, 1.55, 0.17, 2)
+    esfera(mat('gorra_camara', 0xd8202a, 0.5), persona_x, -0.12, 1.66, 0.17, 2, mitad=True)
+    caja(mat('camara_tv', 0x1d1e24, 0.4), persona_x - 0.25, -0.35, 1.3, 0.25, 0.55, 0.3)
+    cil(mat('objetivo', 0x5a7aa0, 0.1), persona_x - 0.25, -0.65, 1.45, 0.1, 0.06, 10, eje='Y')
+    esfera(luz('piloto_camara', 0xff2a2a, 1.0), persona_x - 0.25, -0.4, 1.62, 0.05, 1)
+    # el foco de debajo y las luces de posición
+    cil(mat('foco_heli', 0x3a3d44, 0.4), 0.3, -0.9, 0.35, 0.18, 0.25, 10)
+    esfera(luz('lente_foco', 0xfff6d8, 1.0), 0.3, -0.9, 0.3, 0.14, 1)
+    esfera(luz('luz_roja_heli', 0xff2a2a, 1.0), -0.95, 0.4, 1.0, 0.07, 1)
+    esfera(luz('luz_verde_heli', 0x2aff6a, 1.0), 0.95, 0.4, 1.0, 0.07, 1)
+    esfera(luz('baliza_heli', 0xff4a2a, 1.0), 0, 4.75, 2.3, 0.08, 1)
+
+
 PIEZAS = {
     'taxi':          (taxi,          'obstaculos', dict(lado=512)),
     'alcantarilla':  (alcantarilla,  'obstaculos', dict(lado=512, bisel=0.0)),
@@ -512,6 +567,7 @@ PIEZAS = {
     'limusina':      (limusina,      'obstaculos', dict(lado=512)),
     'marquesina':    (marquesina,    'obstaculos', dict(lado=512, bisel=0.0)),
     'atril':         (atril,         'obstaculos', dict(lado=512, suelo=False)),
+    'helicoptero':   (helicoptero,   'obstaculos', dict(lado=512, bisel=0.0, suelo=False)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),
     'verja':         (verja,         'publico',    dict(lado=256, bisel=0.0)),
 }

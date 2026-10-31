@@ -854,3 +854,36 @@ neones encendidos y ganar el debate con micrófonos.
 - Comprobado con el piloto automático: el nivel entero, los tramos y obstáculos
   nuevos, el debate (encuesta del 50 al 100 %) y el final («¡Nevada vota rojo!»,
   +6 votos). Pendiente: su veredicto en el móvil.
+
+## Mapas vivos y más bonitos (2026-10-31)
+
+Isidro: «dime qué más pondrías y qué cambiarías, mejora la estética y haz que
+los mapas sean más dinámicos». De la lista que se le propuso eligió seis cosas
+(dejó para otro día que el cielo cambie al correr y los tacos en 3D).
+
+- **Vida en la calle** (world.js, «Los mapas vivos»): gente que anda por las
+  aceras, detrás del público (las figuras del público, con paso y brazos);
+  coches que cruzan por los cruces, siempre a más de 100 m del jugador, para
+  que no parezcan obstáculos; palomas en la acera que salen volando al llegar.
+- **Helicóptero de la tele de las Fake News** (`blender/obstaculos2.py`,
+  `helicoptero`): dos veces por nivel (nunca en el jefe, el tutorial ni el
+  sprint) viene por detrás, se queda grabando delante a la derecha y se va; el
+  presidente le suelta «¡FAKE NEWS!». Palas como un disco borroso que gira
+  despacio (sin parpadeo). De noche, con el haz del foco apuntándole.
+- **Monumentos y árboles**: la rueda de la noria va aparte (`noria_rueda`) y
+  gira; los chorros de las fuentes los pone el juego y suben y bajan en ola;
+  los árboles y palmeras de la acera se mecen un poco.
+- **Halos**: un brillo suave en neones, bombillas y farolas, todo en un dibujo
+  por pieza. Blender apunta dónde brilla cada pieza sin hornear
+  (`blender … -- --luces` → `models/<carpeta>/luces.json`). Solo de noche
+  (Las Vegas) y, más flojo, al atardecer (las farolas de Washington).
+- **Calle con más detalle**: parches de asfalto, manchas de aceite y charcos
+  que reflejan el cielo (en Phoenix no, es el desierto), y la sombra de los
+  edificios del lado del sol sobre su acera. Solo la acera: las sombras que
+  cruzan la calzada hacen rayas al correr, y eso marea.
+- **Las Vegas con más contraste**: cielo y bruma más oscuros, luz más baja.
+- Coste medido contra la versión anterior en Las Vegas: de 640 a 697 dibujos
+  por fotograma y unos 0,2 ms más de cálculo. Las palomas se dejaron en tres
+  piezas cada una.
+- Comprobado con el piloto automático: los cinco niveles enteros, sin errores,
+  con el helicóptero dos veces en cada uno. Pendiente: su veredicto en el móvil.

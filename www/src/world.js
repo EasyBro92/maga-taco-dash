@@ -1,11 +1,12 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
-import { modelo, hayModelo, medidas, modeloConContorno, capaHielo } from "./models.js";
+import { modelo, hayModelo, medidas, modeloConContorno, capaHielo, lucesDe } from "./models.js";
 import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel } from "./levels.js";
 import { construirEdificio, soltarEdificio } from "./edificios.js";
 import { lienzo as lienzoPegatina } from "./pegatinas.js";
 import { crearHorizonte } from "./horizonte.js";
+import { mergeGeometries } from "../vendor/BufferGeometryUtils.js";
 import { t as tr } from "./i18n.js";
 
 export const LANE_WIDTH = 2.2;
@@ -1607,6 +1608,7 @@ export function createWorld(scene) {
   //   linea: x donde acaba lo que sobresale por delante (cesped, escalones)
   //   acera: mobiliario sobre la acera; `alterna` = uno y uno, en orden
   //   coches: aparcados en batería delante de las fachadas, a lo largo de la calle
+  const MECE = /palmera|arbol|roble|cerezo|arbusto/;   // lo que se mece con el viento
   const ZONAS_BLENDER = {
     dc: {
       carpeta: "dc", linea: 9.2, alterna: true,
@@ -1639,6 +1641,7 @@ export function createWorld(scene) {
     BIOME_PROP_FACTORIES[zona] = nombres.map((n, i) => () => {
       const g = modelo(clave(z, n));
       g.userData.fachada = i < z.fachadas.length;
+      if (MECE.test(n)) { g.userData.mece = true; g.userData.fase = Math.random() * 6; }
       return g;
     });
     const repartir = (pesos, desde) => pesos.flatMap((p, i) => Array(p).fill(desde + i));
@@ -1706,13 +1709,15 @@ export function createWorld(scene) {
     if (luz === "anochecer") {
       // Las Vegas (29/10): cielo morado arriba y rosa en el horizonte, la
       // bruma malva y la calzada oscura; los neones ponen la luz.
-      Object.assign(BIOME_COLORS.city, { sky: 0xf2a6b4, skyTop: 0x35307a, fog: 0xc89ab8, horizon: 0x5a4580, ground: 0xc9b9c4, sidewalk: 0xd9cbd4, road: 0x4a4d5c });
+      // 31/10: mas contraste (Isidro): cielo mas oscuro, niebla mas oscura y menos lavada.
+      Object.assign(BIOME_COLORS.city, { sky: 0xe27c9a, skyTop: 0x1c1748, fog: 0x7a5c90, horizon: 0x3a2c5c, ground: 0x8e8096, sidewalk: 0xa898aa, road: 0x3a3c48 });
     }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
   }
   function prepararCalle() {
+    if (haloMat) haloMat.uniforms.fuerza.value = fuerzaHalos();
     for (const p of calleViva) { group.remove(p.mesh); soltarEdificio(p.mesh); }
     calleViva.length = 0;
     casaBlanca = null;
@@ -1741,9 +1746,10 @@ export function createWorld(scene) {
     while (siguientePieza < calle.length && calle[siguientePieza].d - totalScrolled < alcance) {
       const p = calle[siguientePieza++];
       if (p.tipo) {
-        // Del suelo: paso de cebra o tapa de alcantarilla (no son modelos).
-        const m = p.tipo === "cebra" ? hacerCebra() : hacerTapa();
+        // Del suelo: paso de cebra, tapa de alcantarilla, parche, mancha o charco (no son modelos).
+        const m = p.tipo === "cebra" ? hacerCebra() : p.tipo === "tapa" ? hacerTapa() : hacerMarca(p);
         m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
+        if (p.tipo === "cebra") apuntarCruce(m);
         group.add(m);
         calleViva.push({ mesh: m, fin: 10 });
         continue;
@@ -1782,7 +1788,11 @@ export function createWorld(scene) {
         const retranqueo = Math.max(0, m.frente - 3);
         mesh.position.set(p.lado * (nivel.linea + retranqueo), 0, -(p.d + p.ancho / 2 - totalScrolled));
         mesh.rotation.y = p.lado < 0 ? Math.PI / 2 : -Math.PI / 2;
+        ponerSombra(p, nivel.linea + retranqueo);
       }
+      animarPieza(p, mesh);
+      // Los halos de sus neones (no en el kit: sus rotulos ya llevan su brillo).
+      if (p.pieza !== "kit" && fuerzaHalos() > 0) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
       group.add(mesh);
       calleViva.push({ mesh, fin: p.ancho + 40 });
     }
@@ -1792,7 +1802,13 @@ export function createWorld(scene) {
   function aceraNivel(z) {
     if (totalScrolled - z > nivel.largo - 15) return;
     if (!acerasNivel[nivel.id]) {
-      acerasNivel[nivel.id] = nivel.acera.map((k) => makePool(() => modelo(k)));
+      acerasNivel[nivel.id] = nivel.acera.map((k) => makePool(() => {
+        const m = modelo(k);
+        const h = m && HALOS_ACERA[k] ? crearHalos(HALOS_ACERA[k], k) : null;
+        if (h) m.add(h);
+        if (m && MECE.test(k)) { m.userData.mece = true; m.userData.fase = Math.random() * 6; }
+        return m;
+      }));
       outerPools["nivel_" + nivel.id] = acerasNivel[nivel.id];
     }
     const pools = acerasNivel[nivel.id];
@@ -1891,6 +1907,114 @@ export function createWorld(scene) {
     a.rotation.x = Math.PI / 2; a.position.y = 0.075;
     g.add(t, a);
     return g;
+  }
+
+  // ---- 31/10: la calle con mas detalle ----
+  // Parches de asfalto, manchas de aceite y charcos pintados en lienzos, y la
+  // sombra suave de los edificios del lado del sol sobre la acera (solo la
+  // acera: si cruzara la calzada, al correr pasarian rayas oscuras, que marean).
+  const marcaGeo = new THREE.PlaneGeometry(1, 1);
+  function lienzoMarca(dibuja, w = 128, h = 128) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    dibuja(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+  function matMarca(tex, opacidad, basico = false) {
+    const op = { map: tex, transparent: true, opacity: opacidad, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -6 };
+    return basico ? new THREE.MeshBasicMaterial(op) : toon(0xffffff, { ...op, shininess: 10 });
+  }
+  const marcas = {};
+  function texturasMarcas() {
+    if (marcas.parche || typeof document === "undefined") return;
+    // Parches: tres dibujos de asfalto nuevo con su junta (y una grieta).
+    marcas.parche = [0, 1, 2].map((v) => matMarca(lienzoMarca((x, w, h) => {
+      x.fillStyle = v === 1 ? "rgba(40,42,50,0.7)" : "rgba(30,32,40,0.6)";
+      x.beginPath(); x.roundRect(6, 6, w - 12, h - 12, v === 2 ? 30 : 6); x.fill();
+      x.strokeStyle = "rgba(20,20,26,0.6)"; x.lineWidth = 3; x.stroke();
+      if (v === 0) {
+        x.strokeStyle = "rgba(15,15,20,0.55)"; x.lineWidth = 2; x.beginPath();
+        x.moveTo(20, 30); x.lineTo(50, 52); x.lineTo(62, 48); x.lineTo(96, 80); x.lineTo(108, 104); x.stroke();
+      }
+    }), 0.75));
+    // Mancha de aceite: borrosa, mas oscura en el centro.
+    marcas.mancha = matMarca(lienzoMarca((x, w, h) => {
+      for (const [cx, cy, r] of [[64, 64, 50], [44, 70, 26], [86, 56, 22]]) {
+        const g = x.createRadialGradient(cx, cy, 2, cx, cy, r);
+        g.addColorStop(0, "rgba(14,14,20,0.7)"); g.addColorStop(1, "rgba(14,14,20,0)");
+        x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill();
+      }
+    }), 0.8);
+  }
+  // El charco refleja el cielo del nivel (por eso se pinta con sus colores).
+  const charcos = {};
+  function matCharco() {
+    const cielo = BIOME_COLORS.city.sky, arriba = BIOME_COLORS.city.skyTop, neon = nivel && nivel.luz === "anochecer";
+    const clave = cielo + "_" + arriba + "_" + neon;
+    if (!charcos[clave]) {
+      charcos[clave] = matMarca(lienzoMarca((x, w, h) => {
+        x.save(); x.beginPath();
+        x.ellipse(64, 64, 58, 40, 0.2, 0, Math.PI * 2);
+        x.ellipse(36, 78, 26, 18, 0, 0, Math.PI * 2);
+        x.ellipse(94, 50, 24, 16, 0.4, 0, Math.PI * 2);
+        x.clip();
+        const g = x.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, new THREE.Color(arriba).getStyle()); g.addColorStop(1, new THREE.Color(cielo).getStyle());
+        x.fillStyle = g; x.fillRect(0, 0, w, h);
+        x.globalAlpha = 0.55; x.fillStyle = "#ffffff";
+        x.fillRect(30, 40, 50, 4); x.fillRect(52, 62, 34, 3); x.fillRect(24, 84, 22, 3);
+        if (neon) { x.fillStyle = "#ff4fd8"; x.fillRect(70, 30, 6, 40); x.fillStyle = "#46e0d0"; x.fillRect(40, 56, 5, 34); }
+        x.restore();
+      }), 0.62, true);
+    }
+    return charcos[clave];
+  }
+  function hacerMarca(p) {
+    texturasMarcas();
+    let m;
+    if (p.tipo === "parche") {
+      m = new THREE.Mesh(marcaGeo, marcas.parche[p.v || 0]);
+      m.scale.set(p.ancho, p.largo, 1);
+      m.rotation.z = p.giro || 0;
+    } else if (p.tipo === "mancha") {
+      m = new THREE.Mesh(marcaGeo, marcas.mancha);
+      m.scale.set(p.r * 2, p.r * 2.6, 1);
+    } else {
+      m = new THREE.Mesh(marcaGeo, matCharco());
+      m.scale.set(p.r * 2.2, p.r * 1.6, 1);
+    }
+    m.rotation.x = -Math.PI / 2;
+    m.position.y = 0.058;
+    const g = new THREE.Group();
+    g.add(m);
+    return g;
+  }
+  // Sombra de un edificio sobre su acera, solo en el lado del sol (manana: el
+  // sol a la derecha, la sombra en la acera de la derecha; tarde y atardecer,
+  // a la izquierda; a mediodia, una franja corta en las dos; de noche, nada).
+  let sombraCalleMat = null;
+  function ponerSombra(p, linea) {
+    const luz = nivel && nivel.luz;
+    const lado = { manana: 1, tarde: -1, atardecer: -1 }[luz];
+    const corta = luz === "mediodia";
+    if (!corta && p.lado !== lado) return;
+    if (!sombraCalleMat) {
+      sombraCalleMat = matMarca(lienzoMarca((x, w, h) => {
+        const g = x.createLinearGradient(0, 0, w, 0);
+        g.addColorStop(0, "rgba(20,16,40,0.9)"); g.addColorStop(0.75, "rgba(20,16,40,0.55)"); g.addColorStop(1, "rgba(20,16,40,0)");
+        x.fillStyle = g; x.fillRect(0, 0, w, h);
+      }, 64, 8), 0.34, true);
+    }
+    const hasta = 3.45;                                   // el bordillo
+    const fondo = corta ? 2.2 : linea - hasta;
+    const m = new THREE.Mesh(marcaGeo, sombraCalleMat);
+    m.rotation.x = -Math.PI / 2;
+    m.scale.set(fondo, Math.max(4, p.ancho - 1), 1);
+    if (p.lado > 0) m.rotation.z = Math.PI;               // lo oscuro, junto a la fachada
+    m.position.set(p.lado * (linea - fondo / 2), 0.03, -(p.d + p.ancho / 2 - totalScrolled));
+    group.add(m);
+    calleViva.push({ mesh: m, fin: p.ancho + 40 });
   }
 
   function spawnOuterCluster(z) {
@@ -2237,6 +2361,9 @@ export function createWorld(scene) {
   function construirObstaculo(nombre) {
     const g = modeloConContorno("obstaculos/" + nombre);
     const m = medidas("obstaculos/" + nombre);
+    // (mas pequeños que los de los edificios: de cerca tapaban el letrero)
+    const halos = crearHalos(lucesDe("obstaculos/" + nombre), "obstaculos/" + nombre, 0.65);
+    if (halos) g.add(halos);
     const sombra = new THREE.Mesh(sombraGeo, sombraMat);
     sombra.scale.set(m.ancho * 1.15, 1, m.fondo * 1.1 + 0.4);
     sombra.position.set(0, 0.075, m.frente - m.fondo / 2);
@@ -2669,6 +2796,67 @@ export function createWorld(scene) {
   // El de cada nivel (patrulla o todoterreno), dado la vuelta, pegado detras.
   const perseguidor = { mesh: null, clave: "", z: 18, x: 0, on: false, t: 0, luces: null };
   let _texLuz = null;
+  // ---- Halos (31/10/2026): el brillo suave de neones, bombillas y farolas ----
+  // Todos los de una pieza en un solo dibujo (puntos con su color y tamaño),
+  // sumando luz y apagandose con la distancia como la niebla. Fijos: nada
+  // parpadea. Solo se ven en los niveles de noche (ver fuerzaHalos).
+  let haloMat = null;
+  const altoPantalla = () => (typeof window === "undefined" ? 800 : window.innerHeight * Math.min(window.devicePixelRatio || 1, 2));
+  function materialHalo() {
+    if (haloMat) { haloMat.uniforms.fuerza.value = fuerzaHalos(); return haloMat; }
+    haloMat = new THREE.ShaderMaterial({
+      uniforms: { mapa: { value: texturaLuz() }, alto: { value: altoPantalla() }, fuerza: { value: 1 } },
+      vertexShader: `attribute float tam; attribute vec3 color; uniform float alto; varying vec3 vColor; varying float vLejos;
+        void main() {
+          vColor = color;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = tam * alto * projectionMatrix[1][1] * 0.5 / max(0.5, -mv.z);
+          vLejos = 1.0 - smoothstep(120.0, 270.0, -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `uniform sampler2D mapa; uniform float fuerza; varying vec3 vColor; varying float vLejos;
+        void main() {
+          float a = texture2D(mapa, gl_PointCoord).a;
+          gl_FragColor = vec4(vColor * a * a * fuerza * vLejos, 1.0);
+        }`,
+      blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+    });
+    return haloMat;
+  }
+  // lista: [[x, y, z, radio, color], ...] en ejes de la pieza.
+  const halosHechos = {};
+  function crearHalos(lista, clave, escala = 1) {
+    if (!lista || !lista.length || typeof document === "undefined") return null;
+    if (clave && halosHechos[clave]) { const q = new THREE.Points(halosHechos[clave].geometry, materialHalo()); q.frustumCulled = false; q.renderOrder = 2; return q; }
+    const pos = new Float32Array(lista.length * 3), col = new Float32Array(lista.length * 3), tam = new Float32Array(lista.length);
+    const c = new THREE.Color();
+    lista.forEach(([x, y, z, r, color], i) => {
+      pos.set([x, y, z], i * 3);
+      c.set(color);
+      col.set([c.r, c.g, c.b], i * 3);
+      tam[i] = r * 2 * escala;
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    geo.setAttribute("tam", new THREE.BufferAttribute(tam, 1));
+    const p = new THREE.Points(geo, materialHalo());
+    p.frustumCulled = false;
+    p.renderOrder = 2;
+    if (clave) halosHechos[clave] = p;
+    return p;
+  }
+  // Cuanto brillan los halos segun la luz del nivel (de dia no se ven).
+  function fuerzaHalos() {
+    const luz = nivel && nivel.luz;
+    return luz === "anochecer" ? 1 : luz === "atardecer" ? 0.45 : 0;
+  }
+  // Las farolas de la acera: donde esta la bombilla de cada una.
+  const HALOS_ACERA = {
+    "ciudad/farola_ciudad": [[1.1, 3.45, 0, 1.3, 0xffe6a8]],
+    "dc/farola": [[0, 2.78, 0, 1.2, 0xffe6a8]],
+  };
+
   function texturaLuz() {
     if (_texLuz) return _texLuz;
     const c = document.createElement("canvas"); c.width = c.height = 64;
@@ -2736,6 +2924,8 @@ export function createWorld(scene) {
     // 29/10: en el debate de Las Vegas viene subido a su atril.
     if (!jefe.atril && hayModelo("obstaculos/atril")) {
       jefe.atril = modelo("obstaculos/atril");
+      const h = crearHalos(lucesDe("obstaculos/atril"), "obstaculos/atril");
+      if (h) jefe.atril.add(h);
       jefe.atril.position.set(0, 0.3, 1.55);
       jefe.mesh.add(jefe.atril);
     }
@@ -3240,11 +3430,330 @@ export function createWorld(scene) {
     if (k > 5) { m.visible = false; m.rotation.set(0, 0, 0); cameo.t = -1; }
   }
 
+  // ================================================================
+  // ---- Los mapas vivos (31/10/2026) ----
+  // Isidro eligio: vida en la calle (gente andando por las aceras, coches que
+  // cruzan a lo lejos y palomas que salen volando), el helicoptero de la tele
+  // de las Fake News, y monumentos y arboles que se mueven (la noria gira, las
+  // fuentes suben y bajan, los arboles se mecen). Todo despacio y suave: nada
+  // parpadea, ni tiembla el suelo, ni se mueve la camara (se marea).
+  // ================================================================
+
+  // -- Monumentos: la rueda de la noria y los chorros de las fuentes --
+  function animarPieza(p, mesh) {
+    if (p.pieza === "noria" && hayModelo("vegas/noria_rueda")) {
+      const r = modelo("vegas/noria_rueda");
+      r.position.set(0, 24, -6);            // el eje (en Blender, 0, 6, 24)
+      const h = fuerzaHalos() > 0 ? crearHalos(lucesDe("vegas/noria_rueda"), "vegas/noria_rueda") : null;
+      if (h) r.add(h);
+      mesh.add(r);
+      mesh.userData.rueda = r;
+    }
+    if (p.pieza === "fuentes") mesh.userData.chorros = chorrosFuente(mesh);
+  }
+  // Las 17 boquillas de blender/vegas.py (fuentes): los chorros suben y bajan
+  // en ola, como el espectaculo de agua, cada uno con su altura.
+  const chorroGeo = new THREE.CylinderGeometry(0.1, 0.38, 1, 8, 1, true).translate(0, 0.5, 0);
+  const espumaGeo = new THREE.SphereGeometry(0.8, 10, 8);
+  let chorroMat = null, espumaMat = null;
+  function chorrosFuente(mesh) {
+    if (!chorroMat) {
+      chorroMat = new THREE.MeshBasicMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.78, depthWrite: false });
+      espumaMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false });
+    }
+    const n = 17;
+    const chorros = new THREE.InstancedMesh(chorroGeo, chorroMat, n);
+    const espumas = new THREE.InstancedMesh(espumaGeo, espumaMat, n);
+    const sitios = [];
+    for (let k = 0; k < n; k++) {
+      const t = k / (n - 1);
+      sitios.push({ x: -24 + 48 * t, z: -(6 + 7 * (1 - (2 * t - 1) ** 2)), alto: 6 + 8 * Math.abs(Math.sin(t * Math.PI * 3)) });
+    }
+    chorros.frustumCulled = espumas.frustumCulled = false;
+    mesh.add(chorros, espumas);
+    return { chorros, espumas, sitios };
+  }
+  const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
+  function moverChorros(c) {
+    c.sitios.forEach((s, k) => {
+      const h = s.alto * (0.3 + 0.7 * (0.5 + 0.5 * Math.sin(animClock * 1.2 - k * 0.5)));
+      c.chorros.setMatrixAt(k, _m4.compose(_v.set(s.x, 0.1, s.z), _q.identity(), _s.set(1, h, 1)));
+      c.espumas.setMatrixAt(k, _m4.compose(_v.set(s.x, 0.1 + h, s.z), _q.identity(), _s.set(1, 0.7, 1)));
+    });
+    c.chorros.instanceMatrix.needsUpdate = true;
+    c.espumas.instanceMatrix.needsUpdate = true;
+  }
+
+  // -- Gente andando por las aceras (detras del publico, junto a las fachadas) --
+  const paseantes = [];
+  function ponerPaseante(z) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const p = personaPixar(nivel && nivel.publico && nivel.publico.personas);
+    const dir = Math.random() < 0.5 ? -1 : 1;              // 1: viene hacia la camara
+    p.position.set(side * (8.9 + Math.random() * 0.9), 0, z);
+    p.rotation.y = dir > 0 ? 0 : Math.PI;
+    p.userData.dir = dir;
+    p.userData.vel = 1.1 + Math.random() * 0.5;
+    group.add(p);
+    paseantes.push(p);
+  }
+
+  // -- Coches que cruzan por los cruces, siempre lejos (nunca cerca del jugador) --
+  const COCHES_CRUCE = ["ciudad/coche_rojo", "ciudad/coche_azul", "ciudad/taxi"];
+  const cruces = [];    // { cebra (su grupo), hecho }
+  const cochesCruce = [];
+  function apuntarCruce(cebra) {
+    if (Math.random() < 0.65) cruces.push({ cebra, hecho: false });
+  }
+  function moverCruces(dt) {
+    for (let i = cruces.length - 1; i >= 0; i--) {
+      const c = cruces[i];
+      const z = c.cebra.position.z;
+      if (!c.cebra.parent || z > -60) { cruces.splice(i, 1); continue; }
+      if (!c.hecho && z > -150) {
+        c.hecho = true;
+        const vale = COCHES_CRUCE.filter((k) => hayModelo(k));
+        if (!vale.length) continue;
+        const car = modelo(vale[Math.floor(Math.random() * vale.length)]);
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        car.position.set(-dir * 17, 0, z - 5 + dir * 1.4);
+        car.rotation.y = dir > 0 ? 0 : Math.PI;
+        car.userData.dir = dir;
+        group.add(car);
+        cochesCruce.push(car);
+      }
+    }
+    for (let i = cochesCruce.length - 1; i >= 0; i--) {
+      const car = cochesCruce[i];
+      car.position.x += car.userData.dir * 10 * dt;
+      if (Math.abs(car.position.x) > 18 || car.position.z > -40) { group.remove(car); cochesCruce.splice(i, 1); }
+    }
+  }
+
+  // -- Palomas en la acera que salen volando cuando llegas --
+  // Cuerpo y cabeza en una sola pieza y las dos alas aparte (tres dibujos por paloma).
+  const plumaMat = toon(0x8a8f9a);
+  const palomaCuerpo = mergeGeometries([
+    new THREE.SphereGeometry(0.13, 8, 6).scale(0.9, 0.8, 1.4).translate(0, 0.14, 0),
+    new THREE.SphereGeometry(0.075, 8, 6).translate(0, 0.27, 0.15),
+  ]);
+  const palomaAla = new THREE.BoxGeometry(0.26, 0.02, 0.13).translate(0.13, 0, 0);
+  function hacerPaloma() {
+    const g = new THREE.Group();
+    const cuerpo = new THREE.Mesh(palomaCuerpo, plumaMat);
+    const alas = [-1, 1].map((s) => {
+      const a = new THREE.Mesh(palomaAla, plumaMat);
+      a.position.set(s * 0.08, 0.2, 0);
+      a.scale.x = s;
+      return a;
+    });
+    g.add(cuerpo, ...alas);
+    g.userData.alas = alas;
+    g.userData.cuerpo = cuerpo;
+    return g;
+  }
+  const bandadas = [];
+  function ponerBandada(z) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const x0 = side * (6.5 + Math.random() * 0.6);
+    const aves = [];
+    const n = 3 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < n; k++) {
+      const p = hacerPaloma();
+      p.position.set(x0 + (Math.random() - 0.5) * 1.2, 0, z + (Math.random() - 0.5) * 2.4);
+      p.rotation.y = Math.random() * Math.PI * 2;
+      p.userData.fase = Math.random() * 6;
+      group.add(p);
+      aves.push(p);
+    }
+    bandadas.push({ aves, side, vuela: false, t: 0 });
+  }
+  function moverBandadas(dt, dz) {
+    for (let i = bandadas.length - 1; i >= 0; i--) {
+      const b = bandadas[i];
+      for (const a of b.aves) a.position.z += dz;
+      const z = b.aves[0].position.z;
+      if (!b.vuela && z > -24) {
+        b.vuela = true;
+        for (const a of b.aves) {
+          a.userData.vy = 3 + Math.random() * 2;
+          a.userData.vx = b.side * (1.5 + Math.random() * 2);
+          a.userData.vz = -1 - Math.random() * 3;
+          a.rotation.y = Math.atan2(a.userData.vx, a.userData.vz);
+        }
+      }
+      if (b.vuela) {
+        b.t += dt;
+        for (const a of b.aves) {
+          a.position.x += a.userData.vx * dt;
+          a.position.y += a.userData.vy * dt;
+          a.position.z += a.userData.vz * dt;
+          const batir = Math.sin(animClock * 20 + a.userData.fase) * 0.9;
+          a.userData.alas[0].rotation.z = batir; a.userData.alas[1].rotation.z = -batir;
+        }
+      } else {
+        // Picotean el suelo (se inclinan hacia delante).
+        for (const a of b.aves) a.userData.cuerpo.rotation.x = Math.max(0, Math.sin(animClock * 3 + a.userData.fase)) * 0.45;
+      }
+      if (b.t > 4 || z > DESPAWN_Z + 4) {
+        for (const a of b.aves) group.remove(a);
+        bandadas.splice(i, 1);
+      }
+    }
+  }
+
+  // -- El helicoptero de la tele de las Fake News --
+  // Viene por detras, se queda un rato delante a la derecha grabandote (con
+  // el foco encendido si es de noche) y se va. Dos veces por nivel.
+  const heli = { mesh: null, rotor: null, cola: null, haz: null, fase: "fuera", t: 0, sitio: new THREE.Vector3(), proximo: 0 };
+  let alEventoHeli = null;
+  function onHelicoptero(fn) { alEventoHeli = fn; }
+  function texturaRotor() {
+    const c = document.createElement("canvas"); c.width = c.height = 128;
+    const x = c.getContext("2d");
+    const g = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+    g.addColorStop(0, "rgba(40,44,52,0.55)"); g.addColorStop(0.85, "rgba(40,44,52,0.28)"); g.addColorStop(1, "rgba(40,44,52,0)");
+    x.fillStyle = g; x.beginPath(); x.arc(64, 64, 62, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(30,32,38,0.45)";
+    x.save(); x.translate(64, 64);
+    for (let k = 0; k < 2; k++) { x.rotate(Math.PI / 2); x.beginPath(); x.ellipse(0, 0, 60, 5, 0, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+    return new THREE.CanvasTexture(c);
+  }
+  function montarHeli() {
+    if (heli.mesh || !hayModelo("obstaculos/helicoptero")) return !!heli.mesh;
+    const m = modelo("obstaculos/helicoptero");
+    const h = crearHalos(lucesDe("obstaculos/helicoptero"), "obstaculos/helicoptero");
+    if (h) m.add(h);
+    const tex = texturaRotor();
+    const disco = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    heli.rotor = new THREE.Mesh(new THREE.CircleGeometry(3.4, 32), disco);
+    heli.rotor.rotation.x = -Math.PI / 2;
+    heli.rotor.position.set(0, 2.47, -0.1);
+    heli.cola = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), disco);
+    heli.cola.rotation.y = Math.PI / 2;
+    heli.cola.position.set(0.24, 2.05, -4.75);
+    m.add(heli.rotor, heli.cola);
+    // El haz del foco (solo de noche): un cono que sale de debajo y llega al suelo.
+    const hc = document.createElement("canvas"); hc.width = 4; hc.height = 64;
+    const hx = hc.getContext("2d");
+    const hg = hx.createLinearGradient(0, 0, 0, 64);
+    hg.addColorStop(0, "rgba(255,246,216,0.9)"); hg.addColorStop(1, "rgba(255,246,216,0.15)");
+    hx.fillStyle = hg; hx.fillRect(0, 0, 4, 64);
+    heli.haz = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 1.1, 1, 16, 1, true).translate(0, -0.5, 0),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(hc), transparent: true, opacity: 0.13, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+    m.visible = false; heli.haz.visible = false;
+    group.add(m, heli.haz);
+    heli.mesh = m;
+    return true;
+  }
+  // Dos veces por nivel, nunca durante el jefe, el tutorial ni el sprint final.
+  function momentosHeli() {
+    if (!nivel) return null;
+    if (nivel.helicoptero) return nivel.helicoptero;
+    const libre = (d) => !(nivel.tramos || []).some(([a, b, tipo]) => d >= a && d < b && ["jefe", "tutorial", "sprint"].includes(tipo));
+    return [0.3, 0.68, 0.8].map((k) => Math.round(nivel.largo * k)).filter(libre).slice(0, 2);
+  }
+  const ENTRA = 2.6, GRABA = 14, SALE = 3;
+  const DESDE = new THREE.Vector3(12, 20, 12), PUESTO = new THREE.Vector3(3.2, 8.6, -26), HACIA = new THREE.Vector3(-4, 30, -170);
+  const _foco = new THREE.Vector3(), _dir = new THREE.Vector3(), _abajo = new THREE.Vector3(0, -1, 0);
+  function moverHeli(dt) {
+    // ¿Toca que venga? (en el sin fin, cada 1.400 m)
+    if (heli.fase === "fuera") {
+      const momentos = momentosHeli();
+      const toca = momentos ? momentos.find((d) => d > heli.proximo && totalScrolled >= d && totalScrolled < d + 120)
+        : (totalScrolled > 700 && totalScrolled >= heli.proximo ? totalScrolled : null);
+      if (toca === undefined || toca === null) return;
+      if (jefeActivo() || cielo || !montarHeli()) { if (!momentos) heli.proximo = totalScrolled + 150; return; }
+      heli.proximo = momentos ? toca : totalScrolled + 1400;
+      heli.fase = "entra"; heli.t = 0;
+      heli.mesh.visible = true;
+      if (alEventoHeli) alEventoHeli("llega");
+    }
+    const m = heli.mesh;
+    heli.t += dt;
+    if (heli.fase === "entra") {
+      const k = Math.min(1, heli.t / ENTRA), e = 1 - Math.pow(1 - k, 3);
+      heli.sitio.lerpVectors(DESDE, PUESTO, e);
+      if (k >= 1) { heli.fase = "graba"; heli.t = 0; }
+    } else if (heli.fase === "graba") {
+      heli.sitio.copy(PUESTO);
+      heli.sitio.y += Math.sin(heli.t * 0.9) * 0.4;
+      heli.sitio.x += Math.sin(heli.t * 0.5) * 0.6;
+      if (heli.t > GRABA || jefeActivo()) { heli.fase = "sale"; heli.t = 0; }
+    } else if (heli.fase === "sale") {
+      const k = Math.min(1, heli.t / SALE), e = k * k;
+      heli.sitio.lerpVectors(PUESTO, HACIA, e);
+      if (k >= 1) { heli.fase = "fuera"; m.visible = false; heli.haz.visible = false; return; }
+    }
+    m.position.copy(heli.sitio);
+    m.rotation.set(0.12, 0.6, Math.sin(animClock * 0.7) * 0.05);
+    heli.rotor.rotation.z += dt * 2.2;
+    heli.cola.rotation.x += dt * 3;
+    // El foco, de noche, apunta al jugador.
+    heli.haz.visible = fuerzaHalos() > 0 && heli.fase === "graba";
+    if (heli.haz.visible) {
+      m.updateMatrixWorld();
+      _foco.set(0.3, 0.3, 0.9).applyMatrix4(m.matrixWorld);
+      group.worldToLocal(_foco);
+      _dir.set(LANE_X[jugadorCarril] - group.position.x, 0, 0).sub(_foco);
+      heli.haz.position.copy(_foco);
+      heli.haz.scale.set(1, _dir.length(), 1);
+      heli.haz.quaternion.setFromUnitVectors(_abajo, _dir.normalize());
+    }
+  }
+
+  // -- Cada fotograma: todo lo anterior --
+  let paseoReloj = 0, bandadaReloj = 60;
+  function animarCalle(dt, dz) {
+    if (!dt) return;
+    for (const p of calleViva) {
+      const u = p.mesh.userData;
+      if (u.rueda) u.rueda.rotation.z += dt * 0.12;
+      if (u.chorros) moverChorros(u.chorros);
+    }
+    // gente andando (solo en los niveles: en el sin fin las fachadas van mas cerca)
+    if (nivel && PUBLICO_PIXAR) {
+      paseoReloj -= dz;
+      if (paseoReloj <= 0 && paseantes.length < 12) { ponerPaseante(-90 - Math.random() * 90); paseoReloj = 14 + Math.random() * 16; }
+      for (let i = paseantes.length - 1; i >= 0; i--) {
+        const p = paseantes[i], u = p.userData;
+        p.position.z += dz + u.dir * u.vel * dt;
+        const paso = animClock * 7 * u.vel + u.phase;
+        p.position.y = Math.abs(Math.sin(paso)) * 0.05;
+        p.rotation.z = Math.sin(paso * 0.5) * 0.03;
+        if (u.brazo) u.brazo.rotation.x = Math.sin(paso) * 0.45;
+        if (p.position.z > DESPAWN_Z || p.position.z < SPAWN_Z) { group.remove(p); paseantes.splice(i, 1); }
+      }
+    }
+    for (const c of cochesCruce) c.position.z += dz;
+    moverCruces(dt);
+    bandadaReloj -= dz;
+    if (bandadaReloj <= 0) { ponerBandada(-110); bandadaReloj = 90 + Math.random() * 90; }
+    moverBandadas(dt, dz);
+    moverHeli(dt);
+  }
+  // Al empezar (o seguir desde el punto de control): fuera todo lo vivo.
+  function reiniciarVida() {
+    for (const p of paseantes) group.remove(p);
+    paseantes.length = 0;
+    for (const c of cochesCruce) group.remove(c);
+    cochesCruce.length = 0; cruces.length = 0;
+    for (const b of bandadas) for (const a of b.aves) group.remove(a);
+    bandadas.length = 0;
+    paseoReloj = 0; bandadaReloj = 60;
+    heli.fase = "fuera";
+    heli.proximo = totalScrolled > 0 ? totalScrolled : 0;
+    if (heli.mesh) { heli.mesh.visible = false; heli.haz.visible = false; }
+  }
+
   function update(dz, dtFijo) {
     const now = typeof performance !== "undefined" ? performance.now() : Date.now();
     const dt = dtFijo !== undefined ? dtFijo : Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
     lastTime = now;
     animClock += dt;
+    if (haloMat) haloMat.uniforms.alto.value = altoPantalla();
+    animarCalle(dt, dz);
 
     totalScrolled += dz;
     // El suelo avanza de verdad: calzada, aceras y suelo eran laminas quietas
@@ -3297,6 +3806,8 @@ export function createWorld(scene) {
       const p = outerProps[i];
       p.mesh.position.z += dz;
       p.mesh.scale.setScalar(Math.max(0.001, edgeFade(p.mesh.position.z, DESPAWN_Z, 6)));
+      // 31/10: los arboles y las palmeras se mecen con el viento (poquito).
+      if (p.mesh.userData.mece) p.mesh.rotation.z = Math.sin(animClock * 1.1 + p.mesh.userData.fase) * 0.035;
       if (p.mesh.userData.kind === "tumbleweed") {
         p.mesh.rotation.x += dt * p.mesh.userData.spinSpeed;
         p.mesh.rotation.z += dt * p.mesh.userData.spinSpeed * 0.6;
@@ -3478,6 +3989,7 @@ export function createWorld(scene) {
   // los que se empieza). `chapasHechas`: las chapas que ya no hay que poner.
   function reset(desde = 0, opciones = {}) {
     totalScrolled = desde;
+    reiniciarVida();
     cajasCarrera = opciones.cajaHecha ? 1 : 0;
     perseguir(false, true);
     curveX = 0;
@@ -3532,6 +4044,6 @@ export function createWorld(scene) {
 
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
-    setNivel, getNivel, setLuz, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
+    setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor };
 }

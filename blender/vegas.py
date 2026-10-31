@@ -242,16 +242,15 @@ def fuentes():
     for x in (-24, -12, 0, 12, 24):
         cil(mat('farola_fuentes', 0x2a2d33, 0.4), x, -3.1, 1.2, 0.1, 3.6, 8)
         esfera(bombilla(), x, -3.1, 5.0, 0.32, 2)
-    # los chorros de las fuentes, en una curva sobre el lago
-    chorro = neon('chorro_fuente', 0xeaf6ff, 0.55)
-    espuma = neon('espuma_fuente', 0xffffff, 0.45)
+    # 31/10: los chorros de las fuentes los pone el juego (world.js), que los
+    # hace subir y bajar como en el espectáculo: aquí solo las boquillas, en
+    # una curva sobre el lago (las mismas cuentas que allí).
+    boquilla = mat('boquilla', 0x9aa3ad, 0.3)
     for k in range(17):
         t = k / 16
         x = -24 + 48 * t
         y = 6 + 7 * (1 - (2 * t - 1) ** 2)
-        alto = 6 + 8 * abs(math.sin(t * math.pi * 3))
-        cil(chorro, x, y, 0.1, 0.38, alto, 8, r2=0.1)
-        esfera(espuma, x, y, alto, 0.8, 1, esc=(1, 1, 0.7))
+        cil(boquilla, x, y, 0.1, 0.3, 0.2, 8)
     # cipreses a los lados
     for x in (-27, 27):
         for y in (2, 8, 14):
@@ -328,19 +327,10 @@ def torre_eiffel():
 def noria():
     """La noria gigante: el aro con luces de colores, las cabinas de cristal,
     los radios, las dos patas y el paseo de tiendas a sus pies."""
+    # 31/10: la rueda va aparte (noria_rueda) para que gire en el juego; su
+    # eje está en (0, yc, zc), que en el juego es (0, 24, -6).
     zc, R, yc = 24, 20, 6
-    aro(neon('aro_noria', 0xff4fd8, 0.9), 0, yc - 0.6, zc, R, 0.45)
-    aro(mat('aro_noria_acero', 0xd8dde3, 0.3), 0, yc + 0.6, zc, R, 0.35)
-    cable = mat('radio_noria', 0xbfc6cf, 0.3)
-    for k in range(28):
-        a = k / 28 * math.pi * 2
-        x, z = math.cos(a) * R, zc + math.sin(a) * R
-        rama(cable, (0, yc, zc), (x, yc, z), 0.06, 0.06, 4)
-        # cabina: una burbuja de cristal colgada por fuera del aro
-        cx, cz = math.cos(a) * (R + 1.0), zc + math.sin(a) * (R + 1.0)
-        esfera(neon('cabina_noria', 0xbfe8ff, 0.45), cx, yc - 1.1, cz, 0.75, 2, esc=(1.25, 1, 0.9))
-    cil(mat('cubo_noria', 0x8f99a8, 0.3), 0, yc, zc, 1.6, 2.6, 16, eje='Y')
-    esfera(neon('centro_noria', 0x46e0d0, 1.0), 0, yc - 1.4, zc, 0.7, 2)
+    cil(mat('eje_noria', 0x8f99a8, 0.3), 0, yc, zc, 0.9, 4.2, 12, eje='Y')
     pata = mat('pata_noria', 0xe8ecf0, 0.3)
     for s in (-1, 1):
         rama(pata, (s * 9, yc - 3, 0), (0, yc - 1.5, zc), 0.8, 0.5, 10)
@@ -352,6 +342,21 @@ def noria():
         caja(neon('rotulo_paseo', 0xff4fa0, 0.9), s * 13, -0.1, 6.2, 12, 0.2, 0.4)
     for x in (-4, 4):
         palmera_en(x, -2, 7)
+
+def noria_rueda():
+    """La rueda de la noria, con el eje en el origen: el aro con luces de
+    colores, los radios, el cubo y las cabinas de cristal."""
+    R = 20
+    aro(neon('aro_noria', 0xff4fd8, 0.9), 0, -0.6, 0, R, 0.45)
+    aro(mat('aro_noria_acero', 0xd8dde3, 0.3), 0, 0.6, 0, R, 0.35)
+    cable = mat('radio_noria', 0xbfc6cf, 0.3)
+    for k in range(28):
+        a = k / 28 * math.pi * 2
+        rama(cable, (0, 0, 0), (math.cos(a) * R, 0, math.sin(a) * R), 0.06, 0.06, 4)
+        cx, cz = math.cos(a) * (R + 1.0), math.sin(a) * (R + 1.0)
+        esfera(neon('cabina_noria', 0xbfe8ff, 0.45), cx, -1.1, cz, 0.75, 2, esc=(1.25, 1, 0.9))
+    cil(mat('cubo_noria', 0x8f99a8, 0.3), 0, 0, 0, 1.6, 2.6, 16, eje='Y')
+    esfera(neon('centro_noria', 0x46e0d0, 1.0), 0, -1.4, 0, 0.7, 2)
 
 def campanile():
     """El palacio veneciano: arcos blancos abajo, la fachada rosa y la
@@ -464,6 +469,7 @@ PIEZAS = {
     'cesar':         (cesar,         'vegas', dict(lado=1024, segmentos=2)),
     'torre_eiffel':  (torre_eiffel,  'vegas', dict(lado=1024, segmentos=2)),
     'noria':         (noria,         'vegas', dict(lado=1024, bisel=0.0)),
+    'noria_rueda':   (noria_rueda,   'vegas', dict(lado=1024, bisel=0.0, suelo=False)),
     'campanile':     (campanile,     'vegas', dict(lado=1024, segmentos=2)),
     'hotel_trump':   (hotel_trump,   'vegas', dict(lado=2048, segmentos=2)),
 }

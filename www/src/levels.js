@@ -235,6 +235,7 @@ const CALLES = [
     // Para el final: mas abajo y mirando hacia arriba, que se vea la torre.
     camaraFinal: { pos: [3.0, 2.3, 19], mira: [0, 9, -12] },
     acera: ["phoenix/palmera", "ciudad/farola_ciudad"],
+    extras: ["noria_rueda"],
   },
   {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
@@ -422,6 +423,23 @@ export function sueloDeNivel(nivel) {
   for (let x = 30; x < nivel.largo - 40; x += 45 + azar() * 25) {
     salida.push({ tipo: "tapa", d: x, x: (azar() < 0.5 ? -1 : 1) * 3.1 });
   }
+  // 31/10: la calle con mas detalle. Parches de asfalto, manchas de aceite y
+  // charcos (en Phoenix no: es el desierto). Pocos y de poco contraste, para
+  // que al pasar por debajo no hagan rayas que parpadeen.
+  const az = azarConSemilla(nivel.semilla + 13);
+  const seco = !!(nivel.kit && nivel.kit.desierto);
+  for (let x = 60; x < nivel.largo - 60; x += 55 + az() * 60) {
+    salida.push({ tipo: "parche", d: x, x: (az() - 0.5) * 3.6, ancho: 1.6 + az() * 2.2, largo: 2.5 + az() * 4, giro: (az() - 0.5) * 0.3, v: Math.floor(az() * 3) });
+  }
+  for (let x = 45; x < nivel.largo - 60; x += 35 + az() * 50) {
+    salida.push({ tipo: "mancha", d: x, x: [-2.2, 0, 2.2][Math.floor(az() * 3)] + (az() - 0.5) * 0.6, r: 0.5 + az() * 0.6 });
+  }
+  if (!seco) {
+    for (let x = 120; x < nivel.largo - 80; x += 110 + az() * 120) {
+      const borde = az() < 0.7;
+      salida.push({ tipo: "charco", d: x, x: borde ? (az() < 0.5 ? -1 : 1) * 2.75 : (az() - 0.5) * 3, r: 0.9 + az() * 0.9 });
+    }
+  }
   return salida.sort((a, b) => a.d - b.d);
 }
 
@@ -442,6 +460,7 @@ export function piezasDeNivel(nivel) {
   const set = new Set();
   for (const lado of [nivel.izquierda, nivel.derecha]) for (const it of lado) if (Array.isArray(it)) set.add(it[0]);
   for (const f of nivel.fondo || []) set.add(f.pieza);
+  for (const e of nivel.extras || []) set.add(e);      // piezas que van pegadas a otras (la rueda de la noria)
   if (nivel.carpeta === "washington") set.add("puerta_cb");
   set.delete("kit");   // los del kit van en su carpeta (ver usaKit)
   return [...set];

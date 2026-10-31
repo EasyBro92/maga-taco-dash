@@ -108,6 +108,9 @@ def mat_ventanas(nombre, cristal, pared, paso_x=0.9, paso_z=1.1, hueco_x=0.5, hu
 # en una segunda textura, la de luz: en el juego va de `emissiveMap` y se ve
 # encendido aunque la escena esté oscura. Fija: nada parpadea (Isidro se marea).
 _luces = set()
+# 31/10: los neones y bombillas (no las ventanas) llevan además un halo en el
+# juego; aquí se apunta su color y su fuerza (ver `--luces` en correr()).
+_halos = {}
 
 def luz(nombre, color, fuerza=1.0):
     """Color liso que brilla solo (neón, bombilla)."""
@@ -118,6 +121,7 @@ def luz(nombre, color, fuerza=1.0):
     b.inputs['Emission Color'].default_value = (*lin(color), 1)
     b.inputs['Emission Strength'].default_value = fuerza
     _luces.add(nombre)
+    _halos[nombre] = (color, fuerza)
     return m
 
 def ventanas_luz(nombre, cristal, pared, brillo=0.6, **kw):
@@ -369,7 +373,7 @@ def escalinata(m, x, y, z, w, n, huella=0.22, tabica=0.12, crece=0.0):
 # ---------------------------------------------------------------- horneado
 def empezar():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    _mats.clear(); _partes.clear(); _luces.clear()
+    _mats.clear(); _partes.clear(); _luces.clear(); _halos.clear()
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'
     sc.cycles.device = 'CPU'
@@ -523,11 +527,66 @@ def terminar(nombre, carpeta, lado=512, bisel=0.025, oclusion=0.7, suelo=True, e
           f'textura {lado}, {time.time() - t0:.0f} s', flush=True)
 
 
+def _puntos_de_luz(max_puntos=420):
+    """Los halos de la pieza (31/10): puntos repartidos por cada neón o
+    bombilla (no las ventanas ni lo que brilla flojo), ya en ejes del juego
+    (x, z, -y) y con su tamaño y color: [x, y, z, radio, color]."""
+    from mathutils import Vector
+    bpy.context.view_layer.update()
+    puntos = []
+    for o in _partes:
+        m = o.data.materials[0] if o.data.materials else None
+        if not m or m.name not in _halos:
+            continue
+        color, fuerza = _halos[m.name]
+        if fuerza < 0.5:
+            continue
+        vs = [o.matrix_world @ v.co for v in o.data.vertices]
+        if not vs:
+            continue
+        lo = Vector((min(v.x for v in vs), min(v.y for v in vs), min(v.z for v in vs)))
+        hi = Vector((max(v.x for v in vs), max(v.y for v in vs), max(v.z for v in vs)))
+        tam = hi - lo
+        if max(tam) < 0.7:
+            c = (lo + hi) / 2
+            puntos.append((c, 0.35 + max(tam) * 2.2, color, fuerza))
+            continue
+        # lo grande (letras, rayos, aros): puntos sueltos por sus vértices
+        paso = min(3.0, max(0.45, sorted(tam)[1] * 0.9))
+        elegidos = []
+        for v in vs:
+            if all((v - e).length >= paso for e in elegidos):
+                elegidos.append(v)
+                if len(elegidos) >= 60:
+                    break
+        for v in elegidos:
+            puntos.append((v, paso * 1.5, color, fuerza))
+    if len(puntos) > max_puntos:
+        k = len(puntos) / max_puntos
+        puntos = [puntos[int(i * k)] for i in range(max_puntos)]
+    return [[round(p.x, 2), round(p.z, 2), round(-p.y, 2), round(r * f, 2), c] for p, r, c, f in puntos]
+
 def correr(piezas):
-    """piezas: {nombre: (funcion, carpeta, opciones)}"""
+    """piezas: {nombre: (funcion, carpeta, opciones)}
+    Con --luces no se hornea nada: solo se apuntan los halos de cada pieza en
+    www/models/<carpeta>/luces.json (lo lee el juego)."""
+    import json
+    luces = {}
     for nombre, (fn, carpeta, op) in piezas.items():
         if SOLO and nombre not in SOLO:
             continue
         empezar()
         fn()
+        if '--luces' in ARGS:
+            pts = _puntos_de_luz()
+            if pts:
+                luces.setdefault(carpeta, {})[nombre] = pts
+                print(f'LUCES {nombre}: {len(pts)} halos', flush=True)
+            continue
         terminar(nombre, carpeta, **op)
+    for carpeta, piezas_luz in luces.items():
+        ruta = os.path.join(MODELOS, carpeta, 'luces.json')
+        viejo = json.load(open(ruta, encoding='utf-8')) if os.path.exists(ruta) else {}
+        viejo.update(piezas_luz)
+        with open(ruta, 'w', encoding='utf-8') as fh:
+            json.dump(viejo, fh, separators=(',', ':'))

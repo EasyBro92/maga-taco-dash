@@ -28,7 +28,9 @@ const LISTA = {
     // 28/10: botas de salto y caja sorpresa (ideas de Subway Surfers)
     "botas", "caja_sorpresa",
     // 29/10: los de Las Vegas y el atril del debate
-    "dado", "fichas", "tragaperras", "limusina", "marquesina", "atril"],
+    "dado", "fichas", "tragaperras", "limusina", "marquesina", "atril",
+    // 31/10: el helicoptero de la tele de las Fake News (decorado, en todos)
+    "helicoptero"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -47,9 +49,26 @@ function materialDe(original, shininess, specular) {
     : { map: mapa, shininess, specular });
 }
 
+// ---- Halos (31/10/2026) ----
+// Donde brilla cada pieza (neones y bombillas): lo apunta Blender en
+// models/<carpeta>/luces.json ({ pieza: [[x, y, z, radio, color], ...] }).
+// Solo las carpetas que lo tienen (las demas darian un error 404).
+const CON_LUCES = new Set(["vegas", "obstaculos"]);
+const luces = {};
+async function cargarLuces(carpeta) {
+  if (!CON_LUCES.has(carpeta) || luces[carpeta]) return;
+  luces[carpeta] = {};
+  try { luces[carpeta] = await (await fetch(`models/${carpeta}/luces.json`)).json(); } catch (e) { /* sin halos */ }
+}
+export function lucesDe(clave) {
+  const [carpeta, pieza] = clave.split("/");
+  return (luces[carpeta] && luces[carpeta][pieza]) || null;
+}
+
 export async function loadZoneModels(onProgress) {
   // ?sinblender: arrancar con las piezas antiguas, para comparar.
   if (/sinblender/.test(location.search)) return 0;
+  await cargarLuces("obstaculos");
   const loader = new GLTFLoader();
   const tareas = [];
   const total = Object.values(LISTA).reduce((n, l) => n + l.length, 0);
@@ -90,6 +109,7 @@ export async function loadZoneModels(onProgress) {
 // Avenue pesa 6 MB) solo se bajan al entrar en el, no al abrir el juego.
 // Lo ya cargado no se vuelve a pedir.
 export async function cargarCarpeta(carpeta, nombres, onProgress) {
+  await cargarLuces(carpeta);
   const loader = new GLTFLoader();
   const faltan = nombres.filter((n) => !plantillas[`${carpeta}/${n}`]);
   let hechas = 0;

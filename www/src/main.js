@@ -310,8 +310,8 @@ function aplicarLuz(luz) {
   } else if (luz === "anochecer") {
     // Anochecer (Las Vegas): el sol ya casi no esta, luz rosada y baja desde
     // el oeste; el cielo morado da la luz de relleno. Lo demas lo ponen los neones.
-    sun.color.set(0xffb0a8); sun.intensity = 0.95; sun.position.set(-8, 4, -1);
-    hemi.color.set(0xb8a8e8); hemi.groundColor.set(0x5a4660);
+    sun.color.set(0xff9f95); sun.intensity = 0.9; sun.position.set(-8, 4, -1);
+    hemi.color.set(0xa090e0); hemi.groundColor.set(0x3c2c46);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -765,6 +765,10 @@ function pintarBarraJefe(vida) {
   barra.querySelector(".bossName").innerHTML = `<span class="yo">${t("encuestaYo")} ${yo} %</span> ${t("encuesta")} <span class="el">${100 - yo} % BOT</span>`;
   document.getElementById("bossFill").style.width = `${yo}%`;
 }
+// 31/10: llega el helicoptero de la tele de las Fake News.
+world.onHelicoptero(() => {
+  setTimeout(() => { if (gameState === "playing") showBubble((FRASES[getLang()] || FRASES.es).furgoneta, 1600); }, 1200);
+});
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
   if (evento === "golpe") {
