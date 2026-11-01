@@ -928,3 +928,34 @@ bajar whisper.cpp, su modelo de inglés y seis grabaciones de Commons.
   errores, cada uno con sus obstáculos; las vacas cruzan y cerca del jugador
   siempre están en un carril. Pendiente: su veredicto en el móvil, y Des
   Moines (en pausa).
+
+## Nivel 5: Des Moines, el caucus de Iowa (2026-11-01)
+
+Isidro pidió seguir con Des Moines y eligió:
+- **Final en el Capitolio dorado**: la cúpula de oro con su linterna y las
+  cuatro cúpulas pequeñas de cobre verde con nervios dorados, como el de
+  verdad, en lo alto de su colina nevada. El presidente se para al pie de la
+  escalinata y la cámara mira hacia la cúpula.
+- **Mañana de invierno**: el caucus de Iowa es en enero. Cielo frío y limpio,
+  nieve en las aceras, los tejados y los árboles sin hojas, y nieve que cae
+  despacio (copos grandes y pocos, sin brillos ni parpadeos: se marea).
+- **Los cuatro tramos**: «¡Montañas de soja!» (un carril cortado que va
+  cambiando, sacos para saltar y el tubo de grano por debajo), «¡Cerdos
+  sueltos!» (cruzan la calle como las vacas de Findlay, pero se saltan),
+  «¡Cosechadoras de frente!» (ocupan dos carriles y vienen hacia ti) y «¡La
+  cola del caucus!» (una fila de votantes tapa un carril un buen trecho).
+  Antes de la meta, «¡Ventisca!»: montones de nieve y la pancarta del caucus.
+- La calle es Locust Street hacia el este, que acaba de verdad en el
+  Capitolio: el parque de esculturas, la biblioteca central de cristal y cobre,
+  el Hotel Fort Des Moines, la torre de acero corten, 801 Grand (la más alta de
+  Iowa) y el antiguo edificio de la biblioteca de 1903 junto al río. Por encima
+  de la calle cruzan las pasarelas acristaladas («skywalks») de Des Moines.
+  Después del puente sobre el río, el East Village de ladrillo bajo.
+- Obstáculos propios: sacos de soja, montaña de soja «FOR SALE · NO CHINA»,
+  montón de nieve con la pala, mesa del caucus con la urna, tubo de grano,
+  pancarta «IOWA CAUCUS», quitanieves, muñeco de nieve con gorra roja, cerdos,
+  cosechadoras y votantes en cola. La furgoneta de las Fake News, como en todos.
+- En la acera, un granjero nuevo (chaqueta de cuadros, peto y gorra con
+  orejeras) entre el público.
+- El helicóptero de la tele sale después del río: por el centro las pasarelas
+  lo atravesarían.

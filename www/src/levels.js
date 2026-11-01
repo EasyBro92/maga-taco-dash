@@ -21,6 +21,13 @@ function cuadras(n) {
 
 // Edificio del kit con aire oficial (Washington).
 const FED = { federal: true, minPlantas: 5, maxPlantas: 7 };
+// East Village de Des Moines: ladrillo bajo, de una a tres plantas (y nevado).
+const EV = { pueblo: true, minPlantas: 1, maxPlantas: 3 };
+function cuadrasCon(n, op) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(["kit", 4, op], 14);
+  return out;
+}
 
 // ---- Tramos (27/10/2026) ----
 // Isidro: «los niveles no sé cuándo acaban, son muy repetitivos». Antes cada
@@ -239,6 +246,67 @@ const CALLES = [
     extras: ["noria_rueda"],
   },
   {
+    // 01/11/2026: nivel 5, el caucus de Iowa. Isidro eligio final en el
+    // Capitolio dorado, mañana de invierno (el caucus es en enero) y cuatro
+    // tramos: montañas de soja, cerdos sueltos, cosechadoras y la cola del caucus.
+    id: "des_moines", nombre: "Locust Street", lugar: "Des Moines, Iowa", listo: true,
+    zona: "city", carpeta: "des_moines", luz: "invierno", semilla: 1846,
+    largo: 3200, linea: 11.5, velMax: 23,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    // Centro de oficinas hasta el rio y, despues, el East Village de ladrillo.
+    kit: { minPlantas: 4, maxPlantas: 13, nieve: true },
+    horizonte: "iowa",
+    obstaculos: { low: ["sacos_soja", "monton_nieve", "urna"], high: ["sinfin", "pancarta_caucus"],
+      full: ["quitanieves", "monton_soja", "munieco_nieve", "votantes", "furgoneta"] },
+    publico: { personas: ["granjero", "abuelo", "senora", "granjero", "fan", "chico"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 200, "calma", { titulo: "locust" }],
+      [200, 520, "suave", { densidad: 0.42 }],
+      [520, 860, "soja", { titulo: "soja" }],
+      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
+      [1000, 1400, "cerdos", { titulo: "cerdos" }],
+      [1400, 1540, "calma"],
+      [1540, 1950, "cosechadoras", { titulo: "cosechadoras" }],
+      [1950, 2100, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [2100, 2550, "caucus", { titulo: "caucus" }],
+      [2550, 2900, "vallas", { high: ["pancarta_caucus"], low: ["monton_nieve"], titulo: "nevada" }],
+      [2900, 3170, "sprint", { titulo: "sprint_capitolio" }],
+    ],
+    control: 1547, caja: 1100,
+    chapas: [[707, "arco"], [1253, "carril"], [2604, "arco"]],
+    hitos: ["parque_esculturas", "hotel_fort", "biblioteca_dm", "ruan", "torre_801", "world_food", "rio"],
+    meta: "capitolio_iowa", metaNombre: { es: "el Capitolio", en: "the Capitol" },
+    // El helicoptero de la tele, despues del rio: por el centro pasan las
+    // pasarelas por encima de la calle y lo atravesarian.
+    helicoptero: [1990, 2480],
+    // Bajando por Locust Street hacia el este, hasta el Capitolio: el norte
+    // queda a la izquierda. Despues del puente, el East Village.
+    izquierda: [
+      40, ["kit", 2], 14, ["parque_esculturas", 1], 14,
+      ...cuadras(2), ["biblioteca_dm", 1], ["kit", 2], 14,
+      ...cuadras(3), ["torre_801", 1], ["kit", 2], 14,
+      ...cuadras(8), ["arena", 1], 48,
+      ...cuadrasCon(11, EV),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(1), ["hotel_fort", 1], ["kit", 2], 14,
+      ...cuadras(3), ["ruan", 1], ["kit", 2], 14,
+      ...cuadras(9), ["kit", 1], ["world_food", 1], 68,
+      ...cuadrasCon(10, EV), ["kit", 1, EV],
+    ],
+    // Las pasarelas acristaladas, el puente sobre el rio y el Capitolio al fondo.
+    fondo: [
+      { pieza: "skywalk", d: 365, cruza: true }, { pieza: "skywalk", d: 640, cruza: true },
+      { pieza: "skywalk", d: 1180, cruza: true }, { pieza: "skywalk", d: 1420, cruza: true },
+      { pieza: "rio", d: 1945, cruza: true },
+      { pieza: "capitolio_iowa", d: 3250, centro: true },
+    ],
+    final: "parada", parada: 4,
+    // Para el final: abajo, al pie de la escalinata, mirando la cupula de oro.
+    camaraFinal: { pos: [3, 3.2, 30], mira: [0, 17, -24] },
+    acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -331,6 +399,9 @@ export const ANCHO = {
   // Las Vegas
   cartel_vegas: 10, piramide: 60, castillo: 48, fuentes: 58, cesar: 44, torre_eiffel: 40, noria: 44,
   campanile: 50, hotel_trump: 44,
+  // Des Moines (el rio y las pasarelas cruzan la calle: su ancho es a lo largo)
+  parque_esculturas: 60, biblioteca_dm: 40, torre_801: 36, ruan: 30, hotel_fort: 30, world_food: 44,
+  arena: 60, rio: 40, skywalk: 4, capitolio_iowa: 80,
 };
 
 // ¿Se puede jugar este nivel? Como en AlienZ: en orden. El primero siempre;
@@ -383,7 +454,8 @@ export function colocarNivel(nivel, anchoDe) {
   const salida = [];
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
   recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
-  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, ancho: anchoDe(f.pieza) });
+  // (`cruza`: de lado a lado de la calle, como el puente o las pasarelas de Des Moines)
+  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, ancho: anchoDe(f.pieza) });
   // El arco del punto de control, de lado a lado de la calle.
   if (nivel.control) salida.push({ pieza: "arco_control", d: nivel.control, lado: 0, arco: true, ancho: 2 });
   return salida.sort((a, b) => a.d - b.d);

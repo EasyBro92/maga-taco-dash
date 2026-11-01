@@ -17,7 +17,7 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
-  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "valla_policia", "verja"],
+  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero", "valla_policia", "verja"],
   obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
     "rayo", "cohete", "barril", "chile", "jefe",
     // 27/10: los de cada ciudad (blender/obstaculos2.py)
@@ -32,7 +32,10 @@ const LISTA = {
     // 31/10: el helicoptero de la tele de las Fake News (decorado, en todos)
     "helicoptero",
     // 31/10 (2): los propios de cada mapa
-    "basura", "viga", "perritos", "bici", "calabazas", "vaca", "calavera", "cartel_ruta", "elvis", "cajas"],
+    "basura", "viga", "perritos", "bici", "calabazas", "vaca", "calavera", "cartel_ruta", "elvis", "cajas",
+    // 01/11: los de Des Moines
+    "sacos_soja", "monton_soja", "monton_nieve", "urna", "sinfin", "pancarta_caucus", "quitanieves",
+    "munieco_nieve", "cerdo", "cosechadora", "votantes"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

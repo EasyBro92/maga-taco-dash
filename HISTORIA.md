@@ -50,7 +50,7 @@ Jefe: **el Rey Pingüino**.
 
 | # | Ciudad | Votos | Qué pasa |
 |---|---|---|---|
-| 5 | Des Moines, Iowa | +6 | La primera votación de verdad. Granjeros con montañas de soja que China ya no compra. |
+| 5 | Des Moines, Iowa | +6 | La primera votación de verdad. Granjeros con montañas de soja que China ya no compra. *(hecho)* |
 | 6 | Omaha, Nebraska | +5 | Tierra de vacas. Cajas de sus «Filetes Trump», los que nadie compró. |
 | 7 | Wichita, Kansas | +6 | Un tornado como el de *El mago de Oz* se lleva las vallas. |
 | 8 | San Luis, Misuri | +10 | El arco Gateway. Las etiquetas de precio crecen por los aranceles. |

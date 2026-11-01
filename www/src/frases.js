@@ -60,6 +60,12 @@ const DICHOS = {
   limusina: "TREMENDOUS!", marquesina: "WE WILL WIN!", elvis: "IT'S INCREDIBLE!",
   // Washington
   cajas: "IT'S A WITCH HUNT AND IT'S A DISGRACE!",
+  // Des Moines (01/11): la soja que China no compra, el campo y el caucus
+  sacos_soja: "BUY AMERICAN AND HIRE AMERICAN!", monton_soja: "BUY AMERICAN AND HIRE AMERICAN!",
+  sinfin: "WE WILL BRING BACK OUR JOBS!", cosechadora: "WE WILL BRING BACK OUR JOBS!", fantasma: "WE WILL BRING BACK OUR JOBS!",
+  cerdo: "YOU WILL NEVER BE IGNORED AGAIN!", votantes: "YOU WILL NEVER BE IGNORED AGAIN!",
+  urna: "WE WILL WIN!", pancarta_caucus: "WE WILL WIN!",
+  quitanieves: "TREMENDOUS!", monton_nieve: "TREMENDOUS!", munieco_nieve: "IT'S INCREDIBLE!",
   // El debate de Las Vegas: lo que le suelta al Burrito-Bot con cada micrófono.
   debate: ["RUSSIA IS FAKE NEWS!", "FAKE. PHONY. FAKE!", "THEY'RE VERY DISHONEST PEOPLE.", "THE ENEMY OF THE PEOPLE!", "THIS IS FAKE NEWS!"],
   // Sin nada delante, y cuando sube el multiplicador de tacos.

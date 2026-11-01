@@ -605,8 +605,9 @@ export function createWorld(scene) {
   // ---- Publico estilo Pixar (25/10/2026, blender/publico.py) ----
   // Seis personas con cara y el brazo derecho aparte: saludan, botan y se
   // animan mas cuando pasa el jugador. Si no han cargado, el muñeco viejo.
-  const PERSONAS = ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan"];
-  const HOMBROS = { ejecutivo: [0.272, 1.368], senora: [0.23, 1.277], chico: [0.158, 0.874],
+  // (01/11: el granjero de Iowa, con chaqueta de cuadros y gorra con orejeras)
+  const PERSONAS = ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero"];
+  const HOMBROS = { granjero: [0.281, 1.353], ejecutivo: [0.272, 1.368], senora: [0.23, 1.277], chico: [0.158, 0.874],
     abuelo: [0.262, 1.262], turista: [0.239, 1.322], fan: [0.233, 1.292] };
   const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_brazo`));
   function personaPixar(lista) {
@@ -750,7 +751,7 @@ export function createWorld(scene) {
   }
   // Publico y banderas segun el sitio: el de cada nivel, o el de su zona en el sin fin.
   const PUBLICO_ZONA = {
-    city: { personas: PERSONAS, valla: "valla_policia", cada: 2 },
+    city: { personas: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan"], valla: "valla_policia", cada: 2 },
     town: { personas: ["abuelo", "senora", "chico", "fan"], cada: 3 },
     dc: { personas: ["ejecutivo", "fan", "turista", "senora"], valla: "verja", cada: 2 },
     desert: { personas: null, banderas: false },
@@ -1716,6 +1717,11 @@ export function createWorld(scene) {
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
+    if (luz === "invierno") {
+      // Des Moines (01/11): mañana de invierno. Cielo frio y limpio, bruma
+      // blanquecina, el suelo y las aceras con nieve y el asfalto mojado.
+      Object.assign(BIOME_COLORS.city, { sky: 0xe4eef8, skyTop: 0x6f9fd8, fog: 0xe6edf4, horizon: 0x9fb0c4, ground: 0xf0f4f8, sidewalk: 0xdde3ea, road: 0x50545e });
+    }
   }
   function prepararCalle() {
     if (haloMat) haloMat.uniforms.fuerza.value = fuerzaHalos();
@@ -1768,7 +1774,13 @@ export function createWorld(scene) {
       const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, { ...nivel.kit, ...p.opciones }) : modelo(clave);
       if (!mesh) continue;
       const m = p.pieza === "kit" ? { frente: mesh.userData.frente } : medidas(clave);
-      if (p.centro) {
+      if (p.cruza) {
+        // De lado a lado de la calle (el puente, las pasarelas de Des Moines):
+        // su origen en el centro de la calle, a lo largo de su ancho.
+        mesh.position.set(0, 0, -(p.d + p.ancho / 2 - totalScrolled));
+        // El agua del rio va casi a ras del suelo: que no parpadee con el.
+        if (p.pieza === "rio") mesh.traverse((o) => { if (o.material) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = -1; o.material.polygonOffsetUnits = -2; } });
+      } else if (p.centro) {
         mesh.position.set(0, 0.05, -(p.d - totalScrolled));
         if (p.pieza === "casa_blanca_final") {
           // Las dos hojas de la puerta, abiertas; la escena final las cierra.
@@ -1997,7 +2009,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -2341,6 +2353,19 @@ export function createWorld(scene) {
     cartel_ruta: { choque: "high", medio: 0.1, alto: 2.3 },
     elvis: { choque: "full", medio: 0.3, alto: 2.4, centro: 0 },
     cajas: { choque: "low", medio: 0.35, alto: 0.95 },
+    // Des Moines (01/11): el cerdo cruza la calle como la vaca (pero se salta)
+    // y la cosechadora viene de frente ocupando dos carriles.
+    sacos_soja: { choque: "low", medio: 0.4, alto: 0.9 },
+    monton_soja: { choque: "full", medio: 0.95, alto: 2.0, centro: -0.6 },
+    monton_nieve: { choque: "low", medio: 0.55, alto: 0.8 },
+    urna: { choque: "low", medio: 0.3, alto: 1.0 },
+    sinfin: { choque: "high", medio: 0.25, alto: 2.0 },
+    pancarta_caucus: { choque: "high", medio: 0.15, alto: 2.4 },
+    quitanieves: { choque: "full", medio: 1.9, alto: 2.4, centro: -1.9 },
+    munieco_nieve: { choque: "full", medio: 0.45, alto: 1.9, centro: 0 },
+    cerdo: { choque: "low", medio: 0.35, alto: 0.95, centro: 0 },
+    cosechadora: { choque: "full", medio: 2.0, alto: 3.7, centro: -2.0, mueve: 4 },
+    votantes: { choque: "full", medio: 1.2, alto: 2.0, centro: -0.85 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2430,6 +2455,12 @@ export function createWorld(scene) {
   });
   if (USAR_BLENDER) {
     for (const nombre in TIPOS) obstaclePools[nombre] = makePool(() => construirObstaculo(nombre));
+    // La cosechadora tapa dos carriles: en el segundo va su «fantasma», un
+    // obstaculo sin dibujo que choca igual (y se rompe a la vez que ella).
+    if (TIPOS.cosechadora) {
+      TIPOS.fantasma = { ...TIPOS.cosechadora };
+      obstaclePools.fantasma = makePool(() => new THREE.Group());
+    }
   }
 
   // La vaca de su tramo: anda de lado a lado mientras esta lejos; al
@@ -2457,7 +2488,7 @@ export function createWorld(scene) {
     const obj = obstaclePools[pool].acquire();
     obj.visible = true;
     obj.position.set(LANE_X[lane], 0, z);
-    obj.rotation.set(0, nombre === "vaca" ? (Math.random() < 0.5 ? 0 : Math.PI) : 0, 0);
+    obj.rotation.set(0, nombre === "vaca" || nombre === "cerdo" ? (Math.random() < 0.5 ? 0 : Math.PI) : 0, 0);
     if (!obj.parent) group.add(obj);
     const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
       medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
@@ -2580,6 +2611,7 @@ export function createWorld(scene) {
 
   function smash(o) {
     if (o.smashed) return;
+    if (o.pareja) { const p = o.pareja; o.pareja = null; p.pareja = null; smash(p); }
     const lado = LANE_X[o.lane] === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(LANE_X[o.lane]);
     o.smashed = { vx: lado * (4 + Math.random() * 3), vy: 9 + Math.random() * 4, vz: -14 - Math.random() * 6,
       rx: (Math.random() - 0.5) * 9, ry: (Math.random() - 0.5) * 9, rz: (Math.random() - 0.5) * 9 };
@@ -3346,6 +3378,78 @@ export function createWorld(scene) {
         LANES.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
       } else tacosEn(Math.floor(Math.random() * 3), z, 4);
     },
+    // Des Moines (01/11): montañas de soja que China ya no compra cortando un
+    // carril (va cambiando), sacos para saltar y el tubo de grano por debajo.
+    soja(z, d, t, k) {
+      const bloque = Math.floor(k / 6), paso = k % 6;
+      const cerrado = [1, 0, 2, 1, 2, 0][bloque % 6];
+      if (paso === 0 || paso === 3) obst(cerrado, "full", z, d, ["monton_soja"]);
+      const otros = LANES.filter((l) => l !== cerrado);
+      if (paso === 1 || (paso === 4 && Math.random() < 0.6)) {
+        const l = elegirDe(otros);
+        obst(l, paso === 1 ? "low" : "high", z, d, paso === 1 ? ["sacos_soja"] : ["sinfin"]);
+        if (paso === 1) arcoDeTacos(l, z);
+        otros.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
+      } else if (paso !== 0 && paso !== 3) otros.forEach((l) => { if (Math.random() < 0.5) tacosEn(l, z, 3); });
+      else tacosEn(elegirDe(otros), z, 3);
+    },
+    // Cerdos escapados que cruzan la calle (de uno en uno o de dos en dos);
+    // se paran en un carril antes de llegar, y se saltan.
+    cerdos(z, d, t, k) {
+      if (k % 3 === 0 && obstaclePools.cerdo) {
+        const desde = Math.random() < 0.5 ? 0 : 2;
+        const v = (desde === 0 ? 1 : -1) * (1.5 + Math.random() * 0.5);
+        const n = Math.random() < 0.45 ? 2 : 1;
+        for (let i = 0; i < n; i++) {
+          if (desde === carrilOcupado) break;
+          const o = spawnObstacle(desde, "low", z - i * 2.4, "cerdo");
+          o.cruza = v * (1 + i * 0.15);
+          o.mesh.rotation.y = v > 0 ? 0 : Math.PI;
+          o.mesh.position.x -= Math.sign(v) * i * 0.8;
+        }
+        tacosEn(2 - desde, z - 2, 3);
+      } else if (k % 3 === 1) {
+        const l = Math.floor(Math.random() * 3);
+        obst(l, "full", z, d, ["quitanieves", "munieco_nieve"]);
+        LANES.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
+      } else tacosEn(Math.floor(Math.random() * 3), z, 4);
+    },
+    // Cosechadoras gigantes que vienen de frente ocupando dos carriles: queda
+    // uno libre (con tacos). Entre medias, sacos o nieve en los de los lados.
+    cosechadoras(z, d, t, k) {
+      if (k % 4 === 0 && USAR_BLENDER && obstaclePools.cosechadora) {
+        const pares = Math.random() < 0.5 ? [[0, 1], [1, 2]] : [[1, 2], [0, 1]];
+        const m = TIPOS.cosechadora.mueve;
+        for (const [a, b] of pares) {
+          if (a === carrilOcupado || b === carrilOcupado || !cocheCabe(a, z, m) || !cocheCabe(b, z, m)) continue;
+          const o = spawnObstacle(a, "full", z, "cosechadora");
+          o.mesh.position.x = (LANE_X[a] + LANE_X[b]) / 2;
+          const f = spawnObstacle(b, "full", z, "fantasma");
+          o.pareja = f; f.pareja = o;
+          tacosEn(3 - a - b, z, 5);
+          return;
+        }
+        tacosEn(1, z, 4);
+      } else if (k % 4 === 2) {
+        const l = Math.random() < 0.5 ? 0 : 2;
+        obst(l, "low", z, d, ["sacos_soja", "monton_nieve"]);
+        tacosEn(2 - l, z, 3);
+      }
+    },
+    // La cola del caucus: una fila de votantes que tapa un carril un buen
+    // trecho (y va cambiando de carril), la mesa con la urna para saltar y la
+    // pancarta para pasar agachado.
+    caucus(z, d, t, k) {
+      const bloque = Math.floor(k / 6), paso = k % 6;
+      const cola = [0, 2, 1, 2, 0, 1][bloque % 6];
+      if (paso <= 3) obst(cola, "full", z, d, ["votantes"]);
+      const otros = LANES.filter((l) => l !== cola);
+      if (paso === 1 || paso === 4) {
+        const l = elegirDe(otros);
+        obst(l, paso === 1 ? "low" : "high", z, d, paso === 1 ? ["urna"] : ["pancarta_caucus"]);
+        otros.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
+      } else otros.forEach((l) => { if (Math.random() < 0.6) tacosEn(l, z, 3); });
+    },
     // Las Vegas: dados gigantes que vienen rodando y tragaperras en medio.
     dados(z, d, t, k) {
       if (k % 2 === 0 && obstaclePools.dado) {
@@ -3821,6 +3925,50 @@ export function createWorld(scene) {
     if (bandadaReloj <= 0) { ponerBandada(-110); bandadaReloj = 90 + Math.random() * 90; }
     moverBandadas(dt, dz);
     moverHeli(dt);
+    moverNieve(dt, dz);
+  }
+  // ---- Nieve que cae (Des Moines, 01/11/2026) ----
+  // Copos grandes, blandos y lentos, y no muchos: sin brillos ni parpadeos
+  // (Isidro se marea). Viven en una caja delante de la camara: bajan despacio,
+  // se mecen un poco y pasan al ritmo de la carrera. Los lejanos no se ponen
+  // (de muy pequeños titilarian).
+  let nieveCae = null;
+  const NIEVE_ALTO = 14, NIEVE_DESDE = 8, NIEVE_LARGO = 54;
+  function montarNieve() {
+    const N = 300, pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 30;
+      pos[i * 3 + 1] = Math.random() * NIEVE_ALTO;
+      pos[i * 3 + 2] = NIEVE_DESDE - Math.random() * NIEVE_LARGO;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const c = document.createElement("canvas");
+    c.width = c.height = 32;
+    const x = c.getContext("2d");
+    const g = x.createRadialGradient(16, 16, 1, 16, 16, 16);
+    g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.55, "rgba(255,255,255,0.8)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 32, 32);
+    const tex = new THREE.CanvasTexture(c);
+    const mat = new THREE.PointsMaterial({ size: 0.26, map: tex, transparent: true, depthWrite: false, opacity: 0.9 });
+    const p = new THREE.Points(geo, mat);
+    p.frustumCulled = false;
+    group.add(p);
+    nieveCae = { p, pos, N };
+  }
+  function moverNieve(dt, dz) {
+    if (!(nivel && nivel.luz === "invierno")) { if (nieveCae) nieveCae.p.visible = false; return; }
+    if (!nieveCae) montarNieve();
+    nieveCae.p.visible = true;
+    const a = nieveCae.pos;
+    for (let i = 0; i < nieveCae.N; i++) {
+      a[i * 3 + 1] -= (0.75 + (i % 7) * 0.07) * dt;
+      a[i * 3] += Math.sin(animClock * 0.5 + i) * 0.25 * dt;
+      a[i * 3 + 2] += dz;
+      if (a[i * 3 + 1] < 0) a[i * 3 + 1] += NIEVE_ALTO;
+      if (a[i * 3 + 2] > NIEVE_DESDE) a[i * 3 + 2] -= NIEVE_LARGO;
+    }
+    nieveCae.p.geometry.attributes.position.needsUpdate = true;
   }
   // Al empezar (o seguir desde el punto de control): fuera todo lo vivo.
   function reiniciarVida() {
@@ -3976,7 +4124,11 @@ export function createWorld(scene) {
           o.mesh.rotation.z = Math.sin(animClock * 1.3 + o.phase) * 0.03;
         } else if (o.pool === "bici") {
           o.mesh.position.y = Math.abs(Math.sin(animClock * 9 + o.phase)) * 0.03;
-        } else if (o.pool === "vaca") moverVaca(o, dt);
+        } else if (o.pool === "vaca" || o.pool === "cerdo") moverVaca(o, dt);
+        else if (o.pool === "votantes") {
+          // Hace frio: dan saltitos en el sitio para entrar en calor.
+          o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
+        }
       }
       if (o.pool === "dado" && !o.smashed) {
         // Rueda de arista en arista: el centro sube y baja para no hundirse.

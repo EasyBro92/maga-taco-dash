@@ -181,6 +181,45 @@ const SITIOS = {
     x.fillStyle = "rgba(255,230,140,0.95)"; x.fillRect(tx - 30, SUELO - th - 4, 60, 3);
     x.fillStyle = "rgba(255,60,60,1)"; x.beginPath(); x.arc(tx, SUELO - th - 102, 4, 0, Math.PI * 2); x.fill();
   },
+  iowa(x, c, r) {
+    // Iowa en invierno (01/11): campos llanos nevados hasta donde se ve,
+    // hileras de arboles, granjas rojas con el tejado blanco, silos, un
+    // elevador de grano y los molinos de viento (quietos: nada da vueltas).
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 40; i++) x.lineTo((i / 40) * ANCHO, SUELO - 10 - Math.sin(i * 0.6) * 4 - r() * 3);
+    x.lineTo(ANCHO, SUELO); x.fill();
+    for (let i = 0; i < 26; i++) {                                   // hileras de arboles
+      const cx = r() * ANCHO, w = 60 + r() * 140;
+      x.fillStyle = c.arbol;
+      for (let k = 0; k < w; k += 7) { const h = 10 + r() * 9; x.fillRect(cx + k, SUELO - h, 5, h); }
+    }
+    for (let k = 0; k < 10; k++) {                                    // granjas
+      const cx = 140 + k * 400 + r() * 140;
+      x.fillStyle = c.granero;
+      x.fillRect(cx, SUELO - 30, 42, 30);
+      x.fillStyle = c.nieve;
+      x.beginPath(); x.moveTo(cx - 4, SUELO - 30); x.lineTo(cx + 21, SUELO - 47); x.lineTo(cx + 46, SUELO - 30); x.fill();
+      x.fillStyle = c.silo;
+      for (let s = 0; s < 1 + Math.floor(r() * 2); s++) {
+        const sx = cx + 50 + s * 18;
+        x.fillRect(sx, SUELO - 62, 14, 62);
+        x.fillStyle = c.nieve; x.beginPath(); x.arc(sx + 7, SUELO - 62, 7, Math.PI, 0); x.fill();
+        x.fillStyle = c.silo;
+      }
+    }
+    x.fillStyle = c.cerca;                                            // elevador de grano
+    x.fillRect(2300, SUELO - 110, 60, 110); x.fillRect(2360, SUELO - 80, 30, 80); x.fillRect(2318, SUELO - 128, 22, 18);
+    x.strokeStyle = c.molino; x.lineWidth = 3; x.fillStyle = c.molino;
+    for (let k = 0; k < 14; k++) {                                    // molinos de viento
+      const mx = 80 + k * 290 + r() * 90, h = 70 + r() * 40, a0 = r() * Math.PI;
+      x.fillRect(mx - 1.5, SUELO - h, 3, h);
+      for (let b = 0; b < 3; b++) {
+        const a = a0 + (b * Math.PI * 2) / 3;
+        x.beginPath(); x.moveTo(mx, SUELO - h); x.lineTo(mx + Math.cos(a) * 26, SUELO - h + Math.sin(a) * 26); x.stroke();
+      }
+    }
+  },
   desierto(x, c, r) {
     for (const [color, hBase, n] of [[c.lejos, 70, 7], [c.cerca, 45, 9]]) {
       for (let i = 0; i < n; i++) {
@@ -208,7 +247,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -217,6 +256,8 @@ function colores(sitio, cielo, niebla) {
     silo: mezcla(0xc8ccd2, cielo, 0.3),
     arbol: mezcla(0x4f7a46, cielo, 0.4),
     monumento: mezcla(0xf3ece0, cielo, 0.2),
+    nieve: mezcla(0xf6f9fc, cielo, 0.25),
+    molino: mezcla(0xf4f6f8, cielo, 0.35),
   };
 }
 

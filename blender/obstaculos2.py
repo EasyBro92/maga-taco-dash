@@ -731,6 +731,221 @@ def cajas():
     caja(mat('tachon', 0x1d1e22, 0.6), 0.12, -0.02, 0.88, 0.18, 0.04, 0.004, giro=0.2)
 
 
+# ---------------------------------------------------------------- Des Moines (01/11/2026)
+# Isidro eligió la mañana de invierno (el caucus es en enero) y cuatro tramos:
+# montañas de soja, cerdos sueltos, cosechadoras y la cola del caucus.
+#   sacos de soja (saltar) · montón de nieve con la pala (saltar)
+#   mesa del caucus con la urna (saltar) · tubo de grano (agacharse)
+#   pancarta «IOWA CAUCUS» (agacharse) · montaña de soja «FOR SALE» (esquivar)
+#   quitanieves (esquivar) · muñeco de nieve con gorra roja (esquivar)
+#   cerdo (cruza la calle: saltar) · cosechadora (dos carriles, viene de frente)
+#   votantes haciendo cola (esquivar)
+def nieve():   return mat('nieve', 0xf4f8fc, 0.7)
+def soja():    return mat_bloques('soja', 0xe2c27a, 0xc9a65c, ancho=0.07, alto=0.06, grosor=0.012, variacion=1.12)
+def arpillera(): return mat_bloques('arpillera', 0xc9a674, 0xb08c5a, ancho=0.05, alto=0.05, grosor=0.006, variacion=1.06)
+
+def sacos_soja():
+    """Sacos de arpillera llenos de soja que China ya no compra."""
+    for x, y, z, g in ((-0.5, 0.0, 0.0, 0.05), (0.48, 0.04, 0.0, -0.06), (0.0, 0.08, 0.4, 0.02)):
+        esfera(arpillera(), x, y, z + 0.22, 0.3, 2, esc=(1.55, 1.0, 0.75)).rotation_euler = (0, 0, g)
+        caja(mat('cuerda_saco', 0x8a6a3a, 0.7), x - 0.4, y, z + 0.14, 0.05, 0.4, 0.2)
+        texto(mat('tinta_saco', 0x2f5a2a, 0.6), 'SOYBEANS', x, y - 0.3, z + 0.24, tam=0.09, prof=0.01)
+    # unas judías de soja por el suelo
+    for k in range(10):
+        esfera(soja(), -0.7 + k * 0.15, -0.38 + (k % 3) * 0.05, 0.02, 0.035, 1)
+
+def monton_soja():
+    """Una montaña de soja con el cartel «FOR SALE» clavado: hay que esquivarla."""
+    o = cil(soja(), 0, 0.6, 0, 0.95, 1.7, 24, r2=0.12)
+    esfera(soja(), 0, 0.6, 1.62, 0.2, 2, esc=(1, 1, 0.6))
+    for x, y in ((-0.7, -0.15), (0.65, -0.1), (0.2, -0.35)):
+        esfera(soja(), x, y, 0.06, 0.28, 2, esc=(1.3, 1.0, 0.4))
+    madera = mat('madera_cartel', 0x9a6a3a, 0.7)
+    cil(madera, 0.35, 0.1, 0.4, 0.04, 1.6, 6)
+    caja(blanco(), 0.35, 0.05, 1.45, 0.8, 0.04, 0.42)
+    texto(rojo(), 'FOR SALE', 0.35, 0.02, 1.62, tam=0.13, prof=0.012)
+    texto(negro(), 'NO CHINA', 0.35, 0.02, 1.47, tam=0.08, prof=0.01)
+
+def monton_nieve():
+    """Montón de nieve que ha dejado el quitanieves, con una pala clavada."""
+    for x, y, r, h in ((-0.45, 0.05, 0.55, 0.62), (0.4, 0.0, 0.6, 0.72), (0.0, 0.25, 0.5, 0.5)):
+        esfera(nieve(), x, y, 0.0, r, 2, esc=(1.1, 0.9, h / r))
+    esfera(mat('nieve_sucia', 0xc9cdd4, 0.8), 0.1, -0.35, 0.02, 0.4, 1, esc=(1.8, 0.6, 0.25))
+    caja(mat('pala', 0x2350c8, 0.4), 0.55, 0.0, 0.55, 0.3, 0.05, 0.36, inclina=0.25)
+    rama(mat('mango_pala', 0x8a6a3a, 0.7), (0.55, 0.0, 0.9), (0.65, 0.05, 1.35), 0.03, 0.03, 6)
+
+def urna():
+    """La mesa del caucus: una urna de cristal llena de papeletas y carteles."""
+    mesa = mat('mesa_caucus', 0xd8d2c4, 0.6)
+    caja(mesa, 0, 0, 0.66, 1.8, 0.6, 0.05)
+    for x in (-0.8, 0.8):
+        for y in (-0.22, 0.22):
+            cil(gris(), x, y, 0, 0.025, 0.66, 6)
+    caja(azul(), 0, -0.3, 0.3, 1.78, 0.02, 0.36)                          # faldón
+    texto(blanco(), 'VOTE HERE', 0, -0.32, 0.45, tam=0.12, prof=0.01)
+    caja(mat('urna_cristal', 0xcfe6f2, 0.1), -0.25, 0, 0.71, 0.48, 0.4, 0.42)
+    caja(blanco(), -0.25, 0, 1.12, 0.5, 0.42, 0.03)
+    caja(negro(), -0.25, 0, 1.15, 0.2, 0.03, 0.01)                        # la ranura
+    papel = mat('papeleta', 0xf8f6f0, 0.7)
+    for k in range(6):
+        caja(papel, -0.4 + (k % 3) * 0.14, -0.08 + (k // 3) * 0.12, 0.74 + k * 0.03, 0.12, 0.08, 0.005, giro=k * 0.6)
+    for k in range(3):
+        caja(papel, 0.35 + k * 0.08, 0.05, 0.71 + k * 0.01, 0.2, 0.28, 0.006, giro=k * 0.3 - 0.2)
+
+def sinfin():
+    """El tubo de grano de la granja cruzando el carril: se pasa agachado."""
+    metal = mat('galvanizado', 0xb9c0c8, 0.3)
+    for s in (-1, 1):                                                     # dos caballetes
+        rama(gris(), (s * 0.95, -0.3, 0), (s * 0.95, 0, 1.55), 0.05, 0.05, 6)
+        rama(gris(), (s * 0.95, 0.3, 0), (s * 0.95, 0, 1.55), 0.05, 0.05, 6)
+    cil(metal, 0, 0, 1.68, 0.17, 2.1, 16, eje='X')
+    for x in (-0.7, -0.2, 0.3, 0.8):
+        cil(mat('aro_tubo', 0x8a929c, 0.3), x, 0, 1.68, 0.19, 0.04, 16, eje='X')
+    # la boca que echa soja por un lado y el motor por el otro
+    cil(metal, 0.98, -0.05, 1.3, 0.12, 0.38, 10, r2=0.17)
+    caja(rojo(), -0.98, 0.15, 1.5, 0.3, 0.3, 0.32)
+    esfera(soja(), 0.98, -0.05, 1.22, 0.16, 2, esc=(1, 1, 0.5))
+    texto(negro(), 'GRAIN', 0, -0.18, 1.62, tam=0.12, prof=0.012)
+
+def pancarta_caucus():
+    """Pancarta del caucus entre dos postes: se pasa agachado."""
+    for s in (-1, 1):
+        cil(mat('poste_caucus', 0x6a4a2a, 0.7), s * 0.95, 0, 0, 0.05, 2.35, 8)
+        esfera(oro(), s * 0.95, 0, 2.38, 0.07, 1)
+    caja(rayas('caucus_franjas', 0xe8303a, 0xffffff, 2, 1.25, 0.95, eje='Z'), 0, 0, 1.3, 1.86, 0.05, 0.9)
+    caja(azul(), 0, -0.03, 1.45, 1.86, 0.01, 0.6)
+    texto(blanco(), 'IOWA', 0, -0.05, 1.86, tam=0.2, prof=0.015)
+    texto(blanco(), 'CAUCUS', 0, -0.05, 1.56, tam=0.22, prof=0.015)
+    for x in (-0.75, 0.75):
+        esfera(blanco(), x, -0.05, 1.86, 0.05, 1)
+
+def quitanieves():
+    """Camión quitanieves naranja parado en el carril, con la pala delante
+    (se le ve de frente: la pala en y = 0)."""
+    chapa = mat('naranja_quitanieves', 0xf08a1a, 0.4)
+    # la pala inclinada, con su borde y la nieve que empuja
+    caja(mat('pala_qn', 0xffd23f, 0.4), 0, 0.15, 0.12, 1.9, 0.12, 0.72, giro=0.18, inclina=-0.2)
+    caja(negro(), 0, 0.12, 0.08, 1.92, 0.14, 0.08, giro=0.18)
+    esfera(nieve(), 0.55, -0.1, 0.0, 0.38, 2, esc=(1.4, 0.7, 0.8))
+    caja(chapa, 0, 1.0, 0.45, 1.5, 1.1, 0.9)                              # cabina
+    caja(chapa, 0, 1.0, 1.35, 1.4, 1.0, 0.75)
+    caja(cristal(), 0, 0.48, 1.42, 1.2, 0.03, 0.55)
+    caja(chapa, 0, 2.6, 0.45, 1.55, 2.2, 1.3)                             # caja de sal
+    caja(mat('sal', 0xe8ecf0, 0.8), 0, 2.6, 1.75, 1.45, 2.1, 0.12)
+    for s in (-1, 1):
+        rueda(s * 0.72, 0.95, 0.38, 0.28)
+        rueda(s * 0.72, 3.1, 0.38, 0.28)
+        caja(faro(), s * 0.5, 0.47, 0.75, 0.24, 0.04, 0.14)
+    caja(mat('rotativo', 0xffb21a, 0.2), 0, 1.0, 2.1, 0.5, 0.18, 0.12)
+    texto(negro(), 'SNOW', 0, 0.47, 1.0, tam=0.12, prof=0.012)
+
+def munieco_nieve():
+    """Muñeco de nieve con gorra roja, bufanda y nariz de zanahoria."""
+    esfera(nieve(), 0, 0, 0.42, 0.48, 3)
+    esfera(nieve(), 0, 0, 1.08, 0.36, 3)
+    esfera(nieve(), 0, 0, 1.6, 0.26, 3)
+    for z in (0.95, 1.1, 1.25):
+        esfera(negro(), 0, -0.34, z, 0.04, 1)                             # botones
+    for s in (-1, 1):
+        esfera(negro(), s * 0.09, -0.23, 1.66, 0.035, 1)
+        rama(mat('rama_brazo', 0x5a3a24, 0.8), (s * 0.3, 0, 1.2), (s * 0.75, -0.05, 1.5), 0.03, 0.015, 6)
+    rama(naranja(), (0, -0.24, 1.6), (0, -0.48, 1.58), 0.05, 0.005, 8)    # la zanahoria
+    bufanda = mat_franjas('bufanda', 0xe8303a, 0xffffff, 6, eje='X', z0=-0.3, alto=0.6)
+    cil(bufanda, 0, 0, 1.36, 0.27, 0.1, 16)
+    caja(bufanda, 0.15, -0.22, 1.05, 0.1, 0.04, 0.32)
+    gorra = mat('gorra_munieco', 0xd8202a, 0.5)
+    esfera(gorra, 0, 0, 1.75, 0.25, 2, esc=(1.02, 1.02, 0.55))
+    caja(gorra, 0, -0.24, 1.75, 0.3, 0.2, 0.03)                           # la visera
+
+def cerdo():
+    """Un cerdo rosa escapado de la granja (cruza la calle hacia +x)."""
+    piel = mat('piel_cerdo', 0xf4a7b0, 0.55)
+    esfera(piel, 0, 0, 0.5, 0.36, 3, esc=(1.6, 1.0, 0.9))                 # el cuerpo
+    for x in (-0.38, 0.38):
+        for y in (-0.18, 0.18):
+            cil(piel, x, y, 0, 0.08, 0.3, 8)
+            cil(mat('pezuna', 0x6a4a4a, 0.6), x, y, 0, 0.085, 0.05, 8)
+    esfera(piel, 0.62, 0, 0.62, 0.24, 2, esc=(1.0, 1.0, 0.95))            # la cabeza
+    cil(mat('morro_cerdo', 0xe8828e, 0.5), 0.82, 0, 0.58, 0.11, 0.08, 14, eje='X')
+    for s in (-1, 1):
+        esfera(mat('fosa', 0x8a3a4a, 0.6), 0.9, s * 0.04, 0.58, 0.022, 1)
+        esfera(negro(), 0.74, s * 0.12, 0.72, 0.035, 1)                   # ojos
+        esfera(piel, 0.55, s * 0.16, 0.86, 0.09, 1, esc=(1, 0.5, 1.2))    # orejas
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.07, minor_radius=0.018, location=(-0.6, 0, 0.65),
+                                     rotation=(math.pi / 2, 0, 0))
+    from comun import _poner
+    _poner(bpy.context.object, piel)                                      # el rabito
+    esfera(mat('barro', 0x7a5a3a, 0.9), -0.15, -0.32, 0.4, 0.12, 1, esc=(1.4, 0.3, 1))
+
+def cosechadora():
+    """Cosechadora gigante que viene de frente y ocupa DOS carriles: el
+    cabezal (de 4,2 de ancho) en y = 0 y el cuerpo detrás. El origen va entre
+    los dos carriles (el juego la coloca ahí)."""
+    rojo_c = mat('rojo_cosechadora', 0xc8262a, 0.4)
+    # el cabezal: la barra de cuchillas, el molinete amarillo y los separadores
+    caja(mat('cabezal', 0x2a2d33, 0.5), 0, 0.35, 0.25, 4.2, 0.7, 0.3)
+    caja(rojo_c, 0, 0.6, 0.25, 4.2, 0.2, 0.8)
+    for s in (-1, 1):
+        caja(rojo_c, s * 2.05, 0.3, 0.25, 0.1, 0.8, 0.75)
+        cil(gris(), s * 2.05, -0.12, 0.2, 0.08, 0.3, 6, r2=0.0, eje='Y')
+    cil(mat('molinete', 0xffd23f, 0.4), 0, 0.25, 0.95, 0.12, 4.0, 10, eje='X')
+    for k in range(9):
+        x = -1.8 + k * 0.45
+        rama(mat('molinete', 0xffd23f, 0.4), (x, 0.25, 0.95), (x, -0.1, 0.62), 0.025, 0.025, 4)
+        rama(mat('molinete', 0xffd23f, 0.4), (x, 0.25, 0.95), (x, 0.45, 1.3), 0.025, 0.025, 4)
+    # el cuerpo, la cabina de cristal y el tubo de descarga
+    caja(rojo_c, 0, 2.2, 0.6, 1.9, 3.0, 1.9)
+    caja(rojo_c, 0, 1.25, 2.5, 1.3, 1.1, 1.0)
+    caja(cristal(), 0, 0.68, 2.55, 1.2, 0.04, 0.85)
+    for s in (-1, 1):
+        caja(cristal(), s * 0.66, 1.25, 2.55, 0.03, 1.0, 0.8)
+    caja(blanco(), 0, 1.25, 3.5, 1.4, 1.2, 0.08)                          # techo
+    caja(mat('rotativo_c', 0xffb21a, 0.2), 0, 1.0, 3.58, 0.25, 0.15, 0.12)
+    caja(rojo_c, 0, 3.0, 2.5, 1.7, 1.4, 0.7)                              # la tolva
+    rama(rojo_c, (0.8, 3.2, 2.8), (2.0, 2.0, 3.0), 0.12, 0.12, 10)
+    for s in (-1, 1):
+        rueda(s * 1.0, 1.3, 0.62, 0.42)
+        rueda(s * 0.9, 3.3, 0.4, 0.3)
+    caja(faro(), -0.4, 0.66, 2.98, 0.2, 0.04, 0.1); caja(faro(), 0.4, 0.66, 2.98, 0.2, 0.04, 0.1)
+
+def votantes():
+    """La cola del caucus: tres votantes abrigados, uno detrás de otro, con la
+    papeleta en la mano (miran al jugador)."""
+    piel = (0xf5c9a6, 0xb57a52, 0xe0a87e)
+    abrigos = (0x2f6a8a, 0x8a3a3a, 0x4f6a3a)
+    gorros = (0xd8202a, 0xffd23f, 0x2350c8)
+    papel = mat('papeleta_v', 0xf8f6f0, 0.7)
+    for k in range(3):
+        y = k * 0.85
+        ropa = mat(f'abrigo{abrigos[k]:06x}', abrigos[k], 0.7)
+        p = mat(f'piel_v{piel[k]:06x}', piel[k], 0.6)
+        x = (-0.12, 0.1, -0.05)[k]
+        pant = mat('pantalon_v', 0x2a3044, 0.6)
+        for s in (-1, 1):
+            cil(pant, x + s * 0.1, y, 0, 0.08, 0.82, 10)
+            caja(negro(), x + s * 0.1, y - 0.05, 0, 0.14, 0.26, 0.09)
+        cil(ropa, x, y, 0.62, 0.28, 0.86, 14, r2=0.22)                    # abrigo largo
+        esfera(ropa, x, y, 1.45, 0.24, 2, esc=(1.05, 0.85, 0.5))
+        cil(mat(f'bufanda_v{k}', gorros[(k + 1) % 3], 0.6), x, y, 1.46, 0.13, 0.12, 12)
+        esfera(p, x, y, 1.7, 0.17, 2, esc=(1, 0.95, 1.08))
+        g = mat(f'gorro_v{gorros[k]:06x}', gorros[k], 0.6)
+        esfera(g, x, y + 0.02, 1.78, 0.175, 2, esc=(1.03, 1.03, 0.7))
+        esfera(blanco(), x, y + 0.02, 1.96, 0.06, 1)                      # pompón
+        for s in (-1, 1):
+            esfera(negro(), x + s * 0.055, y - 0.15, 1.72, 0.022, 1)
+        # el brazo con la papeleta en alto
+        rama(ropa, (x + 0.24, y, 1.38), (x + 0.36, y - 0.15, 1.75), 0.06, 0.055, 8)
+        esfera(p, x + 0.37, y - 0.17, 1.8, 0.055, 1)
+        caja(papel, x + 0.37, y - 0.2, 1.84, 0.2, 0.01, 0.26)
+        caja(azul(), x + 0.37, y - 0.21, 1.9, 0.14, 0.006, 0.04)
+        rama(ropa, (x - 0.24, y, 1.38), (x - 0.3, y - 0.05, 0.95), 0.06, 0.055, 8)
+    # el cartel de la cola
+    cil(gris(), 0.8, 0.2, 0, 0.03, 1.4, 6)
+    caja(blanco(), 0.8, 0.18, 1.4, 0.5, 0.03, 0.34)
+    texto(rojo(), 'CAUCUS', 0.8, 0.16, 1.57, tam=0.09, prof=0.01)
+    texto(azul(), 'LINE', 0.8, 0.16, 1.44, tam=0.08, prof=0.01)
+
+
 PIEZAS = {
     'taxi':          (taxi,          'obstaculos', dict(lado=512)),
     'alcantarilla':  (alcantarilla,  'obstaculos', dict(lado=512, bisel=0.0)),
@@ -766,6 +981,17 @@ PIEZAS = {
     'cartel_ruta':  (cartel_ruta,  'obstaculos', dict(lado=512, bisel=0.0)),
     'elvis':        (elvis,        'obstaculos', dict(lado=512, bisel=0.0)),
     'cajas':        (cajas,        'obstaculos', dict(lado=256)),
+    'sacos_soja':      (sacos_soja,      'obstaculos', dict(lado=256, bisel=0.0)),
+    'monton_soja':     (monton_soja,     'obstaculos', dict(lado=256, bisel=0.0)),
+    'monton_nieve':    (monton_nieve,    'obstaculos', dict(lado=256, bisel=0.0)),
+    'urna':            (urna,            'obstaculos', dict(lado=256)),
+    'sinfin':          (sinfin,          'obstaculos', dict(lado=256, bisel=0.0)),
+    'pancarta_caucus': (pancarta_caucus, 'obstaculos', dict(lado=512, bisel=0.0)),
+    'quitanieves':     (quitanieves,     'obstaculos', dict(lado=512)),
+    'munieco_nieve':   (munieco_nieve,   'obstaculos', dict(lado=256, bisel=0.0)),
+    'cerdo':           (cerdo,           'obstaculos', dict(lado=256, bisel=0.0)),
+    'cosechadora':     (cosechadora,     'obstaculos', dict(lado=512)),
+    'votantes':        (votantes,        'obstaculos', dict(lado=512, bisel=0.0)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),
     'verja':         (verja,         'publico',    dict(lado=256, bisel=0.0)),
 }

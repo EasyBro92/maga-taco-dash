@@ -67,6 +67,7 @@ function texturaRotulo(texto, fondo, letra, neon = false) {
   return tex;
 }
 const rotuloGeo = new THREE.PlaneGeometry(1, 1);
+const nieveGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
 
 function pieza(nombre, tintes, color) {
   const p = medidas("kit/" + nombre);
@@ -189,6 +190,18 @@ export function construirEdificio(azar, ancho, opciones = {}) {
     if (estilo.remate && c === columnas - 1) {
       const re = pieza(estilo.remate, tintes, estilo.remate === "remate_mansarda" ? 0xb8c2cc : estilo.color);
       if (re) { re.position.y = alto - (estilo.cornisa === "cornisa_simple" ? 0.7 : 0); col.add(re); }
+    }
+    if (opciones.nieve) {
+      // Des Moines (01/11): una capa de nieve sobre el tejado plano.
+      const pl = medidas("kit/" + estilo.planta);
+      if (pl) {
+        let m = tintes.get("nieve");
+        if (!m) { m = pl.material.clone(); m.map = null; m.color.set(0xf2f6fa); tintes.set("nieve", m); }
+        const s = new THREE.Mesh(nieveGeo, m);
+        s.scale.set(19.2, 0.4, Math.max(1, pl.fondo - 0.8));
+        s.position.set(0, alto - (estilo.cornisa === "cornisa_simple" ? 0.7 : 0), pl.frente - pl.fondo / 2);
+        col.add(s);
+      }
     }
   }
   return juntarPorMaterial(g, ancho);

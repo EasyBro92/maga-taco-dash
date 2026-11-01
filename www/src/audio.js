@@ -184,7 +184,7 @@ export function pausarMusica(p) {
 const N = (nota) => 440 * Math.pow(2, (nota - 69) / 12);   // numero MIDI -> Hz
 // Acordes como lista de notas MIDI.
 const C = [60, 64, 67], F = [65, 69, 72], G = [67, 71, 74], Am = [69, 72, 76], Dm = [62, 65, 69], E7 = [64, 68, 71, 74];
-const C7 = [60, 64, 67, 70], F7 = [65, 69, 72, 75], G7 = [67, 71, 74, 77], Bb = [70, 74, 77];
+const C7 = [60, 64, 67, 70], F7 = [65, 69, 72, 75], G7 = [67, 71, 74, 77], Bb = [70, 74, 77], D = [62, 66, 69];
 const CANCIONES = {
   // Nueva York: swing de big band, bajo caminando y platillo.
   nueva_york: { bpm: 132, swing: 0.62, acordes: [C7, F7, C7, G7], bateria: "swing", bajo: "camina",
@@ -211,6 +211,11 @@ const CANCIONES = {
     melodia: [72, 76, 79, null, 81, 79, 76, null, 77, null, 74, 77, 81, null, 79, null,
       72, 76, 79, null, 84, null, 83, 81, 79, null, 76, 74, 72, null, null, null],
     timbre: "metal" },
+  // Des Moines (01/11): folk del Medio Oeste en invierno, alegre y con banjo.
+  des_moines: { bpm: 138, swing: 0.5, acordes: [G, C, G, D], bateria: "country", bajo: "alterna",
+    melodia: [67, 71, 74, null, 74, 76, 74, 71, 72, null, 69, 72, 71, null, 67, null,
+      67, 71, 74, null, 79, null, 78, 76, 74, null, 72, 69, 67, null, null, null],
+    timbre: "banjo" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

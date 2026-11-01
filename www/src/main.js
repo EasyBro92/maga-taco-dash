@@ -295,6 +295,8 @@ let fin = null;
 // Luz del nivel. El atardecer: sol bajo, dorado y de lado; cielo calido.
 const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.position.clone(), hemi: hemi.color.getHex(), suelo: hemi.groundColor.getHex() };
 function aplicarLuz(luz) {
+  sunGlare.visible = true;
+  if (camera.far !== 320) { camera.far = 320; camera.updateProjectionMatrix(); }
   if (luz === "manana") {
     // Mañana: sol claro y algo bajo, de frente a la derecha; cielo limpio.
     sun.color.set(0xfff1d8); sun.intensity = 1.15; sun.position.set(6, 9, -5);
@@ -312,6 +314,11 @@ function aplicarLuz(luz) {
     // el oeste; el cielo morado da la luz de relleno. Lo demas lo ponen los neones.
     sun.color.set(0xff9f95); sun.intensity = 0.9; sun.position.set(-8, 4, -1);
     hemi.color.set(0xa090e0); hemi.groundColor.set(0x3c2c46);
+  } else if (luz === "invierno") {
+    // Mañana de invierno (Des Moines): sol bajo y blanco por delante a la
+    // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
+    sun.color.set(0xfff4e8); sun.intensity = 1.15; sun.position.set(6, 6, -7);
+    hemi.color.set(0xe2ecff); hemi.groundColor.set(0xb4bfcc);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -476,13 +483,18 @@ const NOMBRE_HITO = {
     san_carlos: "Hotel San Carlos", westward_ho: "Westward Ho", biblioteca_barr: "Biblioteca Burton Barr", museo_arte: "Museo de Arte de Phoenix",
     museo_heard: "Museo Heard",
     piramide: "La pirámide", castillo: "El castillo", torre_eiffel: "La torre Eiffel", fuentes: "Las fuentes",
-    cesar: "El palacio romano", noria: "La noria gigante", campanile: "El campanario de Venecia" },
+    cesar: "El palacio romano", noria: "La noria gigante", campanile: "El campanario de Venecia",
+    parque_esculturas: "Parque de esculturas", hotel_fort: "Hotel Fort Des Moines", biblioteca_dm: "Biblioteca central",
+    ruan: "La torre de acero", torre_801: "801 Grand, la torre más alta de Iowa", world_food: "Salón del Premio Mundial de la Alimentación",
+    rio: "El río Des Moines" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
     heladeria: "Dietsch Brothers",
     piramide: "The pyramid", castillo: "The castle", torre_eiffel: "The Eiffel Tower", fuentes: "The fountains",
-    cesar: "The Roman palace", noria: "The giant wheel", campanile: "The Venice bell tower" },
+    cesar: "The Roman palace", noria: "The giant wheel", campanile: "The Venice bell tower",
+    parque_esculturas: "Sculpture Park", biblioteca_dm: "Central Library", ruan: "The steel tower",
+    torre_801: "801 Grand, Iowa's tallest tower", world_food: "World Food Prize Hall", rio: "The Des Moines River" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -614,6 +626,14 @@ function finalCamion(dt, flat, zParadaDada) {
   // 29/10: el nivel puede traer su propia camara (Las Vegas, mirando la torre).
   const lejos = zParadaDada !== undefined;
   const cf = nivelActual && nivelActual.camaraFinal;
+  // 01/11: mirando hacia arriba, el destello del sol (se pinta encima de todo)
+  // caia sobre el edificio del final: fuera mientras dura.
+  // Y la camara, mas atras que en la carrera, dejaba fuera el fondo del cielo
+  // (se veia un gris en pico): que vea mas lejos mientras dura.
+  if (cerca && cf) {
+    sunGlare.visible = false;
+    if (camera.far !== 420) { camera.far = 420; camera.updateProjectionMatrix(); }
+  }
   const objetivo = cerca ? (cf ? new THREE.Vector3(...cf.pos) : lejos ? new THREE.Vector3(2.6, 4.6, 16) : new THREE.Vector3(2.0, 3.2, 9.5)) : new THREE.Vector3(0, 4.6, 11);
   const mira = cerca ? (cf ? new THREE.Vector3(...cf.mira) : lejos ? new THREE.Vector3(0, 4.4, -6) : new THREE.Vector3(0, 2.2, -3)) : new THREE.Vector3(0, 2.4, -8);
   camera.position.lerp(objetivo, Math.min(1, dt * 1.6));

@@ -161,8 +161,30 @@ def fan():
     return brazo(1.7, 0x1f3c88, piel, 1.0, 'bandera')
 
 
+def granjero():
+    """Granjero de Iowa en invierno (01/11/2026): chaqueta de cuadros roja,
+    peto vaquero, gorra con orejeras y bigote."""
+    piel = PIELES[0]
+    cuadros = mat_franjas('cuadros_granjero', 0xc0302a, 0x6a1a1a, 9, eje='Z', z0=0.8, alto=0.7)
+    k = cuerpo_base(1.78, 0xc0302a, 0x2f4f7a, piel, zapatos=0x5a3a28, ancho=1.15)
+    elip(cuadros, 0, 0, 1.08 * k, 0.245 * k * 1.15, esc=(1.0, 0.76, 1.35))
+    peto = mat('peto_vaquero', 0x2f4f7a, 0.7)
+    caja(peto, 0, -0.19 * k, 0.88 * k, 0.32 * k, 0.05, 0.32 * k)
+    for s in (-1, 1):
+        caja(peto, s * 0.11 * k, -0.17 * k, 1.18 * k, 0.05 * k, 0.04, 0.2 * k)
+        esfera(mat('boton_peto', 0xd9a520, 0.3), s * 0.11 * k, -0.2 * k, 1.18 * k, 0.02 * k, 1)
+    cara(piel, 0, 1.62 * k, 0.21 * k, 0x8a6a4a)
+    elip(mat('bigote_g', 0x8a6a4a, 0.7), 0, -0.2 * k, 1.53 * k, 0.07 * k, esc=(1.6, 0.5, 0.5))
+    gorra = mat('gorra_granjero', 0x2f6a3a, 0.6)
+    elip(gorra, 0, 0.0, 1.74 * k, 0.22 * k, esc=(1.03, 1.03, 0.58))
+    caja(gorra, 0, -0.21 * k, 1.72 * k, 0.27 * k, 0.18 * k, 0.03 * k)
+    for s in (-1, 1):
+        elip(mat('orejera', 0xd8cbb2, 0.8), s * 0.2 * k, 0, 1.62 * k, 0.07 * k, esc=(0.5, 1, 1.2))
+    return brazo(1.78, 0xc0302a, piel, 1.15)
+
+
 PERSONAS = {'ejecutivo': ejecutivo, 'senora': senora, 'chico': chico,
-            'abuelo': abuelo, 'turista': turista, 'fan': fan}
+            'abuelo': abuelo, 'turista': turista, 'fan': fan, 'granjero': granjero}
 
 for nombre, fn in PERSONAS.items():
     if SOLO and nombre not in SOLO:

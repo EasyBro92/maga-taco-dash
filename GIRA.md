@@ -40,7 +40,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Idaho | Boise | capital y la más grande |
 | Illinois | Chicago (capital: Springfield) | la más famosa |
 | Indiana | Indianápolis | capital y la más famosa |
-| Iowa | Des Moines | capital, y el «caucus» con el que empieza la carrera |
+| Iowa | Des Moines | capital, y el «caucus» con el que empieza la carrera (hecho el 01/11: Locust Street hasta el Capitolio) |
 | Kansas | Wichita (capital: Topeka) | la más grande |
 | Kentucky | Louisville (capital: Frankfort) | el Derby |
 | Luisiana | Nueva Orleans (capital: Baton Rouge) | la más famosa |
