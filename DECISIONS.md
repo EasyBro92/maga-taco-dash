@@ -977,3 +977,20 @@ sus votos) para que el mapa de la gira «se note más». Eligió:
   una etiqueta aparte con su raya, para poder tocarlos con el dedo.
 - El nivel que toca, con borde dorado y un aro que late; el elegido, con borde
   blanco; los jefes, con su carita al lado del número.
+
+## Las rayas del suelo ya no «van apareciendo» (2026-11-02)
+
+Isidro: «las líneas del suelo van cargando y se ve claramente cómo van
+apareciendo; pasa en todos los niveles y con más cosas». Era el asfalto: lleva
+un `polygonOffset` (-2/-4) para no parpadear con el suelo de debajo, y ese
+ajuste crece con la distancia. De lejos tapaba todo lo que va pintado encima, y
+solo se veía a partir de una distancia fija que avanzaba contigo.
+
+- Rayas de carril, pasos de cebra, alcantarillas, sombras de los obstáculos,
+  flechas del turbo y la sombra del jugador llevan ahora un ajuste mayor
+  (`sobreCalzada()` en world.js, -4/-8): se ven desde el fondo de la calle.
+- Las flechas del turbo y la sombra del jugador estaban por debajo del asfalto;
+  ahora van encima.
+- La cámara pasa de `near` 0.1 a 0.5: el buffer de profundidad es 5 veces más
+  preciso de lejos, y el césped y las entradas de las casas (subidos de 6 mm a
+  2 cm) ya no se pisan con el suelo.

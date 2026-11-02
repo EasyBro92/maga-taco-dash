@@ -46,6 +46,19 @@ function edgeFade(z, wrapZ, fadeOutDist) {
 
 const GOLD = 0xffce3d;
 
+// 02/11: lo que va pintado o tumbado sobre la calzada tiene que ganar siempre
+// al asfalto, que lleva polygonOffset -2/-4 (ver carpetMat). Ese ajuste crece
+// con la distancia, y de lejos el asfalto tapaba las rayas de carril, los
+// pasos de cebra, las sombras de los obstaculos...: se veian «aparecer» a una
+// distancia fija segun avanzabas. Con un ajuste mayor que el del asfalto se
+// ven siempre, desde el fondo de la calle.
+function sobreCalzada(mat) {
+  mat.polygonOffset = true;
+  mat.polygonOffsetFactor = -4;
+  mat.polygonOffsetUnits = -8;
+  return mat;
+}
+
 // Brillo/glow compartido (usado por el taco)
 const glowMat = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: 0.3, depthWrite: false });
 const glowGeo = new THREE.CircleGeometry(0.34, 16);
@@ -557,7 +570,7 @@ export function createWorld(scene) {
   // Rayas de carril continuas y de un blanco suave (23/10): las amarillas
   // discontinuas pasaban a 10 por segundo como una luz estroboscopica.
   const stripeGeo = new THREE.BoxGeometry(0.1, 0.02, 3.02);
-  const stripeMat = toon(0xeae6dc);
+  const stripeMat = sobreCalzada(toon(0xeae6dc));
   // 27/10: dos rayas largas en vez de ~190 trocitos de 3 (eran casi 200
   // llamadas de dibujo). Como son continuas, no hace falta moverlas: solo se
   // recortan donde acaba la calle del nivel.
@@ -1134,7 +1147,7 @@ export function createWorld(scene) {
     // bordeandolo -- como hijos de la casa para que aparezcan siempre juntos.
     const lawn = new THREE.Mesh(lawnGeo, lawnMat);
     lawn.rotation.x = -Math.PI / 2;
-    lawn.position.set(0, 0.006, d / 2 + 0.7);
+    lawn.position.set(0, 0.02, d / 2 + 0.7);
     lawn.receiveShadow = true;
     g.add(lawn);
     const fenceZ = d / 2 + 2.15;
@@ -1281,7 +1294,7 @@ export function createWorld(scene) {
       }
       const driveway = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 2.6), toon(0x9a9488));
       driveway.rotation.x = -Math.PI / 2;
-      driveway.position.set(gx, 0.007, garageD / 2 + 1.3);
+      driveway.position.set(gx, 0.022, garageD / 2 + 1.3);
       driveway.receiveShadow = true;
       g.add(driveway);
     }
@@ -1895,7 +1908,7 @@ export function createWorld(scene) {
     return g;
   }
   const cebraGeo = new THREE.BoxGeometry(0.55, 0.02, 4.2);
-  const cebraMat = toon(0xf2efe6);
+  const cebraMat = sobreCalzada(toon(0xf2efe6));
   const lineaGeo = new THREE.BoxGeometry(7.6, 0.02, 0.35);
   function hacerCebra() {
     const g = new THREE.Group();
@@ -1910,13 +1923,14 @@ export function createWorld(scene) {
     return g;
   }
   const tapaGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 18);
-  const tapaMat = toon(0x4a4c52);
+  const tapaMat = sobreCalzada(toon(0x4a4c52));
+  const tapaAroMat = sobreCalzada(toon(0x6a6c72));
   const tapaAroGeo = new THREE.TorusGeometry(0.42, 0.04, 6, 18);
   function hacerTapa() {
     const g = new THREE.Group();
     const t = new THREE.Mesh(tapaGeo, tapaMat);
     t.position.y = 0.065;
-    const a = new THREE.Mesh(tapaAroGeo, toon(0x6a6c72));
+    const a = new THREE.Mesh(tapaAroGeo, tapaAroMat);
     a.rotation.x = Math.PI / 2; a.position.y = 0.075;
     g.add(t, a);
     return g;
@@ -2387,7 +2401,7 @@ export function createWorld(scene) {
     ctx.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
   })();
-  const sombraMat = new THREE.MeshBasicMaterial({ map: sombraTex, transparent: true, depthWrite: false, opacity: 0.85 });
+  const sombraMat = sobreCalzada(new THREE.MeshBasicMaterial({ map: sombraTex, transparent: true, depthWrite: false, opacity: 0.85 }));
   const sombraGeo = new THREE.PlaneGeometry(1, 1);
   sombraGeo.rotateX(-Math.PI / 2);
 
@@ -2725,7 +2739,7 @@ export function createWorld(scene) {
   // el aire, poco reconocible como "acelera"). Forma de chevron real via
   // Shape/ShapeGeometry -- no cajas rotadas a ojo -- tumbada sobre la pista y
   // apuntando hacia delante, como un boost pad de un arcade de carreras.
-  const boostArrowMat = toon(0xffa53d, { emissive: 0x5c2600 });
+  const boostArrowMat = sobreCalzada(toon(0xffa53d, { emissive: 0x5c2600 }));
   const chevronShape = new THREE.Shape();
   chevronShape.moveTo(0, 0.34);
   chevronShape.lineTo(0.3, -0.14);
@@ -2805,7 +2819,7 @@ export function createWorld(scene) {
     const mesh = powerupPools[kind].acquire();
     mesh.visible = true;
     mesh.rotation.y = 0;
-    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.02 : kind === "caja" ? 0.35 : 1.0, z);
+    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.09 : kind === "caja" ? 0.35 : 1.0, z);
     if (!mesh.parent) group.add(mesh);
     powerups.push({ mesh, lane, z, kind, collected: false });
   }
@@ -4207,7 +4221,7 @@ export function createWorld(scene) {
         // Pegadas al suelo, con una ola de brillo/escala que recorre las 3
         // flechas hacia el jugador -- se lee como energia fluyendo hacia
         // delante, en vez de girar flotando en el aire como antes.
-        p.mesh.position.y = 0.02;
+        p.mesh.position.y = 0.09;
         for (const chevron of p.mesh.userData.chevrons) {
           const t = ((animClock * 2.4 - chevron.userData.baseZ * 1.6) % 1 + 1) % 1;
           chevron.scale.setScalar(0.85 + Math.max(0, Math.sin(t * Math.PI)) * 0.3);

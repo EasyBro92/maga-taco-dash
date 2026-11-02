@@ -133,7 +133,11 @@ canvas.addEventListener("webglcontextrestored", () => {
 });
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 320);   // 25/10: de 150 a 320 (ver SPAWN_Z en world.js)
+// 25/10: far de 150 a 320 (ver SPAWN_Z en world.js). 02/11: near de 0.1 a 0.5:
+// la cámara nunca tiene nada a menos de medio metro, y así el buffer de
+// profundidad es 5 veces más preciso de lejos (el suelo, el asfalto y lo que
+// va pintado encima ya no se pisan entre sí a distancia).
+const camera = new THREE.PerspectiveCamera(55, 1, 0.5, 320);
 
 // Camara elevada y alejada tipo Minion Rush: el personaje se ve pequeno,
 // se ve mucho tramo de pista por delante para reaccionar con tiempo.
@@ -639,7 +643,7 @@ function frameFinal(dt) {
   }
   if (dz) world.update(dz);
   character.object3D.position.set(playerX, py, 0);
-  shadowBlob.position.set(playerX, py + 0.015, 0);
+  shadowBlob.position.set(playerX, py + 0.06, 0);
   // Camara de cine: baja y se acerca a medida que llega al portico.
   const cerca = fin.fase >= 2;
   const objetivo = cerca ? new THREE.Vector3(1.2, 3.4 + py, 12.5) : new THREE.Vector3(playerX * 0.6, 4.4 + py, 11);
@@ -668,7 +672,7 @@ function finalCamion(dt, flat, zParadaDada) {
   if (dz) world.update(dz);
   py = 0;
   character.object3D.position.set(playerX, 0, 0);
-  shadowBlob.position.set(playerX, 0.015, 0);
+  shadowBlob.position.set(playerX, 0.06, 0);
   const cerca = fin.fase >= 2;
   // En el diner, mas lejos y mas alto: que se vea el chile gigante del tejado.
   // 29/10: el nivel puede traer su propia camara (Las Vegas, mirando la torre).
@@ -753,7 +757,7 @@ function finalMitin(dt, cb) {
   const subido = zPie + dz > 0 ? Math.min(1, (zPie + dz) / 2.4) : 0;
   if (fin.fase <= 1) py = subido;
   character.object3D.position.set(playerX, py, 0);
-  shadowBlob.position.set(playerX, py + 0.015, 0);
+  shadowBlob.position.set(playerX, py + 0.06, 0);
   const cerca = fin.fase >= 2;
   const objetivo = cerca ? new THREE.Vector3(1.6, 3.6 + py, 10.5) : new THREE.Vector3(0, 4.6 + py, 11);
   const mira = cerca ? new THREE.Vector3(0, 2.6 + py, -3) : new THREE.Vector3(0, 2.4 + py, -8);
@@ -862,10 +866,10 @@ world.onJefe((evento, vida) => {
 
 const shadowBlob = new THREE.Mesh(
   new THREE.CircleGeometry(0.4, 16),
-  new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 })
+  new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 })
 );
 shadowBlob.rotation.x = -Math.PI / 2;
-shadowBlob.position.y = 0.015;
+shadowBlob.position.y = 0.06;
 shadowBlob.visible = !shadowsEnabled; // con sombras reales activas, el blob 2D sobra
 scene.add(shadowBlob);
 
@@ -1915,7 +1919,7 @@ function frame(dtFijo) {
       }
     }
     character.object3D.position.y = py;
-    shadowBlob.position.y = suelo + 0.015;
+    shadowBlob.position.y = suelo + 0.06;
     shadowBlob.scale.setScalar(Math.max(0.4, 1 - (py - suelo) / JUMP_HEIGHT));
 
     if (isJumping) {
@@ -2004,7 +2008,7 @@ function frame(dtFijo) {
     idlePhase += dt;
     character.object3D.rotation.y = Math.PI + Math.sin(idlePhase * 0.5) * 0.4;
     character.setIdlePose(idlePhase);
-    shadowBlob.position.set(0, 0.015, 0);
+    shadowBlob.position.set(0, 0.06, 0);
     shadowBlob.scale.setScalar(1);
     updateDust(dt);
   }
