@@ -959,3 +959,21 @@ Isidro pidió seguir con Des Moines y eligió:
   orejeras) entre el público.
 - El helicóptero de la tele sale después del río: por el centro las pasarelas
   lo atravesarían.
+
+## El mapa de la gira, como un mapa electoral (2026-11-02)
+
+Isidro mandó una foto del mapa electoral de EE. UU. (estados rojos y azules con
+sus votos) para que el mapa de la gira «se note más». Eligió:
+
+- **Formas de verdad.** Los estados ya no son casillas: salen de us-atlas 3.0.1
+  (`states-albers-10m.json`, mapas públicos del censo), convertidos con
+  `herramientas/hacer-mapa.cjs` a `www/src/mapa-eeuu.js` (34 KB).
+- **Azul los que faltan, rojo los ganados.** Como en las elecciones: todo empieza
+  azul y cada estado que ganas se pinta de rojo (más intenso con más estrellas).
+  La barra de votos también va de azul a rojo.
+- Fondo oscuro como en la tele, el número de votos en cada estado y una leyenda
+  («Ganados / Por ganar»).
+- Los estados pequeños del noreste (VT, NH, MA, RI, CT, NJ, DE, MD, DC) llevan
+  una etiqueta aparte con su raya, para poder tocarlos con el dedo.
+- El nivel que toca, con borde dorado y un aro que late; el elegido, con borde
+  blanco; los jefes, con su carita al lado del número.

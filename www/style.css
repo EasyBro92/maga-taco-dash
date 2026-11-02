@@ -764,25 +764,29 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .diarioDia:nth-child(7) { grid-column: span 2; }
 
 /* 28/10: la historia de los 50 estados: mapa de casillas, votos, prologo y mensaje */
+/* 02/11: el mapa electoral, sobre fondo oscuro como en la tele */
+#mapaGira .mapaSvg { background: #10131b; border-radius: 14px; padding: 6px 2px; box-sizing: border-box; width: calc(100% + 24px); max-width: none; margin: 6px -12px 10px; }
 .mapaSvg .estado { cursor: pointer; }
-.mapaSvg .estado rect { fill: #eef1f6; stroke: #d5dbe6; stroke-width: 0.4; }
-.mapaSvg .estado text { font-size: 2.9px; font-weight: 900; text-anchor: middle; fill: #b0b9c8; pointer-events: none; font-family: var(--letra-titulo); }
-.mapaSvg .estado.cerrado rect { fill: #e1e6ee; }
-.mapaSvg .estado.cerrado text { fill: #7f8a9e; }
-.mapaSvg .estado.abierto rect { fill: #ffffff; stroke: #e8463c; stroke-width: 0.8; }
-.mapaSvg .estado.abierto text { fill: #e8463c; }
-.mapaSvg .estado.ganado text { fill: #ffffff; }
-.mapaSvg .estado.e1 rect { fill: #f08a7e; stroke: #e0675a; }
-.mapaSvg .estado.e2 rect { fill: #e04a3c; stroke: #c63a2d; }
-.mapaSvg .estado.e3 rect { fill: #b51f2c; stroke: #8f1520; }
-.mapaSvg .estado.elegido rect { stroke: #1f2a44; stroke-width: 1; }
-.mapaSvg .marcaJefe { fill: #1f2a44; pointer-events: none; }
-.mapaSvg rect.actual { fill: none; pointer-events: none; stroke-width: 0.9; }
+.mapaSvg .estado path, .mapaSvg .estado .caja { fill: #6b93d6; stroke: #10131b; stroke-width: 1.2; stroke-linejoin: round; }
+.mapaSvg .estado .raya { stroke: #8a93a8; stroke-width: 1.2; }
+.mapaSvg .estado.abierto path, .mapaSvg .estado.abierto .caja { stroke: #ffd166; stroke-width: 2.6; }
+.mapaSvg .estado.e1 path, .mapaSvg .estado.e1 .caja { fill: #f7a596; }
+.mapaSvg .estado.e2 path, .mapaSvg .estado.e2 .caja { fill: #f07563; }
+.mapaSvg .estado.e3 path, .mapaSvg .estado.e3 .caja { fill: #e14b3c; }
+.mapaSvg .estado.elegido path, .mapaSvg .estado.elegido .caja { stroke: #ffffff; stroke-width: 3.4; }
+.mapaSvg .capaTextos, .mapaSvg .leyenda, .mapaSvg .actual { pointer-events: none; }
+.mapaSvg .capaTextos text { font-family: var(--letra-titulo); font-size: 30px; font-weight: 900; text-anchor: middle; fill: #10131b; }
+.mapaSvg .capaTextos text.enCaja { font-size: 20px; }
+.mapaSvg .capaTextos text.fuera { fill: #e6e9f0; }
+.mapaSvg circle.actual { fill: none; stroke: #ffd166; stroke-width: 3.5; }
+.mapaSvg .leyenda text { font-family: var(--letra-titulo); font-size: 20px; font-weight: 700; fill: #e6e9f0; }
+.mapaSvg .leyenda .lRojo { fill: #f07563; }
+.mapaSvg .leyenda .lAzul { fill: #6b93d6; }
 .votos { margin: 0 4px 10px; }
 .votosFila { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--letra-titulo); font-weight: 700; font-size: 13px; color: var(--tinta-suave); text-transform: uppercase; letter-spacing: 0.5px; }
 .votosFila b { color: #c63a2d; font-size: 17px; }
-.votosBarra { position: relative; height: 12px; margin-top: 4px; border-radius: 6px; background: #e1e6ee; }
-.votosLleno { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #f08a7e, #c63a2d); }
+.votosBarra { position: relative; height: 12px; margin-top: 4px; border-radius: 6px; background: #6b93d6; }
+.votosLleno { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #f07563, #e14b3c); }
 .votosMarca { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; background: #1f2a44; border-radius: 2px; }
 .votosMarca::after { content: "270"; position: absolute; top: 17px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 900; color: #1f2a44; }
 .votosNota { font-size: 12px; color: var(--tinta-suave); margin-top: 14px; text-align: center; }

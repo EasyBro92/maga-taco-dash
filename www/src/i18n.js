@@ -98,7 +98,7 @@ const DICT = {
     estrellasNuevas: "Estrellas: llegar · sin chocar · 3 chapas",
     receta: "La receta del taco perfecto",
     // 28/10: la historia de los 50 estados
-    votaRojo: "¡{e} vota rojo!", votosElectorales: "Votos electorales", votosN: "{n} votos",
+    votaRojo: "¡{e} vota rojo!", votosElectorales: "Votos electorales", mapaGanados: "Ganados", mapaPorGanar: "Por ganar", votosN: "{n} votos",
     paraGanar: "Con 270 eres presidente. Él los quiere todos.", yaPresidente: "¡Ya eres presidente electo! Ahora, a por los 538.",
     actoN: "Acto", finalActo: "Final", jefeNivel: "Jefe: {j}",
     victoria1: "Por los pelos", victoria2: "Victoria clara", victoria3: "¡Aplastante!",
@@ -206,7 +206,7 @@ const DICT = {
     av_agachar: "Swipe down to duck", av_frase: "Grab the mic and tap the screen",
     estrellasNuevas: "Stars: finish · no crash · 3 buttons",
     receta: "The perfect taco recipe",
-    votaRojo: "{e} votes red!", votosElectorales: "Electoral votes", votosN: "{n} votes",
+    votaRojo: "{e} votes red!", votosElectorales: "Electoral votes", mapaGanados: "Won", mapaPorGanar: "To win", votosN: "{n} votes",
     paraGanar: "270 makes you president. He wants them all.", yaPresidente: "You're president-elect! Now go for all 538.",
     actoN: "Act", finalActo: "Finale", jefeNivel: "Boss: {j}",
     victoria1: "By a hair", victoria2: "Clear win", victoria3: "Landslide!",

@@ -8,7 +8,8 @@ import {
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
-import { ESTADOS, ACTOS, PROLOGO, TOTAL_VOTOS, PARA_GANAR, nombreEstado, votosGanados, postDe } from "./historia.js";
+import { FORMAS, CENTROS } from "./mapa-eeuu.js";
+import { ACTOS, PROLOGO, TOTAL_VOTOS, PARA_GANAR, nombreEstado, votosGanados, postDe } from "./historia.js";
 import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl } from "./levels.js";
 import { icono, pintarIconos } from "./iconos.js";
 import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
@@ -339,11 +340,26 @@ function mostrarBanner(n) {
   mostrarBanner.t = setTimeout(() => el.classList.add("hidden"), 2800);
 }
 
-// ---- El mapa de la gira (28/10/2026: los 50 estados en casillas) ----
-// Cada estado es una casilla; al ganarlo se pinta de rojo (más intenso con más
-// estrellas). Debajo, los votos electorales: 270 para ser presidente.
+// ---- El mapa de la gira (02/11/2026: el mapa electoral de verdad) ----
+// Los estados con su forma real y sus votos electorales, como en los mapas de
+// las elecciones: los que faltan, azules; al ganarlo se pinta de rojo (más
+// intenso con más estrellas). Los estados pequeños del noreste llevan una
+// etiqueta aparte para poder tocarlos. Debajo, la barra de los 270 votos.
 let nivelElegido = null;
-const CASILLA = 9;
+// Etiquetas aparte de los estados pequeños: [x, y] de la caja (72x32).
+const CAJA_W = 72, CAJA_H = 32;
+const ETIQUETA_APARTE = {
+  VT: [742, 58], NH: [818, 58],
+  MA: [906, 200], RI: [906, 236], CT: [906, 272], NJ: [906, 308], DE: [906, 344], MD: [906, 380], DC: [906, 416],
+};
+// Dónde va el número cuando el centro calculado no queda bien. El de Hawái va
+// fuera, al lado de las islas (en blanco), porque dentro no cabe.
+const NUMERO_FUERA = { HI: [346, 566] };
+const CENTRO_AJUSTE = { FL: [797, 552], ID: [200, 162], LA: [562, 470], MI: [690, 192], CA: [80, 282], KY: [692, 324] };
+function centroEstado(e) {
+  const a = ETIQUETA_APARTE[e];
+  return a ? [a[0] + CAJA_W / 2, a[1] + CAJA_H / 2] : CENTRO_AJUSTE[e] || CENTROS[e];
+}
 // El que toca jugar: el primero abierto sin pasar (o el último ganado).
 function nivelEnCurso(hechos) {
   return NIVELES.find((n) => nivelAbierto(n, hechos) && !hechos[n.id])
@@ -353,19 +369,47 @@ function abrirMapa() {
   const svg = document.getElementById("mapaSvg");
   const hechos = getNiveles();
   const actual = nivelEnCurso(hechos);
-  svg.setAttribute("viewBox", `0 0 ${11 * CASILLA} ${8 * CASILLA}`);
-  svg.innerHTML = NIVELES.map((n) => {
-    const [c, f] = ESTADOS[n.estado];
-    const x = c * CASILLA + 0.45, y = f * CASILLA + 0.45, lado = CASILLA - 0.9;
+  svg.setAttribute("viewBox", "0 14 980 594");
+  let estados = "", textos = "";
+  for (const n of NIVELES) {
+    const e = n.estado;
+    if (!FORMAS[e]) continue;
     const r = hechos[n.id];
     const clase = r ? `ganado e${Math.max(1, estrellasDe(r))}` : nivelAbierto(n, hechos) ? "abierto" : n.listo ? "cerrado" : "futuro";
-    return `<g class="estado ${clase}" data-id="${n.id}"><rect x="${x}" y="${y}" width="${lado}" height="${lado}" rx="1.4"/>`
-      + `<text x="${x + lado / 2}" y="${y + lado / 2 + 1.05}">${n.estado}</text>`
-      + (n.esJefe ? `<circle class="marcaJefe" cx="${x + lado - 1.4}" cy="${y + 1.4}" r="0.9"/>` : "")
-      + "</g>";
-  }).join("");
-  const [ac, af] = ESTADOS[actual.estado];
-  svg.insertAdjacentHTML("beforeend", `<rect class="actual" x="${ac * CASILLA - 0.2}" y="${af * CASILLA - 0.2}" width="${CASILLA + 0.4}" height="${CASILLA + 0.4}" rx="2"/>`);
+    const a = ETIQUETA_APARTE[e];
+    let extra = "";
+    if (a) {
+      // Raya desde la caja hasta el estado, y la caja con el nombre y los votos.
+      const [cx, cy] = CENTROS[e];
+      const arriba = a[1] < 120;
+      const [lx, ly] = arriba ? [a[0] + CAJA_W / 2, a[1] + CAJA_H] : [a[0], a[1] + CAJA_H / 2];
+      extra = `<line class="raya" x1="${lx}" y1="${ly}" x2="${cx}" y2="${cy}"/>`
+        + `<rect class="caja" x="${a[0]}" y="${a[1]}" width="${CAJA_W}" height="${CAJA_H}" rx="6"/>`;
+      textos += `<text class="enCaja" x="${a[0] + CAJA_W / 2}" y="${a[1] + 23.5}">${e} ${n.votos}</text>`;
+    } else if (NUMERO_FUERA[e]) {
+      const [x, y] = NUMERO_FUERA[e];
+      textos += `<text class="fuera" x="${x}" y="${y + 10.5}">${n.votos}</text>`;
+    } else {
+      const [x, y] = centroEstado(e);
+      textos += `<text x="${x}" y="${y + 10.5}">${n.votos}</text>`;
+    }
+    if (n.esJefe) {
+      // La misma carita de jefe que sale en la ficha del nivel: a la derecha
+      // del número, o en la esquina de la caja de los estados pequeños.
+      const [x, y] = NUMERO_FUERA[e] || centroEstado(e);
+      const [jx, jy, jl] = a ? [a[0] - 14, a[1] - 12, 24] : [x + String(n.votos).length * 9 + 3, y - 15, 28];
+      textos += icono("jefe").replace("<svg class=\"ico\"", `<svg class="marcaJefe" x="${jx}" y="${jy}" width="${jl}" height="${jl}"`);
+    }
+    estados += `<g class="estado ${clase}" data-id="${n.id}"><path d="${FORMAS[e]}"/>${extra}</g>`;
+  }
+  const [ax, ay] = centroEstado(actual.estado);
+  const leyenda = `<g class="leyenda"><rect class="lRojo" x="836" y="478" width="20" height="20" rx="4"/><text x="864" y="495">${t("mapaGanados")}</text>`
+    + `<rect class="lAzul" x="836" y="508" width="20" height="20" rx="4"/><text x="864" y="525">${t("mapaPorGanar")}</text></g>`;
+  svg.innerHTML = `<g class="capaEstados">${estados}</g><g class="capaTextos">${textos}</g>`
+    + `<circle class="actual" cx="${ax}" cy="${ay}" r="24"/>${leyenda}`;
+  // Los que se pueden jugar, encima, para que su borde dorado se vea entero.
+  const capa = svg.querySelector(".capaEstados");
+  capa.querySelectorAll(".estado.abierto").forEach((g) => capa.appendChild(g));
   svg.querySelectorAll(".estado").forEach((g) => g.addEventListener("click", () => elegirNivel(g.dataset.id)));
   pintarVotos(hechos);
   elegirNivel(nivelElegido || actual.id);
@@ -399,7 +443,11 @@ function elegirNivel(id) {
   const abierto = nivelAbierto(n, hechos);
   const i = NIVELES.indexOf(n);
   const L = getLang();
-  document.querySelectorAll("#mapaSvg .estado").forEach((g) => g.classList.toggle("elegido", g.dataset.id === id));
+  document.querySelectorAll("#mapaSvg .estado").forEach((g) => {
+    const si = g.dataset.id === id;
+    g.classList.toggle("elegido", si);
+    if (si) g.parentNode.appendChild(g); // encima de los vecinos, para que se vea el borde
+  });
   // Para abrirlo: el nivel hecho anterior que falta por pasar.
   const falta = [...NIVELES.slice(0, i)].reverse().find((x) => x.listo && !hechos[x.id]);
   const cierre = !n.listo ? t("proximamente") : t("superaAntes").replace("{n}", falta ? falta.nombre : "");

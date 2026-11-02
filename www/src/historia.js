@@ -6,9 +6,9 @@
 // verdad (270 para ser presidente; él los quiere los 538). Los enemigos son la
 // Liga del Pantano: todos son líos que ha montado él mismo.
 
-// Mapa de casillas: [columna, fila, nombre, name, votos electorales].
-// Cada estado es un cuadrado colocado más o menos donde está; así en el móvil
-// se ven igual de bien Texas que Rhode Island.
+// Estados: [columna, fila, nombre, name, votos electorales]. La columna y la
+// fila eran del mapa de casillas; desde el 02/11 el mapa usa las formas de
+// verdad (mapa-eeuu.js) y solo se usan el nombre y los votos.
 export const ESTADOS = {
   AK: [0, 0, "Alaska", "Alaska", 3],                 ME: [10, 0, "Maine", "Maine", 4],
   WI: [5, 1, "Wisconsin", "Wisconsin", 10],          VT: [8, 1, "Vermont", "Vermont", 3],
