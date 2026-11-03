@@ -107,6 +107,8 @@ const DICT = {
     jefeLlegaDc: "¡La Liga del Pantano manda al Burrito-Bot! Coge chiles para darle", jefeVencidoDc: "¡Pantano drenado!", jefeEscapaDc: "El Burrito-Bot vuelve al pantano...",
     jefeLlegaVegas: "¡Empieza el debate! Coge micrófonos y respóndele", jefeVencidoVegas: "¡Hecho en China, roto en América!",
     jefeEscapaVegas: "El Burrito-Bot se baja del atril...", encuesta: "ENCUESTA", encuestaYo: "TÚ",
+    jefeLlegaDragon: "¡Llega el dragón de China! Coge chiles para darle", jefeVencidoDragon: "¡Dragón derrotado!",
+    jefeEscapaDragon: "El dragón vuelve a China...", dragonNombre: "DRAGÓN CHINO", tr_dragon: "¡El dragón de China!",
     tiendaGorras: "Gorras", tiendaTrajes: "Trajes", tiendaPuesto: "Puesto", tiendaPonerse: "Ponérselo",
   },
   en: {
@@ -215,6 +217,8 @@ const DICT = {
     jefeLlegaDc: "The Swamp League sends Burrito-Bot! Grab chilis to hit him", jefeVencidoDc: "Swamp drained!", jefeEscapaDc: "Burrito-Bot slinks back to the swamp...",
     jefeLlegaVegas: "The debate begins! Grab mics and talk back", jefeVencidoVegas: "Made in China, broken in America!",
     jefeEscapaVegas: "Burrito-Bot walks off the stage...", encuesta: "POLL", encuestaYo: "YOU",
+    jefeLlegaDragon: "Here comes the China dragon! Grab chilis to hit him", jefeVencidoDragon: "Dragon defeated!",
+    jefeEscapaDragon: "The dragon flies back to China...", dragonNombre: "CHINA DRAGON", tr_dragon: "The China dragon!",
     tiendaGorras: "Hats", tiendaTrajes: "Suits", tiendaPuesto: "Wearing", tiendaPonerse: "Wear it",
   },
 };

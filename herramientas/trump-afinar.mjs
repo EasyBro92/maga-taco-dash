@@ -33,6 +33,9 @@ const largos = {}, audios = {};
 const tmp = path.join(T, "ventana");
 const tiempos = {};
 for (const [texto, [fuente, frase, vez]] of Object.entries(CORTES)) {
+  // La cena de Estado (26 min) no se pasó entera por whisper: solo ventanas
+  // alrededor de cada «China»; su tiempo va directo en trump-tiempos.json.
+  if (!fs.existsSync(path.join(T, "texto", fuente + ".json"))) { console.log(`${texto.padEnd(40)} (sin texto largo: ver trump-tiempos.json)`); continue; }
   largos[fuente] = largos[fuente] || palabrasDe(path.join(T, "texto", fuente + ".json"));
   audios[fuente] = audios[fuente] || leerWav(path.join(T, "wav16", fuente + ".wav")).datos;
   const aprox = buscar(largos[fuente], frase, vez);

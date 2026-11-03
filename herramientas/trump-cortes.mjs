@@ -22,6 +22,9 @@ export const CORTES = {
   "GOD BLESS AMERICA!": ["investidura_2017", "god bless america", 0],
   "WE WILL WIN!": ["cien_dias", "we will win", -1],
   "YOU WILL NEVER BE IGNORED AGAIN!": ["investidura_2017", "you will never be ignored again", 0],
+  // 03/11: el grito del dragón. Sale de la cena de Estado con Xi Jinping (la Casa Blanca, 2026):
+  // «between China… and the United States», la vez que lo dice despacio y con pausa (4:14).
+  "CHINA!": ["cena_estado", "china", 1],
 };
 
 // WAV de 16 bits y una pista.

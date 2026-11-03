@@ -994,3 +994,29 @@ solo se veía a partir de una distancia fija que avanzaba contigo.
 - La cámara pasa de `near` 0.1 a 0.5: el buffer de profundidad es 5 veces más
   preciso de lejos, y el césped y las entradas de las casas (subidos de 6 mm a
   2 cm) ya no se pisan con el suelo.
+
+## El dragón de China (2026-11-03)
+
+Isidro: «me gustaría que hubiera un jefe dragón brillante, y que cuando aparezca
+el personaje repita de vez en cuando su frase ¡China!». Eligió:
+
+- **Dónde:** en Des Moines (nivel 5: China ya no compra la soja de Iowa) y en el
+  modo sin fin, por turnos con el Burrito-Bot (primero el dragón).
+- **Cómo se le gana:** como al robot. Vuela delante y te escupe bolas de fuego que
+  caen a tu carril y ruedan hacia ti (se saltan); tú le das con chiles y
+  micrófonos. Cinco golpes.
+- **Cómo es:** rojo y oro, el dragón del Año Nuevo chino (`blender/dragon.py`):
+  cabeza con la mandíbula aparte (se abre al escupir), dieciséis trozos de cuerpo
+  que siguen a la cabeza con retraso y ondean, patas y cola. Escamas de Voronoi;
+  el oro, los dientes y los ojos llevan luz propia y cada trozo un halo dorado
+  fijo: brilla también de día y nada parpadea.
+- **La voz:** «CHINA!» con su voz de verdad, cortado de la cena de Estado con Xi
+  Jinping (la Casa Blanca, 2026, dominio público; bajada con su permiso, versión
+  de 240p). La primera vez a los 2,6 s de llegar y luego cada 6-9 s; también es
+  lo que grita con el micrófono contra el dragón y sus bolas de fuego.
+- En Des Moines va en lugar de la ventisca, de 2400 a 2900 m. La cola del caucus
+  se acortó 150 m (2100-2400) para que la pelea dure unos 20 s, y la tercera
+  chapa pasó de 2604 a 2300 m.
+- Probado con el piloto automático: le dan los chiles, cae en unos 10 s, grita
+  «China» dos veces, se saltan todas las bolas de fuego; en el sin fin salen
+  dragón, robot, dragón; el debate de Las Vegas sigue igual.

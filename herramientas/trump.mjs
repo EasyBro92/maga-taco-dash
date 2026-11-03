@@ -12,6 +12,8 @@
 //   tremendous_trade    «We signed a tremendous trade deal» (la Casa Blanca, 2025)
 //   investidura_2017    discurso de investidura, 20/01/2017 (copia MP3 de Commons)
 //   cien_dias           «President Trump's First 100 Days» (VOA, 2017)
+//   cena_estado         «President Trump and the President of China Deliver Remarks
+//                       at a State Dinner» (la Casa Blanca, 2026; versión de 240p, 03/11/2026)
 // Los pasos:
 //   1. Blender las pasa a WAV (herramientas/a_wav.py): a _trump/wav16 para
 //      whisper y a _trump/wav22 para cortar.

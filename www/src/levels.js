@@ -42,7 +42,8 @@ function cuadrasCon(n, op) {
 //   autobuses autobuses con tacos en el techo, uno tras otro
 //   festin    un potenciador seguro y lluvia de tacos
 //   obras · desfile · comitiva   lo propio de cada ciudad
-//   jefe      llega el Burrito-Bot (tacos y chiles para darle)
+//   jefe      llega el Burrito-Bot (tacos y chiles para darle); con { jefe: "dragon" },
+//             el dragon de China (Des Moines)
 //   sprint    el último tramo, con aviso: ya se ve la meta
 // `control` es el punto de control (se puede seguir desde ahí si se choca) y
 // `chapas` las tres chapas de campaña escondidas, cada una con su truco:
@@ -268,12 +269,14 @@ const CALLES = [
       [1400, 1540, "calma"],
       [1540, 1950, "cosechadoras", { titulo: "cosechadoras" }],
       [1950, 2100, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [2100, 2550, "caucus", { titulo: "caucus" }],
-      [2550, 2900, "vallas", { high: ["pancarta_caucus"], low: ["monton_nieve"], titulo: "nevada" }],
+      [2100, 2400, "caucus", { titulo: "caucus" }],
+      // 03/11: el dragon de China viene a por la soja (en lugar de la ventisca; la
+      // cola del caucus se acorta 150 m para que la pelea dure unos 20 s).
+      [2400, 2900, "jefe", { jefe: "dragon", titulo: "dragon" }],
       [2900, 3170, "sprint", { titulo: "sprint_capitolio" }],
     ],
     control: 1547, caja: 1100,
-    chapas: [[707, "arco"], [1253, "carril"], [2604, "arco"]],
+    chapas: [[707, "arco"], [1253, "carril"], [2300, "arco"]],
     hitos: ["parque_esculturas", "hotel_fort", "biblioteca_dm", "ruan", "torre_801", "world_food", "rio"],
     meta: "capitolio_iowa", metaNombre: { es: "el Capitolio", en: "the Capitol" },
     // El helicoptero de la tele, despues del rio: por el centro pasan las

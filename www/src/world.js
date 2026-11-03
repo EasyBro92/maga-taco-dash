@@ -2380,6 +2380,8 @@ export function createWorld(scene) {
     cerdo: { choque: "low", medio: 0.35, alto: 0.95, centro: 0 },
     cosechadora: { choque: "full", medio: 2.0, alto: 3.7, centro: -2.0, mueve: 4 },
     votantes: { choque: "full", medio: 1.2, alto: 2.0, centro: -0.85 },
+    // 03/11: la bola de fuego del dragon de China: cae de su boca y rueda hacia ti. Se salta.
+    bola_fuego: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2891,7 +2893,7 @@ export function createWorld(scene) {
   // hacia el. Cinco golpes. Si tarda demasiado, se va sin premio.
   const JEFE_VIDA = 5, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 40;
   const jefe = { activo: false, mesh: null, vida: 0, carril: 1, x: 0, z: -90, tiro: 0, tiempo: 0,
-    golpe: 0, saliendo: false, derrotado: false };
+    golpe: 0, saliendo: false, derrotado: false, tipo: "robot", robot: null };
   const disparos = [];
   let jugadorCarril = 1;
   let alEventoJefe = null;
@@ -3012,6 +3014,68 @@ export function createWorld(scene) {
     m.visible = perseguidor.z < 16;
     m.position.set(perseguidor.x, 0, perseguidor.z);
   }
+  // ---- 03/11/2026: el dragon de China (Des Moines y el sin fin) ----
+  // Isidro: «un jefe dragon brillante». Se le gana como al Burrito-Bot (chiles
+  // y microfonos, cinco golpes), pero escupe bolas de fuego que ruedan por tu
+  // carril, y abre la boca al hacerlo. El cuerpo son trozos que siguen a la
+  // cabeza con retraso y ondean despacio, como el dragon del Año Nuevo chino.
+  // El oro brilla con luz propia y lleva un halo suave y fijo: nada parpadea.
+  const DRAGON_Y = 4.0, DRAGON_ESCALA = 1.15, DRAGON_TROZOS = 16, DRAGON_PASO = 1.05;
+  const HAY_DRAGON = USAR_BLENDER && ["dragon_cabeza", "dragon_mandibula", "dragon_cuerpo", "dragon_patas", "dragon_cola", "bola_fuego"]
+    .every((n) => hayModelo("obstaculos/" + n));
+  const dragon = { cabeza: null, mandibula: null, trozos: [], boca: 0 };
+  function halo(escala, opacidad, color = 0xffc23a) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaLuz(), color, transparent: true, opacity: opacidad,
+      depthWrite: false, blending: THREE.AdditiveBlending }));
+    sp.scale.setScalar(escala);
+    return sp;
+  }
+  function montarDragon() {
+    if (dragon.cabeza || !HAY_DRAGON) return dragon.cabeza;
+    const cab = modelo("obstaculos/dragon_cabeza");
+    const mand = modelo("obstaculos/dragon_mandibula");
+    mand.position.set(0, -0.3, -0.15);      // la bisagra (en Blender, 0, 0.15, -0.3)
+    cab.add(mand);
+    cab.add(halo(5, 0.3));
+    dragon.cabeza = cab; dragon.mandibula = mand;
+    for (let i = 0; i < DRAGON_TROZOS; i++) {
+      const t = modelo(i === DRAGON_TROZOS - 1 ? "obstaculos/dragon_cola" : "obstaculos/dragon_cuerpo");
+      if (i === 2 || i === 9) t.add(modelo("obstaculos/dragon_patas"));
+      t.add(halo(3, 0.2));
+      t.scale.setScalar(DRAGON_ESCALA * (1 - i * 0.03));
+      t.rotation.order = "YXZ";
+      t.visible = false;
+      group.add(t);
+      dragon.trozos.push({ mesh: t, x: 0, y: DRAGON_Y });
+    }
+    return cab;
+  }
+  // Cada trozo va hacia donde estaba el de delante (con retraso) y encima
+  // ondea a los lados y arriba y abajo, mas cuanto mas lejos de la cabeza. El
+  // cuerpo sube un poco hacia la cola: asi se ve por encima de la cabeza.
+  function moverDragon(dt) {
+    const cab = dragon.cabeza;
+    dragon.boca = Math.max(0, dragon.boca - dt * 1.8);
+    dragon.mandibula.rotation.x = Math.sin(dragon.boca * Math.PI) * 0.6;
+    const t = jefe.tiempo, k = Math.min(1, dt * 6);
+    let ax = cab.position.x, ay = cab.position.y - 0.3, az = cab.position.z - 0.6;
+    dragon.trozos.forEach((s, i) => {
+      s.x += ((i ? dragon.trozos[i - 1].x : cab.position.x) - s.x) * k;
+      s.y += ((i ? dragon.trozos[i - 1].y : cab.position.y) - s.y) * k;
+      const onda = Math.min(1, (i + 1) / 4), m = s.mesh;
+      const x = s.x + Math.sin(t * 1.4 - i * 0.38) * 1.5 * onda;
+      const y = s.y - 0.4 + i * 0.16 + Math.sin(t * 2.2 - i * 0.5) * 0.7 * onda;
+      const z = cab.position.z - 2.0 - i * DRAGON_PASO;
+      m.position.set(x, y, z);
+      // Mira al trozo de delante (la pieza mira a +z).
+      const dx = ax - x, dy = ay - y, dz = az - z;
+      m.rotation.y = Math.atan2(dx, dz);
+      m.rotation.x = -Math.atan2(dy, Math.hypot(dx, dz));
+      m.visible = cab.visible;
+      ax = x; ay = y; az = z;
+    });
+  }
+  function tipoJefe() { return jefe.activo ? jefe.tipo : null; }
   function onJefe(fn) { alEventoJefe = fn; }
   function jefeActivo() { return jefe.activo && !jefe.saliendo; }
   // En un nivel, al acabarse su tramo se va (sin premio).
@@ -3020,19 +3084,25 @@ export function createWorld(scene) {
     jefe.saliendo = true;
     if (alEventoJefe) alEventoJefe("escapa", 0);
   }
-  function iniciarJefe() {
+  function iniciarJefe(tipo = "robot") {
     if (jefe.activo || !EXTRAS) return false;
-    if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
+    if (tipo === "dragon" && !montarDragon()) tipo = "robot";
+    if (!jefe.robot) jefe.robot = jefe.mesh || modeloConContorno("obstaculos/jefe");
+    if (jefe.mesh && jefe.mesh !== (tipo === "dragon" ? dragon.cabeza : jefe.robot)) jefe.mesh.visible = false;
+    jefe.tipo = tipo;
+    jefe.mesh = tipo === "dragon" ? dragon.cabeza : jefe.robot;
     jefe.mesh.visible = true;
     jefe.mesh.rotation.set(0, 0, 0);
+    jefe.mesh.scale.setScalar(tipo === "dragon" ? DRAGON_ESCALA : 1);
     if (!jefe.mesh.parent) group.add(jefe.mesh);
+    if (tipo === "dragon") for (const s of dragon.trozos) { s.x = 0; s.y = DRAGON_Y; }
     // 29/10: en el debate de Las Vegas viene subido a su atril.
     if (!jefe.atril && hayModelo("obstaculos/atril")) {
       jefe.atril = modelo("obstaculos/atril");
       const h = crearHalos(lucesDe("obstaculos/atril"), "obstaculos/atril");
       if (h) jefe.atril.add(h);
       jefe.atril.position.set(0, 0.3, 1.55);
-      jefe.mesh.add(jefe.atril);
+      jefe.robot.add(jefe.atril);
     }
     if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
@@ -3053,19 +3123,22 @@ export function createWorld(scene) {
   }
   function acabarJefe() {
     if (jefe.mesh) jefe.mesh.visible = false;
+    for (const s of dragon.trozos) s.mesh.visible = false;
     jefe.activo = false;
     for (const d of disparos) group.remove(d.mesh);
     disparos.length = 0;
   }
   function actualizarJefe(dt) {
     if (!jefe.activo) return;
-    const m = jefe.mesh;
+    const m = jefe.mesh, esDragon = jefe.tipo === "dragon";
     jefe.tiempo += dt;
+    if (esDragon) moverDragon(dt);
     if (jefe.saliendo) {
       // Vencido: sale despedido girando. Si se va por tiempo, se aleja volando.
+      // (El dragon da vueltas mas despacio: el cuerpo le sigue.)
       m.position.y += (jefe.derrotado ? 9 : 5) * dt;
       jefe.z -= (jefe.derrotado ? 10 : 25) * dt;
-      if (jefe.derrotado) { m.rotation.z += dt * 6; m.rotation.x += dt * 3; }
+      if (jefe.derrotado) { m.rotation.z += dt * (esDragon ? 2 : 6); m.rotation.x += dt * (esDragon ? 1 : 3); }
       m.position.z = jefe.z;
       if (m.position.y > 30) acabarJefe();
       return;
@@ -3073,18 +3146,22 @@ export function createWorld(scene) {
     jefe.z += (JEFE_Z - jefe.z) * Math.min(1, dt * 1.2);
     jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * 4);
     const temblor = jefe.golpe > 0 ? Math.sin(jefe.tiempo * 70) * 0.25 * jefe.golpe : 0;
-    m.position.set(jefe.x + temblor, JEFE_Y + Math.sin(jefe.tiempo * 2.2) * 0.25, jefe.z);
+    m.position.set(jefe.x + temblor, (esDragon ? DRAGON_Y : JEFE_Y) + Math.sin(jefe.tiempo * 2.2) * 0.25, jefe.z);
     m.rotation.z = Math.sin(jefe.tiempo * 1.7) * 0.06;
+    // El dragon gira un poco la cabeza hacia donde va.
+    if (esDragon) m.rotation.y = (LANE_X[jefe.carril] - jefe.x) * 0.12;
     if (jefe.golpe > 0) {
       jefe.golpe = Math.max(0, jefe.golpe - dt * 2.5);
-      m.scale.setScalar(1 + jefe.golpe * 0.25);
+      m.scale.setScalar((esDragon ? DRAGON_ESCALA : 1) * (1 + jefe.golpe * 0.25));
     }
-    // Lanza un barril al carril donde esta (casi siempre el tuyo) y cambia de carril.
+    // Lanza un barril (el dragon, una bola de fuego) al carril donde esta (casi
+    // siempre el tuyo) y cambia de carril.
     jefe.tiro -= dt;
     if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6) {
-      const o = spawnObstacle(jefe.carril, "low", jefe.z + 1.5, "barril");
-      o.cae = { vy: 2 };
-      o.mesh.position.y = JEFE_Y;
+      const o = spawnObstacle(jefe.carril, "low", jefe.z + (esDragon ? 2.2 : 1.5), esDragon ? "bola_fuego" : "barril");
+      o.cae = { vy: esDragon ? 1 : 2 };
+      o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : JEFE_Y;
+      if (esDragon) dragon.boca = 1;
       jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
       jefe.tiro = 1.6;
     }
@@ -3620,7 +3697,11 @@ export function createWorld(scene) {
   const cameo = { t: -1 };
   function cameoJefe() {
     if (!EXTRAS) return;
-    if (!jefe.mesh) jefe.mesh = modeloConContorno("obstaculos/jefe");
+    // Siempre el Burrito-Bot (aunque antes haya salido el dragon).
+    if (!jefe.robot) jefe.robot = jefe.mesh && jefe.tipo === "robot" ? jefe.mesh : modeloConContorno("obstaculos/jefe");
+    if (jefe.mesh && jefe.mesh !== jefe.robot) jefe.mesh.visible = false;
+    jefe.mesh = jefe.robot; jefe.tipo = "robot";
+    jefe.mesh.scale.setScalar(1);
     jefe.mesh.visible = true;
     if (!jefe.mesh.parent) group.add(jefe.mesh);
     if (jefe.atril) jefe.atril.visible = false;
@@ -4128,6 +4209,11 @@ export function createWorld(scene) {
         if (o.mesh.position.y === 0) o.cae = null;
       }
       if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
+      if (o.pool === "bola_fuego") {
+        // Las llamas dan vueltas despacio y la bola lleva su halo naranja (fijo).
+        o.mesh.rotation.y += dt * 2.5;
+        if (!o.mesh.userData.halo) { const h = halo(2.4, 0.45, 0xff9a2a); h.position.y = 0.45; o.mesh.add(h); o.mesh.userData.halo = h; }
+      }
       if (o.pool === "rodadora") { o.mesh.rotation.x += dt * 7; o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.25; }
       if (!o.smashed) {
         if (o.pool === "elvis") {
@@ -4309,7 +4395,7 @@ export function createWorld(scene) {
   showMidLayer("city");
 
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
-    congelar, setCielo, iniciarJefe, jefeActivo, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
+    congelar, setCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor };
 }

@@ -28,6 +28,7 @@ export const TRUMP = {
   "GOD BLESS AMERICA!": "¡Dios bendiga a América!",
   "WE WILL WIN!": "¡Ganaremos!",
   "YOU WILL NEVER BE IGNORED AGAIN!": "¡Nunca más os ignorarán!",
+  "CHINA!": "¡China!",
 };
 
 // La traducción que sale debajo, solo si el juego está en castellano.
@@ -45,6 +46,8 @@ const DICHOS = {
   valla_metal: "WE WILL BRING BACK OUR BORDERS!",
   pancarta: "IT'S A VERY SAD THING.", globos: "IT'S A VERY SAD THING.", protesta: "IT'S A VERY SAD THING.",
   barril: "FAKE. PHONY. FAKE!", jefe: "AMERICA FIRST!",
+  // 03/11: el dragon de China y sus bolas de fuego
+  dragon: "CHINA!", bola_fuego: "CHINA!",
   // Nueva York
   taxi: "BUY AMERICAN AND HIRE AMERICAN!", contenedor: "THE ENEMY OF THE PEOPLE!", alcantarilla: "THE ENEMY OF THE PEOPLE!",
   andamio: "WE WILL BRING BACK OUR JOBS!", viga: "WE WILL BRING BACK OUR JOBS!", basura: "THE ENEMY OF THE PEOPLE!",

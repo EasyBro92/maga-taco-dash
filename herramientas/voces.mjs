@@ -42,7 +42,8 @@ function textosDe(lang) {
   // de cada nivel ya no salen de levels.js: desde la historia nueva el final
   // de cada estado es «¡X vota rojo!», que cambia con el estado.)
   for (const k of ["robaTortilla", "finCasaBlanca", "jefeLlega", "jefeVencido", "jefeEscapa", "jefeLlegaDc", "jefeVencidoDc",
-    "jefeEscapaDc", "jefeLlegaVegas", "jefeVencidoVegas", "jefeEscapaVegas"]) if (t(k) !== k) textos.add(limpiar(t(k)));
+    "jefeEscapaDc", "jefeLlegaVegas", "jefeVencidoVegas", "jefeEscapaVegas",
+    "jefeLlegaDragon", "jefeVencidoDragon", "jefeEscapaDragon"]) if (t(k) !== k) textos.add(limpiar(t(k)));
   for (const k of ["powerupShield", "powerupMagnet", "powerupBoost", "powerupMega", "powerupFreeze", "powerupRocket"]) textos.add(limpiar(t(k) + "!"));
   return [...textos];
 }

@@ -818,8 +818,10 @@ function completarNivel() {
 // ---- Jefe: barra de vida y premio ----
 // 28/10: en Washington el Burrito-Bot viene mandado por la Liga del Pantano.
 // 29/10: en Las Vegas es un debate.
+// 03/11: y el dragon de China (Des Moines y el sin fin).
 function textoJefe(clave) {
   const id = nivelActual && nivelActual.id;
+  if (world.tipoJefe() === "dragon") return t(clave + "Dragon");
   return t(id === "washington" ? clave + "Dc" : id === "vegas" ? clave + "Vegas" : clave);
 }
 // La barra del jefe. En el debate es la encuesta: tú en rojo contra el robot
@@ -829,7 +831,7 @@ function pintarBarraJefe(vida) {
   const barra = document.getElementById("bossBar");
   barra.classList.toggle("debate", debate);
   if (!debate) {
-    barra.querySelector(".bossName").textContent = "BURRITO-BOT";
+    barra.querySelector(".bossName").textContent = world.tipoJefe() === "dragon" ? t("dragonNombre") : "BURRITO-BOT";
     document.getElementById("bossFill").style.width = `${(vida / 5) * 100}%`;
     return;
   }
@@ -960,7 +962,7 @@ function lanzarFrase() {
   const o = world.primerObstaculo(currentLane, 60);
   let texto, objetivo;
   if (o) { texto = f[o.pool] || f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = o; }
-  else if (world.jefeActivo()) { texto = f.jefe; objetivo = "jefe"; }
+  else if (world.jefeActivo()) { texto = world.tipoJefe() === "dragon" ? f.dragon : f.jefe; objetivo = "jefe"; }
   else { texto = f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = null; }
   frasesCargas--;
   world.lanzarFrase(currentLane, texto, objetivo);
@@ -987,6 +989,9 @@ let carrilAntes = 1, tropiezo = 0, persigueLeft = 0;
 // anunciado y el jefe de los niveles.
 let pausado = false, cuenta = 0, cayendo = 0, invulnerable = 0;
 let tramoMostrado = null, jefeLanzado = false;
+// 03/11: con el dragon delante, el presidente grita «¡China!» de vez en cuando.
+// En el sin fin los jefes se turnan: primero el dragon y luego el robot.
+let gritoChina = 0, jefeSinFin = "dragon";
 let mostrarTutorial = false;
 
 // `desde`: metros desde los que se empieza (el punto de control); 0 = desde el principio.
@@ -1013,7 +1018,7 @@ function resetRun(desde = 0) {
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
-  tramoMostrado = null; jefeLanzado = false;
+  tramoMostrado = null; jefeLanzado = false; gritoChina = 0; jefeSinFin = "dragon";
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1861,8 +1866,9 @@ function frame(dtFijo) {
       if (persigue) setTimeout(() => { if (gameState === "playing") showBubble(FRASES[getLang()].patrulla, 1800); }, 900);
     }
     if (nivelActual && tramo.tipo === "jefe" && !jefeLanzado && distance > tramo.desde + 25 && rocketTimeLeft === 0 && !world.jefeActivo()) {
-      if (world.iniciarJefe()) {
+      if (world.iniciarJefe(tramo.jefe)) {
         jefeLanzado = true;
+        gritoChina = 2.6;
         pintarBarraJefe(5);
         document.getElementById("bossBar").classList.remove("hidden");
         showBubble(textoJefe("jefeLlega"), 2200);
@@ -1878,12 +1884,24 @@ function frame(dtFijo) {
     }
     const av = world.tomarAviso(distance);
     if (av && mostrarTutorial) mostrarGesto(av.tipo);
-    if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe()) {
+    if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe(jefeSinFin)) {
       nextJefeAt = distance + JEFE_CADA;
+      jefeSinFin = jefeSinFin === "dragon" ? "robot" : "dragon";
+      gritoChina = 2.6;
       pintarBarraJefe(5);
       document.getElementById("bossBar").classList.remove("hidden");
       showBubble(textoJefe("jefeLlega"));
       triggerCameraShake(0.04);
+    }
+
+    // El grito: el primero en cuanto se va el aviso de que llega, y luego cada 6 a 9 s.
+    if (world.jefeActivo() && world.tipoJefe() === "dragon") {
+      gritoChina -= dt;
+      if (gritoChina <= 0) {
+        gritoChina = 6 + Math.random() * 3;
+        showBubble("CHINA!", 1500);
+        flashExpression("determined", 0.6);
+      }
     }
 
     // Misiones "de una partida": se miran una vez por segundo (no a cada
