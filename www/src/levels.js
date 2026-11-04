@@ -57,7 +57,7 @@ const CALLES = [
   {
     id: "nueva_york", nombre: "Quinta Avenida", lugar: "Nueva York", listo: true,
     zona: "city", carpeta: "nueva_york", luz: "manana", semilla: 725,
-    largo: 3200, linea: 11.5, velMax: 20,
+    largo: 1400, linea: 11.5, velMax: 20,
     // Primer nivel: lo basico. Sin autobuses ni coches patrulla; iman y microfonos.
     sinBus: true, sinPatrulla: true, potenciadores: ["magnet", "magnet", "shield", "boost"],
     kit: { minPlantas: 5, maxPlantas: 11 },
@@ -66,22 +66,22 @@ const CALLES = [
     obstaculos: { low: ["alcantarilla", "basura", "basura"], high: ["andamio", "viga"],
       full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
     publico: { personas: ["ejecutivo", "turista", "chico", "senora", "turista"], valla: "policia", cada: 2 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Nueva York: 1.400 m. Tutorial, el atasco y las obras; el festin, al final.
     tramos: [
       [0, 280, "tutorial"],
-      [280, 620, "suave", { densidad: 0.4, titulo: "quinta" }],
-      [620, 760, "festin", { potenciador: "magnet", titulo: "festin" }],
-      [760, 1150, "slalom", { full: ["taxi"], titulo: "atasco" }],
-      [1150, 1290, "calma"],
-      [1290, 1580, "obras", { titulo: "obras" }],
-      [1580, 1680, "calma"],
-      [1680, 2100, "vallas", { titulo: "vallas" }],
-      [2100, 2240, "festin", { potenciador: "shield", titulo: "festin" }],
-      [2240, 2650, "repartidores", { titulo: "repartidores" }],
-      [2650, 2900, "obras", { low: ["alcantarilla"], titulo: "vapor" }],
-      [2900, 3170, "sprint", { titulo: "sprint" }],
+      [280, 480, "suave", { densidad: 0.4, titulo: "quinta" }],
+      [480, 700, "slalom", { full: ["taxi"], titulo: "atasco" }],
+      [700, 780, "calma"],
+      [780, 980, "obras", { titulo: "obras" }],
+      [980, 1080, "festin", { potenciador: "magnet", titulo: "festin" }],
+      [1080, 1240, "repartidores", { titulo: "repartidores" }],
+      [1240, 1370, "sprint", { titulo: "sprint" }],
     ],
-    control: 1610, caja: 1100,
-    chapas: [[700, "arco"], [1430, "carril"], [2520, "arco"]],
+    control: 712, caja: 640,
+    chapas: [[430, "arco"], [880, "carril"], [1180, "arco"]],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
     meta: "flatiron", metaNombre: { es: "el Flatiron", en: "the Flatiron" },
     // Bajando por la Quinta Avenida desde la calle 56: el este queda a la izquierda.
@@ -89,24 +89,24 @@ const CALLES = [
     izquierda: [
       ["torre_trump", 1], 14, ["kit", 2], ["st_regis", 1], 14,                    // 56th - 55th
       ...cuadras(3), ["catedral", 1], 14, ["saks", 1], ["kit", 1], 14,           // 54th - 49th
-      ...cuadras(22), ["madison", 1], ["kit", 3],                               // 48th - 23rd
+      ...cuadras(6), ["madison", 1], ["kit", 3],                               // 48th - 23rd
     ],
     derecha: [
       ["kit", 2], 14, ["peninsula", 1], ["kit", 1], 14,                           // 56th - 55th
       ["kit", 1], ["santo_tomas", 1], 14, ...cuadras(1), ["kit", 1], ["rockefeller", 1], 14,   // 53rd - 49th
-      ...cuadras(6), ["biblioteca", 1], 14,                                     // 48th - 40th
-      ...cuadras(6), ["empire", 1], 14,                                         // 39th - 33rd
-      ...cuadras(12), ["kit", 2],                                              // 32nd - 23rd
+      ...cuadras(3), ["biblioteca", 1], 14,                                     // 48th - 40th
+      ...cuadras(3), ["empire", 1], 14,                                         // 39th - 33rd
+      ...cuadras(2), ["kit", 2],                                              // 32nd - 23rd
     ],
     // Al fondo, el Flatiron con el camion de tacos delante (ahi se para).
-    fondo: [{ pieza: "flatiron", d: 3245, centro: true }],
+    fondo: [{ pieza: "flatiron", d: 1445, centro: true }],
     final: "camion",
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
   },
   {
     id: "pueblo", nombre: "Main Street", lugar: "Findlay, Ohio", listo: true,
     zona: "city", carpeta: "findlay", luz: "mediodia", semilla: 1888,
-    largo: 3200, linea: 11.5, velMax: 21.5,
+    largo: 1700, linea: 11.5, velMax: 21.5,
     // Segundo nivel: entran los autobuses de campaña (por el techo hay tacos).
     sinPatrulla: true, potenciadores: ["magnet", "shield", "boost", "magnet", "botas"],
     // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
@@ -115,35 +115,37 @@ const CALLES = [
     obstaculos: { low: ["paca", "calabazas", "calabazas"], high: ["guirnalda", "globos"],
       full: ["tractor", "carroza", "vaca", "furgoneta"] },
     publico: { personas: ["abuelo", "senora", "fan", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Findlay: 1.700 m. Empieza con el desfile, el jefe a mitad y las vacas al final.
     tramos: [
-      [0, 200, "calma", { titulo: "main_street" }],
-      [200, 560, "vacas", { titulo: "vacas" }],
-      [560, 860, "autobuses", { titulo: "autobuses" }],
-      [860, 1000, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [1000, 1400, "desfile", { titulo: "desfile" }],
-      [1400, 1540, "calma"],
-      [1540, 2300, "jefe", { titulo: "jefe" }],
-      [2300, 2650, "slalom", { full: ["tractor"], titulo: "tractores" }],
-      [2650, 2900, "autobuses", { titulo: "autobuses" }],
-      [2900, 3170, "sprint", { titulo: "sprint" }],
+      [0, 160, "calma", { titulo: "main_street" }],
+      [160, 440, "desfile", { titulo: "desfile" }],
+      [440, 660, "autobuses", { titulo: "autobuses" }],
+      [660, 740, "calma"],
+      [740, 1340, "jefe", { titulo: "jefe" }],
+      [1340, 1430, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [1430, 1560, "vacas", { titulo: "vacas" }],
+      [1560, 1670, "sprint", { titulo: "sprint" }],
     ],
-    control: 1547, caja: 1000,
-    chapas: [[700, "bus"], [1253, "arco"], [2786, "bus"]],
+    control: 680, caja: 600,
+    chapas: [[540, "bus"], [1490, "arco"], [1620, "carril"]],
     hitos: ["courier", "heladeria", "deposito_agua", "davis"],
     meta: "juzgado_final", metaNombre: { es: "el juzgado", en: "the courthouse" },
     // Subiendo por South Main Street hacia el norte: el oeste queda a la izquierda.
     izquierda: [
       40, ["kit", 3], 14, ["courier", 1], ["kit", 2], 14,
-      ...cuadras(7), ["heladeria", 1], ["kit", 3], 14,
-      ...cuadras(8), ["deposito_agua", 1], ["kit", 3], 14,
-      ...cuadras(9), ["kit", 2], ["davis", 1], ["kit", 1],
+      ...cuadras(4), ["heladeria", 1], ["kit", 3], 14,
+      ...cuadras(4), ["deposito_agua", 1], ["kit", 3], 14,
+      ...cuadras(2), ["kit", 2], ["davis", 1], ["kit", 3],
     ],
     derecha: [
       40, ["marathon", 1], ["kit", 2], 14,
-      ...cuadras(27), ["kit", 2],
+      ...cuadras(14), ["kit", 2],
     ],
     // Al fondo, el juzgado del condado con la plaza y el escenario del mitin.
-    fondo: [{ pieza: "juzgado_final", d: 3240, centro: true }],
+    fondo: [{ pieza: "juzgado_final", d: 1740, centro: true }],
     final: "mitin",
     acera: ["findlay/farola_bandera", "ciudad/arbol_ciudad"],
   },
@@ -152,7 +154,7 @@ const CALLES = [
     // estado (ver GIRA.md); en Arizona, Phoenix. Final en un diner, luz de tarde dorada.
     id: "phoenix", nombre: "Central Avenue", lugar: "Phoenix, Arizona", listo: true,
     zona: "city", carpeta: "phoenix", luz: "tarde", semilla: 1912,
-    largo: 3200, linea: 11.5, velMax: 22,
+    largo: 2000, linea: 11.5, velMax: 22,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     // Centro de Phoenix: estuco de colores calidos, de dos a nueve plantas.
     kit: { desierto: true, minPlantas: 2, maxPlantas: 9 },
@@ -160,36 +162,38 @@ const CALLES = [
     obstaculos: { low: ["nopal", "nopal", "calavera"], high: ["arco_neon", "cartel_ruta"],
       full: ["saguaro", "pickup", "pickup", "furgoneta"] },
     publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Phoenix: 2.000 m. Las rodadoras nada mas salir y la gran persecucion al final.
     tramos: [
-      [0, 200, "calma", { titulo: "central" }],
-      [200, 560, "suave", { densidad: 0.42 }],
-      [560, 860, "rodadoras", { titulo: "rodadoras" }],
-      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
-      [1000, 1400, "persecucion", { titulo: "persecucion" }],
-      [1400, 1540, "calma"],
-      [1540, 1950, "vallas", { high: ["arco_neon"], titulo: "neones" }],
-      [1950, 2300, "autobuses", { titulo: "autobuses" }],
-      [2300, 2450, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [2450, 2900, "persecucion", { titulo: "caza_brujas" }],
-      [2900, 3170, "sprint", { titulo: "sprint_diner" }],
+      [0, 150, "calma", { titulo: "central" }],
+      [150, 430, "rodadoras", { titulo: "rodadoras" }],
+      [430, 520, "festin", { potenciador: "boost", titulo: "festin" }],
+      [520, 800, "autobuses", { titulo: "autobuses" }],
+      [800, 880, "calma"],
+      [880, 1180, "vallas", { high: ["arco_neon"], titulo: "neones" }],
+      [1180, 1400, "suave", { densidad: 0.5 }],
+      [1400, 1830, "persecucion", { titulo: "caza_brujas" }],
+      [1830, 1970, "sprint", { titulo: "sprint_diner" }],
     ],
-    control: 1547, caja: 1150,
-    chapas: [[707, "arco"], [2100, "bus"], [2604, "carril"]],
+    control: 812, caja: 1250,
+    chapas: [[600, "bus"], [1050, "arco"], [1300, "carril"]],
     hitos: ["san_carlos", "westward_ho", "biblioteca_barr", "museo_arte", "museo_heard"],
     meta: "diner_final", metaNombre: { es: "el diner", en: "the diner" }, coche: "patrulla",
     // Subiendo por Central Avenue hacia el norte: el oeste queda a la izquierda.
     izquierda: [
       40, ["kit", 2], ["san_carlos", 1], ["kit", 1], 14,
-      ...cuadras(8), ["biblioteca_barr", 1], ["kit", 2], 14,
-      ...cuadras(17), ["kit", 4],
+      ...cuadras(5), ["biblioteca_barr", 1], ["kit", 2], 14,
+      ...cuadras(10), ["kit", 4],
     ],
     derecha: [
-      40, ["kit", 3], 14, ...cuadras(3), ["westward_ho", 1], ["kit", 2], 14,
-      ...cuadras(8), ["museo_arte", 1], ["kit", 2], 14,
-      ...cuadras(7), ["museo_heard", 1], ["kit", 2], 14,
-      ...cuadras(6), ["kit", 2],
+      40, ["kit", 3], 14, ...cuadras(2), ["westward_ho", 1], ["kit", 2], 14,
+      ...cuadras(5), ["museo_arte", 1], ["kit", 2], 14,
+      ...cuadras(4), ["museo_heard", 1], ["kit", 2], 14,
+      ...cuadras(2), ["kit", 2],
     ],
-    fondo: [{ pieza: "diner_final", d: 3245, centro: true }],
+    fondo: [{ pieza: "diner_final", d: 2045, centro: true }],
     final: "parada", parada: 3.2,
     acera: ["phoenix/palmera", "phoenix/saguaro_maceta"],
   },
@@ -200,7 +204,7 @@ const CALLES = [
     // microfonos: cada uno que coges le lanza una frase al robot.
     id: "vegas", nombre: "El Strip", lugar: "Las Vegas, Nevada", listo: true,
     zona: "city", carpeta: "vegas", luz: "anochecer", semilla: 1905,
-    largo: 3200, linea: 11.5, velMax: 22.5,
+    largo: 2300, linea: 11.5, velMax: 22.5,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     // Hoteles y casinos: altos, claros y con letreros de neon.
     kit: { vegas: true, minPlantas: 4, maxPlantas: 12 },
@@ -208,38 +212,41 @@ const CALLES = [
     obstaculos: { low: ["fichas", "fichas"], high: ["marquesina"],
       full: ["tragaperras", "limusina", "elvis", "elvis", "furgoneta"] },
     publico: { personas: ["turista", "fan", "ejecutivo", "senora", "chico"], valla: "verja", cada: 2 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Las Vegas: 2.300 m. Las limusinas de entrada, los dados y el debate a mitad.
     tramos: [
-      [0, 200, "calma", { titulo: "strip" }],
-      [200, 560, "suave", { densidad: 0.42 }],
-      [560, 860, "dados", { titulo: "dados" }],
-      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
-      [1000, 1400, "slalom", { full: ["limusina"], titulo: "limusinas" }],
-      [1400, 1540, "calma"],
-      [1540, 2300, "jefe", { titulo: "debate" }],
-      [2300, 2450, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [2450, 2900, "vallas", { high: ["marquesina"], titulo: "neones_strip" }],
-      [2900, 3170, "sprint", { titulo: "sprint_trump" }],
+      [0, 150, "calma", { titulo: "strip" }],
+      [150, 420, "slalom", { full: ["limusina"], titulo: "limusinas" }],
+      [420, 700, "dados", { titulo: "dados" }],
+      [700, 780, "calma"],
+      [780, 1400, "jefe", { titulo: "debate" }],
+      [1400, 1500, "festin", { potenciador: "mega", titulo: "gigante" }],
+      [1500, 1820, "vallas", { high: ["marquesina"], titulo: "neones_strip" }],
+      [1820, 2130, "mixto", { densidad: 0.55 }],
+      [2130, 2270, "sprint", { titulo: "sprint_trump" }],
     ],
-    control: 1547, caja: 1100,
-    chapas: [[707, "arco"], [1253, "carril"], [2604, "arco"]],
+    control: 712, caja: 1450,
+    chapas: [[560, "arco"], [1700, "carril"], [1980, "bus"]],
     hitos: ["piramide", "castillo", "torre_eiffel", "fuentes", "cesar", "noria", "campanile"],
     meta: "hotel_trump", metaNombre: { es: "el hotel Trump", en: "Trump Hotel" }, coche: "patrulla",
     // Subiendo por el Strip hacia el norte desde el cartel de bienvenida: el
     // oeste queda a la izquierda. Los casinos en su orden de verdad.
     izquierda: [
       40, ["cartel_vegas", 1], 30, ["piramide", 1], ["kit", 1], 14, ...cuadras(1), ["kit", 2], ["castillo", 1], 14,
-      ...cuadras(4), ["fuentes", 1], ["kit", 1], 14,
+      ...cuadras(3), ["fuentes", 1], ["kit", 1], 14,
       ...cuadras(5), ["cesar", 1], ["kit", 2], 14,
-      ...cuadras(13), ["kit", 2],
+      ...cuadras(7), ["kit", 2],
     ],
     derecha: [
-      40, ["kit", 3], 14, ...cuadras(5), ["torre_eiffel", 1], ["kit", 2], 14,
-      ...cuadras(7), ["noria", 1], ["kit", 2], 14,
-      ...cuadras(5), ["campanile", 1], ["kit", 2], 14,
-      ...cuadras(6), ["kit", 2],
+      40, ["kit", 3], 14, ...cuadras(4), ["torre_eiffel", 1], ["kit", 2], 14,
+      ...cuadras(6), ["noria", 1], ["kit", 2], 14,
+      ...cuadras(3), ["campanile", 1], ["kit", 2], 14,
+      ...cuadras(4), ["kit", 2],
     ],
     // Al fondo, la torre dorada con la alfombra roja hasta la acera.
-    fondo: [{ pieza: "hotel_trump", d: 3252, centro: true }],
+    fondo: [{ pieza: "hotel_trump", d: 2352, centro: true }],
     final: "parada", parada: 11,
     // Para el final: mas abajo y mirando hacia arriba, que se vea la torre.
     camaraFinal: { pos: [3.0, 2.3, 19], mira: [0, 9, -12] },
@@ -252,7 +259,7 @@ const CALLES = [
     // tramos: montañas de soja, cerdos sueltos, cosechadoras y la cola del caucus.
     id: "des_moines", nombre: "Locust Street", lugar: "Des Moines, Iowa", listo: true,
     zona: "city", carpeta: "des_moines", luz: "invierno", semilla: 1846,
-    largo: 3200, linea: 11.5, velMax: 23,
+    largo: 2600, linea: 11.5, velMax: 23,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     // Centro de oficinas hasta el rio y, despues, el East Village de ladrillo.
     kit: { minPlantas: 4, maxPlantas: 13, nieve: true },
@@ -260,49 +267,52 @@ const CALLES = [
     obstaculos: { low: ["sacos_soja", "monton_nieve", "urna"], high: ["sinfin", "pancarta_caucus"],
       full: ["quitanieves", "monton_soja", "munieco_nieve", "votantes", "furgoneta"] },
     publico: { personas: ["granjero", "abuelo", "senora", "granjero", "fan", "chico"], valla: "banderas", cada: 2 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Des Moines: 2.600 m. La soja y los cerdos primero, el caucus y luego el dragon.
     tramos: [
-      [0, 200, "calma", { titulo: "locust" }],
-      [200, 520, "suave", { densidad: 0.42 }],
-      [520, 860, "soja", { titulo: "soja" }],
-      [860, 1000, "festin", { potenciador: "boost", titulo: "festin" }],
-      [1000, 1400, "cerdos", { titulo: "cerdos" }],
-      [1400, 1540, "calma"],
-      [1540, 1950, "cosechadoras", { titulo: "cosechadoras" }],
-      [1950, 2100, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [2100, 2400, "caucus", { titulo: "caucus" }],
-      // 03/11: el dragon de China viene a por la soja (en lugar de la ventisca; la
-      // cola del caucus se acorta 150 m para que la pelea dure unos 20 s).
-      [2400, 2900, "jefe", { jefe: "dragon", titulo: "dragon" }],
-      [2900, 3170, "sprint", { titulo: "sprint_capitolio" }],
+      [0, 150, "calma", { titulo: "locust" }],
+      [150, 450, "soja", { titulo: "soja" }],
+      [450, 750, "cerdos", { titulo: "cerdos" }],
+      [750, 830, "calma"],
+      [830, 1150, "cosechadoras", { titulo: "cosechadoras" }],
+      [1150, 1250, "festin", { potenciador: "boost", titulo: "festin" }],
+      [1250, 1500, "caucus", { titulo: "caucus" }],
+      [1500, 1580, "calma"],
+      // 03/11: el dragon de China viene a por la soja.
+      [1580, 2150, "jefe", { jefe: "dragon", titulo: "dragon" }],
+      [2150, 2440, "mixto", { densidad: 0.55 }],
+      [2440, 2570, "sprint", { titulo: "sprint_capitolio" }],
     ],
-    control: 1547, caja: 1100,
-    chapas: [[707, "arco"], [1253, "carril"], [2300, "arco"]],
+    control: 1512, caja: 1200,
+    chapas: [[350, "arco"], [1050, "carril"], [2300, "arco"]],
     hitos: ["parque_esculturas", "hotel_fort", "biblioteca_dm", "ruan", "torre_801", "world_food", "rio"],
     meta: "capitolio_iowa", metaNombre: { es: "el Capitolio", en: "the Capitol" },
     // El helicoptero de la tele, despues del rio: por el centro pasan las
     // pasarelas por encima de la calle y lo atravesarian.
-    helicoptero: [1990, 2480],
+    helicoptero: [1602, 2092],
     // Bajando por Locust Street hacia el este, hasta el Capitolio: el norte
     // queda a la izquierda. Despues del puente, el East Village.
     izquierda: [
       40, ["kit", 2], 14, ["parque_esculturas", 1], 14,
       ...cuadras(2), ["biblioteca_dm", 1], ["kit", 2], 14,
       ...cuadras(3), ["torre_801", 1], ["kit", 2], 14,
-      ...cuadras(8), ["arena", 1], 48,
-      ...cuadrasCon(11, EV),
+      ...cuadras(5), ["arena", 1], 48,
+      ...cuadrasCon(9, EV),
     ],
     derecha: [
       40, ["kit", 3], 14, ...cuadras(1), ["hotel_fort", 1], ["kit", 2], 14,
       ...cuadras(3), ["ruan", 1], ["kit", 2], 14,
-      ...cuadras(9), ["kit", 1], ["world_food", 1], 68,
-      ...cuadrasCon(10, EV), ["kit", 1, EV],
+      ...cuadras(6), ["kit", 1], ["world_food", 1], 68,
+      ...cuadrasCon(8, EV), ["kit", 1, EV],
     ],
     // Las pasarelas acristaladas, el puente sobre el rio y el Capitolio al fondo.
     fondo: [
       { pieza: "skywalk", d: 365, cruza: true }, { pieza: "skywalk", d: 640, cruza: true },
       { pieza: "skywalk", d: 1180, cruza: true }, { pieza: "skywalk", d: 1420, cruza: true },
-      { pieza: "rio", d: 1945, cruza: true },
-      { pieza: "capitolio_iowa", d: 3250, centro: true },
+      { pieza: "rio", d: 1557, cruza: true },
+      { pieza: "capitolio_iowa", d: 2650, centro: true },
     ],
     final: "parada", parada: 4,
     // Para el final: abajo, al pie de la escalinata, mirando la cupula de oro.
@@ -325,21 +335,25 @@ const CALLES = [
     obstaculos: { low: ["valla_metal", "cajas", "cajas"], high: ["protesta"],
       full: ["agentes", "agentes", "furgoneta", "guardaespaldas"] },
     publico: { personas: ["ejecutivo", "fan", "turista", "senora", "ejecutivo"], valla: "verja", cada: 2 },
+    // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
+    // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
+    // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
+    // Washington sigue en 3.300 m (es el final de la gira), con otro orden.
     tramos: [
-      [0, 200, "calma", { titulo: "pennsylvania" }],
-      [200, 560, "mixto", { densidad: 0.5 }],
-      [560, 900, "comitiva", { titulo: "comitiva" }],
-      [900, 1060, "festin", { potenciador: "rocket", titulo: "cohete" }],
-      [1060, 1450, "vallas", { high: ["protesta"], titulo: "protesta" }],
-      [1450, 1680, "autobuses", { titulo: "autobuses" }],
-      [1680, 1750, "calma"],
-      [1750, 2450, "jefe", { titulo: "jefe_final" }],
-      [2450, 2600, "festin", { potenciador: "freeze", titulo: "hielo" }],
-      [2600, 3000, "slalom", { full: ["agentes", "furgoneta"], titulo: "recta" }],
+      [0, 150, "calma", { titulo: "pennsylvania" }],
+      [150, 500, "comitiva", { titulo: "comitiva" }],
+      [500, 800, "mixto", { densidad: 0.5 }],
+      [800, 900, "festin", { potenciador: "rocket", titulo: "cohete" }],
+      [900, 1250, "autobuses", { titulo: "autobuses" }],
+      [1250, 1600, "vallas", { high: ["protesta"], titulo: "protesta" }],
+      [1600, 1680, "calma"],
+      [1680, 2400, "jefe", { titulo: "jefe_final" }],
+      [2400, 2550, "festin", { potenciador: "freeze", titulo: "hielo" }],
+      [2550, 3000, "slalom", { full: ["agentes", "furgoneta"], titulo: "recta" }],
       [3000, 3270, "sprint", { titulo: "sprint_dc" }],
     ],
-    control: 1694, caja: 950,
-    chapas: [[1204, "arco"], [1561, "bus"], [2751, "carril"]],
+    control: 1612, caja: 1150,
+    chapas: [[650, "arco"], [1100, "bus"], [2751, "carril"]],
     hitos: ["archivos_portico", "fbi", "irs", "correos_torre", "willard", "tesoro"],
     meta: "casa_blanca_final", metaNombre: { es: "la Casa Blanca", en: "the White House" }, coche: "suv",
     // Hacia el oeste: el sur queda a la izquierda y el norte a la derecha.
@@ -379,11 +393,33 @@ const CALLES = [
   },
 ];
 
+// 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
+// por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", washington: "voto" };
+export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
+// Los metros de cada uno: repartidos a partes iguales por los tramos que
+// valen (fuera del tutorial, del jefe, del festin y del sprint final).
+export function sitiosObjetos(nivel) {
+  if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint"].includes(tipo))
+    .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
+  const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
+  const salida = [];
+  for (let i = 0; i < OBJETOS_POR_NIVEL; i++) {
+    let resto = ((i + 0.5) / OBJETOS_POR_NIVEL) * total;
+    for (const [a, b] of trozos) {
+      if (resto <= b - a) { salida.push(a + resto); break; }
+      resto -= b - a;
+    }
+  }
+  return salida;
+}
+
 // Las 51 paradas de la historia, con la calle de las que ya existen.
 // (`jefe` de la historia pasa a `esJefe`: el jefe de verdad es el tramo «jefe».)
 export const NIVELES = PARADAS.map(({ jefe, ...p }) => {
   const calle = CALLES.find((c) => c.id === p.id);
-  return calle ? { ...calle, ...p, esJefe: jefe } : { ...p, esJefe: jefe, listo: false };
+  return calle ? { ...calle, ...p, esJefe: jefe, objeto: OBJETOS[p.id] } : { ...p, esJefe: jefe, listo: false };
 });
 
 // Ancho de cada pieza a lo largo de la calle (el de su fachada, sin contar lo

@@ -2,7 +2,7 @@ import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo, lucesDe } from "./models.js";
-import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel } from "./levels.js";
+import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel, sitiosObjetos } from "./levels.js";
 import { construirEdificio, soltarEdificio } from "./edificios.js";
 import { lienzo as lienzoPegatina } from "./pegatinas.js";
 import { crearHorizonte } from "./horizonte.js";
@@ -2481,6 +2481,25 @@ export function createWorld(scene) {
 
   // La vaca de su tramo: anda de lado a lado mientras esta lejos; al
   // acercarse se queda quieta en el carril mas cercano (con un pasito).
+  // 05/11: lo que estaba quieto se mueve un poco, siempre despacio y suave
+  // (Isidro se marea con lo que tiembla o parpadea): la gente se balancea al
+  // andar, lo que cuelga se mece, las plantas con la brisa y las fichas giran.
+  const VIDA = {
+    agentes: "andar", guardaespaldas: "andar", perritos: "andar", turista: "andar",
+    globos: "mecer", guirnalda: "mecer", pancarta: "mecer", pancarta_caucus: "mecer", protesta: "mecer",
+    marquesina: "mecer", cartel_ruta: "mecer", andamio: "brisa",
+    nopal: "brisa", saguaro: "brisa", munieco_nieve: "brisa", arco_neon: "brisa",
+    fichas: "girar", urna: "girar",
+  };
+  function vida(o, dt) {
+    const m = o.mesh, t = animClock + o.phase;
+    switch (VIDA[o.pool]) {
+      case "andar": m.rotation.y = Math.sin(t * 2.6) * 0.14; m.position.y = Math.abs(Math.sin(t * 5.2)) * 0.04; break;
+      case "mecer": m.rotation.z = Math.sin(t * 1.5) * 0.045; break;
+      case "brisa": m.rotation.z = Math.sin(t * 1.1) * 0.025; break;
+      case "girar": m.rotation.y += dt * 1.1; break;
+    }
+  }
   function moverVaca(o, dt) {
     const m = o.mesh;
     if (o.cruza && o.z < -26) {
@@ -2697,15 +2716,38 @@ export function createWorld(scene) {
   function randomizeTacoLumps() {}
 
   const tacoPool = makePool(buildTaco);
+  // 05/11: el taco dorado vale 10. Sale en lo mas alto de algunos arcos y al
+  // final del techo de los autobuses: el premio por ir por el sitio dificil.
+  const tacoOroMat = typeof document !== "undefined"
+    ? new THREE.SpriteMaterial({ map: texturaTaco(), color: 0xffd650, transparent: true, alphaTest: 0.05, fog: true })
+    : new THREE.SpriteMaterial({ color: 0xffd650 });
+  function buildTacoOro() {
+    const g = new THREE.Group();
+    const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaLuz(), color: 0xffc23a, transparent: true, opacity: 0.6,
+      depthWrite: false, blending: THREE.AdditiveBlending }));
+    h.scale.setScalar(2.2);
+    g.add(h);
+    const taco = new THREE.Sprite(tacoOroMat);
+    taco.scale.setScalar(1.3);
+    g.add(taco);
+    return g;
+  }
+  const tacoOroPool = makePool(buildTacoOro);
+  function soltarTaco(it) {
+    if (it.obj !== undefined) group.remove(it.mesh);
+    else (it.oro ? tacoOroPool : tacoPool).release(it.mesh);
+  }
+  // La fila de tramo que se esta generando (ver tacosEn, mas abajo).
+  let filaD = null, tacosFila = 0, maxFila = 1, arcoD = -1e9, carrilTacos = -1;
 
-  function spawnTaco(lane, z, y) {
-    const mesh = tacoPool.acquire();
+  function spawnTaco(lane, z, y, oro = false) {
+    const mesh = (oro ? tacoOroPool : tacoPool).acquire();
     randomizeTacoLumps(mesh);
     mesh.visible = true;
     mesh.rotation.y = 0;
     mesh.position.set(LANE_X[lane], y || 0.9, z);
     if (!mesh.parent) group.add(mesh);
-    tacos.push({ mesh, lane, z, baseY: y || 0.9, phase: Math.random() * Math.PI * 2, collected: false });
+    tacos.push({ mesh, lane, z, baseY: y || 0.9, phase: Math.random() * Math.PI * 2, collected: false, oro });
   }
 
   // ---- Chispas al recoger un taco (pool reciclado) ----
@@ -2870,7 +2912,14 @@ export function createWorld(scene) {
 
   function arcoDeTacos(lane, z) {
     // Tacos en arco por encima de lo que se salta, como los platanos de Minion Rush.
-    for (let i = -2; i <= 2; i++) spawnTaco(lane, z - i * 1.1, 0.9 + 1.25 * (1 - (i * i) / 5));
+    // 05/11: dentro de un tramo, como mucho uno cada tres filas (antes salia
+    // sobre casi cada cosa baja), y uno de cada tres con el dorado arriba.
+    if (filaD !== null) {
+      if (filaD - arcoD < ROW_SPACING * 3 - 0.5) return;
+      arcoD = filaD;
+    }
+    const oro = Math.random() < 0.34;
+    for (let i = -2; i <= 2; i++) spawnTaco(lane, z - i * 1.1, 0.9 + 1.25 * (1 - (i * i) / 5), oro && i === 0);
   }
 
   // ---- Cohete: mientras se vuela, las filas nuevas son tacos en el cielo ----
@@ -3217,11 +3266,39 @@ export function createWorld(scene) {
   };
   // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
   let carrilOcupado = -1;
+  // 05/11: Isidro: «muchos objetos son igual». Antes se elegian al azar con
+  // repetidos en la lista para darles mas peso, y en Phoenix salian 77 nopales
+  // y en Las Vegas 70 fichas. Ahora salen de una bolsa: todos los de la lista
+  // una vez, en orden barajado, y luego se vuelve a llenar. Asi todos salen
+  // parecido y ninguno mas de dos veces seguidas.
+  const bolsas = {};
+  function deBolsa(lista) {
+    const unicos = [...new Set(lista)];
+    if (unicos.length === 1) return unicos[0];
+    const clave = unicos.join(",");
+    let b = bolsas[clave];
+    if (!b || !b.length) {
+      b = bolsas[clave] = unicos.sort(() => Math.random() - 0.5);
+      // Que el primero de la bolsa nueva no sea el ultimo de la anterior.
+      if (b.length > 1 && b[b.length - 1] === bolsas[clave + "#"]) b.unshift(b.pop());
+    }
+    const n = b.pop();
+    bolsas[clave + "#"] = n;
+    return n;
+  }
   function nombreObstaculo(type, d, lista) {
     const deNivel = nivel && nivel.obstaculos ? nivel.obstaculos[type] : null;
     const set = lista || deNivel || (LOCALES_ZONA[currentZoneName(d)] || DE_TIPO)[type] || DE_TIPO[type];
     const vale = set.filter((n) => obstaclePools[n]);
-    return elegirDe(vale.length ? vale : DE_TIPO[type]);
+    return deBolsa(vale.length ? vale : DE_TIPO[type]);
+  }
+  // 05/11: «haz mas dinamicos los modelos». Algunos coches parados arrancan y
+  // vienen hacia ti (como los trenes de Subway Surfers), si no deja la fila
+  // imposible (cocheCabe, lo mismo que mira el coche patrulla).
+  const CONDUCEN = new Set(["taxi", "furgoneta", "pickup", "limusina", "tractor", "quitanieves", "carroza", "perritos"]);
+  function quizaArranca(o, z) {
+    if (!CONDUCEN.has(o.pool) || o.mueve || Math.random() > 0.35) return;
+    if (cocheCabe(o.lane, z, 4)) o.mueve = 4;
   }
   // Carril que se deja libre un trecho (detras de una chapa escondida).
   let reserva = null;
@@ -3230,8 +3307,23 @@ export function createWorld(scene) {
     if (reserva && lane === reserva.lane && d > reserva.desde && d <= reserva.hasta) return null;
     return spawnObstacle(lane, type, z, USAR_BLENDER ? nombreObstaculo(type, d, lista) : undefined);
   }
+  // 05/11: Isidro: «en todos los niveles hay demasiados tacos, se hace
+  // monotono». Antes salian unos 0,6 por metro, casi siempre en los tres
+  // carriles a la vez. Ahora, como las monedas de Subway Surfers, marcan un
+  // camino: dentro de un tramo solo un carril por fila lleva tacos, y van en
+  // tiras (TIRA filas seguidas con tacos y luego un trecho sin ninguno). El
+  // festin deja dos carriles y no hace huecos. Los de premio (arcos sobre lo
+  // que se salta, techo del autobus, chapas) no pasan por aqui.
+  const TIRA = 2, CICLO = 11;
+  const hayTira = (d) => Math.floor(d / ROW_SPACING) % CICLO < TIRA;
   function tacosEn(lane, z, n = 4, y = 0.9, paso = 1.1) {
     if (lane === carrilOcupado) return;
+    if (filaD !== null) {
+      if (tacosFila >= maxFila || (maxFila === 1 && !hayTira(filaD))) return;
+      tacosFila++; carrilTacos = lane;
+      // En la tira, la hilera llena la fila entera (7 m): se lee como un camino.
+      if (maxFila === 1) { n = 5; paso = 1.4; } else n = Math.min(n, 3);
+    }
     for (let i = 0; i < n; i++) spawnTaco(lane, z - i * paso, y);
   }
 
@@ -3241,7 +3333,7 @@ export function createWorld(scene) {
     spawnObstacle(lane, "bus", z, "autobus");
     busCarril = lane; busFilas = 2;
     const n = chapa !== undefined ? 6 : 7;
-    for (let i = 0; i < n; i++) spawnTaco(lane, z - BUS_RAMPA - 0.6 - i * 1.15, BUS_TECHO + 0.9);
+    for (let i = 0; i < n; i++) spawnTaco(lane, z - BUS_RAMPA - 0.6 - i * 1.15, BUS_TECHO + 0.9, chapa === undefined && i === n - 1 && Math.random() < 0.5);
     if (chapa !== undefined) spawnChapa(lane, z - BUS_RAMPA - 0.6 - 6 * 1.15 - 0.4, BUS_TECHO + 1.0, chapa);
     const otros = LANES.filter((l) => l !== lane);
     const lado = elegirDe(otros);
@@ -3282,7 +3374,8 @@ export function createWorld(scene) {
         const typeRoll = Math.random();
         const type = typeRoll < 0.4 ? "low" : typeRoll < 0.75 || trasLlena ? "high" : "full";
         if (type === "full") llenas++;
-        obst(lane, type, z, d);
+        const ob = obst(lane, type, z, d);
+        if (ob && type === "full") quizaArranca(ob, z);
         if (type === "low" && Math.random() < 0.45) arcoDeTacos(lane, z);
       });
       if (llenas >= 2) ultimaFilaLlena = d;
@@ -3317,7 +3410,8 @@ export function createWorld(scene) {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
       const lane = SERPIENTE[k % SERPIENTE.length];
-      for (let i = 0; i < 5; i++) if (lane !== carrilOcupado) spawnTaco(lane, z - i * 1.4, 0.9 + Math.sin((k * 5 + i) * 0.45) * 0.25);
+      // 05/11: tambien por tiras (antes, una hilera sin fin).
+      if (hayTira(d)) for (let i = 0; i < 5; i++) if (lane !== carrilOcupado) spawnTaco(lane, z - i * 1.4, 0.9 + Math.sin((k * 5 + i) * 0.45) * 0.25);
       if (k % 9 === 4 && USAR_BLENDER) spawnPowerup((lane + 1) % 3, z, "micro");
     },
     // El primer nivel enseña los gestos uno a uno (main.js pone el aviso).
@@ -3608,6 +3702,31 @@ export function createWorld(scene) {
   // ---- Chapas de campaña: tres escondidas en cada nivel ----
   const chapas = [];
   let chapasHechas = new Set();     // ya puestas (o cogidas antes del punto de control)
+  // 05/11: el objeto de la ciudad. Va en la lista de los tacos (se coge igual
+  // y el iman lo atrae), con `obj` = su numero; main.js lo cuenta aparte.
+  let sitiosObj = [], objHechos = new Set();
+  const matObjeto = {};
+  function spawnObjeto(lane, z, idx) {
+    const nombre = nivel.objeto;
+    if (!matObjeto[nombre]) matObjeto[nombre] = new THREE.SpriteMaterial({ map: texturaPegatina(nombre), transparent: true, alphaTest: 0.05, fog: true });
+    const g = new THREE.Group();
+    const brillo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaBrillo(), color: 0xffffff, transparent: true, opacity: 0.8,
+      depthWrite: false, blending: THREE.AdditiveBlending }));
+    brillo.scale.setScalar(2.1);
+    const s = new THREE.Sprite(matObjeto[nombre]);
+    s.scale.setScalar(1.2);
+    g.add(brillo, s);
+    g.position.set(LANE_X[lane], 1.0, z);
+    group.add(g);
+    tacos.push({ mesh: g, lane, z, baseY: 1.0, phase: 0, collected: false, oro: false, obj: idx });
+  }
+  // Lo pone en la fila que se acaba de generar: en el carril de los tacos, o
+  // en uno sin nada delante.
+  function ponerObjeto(z, idx) {
+    const libres = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => o.lane === l && Math.abs(o.z + (o.centro || 0) - z) < (o.medio || 0.7) + 2.5));
+    const lane = libres.includes(carrilTacos) ? carrilTacos : libres.length ? libres[0] : -1;
+    if (lane >= 0) spawnObjeto(lane, z + 2, idx);
+  }
   const chapaPool = makePool(() => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaChapa(), transparent: true, depthWrite: false }));
     s.scale.set(1.15, 1.15, 1);
@@ -3675,8 +3794,13 @@ export function createWorld(scene) {
       }
       const t = tramoEn(d);
       const k = Math.round((d - t.desde) / ROW_SPACING);
+      filaD = d; tacosFila = 0; maxFila = t.tipo === "festin" ? 2 : 1; carrilTacos = -1;
       (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
-    } finally { carrilOcupado = -1; }
+      if (nivel && nivel.objeto && USAR_BLENDER) {
+        const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && Math.abs(sd - d) <= ROW_SPACING / 2);
+        if (i >= 0) { objHechos.add(i); ponerObjeto(z, i); }
+      }
+    } finally { carrilOcupado = -1; filaD = null; }
   }
 
   function ensureRows() {
@@ -4228,7 +4352,7 @@ export function createWorld(scene) {
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
-        }
+        } else if (VIDA[o.pool]) vida(o, dt);
       }
       if (o.pool === "dado" && !o.smashed) {
         // Rueda de arista en arista: el centro sube y baja para no hundirse.
@@ -4282,7 +4406,7 @@ export function createWorld(scene) {
       if (it.mesh.userData.glow) it.mesh.userData.glow.scale.setScalar(glowPulse * 0.85);
       if (it.z > DESPAWN_Z || it.collected) {
         if (it.collected) burstSparkles(it.mesh.position.x, it.mesh.position.y, it.mesh.position.z);
-        tacoPool.release(it.mesh);
+        soltarTaco(it);
         tacos.splice(i, 1);
       }
     }
@@ -4349,6 +4473,8 @@ export function createWorld(scene) {
     chapas.forEach((c) => chapaPool.release(c.mesh));
     chapas.length = 0;
     chapasHechas = new Set(opciones.chapasHechas || []);
+    sitiosObj = nivel ? sitiosObjetos(nivel) : [];
+    objHechos = new Set(opciones.objetosHechos || []);
     avisos.length = 0;
     reserva = null;
     cameo.t = -1;
@@ -4358,7 +4484,7 @@ export function createWorld(scene) {
     for (const f of frases) group.remove(f.sprite);
     frases.length = 0;
     busCarril = -1; busFilas = 0;
-    tacos.forEach((t) => tacoPool.release(t.mesh));
+    tacos.forEach(soltarTaco);
     powerups.forEach((p) => powerupPools[p.kind].release(p.mesh));
     activeSparkles.forEach((s) => sparklePool.release(s.mesh));
     citySigns.forEach((s) => disposeCitySign(s));

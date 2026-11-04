@@ -1020,3 +1020,42 @@ el personaje repita de vez en cuando su frase ¡China!». Eligió:
 - Probado con el piloto automático: le dan los chiles, cae en unos 10 s, grita
   «China» dos veces, se saltan todas las bolas de fuego; en el sin fin salen
   dragón, robot, dragón; el debate de Las Vegas sigue igual.
+
+## Menos tacos, niveles que crecen y voces que no se pisan (2026-11-05)
+
+Isidro: «hay demasiados tacos, se hace monótono; los primeros niveles deben
+ser más cortos y luego ir alargándose; muchos objetos son igual; los niveles
+se sienten muy iguales; las voces no suenan cuando toca, repiten o no acaban
+la locución; haz más dinámicos los modelos». Se midió todo con el piloto
+automático y él eligió (tras compararlo con Subway Surfers y Minion Rush):
+
+- **Tacos: tres de cada cuatro fuera.** Antes, 1.700–2.200 por nivel (unos
+  10 por segundo). Ahora marcan un camino: un solo carril por fila, en tiras
+  de dos filas con un trecho vacío (`TIRA`/`CICLO` en world.js), y el festín
+  con dos carriles. Arcos como mucho cada tres filas. **Taco dorado** (vale
+  10) arriba de algunos arcos y al final de algunos techos de autobús.
+  **Premio al ganar**: 500 + 250 por estrella. Misiones de tacos rebajadas.
+- **Largo: de 1,4 a 3,3 km.** Nueva York 1.400 m (1 min 24 s), Findlay 1.700,
+  Phoenix 2.000, Las Vegas 2.300, Des Moines 2.600 y Washington 3.300 (unos
+  3 min). Las calles se acortaron quitando cuadras del kit, sin tocar los
+  monumentos; el río de Des Moines pasa a 1.557 m.
+- **Cada nivel con su orden de tramos** (ya no el mismo esqueleto) y un solo
+  festín por nivel salvo Washington.
+- **Objeto de cada ciudad**: diez por nivel (manzanas, banderas, placas de
+  sheriff, fichas, mazorcas y papeletas); los diez dan 300 tacos. Contador
+  junto a las chapas y línea propia en la pantalla final; no cuenta para las
+  estrellas.
+- **Obstáculos repartidos**: salen de una bolsa barajada, así todos salen
+  parecido y ninguno más de dos veces seguidas.
+- **Más vivos**: algunos coches parados arrancan hacia ti (si la fila sigue
+  siendo justa); la gente se balancea, lo que cuelga se mece, las plantas con
+  la brisa y las fichas giran. Todo lento: nada tiembla ni parpadea.
+- **Voces (director en audio.js)**: nada corta a nada; prioridades (jefe y
+  meta, micrófono y «CHINA!», potenciadores, ánimo); 5 s de respiro antes de
+  una de ánimo; las de ánimo solo al llegar a x3 y x5; las frases al azar no
+  repiten ninguna de las tres últimas; todas se preparan al empezar la
+  partida; el globo sale cuando suena y dura lo que la voz.
+
+Pendiente, elegido por él: el momento estrella de cada nivel (en Blender, uno
+por uno), dos o tres obstáculos nuevos por ciudad y las animaciones del
+presidente con Meshy (enseñarle antes los créditos).

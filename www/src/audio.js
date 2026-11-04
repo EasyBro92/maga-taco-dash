@@ -369,41 +369,103 @@ export function stopMusic() {
 // un trozo de MP3 dentro de un archivo; se decodifica la primera vez que hace
 // falta. Si no hay voces (o es otra frase), no pasa nada.
 // ================================================================
+//
+// 05/11/2026, el director de voces. Isidro: «las voces no acaban de sonar
+// cuando toca, dicen cosas repetidas o no acaban la locución». Antes cada
+// frase nueva cortaba la de antes, y cada una se bajaba y preparaba la
+// primera vez que hacia falta (en el movil llegaba tarde). Ahora:
+//   - se preparan todas al empezar la partida (precargarVoces);
+//   - nada corta a nada: si ya esta hablando, la frase nueva espera su turno
+//     un poco o se queda sin decir si es de las menos importantes;
+//   - entre frase y frase hay un respiro, mas largo para las de animo;
+//   - el globo sale cuando empieza a sonar y dura lo que dura la voz.
+// Prioridades: 3 el jefe y la meta · 2 el microfono y «CHINA!» ·
+//              1 potenciadores y avisos · 0 las de animo.
 let indiceVoces = null;
 const archivosVoz = {}, bufferVoz = {};
-let vozSonando = null;
+let vozSonando = null, ocupadaHasta = 0, pendiente = null, temporizador = null;
+const RESPIRO = [5, 0.5, 0.3, 0.2];     // silencio que pide antes de sonar, segun la prioridad
+const ESPERA = [0, 1.2, 2.5, 3];        // lo que puede esperar su turno sin perder sentido
 // 31/10: y las de su voz de verdad (herramientas/trump.mjs), en su propio indice.
-Promise.all(["voces/indice.json", "voces/trump.json"].map((u) => fetch(u).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))))
+const vocesListas = Promise.all(["voces/indice.json", "voces/trump.json"].map((u) => fetch(u).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))))
   .then(([a, b]) => { indiceVoces = { ...a, ...b }; });
 function limpiar(texto) {
   return texto.normalize("NFC").replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s+/g, " ").trim();
 }
-export async function hablar(texto) {
-  if (!indiceVoces || sfxMuted) return;
-  const e = indiceVoces[limpiar(texto)];
-  if (!e) return;
-  const [archivo, desde, largo] = e;
-  try {
-    const ac = audio();
-    const clave = archivo + desde;
-    if (!bufferVoz[clave]) {
-      if (!archivosVoz[archivo]) archivosVoz[archivo] = fetch("voces/" + archivo).then((r) => r.arrayBuffer());
-      const todo = await archivosVoz[archivo];
-      bufferVoz[clave] = await ac.decodeAudioData(todo.slice(desde, desde + largo));
-    }
-    if (vozSonando) { try { vozSonando.stop(); } catch (er) {} }
-    const src = ac.createBufferSource();
-    src.buffer = bufferVoz[clave];
-    const g = ac.createGain(); g.gain.value = 1.3;
-    src.connect(g).connect(ensureSfxGain());
-    src.start();
-    vozSonando = src;
-    // La musica baja un poco mientras habla.
-    if (musicGainNode) {
-      musicGainNode.gain.setTargetAtTime(volumenMusica() * 0.45, ac.currentTime, 0.05);
-      musicGainNode.gain.setTargetAtTime(volumenMusica(), ac.currentTime + src.buffer.duration, 0.2);
-    }
-  } catch (er) {}
+const ahora = () => performance.now() / 1000;
+function preparar(e) {
+  const [archivo, desde, largo] = e, clave = archivo + desde;
+  if (!bufferVoz[clave]) {
+    if (!archivosVoz[archivo]) archivosVoz[archivo] = fetch("voces/" + archivo).then((r) => r.arrayBuffer());
+    bufferVoz[clave] = archivosVoz[archivo]
+      .then((todo) => audio().decodeAudioData(todo.slice(desde, desde + largo)))
+      .then((b) => (bufferVoz[clave] = b))
+      .catch(() => { delete bufferVoz[clave]; });
+  }
+  return bufferVoz[clave];
+}
+// Todas listas antes de que hagan falta (al empezar cada partida; la segunda vez no hace nada).
+export async function precargarVoces() {
+  await vocesListas;
+  for (const e of Object.values(indiceVoces || {})) { try { await preparar(e); } catch (er) {} }
+}
+// La voz ya preparada de un texto (o null si no tiene, o aun no esta).
+function vozDe(texto) {
+  const e = indiceVoces && indiceVoces[limpiar(texto)];
+  if (!e) return null;
+  const b = preparar(e);
+  return b instanceof AudioBuffer ? b : null;
+}
+function sonar(item) {
+  const b = sfxMuted ? null : vozDe(item.texto);
+  let dura = item.ms / 1000;
+  if (b) {
+    try {
+      const ac = audio();
+      const src = ac.createBufferSource();
+      src.buffer = b;
+      const g = ac.createGain(); g.gain.value = 1.3;
+      src.connect(g).connect(ensureSfxGain());
+      src.start();
+      vozSonando = src;
+      src.onended = () => { if (vozSonando === src) vozSonando = null; };
+      // La musica baja un poco mientras habla.
+      if (musicGainNode) {
+        musicGainNode.gain.setTargetAtTime(volumenMusica() * 0.45, ac.currentTime, 0.05);
+        musicGainNode.gain.setTargetAtTime(volumenMusica(), ac.currentTime + b.duration, 0.2);
+      }
+      dura = Math.max(dura, b.duration + 0.4);
+      ocupadaHasta = ahora() + b.duration;
+    } catch (er) { ocupadaHasta = ahora() + dura * 0.7; }
+  } else ocupadaHasta = ahora() + dura * 0.7;   // un globo sin voz tambien pide su rato
+  if (item.alEmpezar) item.alEmpezar(dura);
+}
+function libre(p) { return ahora() >= ocupadaHasta + RESPIRO[p]; }
+function siguiente() {
+  temporizador = null;
+  const item = pendiente;
+  if (!item) return;
+  if (ahora() > item.caduca) { pendiente = null; return; }
+  if (libre(item.prioridad)) { pendiente = null; sonar(item); return; }
+  temporizador = setTimeout(siguiente, Math.max(30, (ocupadaHasta + RESPIRO[item.prioridad] - ahora()) * 1000));
+}
+// Dice un texto (si tiene voz) y avisa con alEmpezar(segundos) cuando empieza,
+// para sacar el globo a la vez. Devuelve false si se queda sin decir.
+export function decir(texto, prioridad = 1, alEmpezar = null, ms = 1300) {
+  const item = { texto, prioridad, alEmpezar, ms, caduca: ahora() + ESPERA[prioridad] };
+  if (!pendiente && libre(prioridad)) { sonar(item); return true; }
+  if (prioridad === 0 || (pendiente && pendiente.prioridad > prioridad)) return false;
+  pendiente = item;
+  if (!temporizador) siguiente();
+  return true;
+}
+// Lo de antes, para las frases del microfono (sin globo: salen volando por la pista).
+export function hablar(texto, prioridad = 2) { return decir(texto, prioridad); }
+// Al empezar otra partida, nada de la anterior se queda sonando ni esperando.
+export function callarVoces() {
+  if (vozSonando) { try { vozSonando.stop(); } catch (er) {} vozSonando = null; }
+  pendiente = null; ocupadaHasta = 0;
+  if (temporizador) { clearTimeout(temporizador); temporizador = null; }
 }
 
 // ---------- La sirena de la policia (Phoenix, 27/10/2026) ----------

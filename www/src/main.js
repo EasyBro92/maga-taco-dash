@@ -4,13 +4,13 @@ import { createWorld, LANE_X, CIELO_Y } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, pausarMusica, hablar, sndCaida, sirena, sndTropiezo,
+  sndFanfarria, sndChapa, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
 import { FORMAS, CENTROS } from "./mapa-eeuu.js";
 import { ACTOS, PROLOGO, TOTAL_VOTOS, PARA_GANAR, nombreEstado, votosGanados, postDe } from "./historia.js";
-import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl } from "./levels.js";
+import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl, OBJETOS_POR_NIVEL, PREMIO_OBJETOS } from "./levels.js";
 import { icono, pintarIconos } from "./iconos.js";
 import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
 import { abrirTienda, aplicarTienda } from "./tienda.js";
@@ -33,7 +33,7 @@ const ACCEL = 0.12;
 const JUMP_DURATION = 0.62;   // 26/10: mas rato en el aire (habia que estar muy encima para saltar)
 const JUMP_HEIGHT = 1.7;
 const SLIDE_DURATION = 0.5;
-const STREAK_RESET_GAP = 2.2;
+const STREAK_RESET_GAP = 4;   // 05/11: antes 2,2 (con menos tacos, entre tira y tira hay mas hueco)
 const MAGNET_DURATION = 6;
 const BOOST_DURATION = 4;
 const BOOST_MULT = 1.5;
@@ -57,6 +57,7 @@ const JEFE_CADA = 2000;      // y luego cada tantos
 const SPRINT_EXTRA = 1.08;
 // Seguir tras chocar: cuesta tacos, cada vez el doble.
 const PRECIO_SEGUIR = 300;
+const PREMIO_BASE = 500, PREMIO_ESTRELLA = 250;   // 05/11: el premio de cada victoria (750 a 1250 tacos)
 const INVULNERABLE = 2.2;    // segundos de parpadeo al seguir: lo de delante no cuenta
 // ---- 28/10/2026: ideas de Subway Surfers ----
 const BOTAS_DURATION = 10;    // botas de vaquero: saltos altos (las «súper zapatillas»)
@@ -510,7 +511,7 @@ async function empezarNivel(n) {
 // pagado por seguir.
 let intento = null;
 function nuevoIntento() {
-  return { chocado: false, chapas: [false, false, false], control: null, pagos: 0 };
+  return { chocado: false, chapas: [false, false, false], control: null, pagos: 0, objetos: [] };
 }
 function arrancar() {
   gameState = "playing";
@@ -583,7 +584,8 @@ function pintarChapas() {
   el.innerHTML = [0, 1, 2].map((i) => {
     const clase = intento && intento.chapas[i] ? "cogida" : antes[i] ? "antes" : "falta";
     return `<span class="chapaHud ${clase}"><img src="${urlPegatina("chapa")}" alt=""></span>`;
-  }).join("");
+  }).join("")
+    + (nivelActual.objeto ? `<span class="objHud"><img src="${urlPegatina(nivelActual.objeto)}" alt="">${intento ? intento.objetos.filter(Boolean).length : 0}/${OBJETOS_POR_NIVEL}</span>` : "");
 }
 // ---- Llegada a la Casa Blanca: unos 10 segundos ----
 // 0 frena y anda hasta la escalinata · 1 sube al portico y llega a la puerta
@@ -626,7 +628,7 @@ function frameFinal(dt) {
     dz = 2.6 * dt;
     py = Math.min(1, Math.max(0, zPasos / 1.8));
     character.updateRun(dt, 0.45);
-    if (zPuerta + dz >= -1.4) { fin.fase = 2; fin.t = 0; showBubble(t("finCasaBlanca")); vibrate([30, 40, 30]); mostrarPremio("taco_perfecto"); spawnConfetti(30); }
+    if (zPuerta + dz >= -1.4) { fin.fase = 2; fin.t = 0; showBubble(t("finCasaBlanca"), 1300, 3); vibrate([30, 40, 30]); mostrarPremio("taco_perfecto"); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
@@ -663,7 +665,7 @@ function finalCamion(dt, flat, zParadaDada) {
     fin.v = Math.max(5, Math.min(fin.v - dt * 6, -zParada * 1.5 + 4));
     dz = fin.v * dt;
     character.updateRun(dt, Math.max(0.45, fin.v / BASE_SPEED));
-    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(finTexto(nivelActual)); vibrate([30, 40, 30]); mostrarPremio(premioDe(nivelActual)); spawnConfetti(30); }
+    if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(finTexto(nivelActual), 1300, 3); vibrate([30, 40, 30]); mostrarPremio(premioDe(nivelActual)); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
     character.setIdlePose(fin.t + 1);
@@ -742,7 +744,7 @@ function finalMitin(dt, cb) {
     character.updateRun(dt, 0.45);
     if (zParada + dz >= -0.02) {
       fin.fase = 2; fin.t = 0;
-      showBubble(finTexto(nivelActual));
+      showBubble(finTexto(nivelActual), 1300, 3);
       vibrate([30, 40, 30]);
       mostrarPremio(premioDe(nivelActual));
       spawnConfetti(30);
@@ -783,6 +785,10 @@ function completarNivel() {
   document.getElementById("nivelFinPremio").src = urlPegatina(premioDe(n));
   pintarSinFin();
   const est = estrellasDe(r);
+  // 05/11: con muchos menos tacos por la calle, cada victoria trae un premio
+  // en tacos segun las estrellas, para que la tienda siga a mano.
+  const premio = PREMIO_BASE + PREMIO_ESTRELLA * Math.max(1, est);
+  addTacos(premio);
   const yaHechos = getNiveles();
   const votosAhora = votosGanados(NIVELES, yaHechos);
   const todoRojo = NIVELES.every((x) => x.id === "washington" || yaHechos[x.id]);
@@ -799,8 +805,14 @@ function completarNivel() {
     [!intento.chocado || r.sinChocar, t("objSinChocar")],
     [chapasYa === 3, `${t("objChapas")} (${chapasYa}/3)`],
   ];
+  // 05/11: el objeto de la ciudad (no cuenta para las estrellas: da tacos).
+  if (n.objeto) {
+    const cogidos = intento.objetos.filter(Boolean).length;
+    objetivos.push([cogidos === OBJETOS_POR_NIVEL, `${t("objObjetos").replace("{o}", nombreObjetos(n))} (${cogidos}/${OBJETOS_POR_NIVEL})`]);
+  }
   document.getElementById("nivelFinObjetivos").innerHTML = objetivos.map(([ok, txt]) => `<li>${icono(ok ? "check" : "cruz")}<span>${txt}</span></li>`).join("");
-  document.getElementById("nivelFinTacos").textContent = tacos;
+  document.getElementById("nivelFinTacos").textContent = tacos + premio;
+  document.getElementById("nivelFinBonus").textContent = t("premioVictoria").replace("{n}", premio);
   // ¿Se ha abierto algo nuevo?
   const ahora = getNiveles();
   const nuevos = NIVELES.filter((x) => nivelAbierto(x, ahora) && !abiertosAntes.includes(x.id));
@@ -853,7 +865,7 @@ world.onJefe((evento, vida) => {
     if (nivelActual && nivelActual.debate) pintarBarraJefe(0);
     else document.getElementById("bossFill").style.width = "0%";
     tacosThisRun += 150;
-    showBubble(textoJefe("jefeVencido"));
+    showBubble(textoJefe("jefeVencido"), 1300, 3);
     avisoVerde(`+150 ${TACO_IMG()}`);
     spawnConfetti(30);
     triggerCameraShake(0.06);
@@ -861,7 +873,7 @@ world.onJefe((evento, vida) => {
     avisarMisiones(misiones.evento("jefe"));
     setTimeout(() => barra.classList.add("hidden"), 1500);
   } else if (evento === "escapa") {
-    showBubble(textoJefe("jefeEscapa"));
+    showBubble(textoJefe("jefeEscapa"), 1300, 3);
     setTimeout(() => barra.classList.add("hidden"), 1000);
   }
 });
@@ -961,9 +973,9 @@ function lanzarFrase() {
   const f = FRASES[getLang()] || FRASES.es;
   const o = world.primerObstaculo(currentLane, 60);
   let texto, objetivo;
-  if (o) { texto = f[o.pool] || f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = o; }
+  if (o) { texto = f[o.pool] && f[o.pool] !== dichasHace[dichasHace.length - 1] ? f[o.pool] : sinRepetir(f.nada); objetivo = o; }
   else if (world.jefeActivo()) { texto = world.tipoJefe() === "dragon" ? f.dragon : f.jefe; objetivo = "jefe"; }
-  else { texto = f.nada[Math.floor(Math.random() * f.nada.length)]; objetivo = null; }
+  else { texto = sinRepetir(f.nada); objetivo = null; }
   frasesCargas--;
   world.lanzarFrase(currentLane, texto, objetivo);
   hablar(texto);
@@ -996,6 +1008,7 @@ let mostrarTutorial = false;
 
 // `desde`: metros desde los que se empieza (el punto de control); 0 = desde el principio.
 function resetRun(desde = 0) {
+  callarVoces(); precargarVoces();
   if (mazorca) mazorca.visible = false;
   currentLane = 1;
   playerX = 0;
@@ -1040,7 +1053,8 @@ function resetRun(desde = 0) {
   const zonas = ["city", "desert", "town", "dc"];
   const zonaSinFin = zoneChoice === "auto" ? zonas[Math.floor(Math.random() * zonas.length)] : zoneChoice;
   world.setForcedZone(nivelActual ? nivelActual.zona : zonaSinFin);
-  world.reset(desde, { cajaHecha: !!(desde && intento && intento.caja) });
+  world.reset(desde, { cajaHecha: !!(desde && intento && intento.caja),
+    objetosHechos: desde && intento ? intento.objetos.map((v, i) => (v ? i : -1)).filter((i) => i >= 0) : [] });
   character.object3D.visible = true;
   fin = null;
   if (nivelActual && !desde) mostrarBanner(nivelActual);
@@ -1188,7 +1202,22 @@ function updatePowerupBadge() {
 let bubbleTimeout = null;
 // 31/10: sus frases de verdad (en ingles) llevan la traduccion debajo en
 // castellano, y se quedan mas rato: son mas largas.
-function showBubble(text, ms = 1300) {
+// 05/11: el globo sale cuando empieza a sonar la voz (audio.js: decir) y
+// dura lo que ella; si hay otra frase sonando, espera su turno o no sale.
+function showBubble(text, ms = 1300, prioridad = 1) {
+  return decir(text, prioridad, (dura) => pintarGlobo(text, Math.max(ms, dura * 1000)), ms);
+}
+// 05/11: las frases al azar no se repiten: ninguna de las tres ultimas.
+const dichasHace = [];
+function sinRepetir(lista) {
+  const vale = lista.filter((x) => !dichasHace.includes(x));
+  const de = vale.length ? vale : lista;
+  const f = de[Math.floor(Math.random() * de.length)];
+  dichasHace.push(f);
+  if (dichasHace.length > 3) dichasHace.shift();
+  return f;
+}
+function pintarGlobo(text, ms) {
   const el = document.getElementById("speechBubble");
   const trad = traduccion(text, getLang());
   if (trad) {
@@ -1201,7 +1230,6 @@ function showBubble(text, ms = 1300) {
   el.classList.add("show");
   if (bubbleTimeout) clearTimeout(bubbleTimeout);
   bubbleTimeout = setTimeout(() => el.classList.remove("show"), ms);
-  hablar(text);
 }
 
 // ---- Cartel de cada tramo y avisos del tutorial (27/10/2026) ----
@@ -1404,8 +1432,9 @@ function registerTaco(amount) {
   const newMultiplier = Math.min(5, 1 + Math.floor(streak / 5));
   if (newMultiplier > multiplier) {
     multiplier = newMultiplier;
-    const animo = (FRASES[getLang()] || FRASES.es).animo;
-    showBubble(animo[Math.floor(Math.random() * animo.length)]);
+    // 05/11: antes salia una frase cada vez que subia (cada 5 tacos seguidos):
+    // tres o cuatro en dos segundos. Ahora solo al llegar a x3 y a x5, y si no habla ya.
+    if (multiplier === 3 || multiplier === 5) showBubble(sinRepetir((FRASES[getLang()] || FRASES.es).animo), 1300, 0);
     sndPoint();
     flashExpression("happy", 0.6);
   }
@@ -1440,8 +1469,7 @@ function checkCollectibles(dt) {
       // tiene por que caer justo en la ventana estrecha de +-0.8.
       if (Math.abs(tItem.z) < 1.3 && Math.abs(tItem.mesh.position.x - targetX) < 0.9) {
         tItem.collected = true;
-        registerTaco(1);
-        sndTaco();
+        cobrarTaco(tItem);
       }
       continue;
     }
@@ -1451,11 +1479,31 @@ function checkCollectibles(dt) {
     if (Math.abs(tItem.baseY - (py + 0.9)) > 1.7) continue;
     if (tItem.z < -0.8 || tItem.z > 0.8) continue;
     tItem.collected = true;
-    registerTaco(1);
-    sndTaco();
+    cobrarTaco(tItem);
   }
   if (streak > 0 && elapsed - lastTacoTime > STREAK_RESET_GAP) {
     streak = 0; multiplier = 1;
+  }
+}
+
+// 05/11: un taco normal vale 1, el dorado 10; el objeto de la ciudad va aparte.
+function cobrarTaco(tItem) {
+  if (tItem.obj !== undefined) { cogerObjeto(tItem.obj); return; }
+  registerTaco(tItem.oro ? 10 : 1);
+  sndTaco();
+  if (tItem.oro) sndPoint();
+}
+function nombreObjetos(n) { return t("obj_" + n.objeto); }
+function cogerObjeto(i) {
+  sndChapa();
+  vibrate(15);
+  if (!intento || intento.objetos[i]) return;
+  intento.objetos[i] = true;
+  pintarChapas();
+  const n = intento.objetos.filter(Boolean).length;
+  if (n === OBJETOS_POR_NIVEL) {
+    tacosThisRun += PREMIO_OBJETOS;
+    avisoVerde(`<img class="peg" src="${urlPegatina(nivelActual.objeto)}" alt=""> ${t("objetosTodos").replace("{o}", nombreObjetos(nivelActual)).replace("{n}", PREMIO_OBJETOS)}`);
   }
 }
 
@@ -1871,7 +1919,7 @@ function frame(dtFijo) {
         gritoChina = 2.6;
         pintarBarraJefe(5);
         document.getElementById("bossBar").classList.remove("hidden");
-        showBubble(textoJefe("jefeLlega"), 2200);
+        showBubble(textoJefe("jefeLlega"), 2200, 3);
         triggerCameraShake(0.04);
       }
     }
@@ -1890,7 +1938,7 @@ function frame(dtFijo) {
       gritoChina = 2.6;
       pintarBarraJefe(5);
       document.getElementById("bossBar").classList.remove("hidden");
-      showBubble(textoJefe("jefeLlega"));
+      showBubble(textoJefe("jefeLlega"), 1300, 3);
       triggerCameraShake(0.04);
     }
 
@@ -1898,8 +1946,8 @@ function frame(dtFijo) {
     if (world.jefeActivo() && world.tipoJefe() === "dragon") {
       gritoChina -= dt;
       if (gritoChina <= 0) {
-        gritoChina = 6 + Math.random() * 3;
-        showBubble("CHINA!", 1500);
+        // Si esta hablando de otra cosa, lo vuelve a intentar enseguida.
+        gritoChina = showBubble("CHINA!", 1500, 2) ? 6 + Math.random() * 3 : 1;
         flashExpression("determined", 0.6);
       }
     }

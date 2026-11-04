@@ -10,7 +10,7 @@
 import { getSave, addTacos, persistSave } from "./save.js";
 
 const TIPOS = {
-  tacos:     { clase: "partida", metas: [150, 300, 600, 1000, 1600] },
+  tacos:     { clase: "partida", metas: [100, 200, 350, 600, 900] },   // 05/11: hay muchos menos tacos
   distancia: { clase: "partida", metas: [1000, 2000, 3500, 5000, 8000] },
   saltos:    { clase: "total",   metas: [15, 40, 100, 200] },
   deslizar:  { clase: "total",   metas: [10, 30, 80, 160] },

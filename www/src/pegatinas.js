@@ -146,6 +146,104 @@ const DIBUJOS = {
     x.beginPath(); x.arc(cx, cy, 92, Math.PI * 1.08, Math.PI * 1.42); x.stroke();
   },
 
+  // 05/11: los objetos de cada ciudad (diez por nivel, con su premio).
+  // La Gran Manzana (Nueva York).
+  manzana(x) {
+    const cuerpo = () => {
+      x.beginPath();
+      x.moveTo(128, 86);
+      x.bezierCurveTo(162, 60, 224, 74, 220, 142);
+      x.bezierCurveTo(216, 198, 174, 230, 142, 216);
+      x.bezierCurveTo(134, 212, 122, 212, 114, 216);
+      x.bezierCurveTo(82, 230, 40, 198, 36, 142);
+      x.bezierCurveTo(32, 74, 94, 60, 128, 86);
+      x.closePath();
+    };
+    const hoja = () => { x.beginPath(); x.ellipse(164, 50, 30, 14, -0.5, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cuerpo(); x.stroke(); hoja(); x.stroke();
+    x.beginPath(); x.moveTo(128, 88); x.lineTo(138, 40); x.stroke();
+    x.lineWidth = 12; x.strokeStyle = CONTORNO;                       // el rabito
+    x.beginPath(); x.moveTo(128, 90); x.quadraticCurveTo(130, 62, 140, 42); x.stroke();
+    hoja(); x.fillStyle = "#3fae3a"; x.fill(); x.lineWidth = 6; x.stroke();
+    cuerpo();
+    const g = x.createLinearGradient(40, 70, 210, 220);
+    g.addColorStop(0, "#ff5a48"); g.addColorStop(1, "#b81c22");
+    x.fillStyle = g; x.fill(); x.lineWidth = 8; x.strokeStyle = CONTORNO; x.stroke();
+    x.fillStyle = "rgba(255,255,255,0.65)";                            // brillo
+    x.beginPath(); x.ellipse(84, 124, 14, 30, 0.35, 0, Math.PI * 2); x.fill();
+  },
+
+  // La bandera (Findlay es «Flag City, USA»).
+  bandera(x) {
+    const tela = () => {
+      x.beginPath();
+      x.moveTo(66, 52);
+      x.bezierCurveTo(110, 30, 160, 76, 218, 50);
+      x.lineTo(218, 152);
+      x.bezierCurveTo(160, 178, 110, 132, 66, 154);
+      x.closePath();
+    };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; tela(); x.stroke();
+    x.beginPath(); x.moveTo(58, 34); x.lineTo(58, 232); x.stroke();
+    x.lineWidth = 14; x.strokeStyle = "#8a5a2b";                      // el mastil
+    x.beginPath(); x.moveTo(58, 38); x.lineTo(58, 228); x.stroke();
+    x.fillStyle = "#ffd23f"; x.beginPath(); x.arc(58, 32, 11, 0, Math.PI * 2); x.fill();
+    x.save();
+    tela(); x.clip();
+    x.fillStyle = "#ffffff"; x.fillRect(60, 20, 170, 170);
+    x.fillStyle = "#e8463c";                                          // las rayas, ondeando
+    for (let i = 0; i < 7; i += 2) {
+      const y0 = 52 + i * 14.6;
+      x.beginPath();
+      x.moveTo(60, y0 + 4); x.bezierCurveTo(110, y0 - 18, 160, y0 + 28, 222, y0);
+      x.lineTo(222, y0 + 14.6); x.bezierCurveTo(160, y0 + 42, 110, y0 - 4, 60, y0 + 18);
+      x.closePath(); x.fill();
+    }
+    x.fillStyle = "#1f4fb0"; x.fillRect(60, 30, 70, 70);             // el cuadro azul
+    x.fillStyle = "#ffffff";
+    for (const [sx, sy] of [[80, 56], [108, 52], [94, 78], [120, 76]]) { estrella(x, sx, sy, 9, 4); x.fill(); }
+    x.restore();
+    tela(); x.lineWidth = 7; x.strokeStyle = CONTORNO; x.stroke();
+  },
+
+  // La placa de sheriff (el Viejo Oeste de Arizona).
+  placa(x) {
+    const cx = 128, cy = 132;
+    x.lineWidth = 26; x.strokeStyle = "#fff";
+    estrella(x, cx, cy, 100, 54, 6); x.stroke();
+    const puntas = [];
+    for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 3; puntas.push([cx + Math.cos(a) * 100, cy + Math.sin(a) * 100]); }
+    for (const [px, py] of puntas) { x.beginPath(); x.arc(px, py, 14, 0, Math.PI * 2); x.stroke(); }
+    const g = x.createLinearGradient(0, cy - 100, 0, cy + 100);
+    g.addColorStop(0, "#ffe27a"); g.addColorStop(1, "#d39a14");
+    estrella(x, cx, cy, 100, 54, 6); x.fillStyle = g; x.fill(); x.lineWidth = 7; x.strokeStyle = CONTORNO; x.stroke();
+    for (const [px, py] of puntas) { x.beginPath(); x.arc(px, py, 14, 0, Math.PI * 2); x.fillStyle = "#ffd23f"; x.fill(); x.lineWidth = 6; x.stroke(); }
+    x.beginPath(); x.arc(cx, cy, 40, 0, Math.PI * 2); x.fillStyle = "#f3c13a"; x.fill();
+    x.lineWidth = 6; x.strokeStyle = "#a8740a"; x.stroke();
+    estrella(x, cx, cy + 2, 24, 10); x.fillStyle = "#a8740a"; x.fill();
+    x.strokeStyle = "rgba(255,255,255,0.7)"; x.lineWidth = 9;        // brillo
+    x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
+  },
+
+  // La ficha de casino (Las Vegas).
+  ficha(x) {
+    const cx = 128, cy = 128;
+    x.beginPath(); x.arc(cx, cy, 112, 0, Math.PI * 2); x.fillStyle = "#ffffff"; x.fill();
+    x.beginPath(); x.arc(cx, cy, 100, 0, Math.PI * 2);
+    x.fillStyle = "#d8232a"; x.fill(); x.lineWidth = 8; x.strokeStyle = CONTORNO; x.stroke();
+    x.fillStyle = "#ffffff";                                          // las marcas del canto
+    for (let i = 0; i < 8; i++) {
+      x.save(); x.translate(cx, cy); x.rotate((i * Math.PI) / 4);
+      x.beginPath(); x.roundRect(-12, -98, 24, 30, 5); x.fill();
+      x.restore();
+    }
+    x.beginPath(); x.arc(cx, cy, 62, 0, Math.PI * 2); x.fillStyle = "#ffffff"; x.fill();
+    x.lineWidth = 5; x.strokeStyle = "#d8232a"; x.stroke();
+    x.setLineDash([10, 9]); x.beginPath(); x.arc(cx, cy, 54, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+    estrella(x, cx, cy + 3, 36, 15); x.fillStyle = "#ffd23f"; x.fill();
+    x.lineWidth = 5; x.strokeStyle = "#b07a00"; x.stroke();
+  },
+
   // Mazorca de maíz (el ingrediente de Ohio).
   maiz(x) {
     x.save();

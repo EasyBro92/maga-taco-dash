@@ -576,6 +576,10 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .pgTexto { text-align: center; margin-top: 7px; font-family: var(--letra-titulo); font-weight: 700; font-size: 13px; color: #fff; text-shadow: 0 1px 0 rgba(20, 40, 90, 0.6), 0 0 6px rgba(20, 40, 90, 0.45); }
 #hudChapas { display: flex; gap: 4px; margin-top: 6px; }
 #hudChapas.hidden { display: none !important; }
+/* 05/11: el contador del objeto de la ciudad, al lado de las chapas */
+.objHud { display: flex; align-items: center; gap: 3px; margin-left: 8px; font-family: var(--letra-titulo); font-weight: 700; font-size: 14px; color: #fff;
+  text-shadow: 0 1px 0 rgba(20, 40, 90, 0.6), 0 0 6px rgba(20, 40, 90, 0.45); }
+.objHud img { width: 26px; height: 26px; display: block; }
 .chapaHud img { width: 26px; height: 26px; display: block; }
 .chapaHud.falta img { filter: grayscale(1); opacity: 0.35; }
 .chapaHud.antes img { filter: grayscale(0.7); opacity: 0.65; }
