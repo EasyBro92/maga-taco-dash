@@ -1194,3 +1194,14 @@ sin choques; en Phoenix, saltos justos (serpiente, calavera); en Des Moines,
 la cosechadora de siempre y un ciervo; en Washington, a veces unos agentes
 justo después de la escolta (hay hueco, el piloto no lo ve). Entre 1 y 10
 cambios de carril por nivel.
+
+## Los chiles se acaban con el jefe (2026-11-06)
+
+Isidro: «cuando el Burrito-Bot está derrotado, los chiles siguen
+apareciendo». El tramo del jefe mide unos 600 m y seguía poniendo tacos y
+chiles hasta el final aunque el jefe ya se hubiera ido. Ahora, en cuanto se
+va (vencido o porque se le acaba el tiempo), los chiles que quedan en la
+pista se vuelven tacos y el resto del tramo es calle normal (`jefeSeVa`,
+`jefeAcabado` en world.js). Vale también para el dragón de Des Moines.
+Probado con el piloto en Findlay, Las Vegas y Des Moines: ningún chile
+después del jefe y 37-44 obstáculos normales en lo que queda del tramo.

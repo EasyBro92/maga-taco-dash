@@ -3499,7 +3499,17 @@ export function createWorld(scene) {
   function despedirJefe() {
     if (!jefeActivo()) return;
     jefe.saliendo = true;
+    jefeSeVa();
     if (alEventoJefe) alEventoJefe("escapa", 0);
+  }
+  // 06/11 (3): Isidro: «cuando el Burrito-Bot esta derrotado, los chiles siguen
+  // apareciendo». El tramo del jefe mide 600 m y seguia poniendo chiles hasta
+  // el final. Ahora, en cuanto se va (vencido o escapado), los chiles que
+  // quedan en la pista se vuelven tacos y el resto del tramo es calle normal.
+  let jefeAcabado = false;
+  function jefeSeVa() {
+    jefeAcabado = true;
+    for (const p of powerups) if (p.kind === "chile" && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
   }
   function iniciarJefe(tipo = "robot") {
     if (jefe.activo || !EXTRAS) return false;
@@ -3522,6 +3532,7 @@ export function createWorld(scene) {
       jefe.robot.add(jefe.atril);
     }
     if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
+    jefeAcabado = false;
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
       saliendo: false, derrotado: false,
       // El primer barril espera a que pase lo que ya estaba en la pista
@@ -3584,6 +3595,7 @@ export function createWorld(scene) {
     }
     if (jefe.tiempo > JEFE_TIEMPO) {
       jefe.saliendo = true;
+      jefeSeVa();
       if (alEventoJefe) alEventoJefe("escapa", 0);
     }
   }
@@ -3609,6 +3621,7 @@ export function createWorld(scene) {
     for (let k = 0; k < 3; k++) burstSparkles(jefe.x, JEFE_Y + 1.5, jefe.z);
     if (jefe.vida <= 0) {
       jefe.saliendo = true; jefe.derrotado = true;
+      jefeSeVa();
       if (alEventoJefe) alEventoJefe("derrotado", 0);
     } else if (alEventoJefe) alEventoJefe("golpe", jefe.vida);
   }
@@ -4029,6 +4042,7 @@ export function createWorld(scene) {
     // El Burrito-Bot: sin obstaculos normales (solo sus barriles), tacos y chiles.
     // 29/10: en el debate de Las Vegas, microfonos en vez de chiles.
     jefe(z, d, t, k) {
+      if (nivel && jefeAcabado) { PATRONES.mixto(z, d, { densidad: 0.5 }, k); return; }
       const lane = Math.floor(Math.random() * 3);
       tacosEn(lane, z, 4);
       const arma = nivel && nivel.debate ? "micro" : "chile";
@@ -4849,7 +4863,7 @@ export function createWorld(scene) {
     // el, recorrian mas calle de la prevista: en Washington una escolta
     // atravesaba a los agentes a 130 m.
     ritmo = 13;
-    ultimaCerrada = -1e9;
+    ultimaCerrada = -1e9; jefeAcabado = false;
     reiniciarVida();
     cajasCarrera = opciones.cajaHecha ? 1 : 0;
     perseguir(false, true);
