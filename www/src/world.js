@@ -14,6 +14,11 @@ export const LANE_WIDTH = 2.2;
 export const LANE_X = [-LANE_WIDTH, 0, LANE_WIDTH];
 // Altura a la que vuela el cohete (los tacos del cielo van un poco mas arriba).
 export const CIELO_Y = 7;
+// 06/11 (3): la rampa gigante (blender/momentos.py) y el salto que da: sube a
+// 1,6 m en 4,4 m y lanza con 9,2 m/s hacia arriba y una gravedad suave, unos
+// 2,8 s por el aire (sube unos 6 m por encima de la rampa).
+export const RAMPA_LARGO = 4.4, RAMPA_ALTO = 1.6, SALTO_VY = 9.2, SALTO_G = 7.1;
+export const SALTO_T = (SALTO_VY + Math.sqrt(SALTO_VY * SALTO_VY + 2 * SALTO_G * RAMPA_ALTO)) / SALTO_G;
 // Debe coincidir con BIOME_NAMES + "dc" dentro de createWorld(). Se duplica
 // aqui a nivel de modulo (en vez de exportar la lista interna) para que
 // main.js pueda construir el selector de zona sin acoplarse al cierre de
@@ -2421,6 +2426,11 @@ export function createWorld(scene) {
     rama_nevada: { choque: "high", medio: 0.3, alto: 2.4 },
     bus_escolar: { choque: "full", medio: 1.8, alto: 2.4, centro: -1.8, cambia: 2.1, intX: 0.6, intZ: 0.04 },
     ciervo: { choque: "full", medio: 0.7, alto: 1.9, centro: 0, cruza: true },
+    // 06/11 (3): los momentos (blender/momentos.py). La rampa no choca: se
+    // sube y lanza; el camion es como el autobus; el arco es decorado.
+    rampa_salto: { choque: "rampa", alto: RAMPA_ALTO },
+    camion: { choque: "bus", alto: 1.55 },
+    arco_premio: { choque: "nada" },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2634,6 +2644,9 @@ export function createWorld(scene) {
       TIPOS.fantasma = { ...TIPOS.cosechadora };
       obstaclePools.fantasma = makePool(() => new THREE.Group());
     }
+    // 06/11 (3): la alfombra roja, un trozo por fila (se pisa: no choca).
+    TIPOS.alfombra = { choque: "nada" };
+    obstaclePools.alfombra = makePool(crearAlfombra);
   }
 
   // La vaca de su tramo: anda de lado a lado mientras esta lejos; al
@@ -2879,11 +2892,12 @@ export function createWorld(scene) {
   // Altura del suelo bajo el jugador en un carril: la rampa y el techo del
   // autobus. `d` es cuanto se ha metido el jugador desde el pie de la rampa.
   function surfaceAt(x) {
-    let h = 0;
+    let h = vehiculo.fase === 2 ? vehiculo.alto : 0;   // 06/11 (3): de pie en el vehiculo
     for (const o of obstacles) {
-      if (o.type !== "bus" || o.smashed) continue;
-      if (Math.abs(x - LANE_X[o.lane]) > 0.85) continue;
+      if ((o.type !== "bus" && o.type !== "rampa") || o.smashed) continue;
+      if (Math.abs(x - LANE_X[o.lane]) > (o.type === "rampa" ? 1.1 : 0.85)) continue;
       const d = o.z;
+      if (o.type === "rampa") { if (d >= 0 && d <= RAMPA_LARGO) h = Math.max(h, RAMPA_ALTO * d / RAMPA_LARGO); continue; }
       if (d < 0 || d > BUS_LARGO) continue;
       h = Math.max(h, d < BUS_RAMPA ? BUS_TECHO * d / BUS_RAMPA : BUS_TECHO);
     }
@@ -3092,6 +3106,7 @@ export function createWorld(scene) {
     mesh.rotation.y = 0;
     mesh.position.set(LANE_X[lane], y || 0.9, z);
     if (!mesh.parent) group.add(mesh);
+    if (mesh.userData.sombraCae) mesh.userData.sombraCae.visible = false;
     tacos.push({ mesh, lane, z, baseY: y || 0.9, phase: Math.random() * Math.PI * 2, collected: false, oro });
   }
 
@@ -3202,7 +3217,30 @@ export function createWorld(scene) {
     // 28/10: botas de vaquero (saltos altos) y caja sorpresa.
     botas: makePool(() => { const g = modeloConContorno("obstaculos/botas") || buildPowerupIcon("shield"); g.scale.setScalar(1.45); return g; }),
     caja: makePool(() => { const g = modeloConContorno("obstaculos/caja_sorpresa") || buildPowerupIcon("shield"); g.scale.setScalar(1.25); return g; }),
+    // 06/11 (3): la gorra que lanzan los fans (dobla los tacos un rato). Con
+    // brillo dorado y un «x2» encima, para no confundirla con la del gigante.
+    gorra_fan: makePool(() => {
+      const g = new THREE.Group();
+      const gorra = modeloConContorno("obstaculos/gorra") || buildPowerupIcon("shield");
+      gorra.scale.setScalar(1.05);
+      g.add(gorra, halo(2.2, 0.55, 0xffd23a));
+      const x2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaX2(), transparent: true, depthWrite: false }));
+      x2.scale.set(0.9, 0.45, 1); x2.position.y = 0.95;
+      g.add(x2);
+      return g;
+    }),
   };
+  let _texX2 = null;
+  function texturaX2() {
+    if (_texX2 || typeof document === "undefined") return _texX2;
+    const c = document.createElement("canvas"); c.width = 128; c.height = 64;
+    const g = c.getContext("2d");
+    g.font = "900 52px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.lineWidth = 10; g.strokeStyle = "#1b2d6b"; g.strokeText("x2", 64, 34);
+    g.fillStyle = "#ffd23a"; g.fillText("x2", 64, 34);
+    _texX2 = new THREE.CanvasTexture(c);
+    return _texX2;
+  }
 
   function spawnPowerup(lane, z, kind) {
     const mesh = powerupPools[kind].acquire();
@@ -3391,20 +3429,27 @@ export function createWorld(scene) {
     _texLuz = new THREE.CanvasTexture(c);
     return _texLuz;
   }
-  function perseguir(on, deGolpe = false) {
+  // 06/11 (3): `forzado`: el que persigue en el momento «te persiguen» (si no, el coche del nivel).
+  function perseguir(on, deGolpe = false, forzado = null) {
     perseguidor.on = on;
+    if (on) perseguidor.forzado = forzado;
     if (deGolpe) { perseguidor.z = 18; if (perseguidor.mesh) perseguidor.mesh.visible = false; }
   }
   function moverPerseguidor(dt, x) {
-    const clave = "obstaculos/" + ((nivel && nivel.coche) || "patrulla");
+    const clave = "obstaculos/" + (perseguidor.forzado || (nivel && nivel.coche) || "patrulla");
     if (perseguidor.on && perseguidor.clave !== clave) {
       if (perseguidor.mesh) group.remove(perseguidor.mesh);
       perseguidor.mesh = modelo(clave);
       perseguidor.clave = clave;
       perseguidor.z = 18; perseguidor.x = x;
+      perseguidor.luces = null;
       if (perseguidor.mesh) {
-        perseguidor.mesh.rotation.y = Math.PI;
+        // Los que miran al jugador, dados la vuelta, le siguen; la furgoneta de
+        // las Fake News ya se ve por detras y la vaca va de lado.
+        perseguidor.mesh.rotation.y = { vaca: Math.PI / 2, furgoneta_fake: 0 }[perseguidor.forzado] ?? Math.PI;
         group.add(perseguidor.mesh);
+      }
+      if (perseguidor.mesh && /patrulla|suv/.test(clave)) {
         // Luces de sirena encima (desde la camara solo se ve el techo).
         const caja = new THREE.Box3().setFromObject(perseguidor.mesh);
         const alto = caja.max.y, fondo = perseguidor.mesh.userData.fondo || 4;
@@ -3425,7 +3470,8 @@ export function createWorld(scene) {
       perseguidor.luces[0].material.opacity = fase ? 1 : 0.15;
       perseguidor.luces[1].material.opacity = fase ? 0.15 : 1;
     }
-    const meta = perseguidor.on ? 1.3 : 18;
+    // (Los altos, mas atras: pegados tapaban al personaje desde la camara.)
+    const meta = perseguidor.on ? ({ furgoneta_fake: 3.6, vaca: 2.6, cosechadora: 5.5 }[perseguidor.forzado] || 1.3) : 18;
     perseguidor.z += (meta - perseguidor.z) * Math.min(1, dt * (perseguidor.on ? 2.5 : 0.9));
     perseguidor.x += (x - perseguidor.x) * Math.min(1, dt * 3);
     m.visible = perseguidor.z < 16;
@@ -3511,7 +3557,9 @@ export function createWorld(scene) {
     jefeAcabado = true;
     for (const p of powerups) if (p.kind === "chile" && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
   }
-  function iniciarJefe(tipo = "robot") {
+  // 06/11 (3): `paso`: el «jefe de paso» de los niveles sin jefe: tira tres
+  // barriles y se va (sin barra, sin chiles).
+  function iniciarJefe(tipo = "robot", paso = false) {
     if (jefe.activo || !EXTRAS) return false;
     if (tipo === "dragon" && !montarDragon()) tipo = "robot";
     if (!jefe.robot) jefe.robot = jefe.mesh || modeloConContorno("obstaculos/jefe");
@@ -3534,10 +3582,11 @@ export function createWorld(scene) {
     if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
     jefeAcabado = false;
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
-      saliendo: false, derrotado: false,
+      saliendo: false, derrotado: false, paso, tirados: 0,
       // El primer barril espera a que pase lo que ya estaba en la pista
       // (hasta 128 por delante): asi nunca coincide con un obstaculo normal.
-      tiro: 5.5 });
+      // (El de paso llega a un tramo sin obstaculos: puede tirar antes.)
+      tiro: paso ? 2.0 : 5.5 });
     return true;
   }
   const chileGeo = () => modelo("obstaculos/chile");
@@ -3591,7 +3640,12 @@ export function createWorld(scene) {
       o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : JEFE_Y;
       if (esDragon) dragon.boca = 1;
       jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
-      jefe.tiro = 1.6;
+      jefe.tiro = jefe.paso ? 1.4 : 1.6;
+      if (jefe.paso && ++jefe.tirados >= 3) {
+        jefe.saliendo = true;
+        jefeSeVa();
+        if (alEventoJefe) alEventoJefe("pasa", 0);
+      }
     }
     if (jefe.tiempo > JEFE_TIEMPO) {
       jefe.saliendo = true;
@@ -4048,7 +4102,259 @@ export function createWorld(scene) {
       const arma = nivel && nivel.debate ? "micro" : "chile";
       if (EXTRAS && Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
+
+    // ---- 06/11 (3): los momentos (ver «Los momentos», mas abajo) ----
+    // La rampa gigante: tres rampas (una por carril) y un arco de tacos por
+    // donde vuela. Debajo del vuelo no hay nada (una fila de vallas que se ve
+    // pasar por debajo) y al caer, unos metros de tacos antes de seguir.
+    rampa(z, d, t, k) {
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k === 2 && obstaclePools.rampa_salto) {
+        for (const l of LANES) spawnObstacle(l, "rampa", z, "rampa_salto");
+        const v = Math.max(12, (velEn && velEn(d)) || ritmo);
+        t.vuelo = { d, hasta: d + RAMPA_LARGO + v * SALTO_T + 10 };
+        const pico = SALTO_VY / SALTO_G;
+        for (const l of LANES) {
+          const paso = l === 1 ? 1.7 : 2.8;
+          for (let s = 1.2; s < v * SALTO_T - 3; s += paso) {
+            const tt = s / v, y = RAMPA_ALTO + SALTO_VY * tt - 0.5 * SALTO_G * tt * tt;
+            if (y < 1.4) continue;
+            spawnTaco(l, z - RAMPA_LARGO - s, y + 0.9, l === 1 && Math.abs(tt - pico) < paso / v / 2);
+          }
+        }
+        return;
+      }
+      if (!t.vuelo) { filaMixta(z, d, 0.4); return; }
+      if (d < t.vuelo.hasta) {
+        if (!t.vuelo.vallas && d > t.vuelo.d + RAMPA_LARGO + 12) { t.vuelo.vallas = true; for (const l of LANES) obst(l, "low", z, d); }
+        return;
+      }
+      if (d < t.vuelo.hasta + 3 * ROW_SPACING) { for (let i = 0; i < 4; i++) spawnTaco(SERPIENTE[k % SERPIENTE.length], z - i * 1.4, 0.9); return; }
+      filaMixta(z, d, 0.35);
+    },
+    // El convoy: camiones (y algun autobus) en los tres carriles, escalonados:
+    // los de los lados en las filas pares y el del centro en las impares, asi
+    // que siempre hay un techo cerca. Entre uno y otro se salta (o se cae y se
+    // vuelve a subir por la rampa del siguiente).
+    convoy(z, d, t, k) {
+      if (!obstaclePools.camion) { PATRONES.autobuses(z, d, t, k); return; }
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 1 || k > n - 3) return;
+      for (const l of k % 2 === 0 ? [0, 2] : [1]) {
+        spawnObstacle(l, "bus", z, k % 4 === 1 ? "autobus" : "camion");
+        for (let i = 0; i < 6; i++) spawnTaco(l, z - BUS_RAMPA - 0.8 - i * 1.25, BUS_TECHO + 0.9, i === 5 && Math.random() < 0.3);
+      }
+    },
+    // La lluvia de tacos: los suelta el avion presidencial (main.js lo lanza al
+    // entrar) y caen haciendo culebra; alguna valla donde no caen.
+    lluvia(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2 || k > n - 2) return;
+      const lane = SERPIENTE[k % SERPIENTE.length], luego = SERPIENTE[(k + 1) % SERPIENTE.length];
+      for (let i = 0; i < 4; i++) spawnTacoQueCae(lane, z - 0.8 - i * 1.5);
+      if (k % 4 === 0) spawnTacoQueCae((lane + 1) % 3 === luego ? (lane + 2) % 3 : (lane + 1) % 3, z - 3.5, true);
+      if (k % 3 === 2) {
+        const otros = LANES.filter((l) => l !== lane && l !== luego);
+        if (otros.length) obst(elegirDe(otros), "low", z, d);
+      }
+    },
+    // La alfombra roja: va por un carril y cada 5 filas se pasa al de al lado;
+    // en ella, tacos de oro (valen 5). Justo antes de que cambie, algo encima
+    // te echa de ella. En los otros carriles, algo de vez en cuando.
+    alfombra(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 2) return;
+      const CAMINO = [1, 0, 1, 2, 1, 0];
+      const lane = CAMINO[Math.floor(k / 5) % CAMINO.length], sig = CAMINO[(Math.floor(k / 5) + 1) % CAMINO.length];
+      spawnObstacle(lane, "nada", z, "alfombra");
+      const cambia = k % 5 === 4;
+      if (cambia) {
+        spawnObstacle(sig, "nada", z, "alfombra");
+        obst(lane, Math.random() < 0.5 ? "full" : "low", z, d);
+        for (let i = 0; i < 2; i++) { spawnTaco(sig, z - 1.5 - i * 3, 0.9, true); tacos[tacos.length - 1].vale = 5; }
+      } else {
+        for (let i = 0; i < 2; i++) { spawnTaco(lane, z - 1.5 - i * 3, 0.9, true); tacos[tacos.length - 1].vale = 5; }
+      }
+      if (k % 2 === 1) {
+        const otros = LANES.filter((l) => l !== lane && l !== sig);
+        if (otros.length) obst(elegirDe(otros), elegirDe(["low", "high", "full"]), z, d);
+      }
+    },
+    // Elige tu premio: tres arcos, uno por carril, cada uno con un premio
+    // distinto. Despues unas filas tranquilas y algo de calle para gastarlo.
+    premios(z, d, t, k) {
+      if (k < 3) { if (k === 1) for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k === 3) {
+        const kinds = (EXTRAS ? ["magnet", "mega", "rocket", "shield", "botas", "boost"] : ["magnet", "mega", "shield", "botas", "boost"])
+          .sort(() => Math.random() - 0.5);
+        LANES.forEach((l, i) => {
+          if (obstaclePools.arco_premio) spawnObstacle(l, "nada", z, "arco_premio");
+          spawnPowerup(l, z, kinds[i]);
+        });
+        return;
+      }
+      if (k < 7) return;
+      filaMixta(z, d, 0.45);
+    },
+    // El desfile que cruza: cada tres filas cruzan dos (vaqueros, ciervos,
+    // turistas en Segway...) y dejan libre un carril que va cambiando.
+    desfile_cruza(z, d, t, k) {
+      const quien = (t.cruzan || []).filter((n) => obstaclePools[n] && TIPOS[n] && TIPOS[n].cruza);
+      if (!quien.length) { filaMixta(z, d, 0.5); return; }
+      if (k < 1 || k % 3 !== 1) return;
+      // (El hueco siempre al carril de al lado: saltar dos de golpe en 21 m no da tiempo.)
+      const libre = [2, 1, 0, 1][Math.floor(k / 3) % 4];
+      for (const l of LANES) if (l !== libre) obst(l, "full", z, d, quien);
+      for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
+    // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
+    jefe_paso(z, d, t, k) {
+      if (k % 2 === 1) return;
+      const lane = SERPIENTE[(k >> 1) % SERPIENTE.length];
+      for (let i = 0; i < 4; i++) spawnTaco(lane, z - i * 1.4, 0.9);
+    },
   };
+
+  // ================================================================
+  // ---- Los momentos (06/11/2026, 3) ----
+  // Isidro: «los mapas se hacen aburridos... más cosas, muchas más, que no
+  // sea tan repetitivo». Eligió doce momentos de unos 10 s, uno cada 20 s (los
+  // tramos de levels.js). Los que cambian la calle son patrones (arriba); los
+  // que van encima del tramo de la ciudad llevan `momento` en el tramo:
+  //   gorras y reto   ponen algo en cada fila (aqui, en generarFila)
+  //   persigue, vehiculo   los arranca main.js al entrar en el tramo
+
+  // La velocidad que llevara el jugador a `d` metros (la pone main.js): la
+  // rampa la necesita para saber donde se cae.
+  let velEn = null;
+  function setVelEn(f) { velEn = f; }
+
+  // -- Tacos que caen del cielo; una sombra en el suelo dice donde caeran. --
+  const sombraCaeGeo = new THREE.CircleGeometry(0.42, 18);
+  sombraCaeGeo.rotateX(-Math.PI / 2);
+  const sombraCaeMat = sobreCalzada(new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }));
+  function spawnTacoQueCae(lane, z, oro = false) {
+    spawnTaco(lane, z, 0.9, oro);
+    const it = tacos[tacos.length - 1];
+    it.cae = 13;
+    let s = it.mesh.userData.sombraCae;
+    if (!s) { s = new THREE.Mesh(sombraCaeGeo, sombraCaeMat); it.mesh.add(s); it.mesh.userData.sombraCae = s; }
+    s.visible = true;
+  }
+
+  // -- El avion presidencial: pasa por encima y se aleja calle abajo. --
+  const avion = { mesh: null, t: -1 };
+  function lanzarAvion() {
+    if (!hayModelo("obstaculos/avion")) return;
+    if (!avion.mesh) { avion.mesh = modelo("obstaculos/avion"); group.add(avion.mesh); }
+    avion.mesh.visible = true;
+    avion.t = 0;
+  }
+  function moverAvion(dt) {
+    if (avion.t < 0) return;
+    avion.t += dt;
+    const z = 30 - avion.t * 32;
+    avion.mesh.position.set(0, 15 + avion.t * 0.4, z);
+    if (z < -330) { avion.mesh.visible = false; avion.t = -1; }
+  }
+
+  // -- Las gorras de los fans: salen de la acera en arco y caen en un carril libre. --
+  function lanzarGorra(z, k) {
+    if (!USAR_BLENDER || k % 3 !== 1) return;
+    const libres = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => !o.smashed && o.lane === l && o.type !== "nada" && Math.abs(o.z - z) < 6));
+    if (!libres.length) return;
+    const lane = elegirDe(libres);
+    spawnPowerup(lane, z - 3, "gorra_fan");
+    const lado = lane === 0 ? -1 : lane === 2 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+    powerups[powerups.length - 1].vuela = { x0: lado * 7, y0: 2.6 };
+  }
+
+  // -- El reto relampago: una hilera de tacos por fila en un carril libre
+  // (el mismo que la fila de antes si se puede, o el de al lado). --
+  let carrilReto = 1;
+  function tacosReto(z) {
+    const libre = (l) => l !== carrilOcupado && !obstacles.some((o) => !o.smashed && o.lane === l && o.type !== "nada" && o.z > z - 8 && o.z < z + 4);
+    if (!libre(carrilReto)) {
+      const op = LANES.filter(libre);
+      if (!op.length) return;
+      const cerca = op.filter((l) => Math.abs(l - carrilReto) === 1);
+      carrilReto = elegirDe(cerca.length ? cerca : op);
+    }
+    for (let i = 0; i < 3; i++) {
+      const zz = z - 1 - i * 2;
+      if (!tacos.some((it) => it.lane === carrilReto && Math.abs(it.z - zz) < 0.9)) spawnTaco(carrilReto, zz, 0.9);
+    }
+  }
+
+  // -- La alfombra roja: un trozo de 7 m por fila. Roja con el borde dorado
+  // (nada de rayas finas: en el suelo parpadean). --
+  let alfombraGeo = null, alfombraMat = null;
+  function crearAlfombra() {
+    if (!alfombraGeo) {
+      alfombraGeo = new THREE.PlaneGeometry(1.9, ROW_SPACING + 0.05);
+      alfombraGeo.rotateX(-Math.PI / 2);
+      alfombraGeo.translate(0, 0.03, -ROW_SPACING / 2);
+      let mapa = null;
+      if (typeof document !== "undefined") {
+        const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+        const g = c.getContext("2d");
+        g.fillStyle = "#c8102e"; g.fillRect(0, 0, 64, 64);
+        g.fillStyle = "#e0b02a"; g.fillRect(0, 0, 7, 64); g.fillRect(57, 0, 7, 64);
+        mapa = new THREE.CanvasTexture(c);
+        mapa.colorSpace = THREE.SRGBColorSpace;
+      }
+      alfombraMat = sobreCalzada(new THREE.MeshLambertMaterial({ map: mapa, color: 0xffffff }));
+    }
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(alfombraGeo, alfombraMat));
+    return g;
+  }
+
+  // -- El vehiculo: va de pie encima (o en la plataforma de atras) unos 10 s
+  // y arrolla todo lo que pilla. alto: donde pisa; z: cuanto del vehiculo
+  // queda detras de el; gira: el modelo mira hacia el jugador. --
+  const VEHICULOS = {
+    taxi: { alto: 1.45, z: 1.6 }, limusina: { alto: 1.45, z: 2.4 }, descapotable: { alto: 0.75, z: 0.6 },
+    carroza: { alto: 0.95, z: 1.0, gira: true }, tractor: { alto: 2.2, z: 1.4, gira: true }, carrito_golf: { alto: 0.37, z: 0.25 },
+  };
+  const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0 };
+  function montarVehiculo(nombre, x) {
+    const v = VEHICULOS[nombre];
+    if (!v || !hayModelo("obstaculos/" + nombre)) return 0;
+    if (vehiculo.nombre !== nombre) {
+      if (vehiculo.mesh) group.remove(vehiculo.mesh);
+      const m = modeloConContorno("obstaculos/" + nombre);
+      const g = new THREE.Group();
+      g.add(m);
+      if (v.gira) {
+        const caja = medidas("obstaculos/" + nombre).geometry.boundingBox;
+        m.rotation.y = Math.PI;
+        m.position.z = caja.min.z;
+      }
+      vehiculo.mesh = g; vehiculo.nombre = nombre;
+      group.add(g);
+    }
+    Object.assign(vehiculo, { fase: 1, t: 0, z: 12, x, alto: v.alto, meta: v.z, vz: 0 });
+    vehiculo.mesh.visible = true;
+    return v.alto;
+  }
+  function bajarVehiculo() { if (vehiculo.fase) { vehiculo.fase = 3; vehiculo.vz = 0; } }
+  function moverVehiculo(dt, x) {
+    if (!vehiculo.fase || !vehiculo.mesh) return;
+    vehiculo.t += dt;
+    if (vehiculo.fase === 1) {
+      // Llega por detras mientras el salta, y se le mete debajo.
+      vehiculo.z += (vehiculo.meta - vehiculo.z) * Math.min(1, dt * 9);
+      if (vehiculo.t > 0.35) { vehiculo.fase = 2; vehiculo.z = vehiculo.meta; }
+    } else if (vehiculo.fase === 3) {
+      // Se va calle abajo, cada vez mas rapido.
+      vehiculo.vz += dt * 40;
+      vehiculo.z -= vehiculo.vz * dt;
+      if (vehiculo.z < -140) { vehiculo.fase = 0; vehiculo.mesh.visible = false; }
+    }
+    if (vehiculo.fase !== 3) vehiculo.x = x;
+    vehiculo.mesh.position.set(vehiculo.x, 0, vehiculo.z);
+  }
 
   // ---- Los tramos del nivel, o los del sin fin (al azar, se van añadiendo) ----
   let tramos = [];
@@ -4184,13 +4490,15 @@ export function createWorld(scene) {
       filaD = d; tacosFila = 0; maxFila = t.tipo === "festin" ? 2 : 1; carrilTacos = -1;
       respiro = d > ultimaCerrada && d - ultimaCerrada <= ROW_SPACING + 0.5;
       (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
+      if (t.momento === "gorras") lanzarGorra(z, k);
+      else if (t.momento === "reto") tacosReto(z);
       if (nivel && nivel.objeto && USAR_BLENDER) {
         const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && Math.abs(sd - d) <= ROW_SPACING / 2);
         if (i >= 0) { objHechos.add(i); ponerObjeto(z, i); }
       }
     } finally {
       carrilOcupado = -1; filaD = null; respiro = false;
-      if (new Set(obstacles.filter((o) => o.z === z && o.type !== "bus").map((o) => o.lane)).size === 3) ultimaCerrada = d;
+      if (new Set(obstacles.filter((o) => o.z === z && o.type !== "bus" && o.type !== "nada" && o.type !== "rampa").map((o) => o.lane)).size === 3) ultimaCerrada = d;
     }
   }
 
@@ -4794,7 +5102,18 @@ export function createWorld(scene) {
       const it = tacos[i];
       it.z += dz; it.mesh.position.z = it.z;
       it.mesh.rotation.y += 0.08;
+      if (it.cae) {
+        // Cae desde 13 m: despacio arriba y cada vez mas rapido, como de verdad; llega a 7 m del jugador.
+        const f = Math.min(1, Math.max(0, (-it.z - 7) / 48));
+        it.baseY = 0.9 + it.cae * (1 - (1 - f) * (1 - f));
+        if (f === 0) it.cae = 0;
+      }
       it.mesh.position.y = it.baseY + Math.sin(animClock * 3 + it.phase) * 0.08;
+      const sc = it.mesh.userData.sombraCae;
+      if (sc && sc.visible) {
+        if (!it.cae) sc.visible = false;
+        else { sc.position.y = 0.03 - it.mesh.position.y; sc.scale.setScalar(0.45 + 0.55 * (1 - (it.baseY - 0.9) / 13)); }
+      }
       const glowPulse = 1 + Math.sin(animClock * 4 + it.phase) * 0.18;
       if (it.mesh.userData.glow) it.mesh.userData.glow.scale.setScalar(glowPulse * 0.85);
       if (it.z > DESPAWN_Z || it.collected) {
@@ -4816,6 +5135,7 @@ export function createWorld(scene) {
       }
     }
     actualizarCameo(dt);
+    moverAvion(dt);
     if (horizonte) horizonte.animar(dt);
     for (let i = powerups.length - 1; i >= 0; i--) {
       const p = powerups[i];
@@ -4829,6 +5149,13 @@ export function createWorld(scene) {
           const t = ((animClock * 2.4 - chevron.userData.baseZ * 1.6) % 1 + 1) % 1;
           chevron.scale.setScalar(0.85 + Math.max(0, Math.sin(t * Math.PI)) * 0.3);
         }
+      } else if (p.vuela) {
+        // La gorra de un fan: sale de la acera y cae en su carril en arco.
+        const f = Math.min(1, Math.max(0, (-p.z - 14) / 46));
+        p.mesh.position.x = LANE_X[p.lane] + (p.vuela.x0 - LANE_X[p.lane]) * f;
+        p.mesh.position.y = 1.0 + (p.vuela.y0 - 1.0) * f + Math.sin(f * Math.PI) * 3;
+        p.mesh.rotation.y += 0.08;
+        p.mesh.rotation.z = f * 2.5;
       } else {
         p.mesh.rotation.y += 0.05;
         p.mesh.position.y = 1.0 + Math.sin(p.z * 0.5) * 0.08;
@@ -4864,6 +5191,8 @@ export function createWorld(scene) {
     // atravesaba a los agentes a 130 m.
     ritmo = 13;
     ultimaCerrada = -1e9; jefeAcabado = false;
+    vehiculo.fase = 0; if (vehiculo.mesh) vehiculo.mesh.visible = false;
+    avion.t = -1; if (avion.mesh) avion.mesh.visible = false;
     reiniciarVida();
     cajasCarrera = opciones.cajaHecha ? 1 : 0;
     perseguir(false, true);
@@ -4922,5 +5251,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor };
+    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo };
 }

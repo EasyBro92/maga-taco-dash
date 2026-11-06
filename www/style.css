@@ -303,6 +303,11 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 #bossBar .bossName { font-weight: 900; color: #fff; text-shadow: 0 2px 0 #000, 0 0 8px #ff3a2a; font-size: 15px; margin-bottom: 4px; }
 #bossBar .bossTrack { height: 12px; border-radius: 999px; background: rgba(0,0,0,0.55); border: 2px solid #fff; overflow: hidden; }
 #bossFill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff3a2a, #ffb02e); transition: width 0.25s; }
+/* 06/11 (3): el reto relampago (tacos cogidos y el tiempo que queda) */
+#retoBar { position: absolute; left: 50%; transform: translateX(-50%); width: min(300px, 66vw); z-index: 5; pointer-events: none; text-align: center; }
+#retoBar .bossName { font-family: var(--letra-titulo); font-weight: 700; color: #fff; font-size: 17px; margin-bottom: 4px; -webkit-text-stroke: 4px var(--azul); paint-order: stroke fill; }
+#retoBar .bossTrack { height: 12px; border-radius: 999px; background: rgba(0,0,0,0.45); border: 2px solid #fff; overflow: hidden; }
+#retoBar .retoFill { height: 100%; width: 100%; background: linear-gradient(90deg, #ffd23a, #ff9a1a); }
 
 #misionToast {
   position: absolute; top: 140px; left: 50%; transform: translateX(-50%);
@@ -738,6 +743,7 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .pgHitoNombre.hidden { display: none !important; }
 #powerupBadge { top: calc(max(10px, env(safe-area-inset-top)) + 150px); }
 #bossBar { top: calc(max(10px, env(safe-area-inset-top)) + 190px); }
+#retoBar { top: calc(max(10px, env(safe-area-inset-top)) + 190px); }
 #misionToast { top: calc(max(10px, env(safe-area-inset-top)) + 236px); }
 #tramoBanner { top: 40%; }
 

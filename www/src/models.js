@@ -44,7 +44,9 @@ const LISTA = {
     "paso_nivel", "paso_nivel_brazo", "pavos", "bandera_grande", "cortacesped", "limonada",
     "serpiente", "rueda_loca", "pinata", "autocaravana", "vaquero",
     "ruleta", "barrera_valet", "barrera_valet_brazo", "cartel_boda", "descapotable", "bailarinas",
-    "bola_nieve", "trineo", "rama_nevada", "bus_escolar", "ciervo"],
+    "bola_nieve", "trineo", "rama_nevada", "bus_escolar", "ciervo",
+    // 06/11 (3): los momentos (blender/momentos.py)
+    "rampa_salto", "camion", "avion", "arco_premio", "carrito_golf"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

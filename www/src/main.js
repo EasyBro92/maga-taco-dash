@@ -1,6 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { createCharacter } from "./character.js";
-import { createWorld, LANE_X, CIELO_Y } from "./world.js";
+import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_G } from "./world.js";
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
@@ -591,6 +591,7 @@ function pintarChapas() {
 // 0 frena y anda hasta la escalinata · 1 sube al portico y llega a la puerta
 // · 2 se da la vuelta y saluda · 3 se gira y entra · 4 se cierran las puertas.
 function iniciarFinal() {
+  quitarReto();
   gameState = "final";
   apagarSirenas();
   fin = { fase: 0, t: 0, v: speed, look: new THREE.Vector3(0, 0.4, -18) };
@@ -872,6 +873,8 @@ world.onJefe((evento, vida) => {
     vibrate([40, 30, 80]);
     avisarMisiones(misiones.evento("jefe"));
     setTimeout(() => barra.classList.add("hidden"), 1500);
+  } else if (evento === "pasa") {
+    showBubble(t("jefePasaVa"), 1300, 2);
   } else if (evento === "escapa") {
     showBubble(textoJefe("jefeEscapa"), 1300, 3);
     setTimeout(() => barra.classList.add("hidden"), 1000);
@@ -1028,6 +1031,8 @@ function resetRun(desde = 0) {
   shieldActive = false; magnetTimeLeft = 0; boostTimeLeft = 0;
   botasTimeLeft = 0; gestoGuardado = null; gestoReloj = 0; coyote = 0;
   carrilAntes = 1; tropiezo = 0; persigueLeft = 0; world.perseguir(false, true);
+  montado = false; superSalto = false; persigueMomento = false; dobleLeft = 0; reto = null;
+  document.getElementById("retoBar").classList.add("hidden");
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1171,7 +1176,8 @@ function updateHud() {
     }
   } else document.getElementById("hudScoreValue").textContent = Math.floor(distance);
   const streakEl = document.getElementById("hudStreak");
-  if (multiplier > 1) { streakEl.textContent = "x" + multiplier; streakEl.classList.remove("hidden"); }
+  const mult = multiplier * (dobleLeft > 0 ? 2 : 1);
+  if (mult > 1) { streakEl.textContent = "x" + mult; streakEl.classList.remove("hidden"); }
   else { streakEl.classList.add("hidden"); }
 }
 
@@ -1183,6 +1189,7 @@ function updatePowerupBadge() {
   let p = null;
   if (rocketTimeLeft > 0) p = ["cohete", rocketTimeLeft / ROCKET_DURATION, t("powerupRocket")];
   else if (megaTimeLeft > 0) p = ["gorra", megaTimeLeft / MEGA_DURATION, t("powerupMega")];
+  else if (dobleLeft > 0) p = ["gorra", dobleLeft / DOBLE_DURATION, t("dobleTacos")];
   else if (freezeTimeLeft > 0) p = ["hielo", freezeTimeLeft / FREEZE_DURATION, t("powerupFreeze")];
   else if (botasTimeLeft > 0) p = ["botas", botasTimeLeft / BOTAS_DURATION, t("powerupBotas")];
   else if (shieldActive) p = ["escudo", 1, t("powerupShield")];
@@ -1280,7 +1287,7 @@ function accionJugador(action) {
     // 28/10: se puede saltar agachado (se levanta saltando), un instante
     // despues de caer de un techo, y si se pulsa en el aire justo antes de
     // tocar suelo, salta al aterrizar (antes ese toque se perdia).
-    if (rocketTimeLeft > 0) return;
+    if (rocketTimeLeft > 0 || montado || superSalto) return;
     if (enSuelo || coyote > 0) saltar();
     else { gestoGuardado = "jump"; gestoReloj = RECUERDA_GESTO; }
   }
@@ -1288,7 +1295,7 @@ function accionJugador(action) {
   // de ignorarse: con dos vallas seguidas el jugador da al boton por segunda
   // vez y antes se levantaba igual en medio de la segunda valla.
   else if (action === "slide") {
-    if (rocketTimeLeft > 0) return;
+    if (rocketTimeLeft > 0 || montado || superSalto) return;
     if (!enSuelo) {
       // 28/10, como en Subway Surfers: en el aire baja de golpe y rueda al tocar suelo.
       vy = Math.min(vy, CAIDA_RAPIDA);
@@ -1344,18 +1351,32 @@ function tropezar(o) {
 }
 // Luces y sirena: en el tramo de persecucion y mientras te sigue el coche.
 function ponerSirenas() {
-  const on = gameState === "playing" && !pausado && ((tramoMostrado && tramoMostrado.tipo === "persecucion") || persigueLeft > 0);
+  const policia = !persigueMomento || /patrulla|suv/.test((tramoMostrado && tramoMostrado.perseguidor) || "");
+  const on = gameState === "playing" && !pausado && ((tramoMostrado && tramoMostrado.tipo === "persecucion") || (persigueLeft > 0 && policia));
   document.getElementById("sirenas").classList.toggle("hidden", !on);
   sirena(on);
 }
 
 function checkCollisions(paso = 0) {
-  if (rocketTimeLeft > 0) return;          // en el cohete se vuela por encima de todo
+  if (rocketTimeLeft > 0 || superSalto) return;          // en el cohete (y en el salto de la rampa) se vuela por encima de todo
+  if (montado) {
+    // 06/11 (3): en el vehiculo, todo lo que pilla sale volando.
+    for (const o of world.obstacles) {
+      if (o.smashed || o.type === "nada" || o.type === "rampa" || o.fuera || Math.abs(playerX - LANE_X[o.lane]) > 1.2) continue;
+      const zc = o.type === "bus" ? o.z - 1 : o.z + (o.centro || 0), medio = o.type === "bus" ? 1.2 : (o.medio || 0.7);
+      if (zc < -medio - 1.6 || zc > medio) continue;
+      world.smash(o);
+      sndHit(); vibrate(20); triggerCameraShake(0.02);
+      tacosThisRun += 3 * multiplier;
+    }
+    return;
+  }
   for (const o of world.obstacles) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
     if (o.smashed || o.rozado || o.abierta || o.fuera) continue;   // (abierta: la barrera, con el brazo arriba; fuera: se quedo en la acera)
+    if (o.type === "nada" || o.type === "rampa") continue;       // la alfombra, los arcos y la rampa se pisan
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
     if (o.type === "bus") {
       // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
@@ -1438,7 +1459,7 @@ function registerTaco(amount) {
     sndPoint();
     flashExpression("happy", 0.6);
   }
-  tacosThisRun += amount * multiplier;
+  tacosThisRun += amount * multiplier * (dobleLeft > 0 ? 2 : 1);
 }
 
 const MAGNET_RANGE = 14; // alcance del iman hacia delante: solo absorbe lo cercano segun se va pasando, no toda la pista de golpe
@@ -1489,7 +1510,8 @@ function checkCollectibles(dt) {
 // 05/11: un taco normal vale 1, el dorado 10; el objeto de la ciudad va aparte.
 function cobrarTaco(tItem) {
   if (tItem.obj !== undefined) { cogerObjeto(tItem.obj); return; }
-  registerTaco(tItem.oro ? 10 : 1);
+  if (reto) reto.n++;
+  registerTaco(tItem.vale || (tItem.oro ? 10 : 1));
   sndTaco();
   if (tItem.oro) sndPoint();
 }
@@ -1575,6 +1597,11 @@ function checkPowerups() {
       frasesCargas = Math.min(MAX_FRASES, frasesCargas + 1);
       if (!microVisto) { microVisto = true; showBubble(t("microfono")); }
       pintarFrases();
+    } else if (p.kind === "gorra_fan") {
+      // 06/11 (3): la gorra que lanzan los fans: tacos x2 unos segundos.
+      dobleLeft = DOBLE_DURATION;
+      showBubble(t("dobleTacos"), 1100, 0);
+      vibrate(20);
     } else if (p.kind === "chile") {
       // Chile picante: sale disparado hacia el Burrito-Bot.
       world.dispararJefe(playerX, py + 1.2);
@@ -1594,7 +1621,7 @@ if (PRUEBA) {
     botas: () => { botasTimeLeft = BOTAS_DURATION; },
     perseguido: () => persigueLeft,
     cajas: { abrir: () => abrirCaja(pintarCajaBtn), guardar: guardarCaja, diario: () => premioDiario(pintarCajaBtn), pintar: () => pintarCajaBtn() },
-    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, botasTimeLeft, isSliding, currentLane, playerX, tacos: tacosThisRun, distancia: distance }),
+    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, botasTimeLeft, isSliding, currentLane, playerX, tacos: tacosThisRun, distancia: distance, montado, superSalto, reto: reto && { t: reto.t, n: reto.n }, dobleLeft, persigueLeft, py }),
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
@@ -1620,9 +1647,67 @@ if (PRUEBA) {
 // nivel volvia a empezar de cero. Ahora se cae de espaldas y, en un nivel,
 // sale cuanto faltaba para la meta y se puede seguir pagando tacos, desde el
 // punto de control o desde el principio.
+// ---- 06/11 (3): los momentos (ver world.js) ----
+// Los que van encima de un tramo de la ciudad se arrancan al entrar en el
+// tramo y se acaban al salir: te persiguen, el vehiculo y el reto relampago.
+let montado = false, superSalto = false, persigueMomento = false, dobleLeft = 0, reto = null;
+const VEHICULO_MULT = 1.2, DOBLE_DURATION = 6, RETO_TIEMPO = 10, RETO_META = 25, RETO_PREMIO = 100;
+function velNivel(d) {
+  // 06/11 (2): en los primeros 350 m hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
+  const ARRANQUE = 350, L = nivelActual.largo;
+  const k = d < ARRANQUE ? 0.45 * (d / ARRANQUE) : 0.45 + 0.55 * Math.min(1, (d - ARRANQUE) / Math.max(1, L - ARRANQUE));
+  return BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k;
+}
+world.setVelEn((d) => (nivelActual ? velNivel(d) : null));
+function empezarMomento(tr) {
+  if (!tr || !nivelActual || gameState !== "playing") return;
+  if (tr.tipo === "lluvia") world.lanzarAvion();
+  if (tr.momento === "persigue") {
+    persigueMomento = true; persigueLeft = 1e6;
+    world.perseguir(true, false, tr.perseguidor || null);
+    setTimeout(() => { if (gameState === "playing" && persigueMomento) showBubble(t("persigueAviso"), 1800, 2); }, 900);
+  } else if (tr.momento === "vehiculo" && rocketTimeLeft === 0 && world.montarVehiculo(tr.vehiculo, playerX)) {
+    montado = true;
+    saltar();
+    showBubble(t("subeAviso"), 1600, 2);
+  } else if (tr.momento === "reto") {
+    reto = { t: RETO_TIEMPO, n: 0, pintado: "" };
+    document.getElementById("retoBar").classList.remove("hidden");
+    pintarReto();
+  }
+}
+function terminarMomento(tr) {
+  if (!tr) return;
+  if (tr.momento === "persigue" && persigueMomento) { persigueMomento = false; persigueLeft = 0; world.perseguir(false); }
+  if (tr.momento === "vehiculo" && montado) {
+    montado = false;
+    world.bajarVehiculo();
+    if (gameState === "playing") saltar();
+  }
+}
+function pintarReto() {
+  const el = document.getElementById("retoBar");
+  const texto = t("retoHud").replace("{n}", Math.min(reto.n, RETO_META)).replace("{m}", RETO_META).replace("{s}", Math.max(0, Math.ceil(reto.t)));
+  if (texto !== reto.pintado) { el.querySelector(".bossName").textContent = texto; reto.pintado = texto; }
+  el.querySelector(".retoFill").style.width = `${Math.max(0, reto.t / RETO_TIEMPO) * 100}%`;
+}
+function acabarReto(bien) {
+  document.getElementById("retoBar").classList.add("hidden");
+  if (bien) {
+    tacosThisRun += RETO_PREMIO;
+    showBubble(t("retoBien"), 1500, 2);
+    avisoVerde(`+${RETO_PREMIO} ${TACO_IMG()}`);
+    spawnConfetti(24);
+    sndPoint(); vibrate([30, 30, 60]);
+  } else showBubble(t("retoMal").replace("{n}", reto.n).replace("{m}", RETO_META), 1300, 1);
+  reto = null;
+}
+
+function quitarReto() { if (reto) { reto = null; document.getElementById("retoBar").classList.add("hidden"); } }
 function triggerGameOver() {
   if (PRUEBA && window.__juego.inmortal) { window.__juego.choques++; return; }
   if (invulnerable > 0 || gameState !== "playing") return;
+  quitarReto();
   gameState = "cayendo";
   cayendo = 0;
   if (intento) intento.chocado = true;
@@ -1847,9 +1932,7 @@ function frame(dtFijo) {
       // La velocidad subia igual por todo el nivel y en Washington (3,3 km)
       // apenas se notaba en el primer kilometro. Ahora en los primeros 350 m
       // hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
-      const ARRANQUE = 350, L = nivelActual.largo;
-      const k = distance < ARRANQUE ? 0.45 * (distance / ARRANQUE) : 0.45 + 0.55 * Math.min(1, (distance - ARRANQUE) / Math.max(1, L - ARRANQUE));
-      speed = BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k;
+      speed = velNivel(distance);
       if (tramoMostrado && tramoMostrado.tipo === "sprint") speed *= SPRINT_EXTRA;
     } else speed = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);
     if (invulnerable > 0) {
@@ -1863,7 +1946,14 @@ function frame(dtFijo) {
       persigueLeft = Math.max(0, persigueLeft - dt);
       if (persigueLeft === 0) { world.perseguir(false); ponerSirenas(); }
     }
-    const frameSpeed = speed * (boostTimeLeft > 0 ? BOOST_MULT : 1);
+    const frameSpeed = speed * (boostTimeLeft > 0 ? BOOST_MULT : 1) * (montado ? VEHICULO_MULT : 1);
+    if (dobleLeft > 0) { dobleLeft = Math.max(0, dobleLeft - dt); updatePowerupBadge(); }
+    if (reto) {
+      reto.t -= dt;
+      if (reto.n >= RETO_META) acabarReto(true);
+      else if (reto.t <= 0) acabarReto(false);
+      else pintarReto();
+    }
     distance += frameSpeed * dt;
 
     const targetX = LANE_X[currentLane];
@@ -1876,6 +1966,7 @@ function frame(dtFijo) {
     character.setLean((playerX - prevX) * 12 + tambaleo);
     if (Math.abs(playerX - targetX) < 0.15) carrilAntes = currentLane;
     world.moverPerseguidor(dt, playerX);
+    world.moverVehiculo(dt, playerX);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -1908,7 +1999,10 @@ function frame(dtFijo) {
     // ---- Tramos: el cartel al entrar, el jefe de los niveles y el punto de control ----
     const tramo = world.tramoEn(distance);
     if (tramo !== tramoMostrado) {
+      const antes = tramoMostrado;
       tramoMostrado = tramo;
+      terminarMomento(antes);
+      empezarMomento(tramo);
       // (El del primer tramo no: saldria encima del cartel del nivel.)
       const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
@@ -1929,7 +2023,12 @@ function frame(dtFijo) {
       }
     }
     // En un nivel el Burrito-Bot se va cuando se acaba su tramo.
-    if (nivelActual && tramo.tipo !== "jefe" && world.jefeActivo()) world.despedirJefe();
+    if (nivelActual && tramo.tipo !== "jefe" && tramo.tipo !== "jefe_paso" && world.jefeActivo()) world.despedirJefe();
+    // 06/11 (3): el jefe de paso de los niveles sin jefe (tres barriles y se va).
+    if (nivelActual && tramo.tipo === "jefe_paso" && !tramo.lanzado && distance > tramo.desde + 8 && rocketTimeLeft === 0 && !world.jefeActivo()) {
+      tramo.lanzado = true;
+      if (world.iniciarJefe("robot", true)) { showBubble(t("jefePasa"), 1800, 3); triggerCameraShake(0.03); }
+    }
     if (nivelActual && nivelActual.control && intento && !intento.control && distance >= nivelActual.control) {
       intento.control = { tacos: Math.floor(tacosThisRun) };
       avisoVerde(`${icono("control")} ${t("controlGuardado")}`);
@@ -1966,6 +2065,17 @@ function frame(dtFijo) {
     }
 
     // ---- Altura: suelo, rampa y techo del autobus ----
+    if (!superSalto && rocketTimeLeft === 0) {
+      for (const o of world.obstacles) {
+        if (o.type !== "rampa" || o.lanzado || o.z < RAMPA_LARGO - 0.25 || o.z > RAMPA_LARGO + 4 || Math.abs(playerX - LANE_X[o.lane]) > 1.1) continue;
+        for (const r of world.obstacles) if (r.type === "rampa" && Math.abs(r.z - o.z) < 0.5) r.lanzado = true;
+        superSalto = true; enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0;
+        if (isSliding) { isSliding = false; character.setSlidePose(false); }
+        vy = Math.max(vy, SALTO_VY); py = Math.max(py, RAMPA_ALTO);
+        sndJump(); vibrate([20, 30, 40]); flashExpression("happy", 2);
+        break;
+      }
+    }
     const suelo = world.surfaceAt(playerX);
     if (enSuelo) {
       if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; coyote = COYOTE; } // se acabo el techo: a caer
@@ -1974,10 +2084,10 @@ function frame(dtFijo) {
     if (coyote > 0) coyote = Math.max(0, coyote - dt);
     if (gestoReloj > 0) { gestoReloj -= dt; if (gestoReloj <= 0) gestoGuardado = null; }
     if (!enSuelo && rocketTimeLeft === 0) {
-      vy -= GRAVEDAD * dt;
+      vy -= (superSalto ? SALTO_G : GRAVEDAD) * dt;
       py += vy * dt;
       if (py <= suelo && vy <= 0) {
-        py = suelo; vy = 0; enSuelo = true; isJumping = false;
+        py = suelo; vy = 0; enSuelo = true; isJumping = false; superSalto = false;
         character.setJumpPose(1);
         // Aterrizaje con peso: nube de polvo a los pies + vibracion corta.
         for (let d = 0; d < 5; d++) spawnDust(character.object3D.position.x, character.object3D.position.z, py);
@@ -2002,6 +2112,8 @@ function frame(dtFijo) {
       slideElapsed += dt;
       character.setSlidePose(true);
       if (slideElapsed >= SLIDE_DURATION) { isSliding = false; character.setSlidePose(false); }
+    } else if (montado) {
+      character.setIdlePose(elapsed);   // de pie en el vehiculo
     } else {
       character.updateRun(dt, speed / BASE_SPEED);
     }
@@ -2047,7 +2159,10 @@ function frame(dtFijo) {
     // poco mas en modo gigante para que se vea la pista por encima de el.
     // Sigue al suelo que pisa (techo del autobus) o al cohete, no a cada salto:
     // subir y bajar la camara en cada salto era otro vaiven que mareaba.
-    const alturaCam = rocketTimeLeft > 0 ? py : world.surfaceAt(playerX);
+    // 06/11 (3): tambien en el salto de la rampa; en el convoy se queda a la
+    // altura de los techos (bajar y subir en cada hueco era otro vaiven).
+    let alturaCam = rocketTimeLeft > 0 ? py : superSalto ? py * 0.85 : world.surfaceAt(playerX);
+    if (tramoMostrado && tramoMostrado.tipo === "convoy") alturaCam = Math.max(alturaCam, 1.55);
     camY += ((alturaCam * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 2.5);
     camera.position.y = RACE_CAM.pos.y + camY + shakeY;
     camera.updateProjectionMatrix();

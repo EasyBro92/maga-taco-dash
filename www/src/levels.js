@@ -73,14 +73,18 @@ const CALLES = [
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Nueva York: 1.400 m. Tutorial, el atasco y las obras; el festin, al final.
+    // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+    // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+    // largo del nivel no cambia.
     tramos: [
       [0, 280, "tutorial"],
-      [280, 480, "suave", { densidad: 0.4, titulo: "quinta" }],
-      [480, 700, "slalom", { full: ["taxi", "taxi", "carruaje"], titulo: "atasco" }],
+      [280, 420, "lluvia", { titulo: "lluvia" }],
+      [420, 560, "slalom", { full: ["taxi", "taxi", "carruaje"], titulo: "atasco" }],
+      [560, 700, "jefe_paso", { titulo: "jefe_paso" }],
       [700, 780, "calma"],
       [780, 980, "obras", { titulo: "obras" }],
       [980, 1080, "festin", { potenciador: "magnet", titulo: "festin" }],
-      [1080, 1240, "repartidores", { titulo: "repartidores" }],
+      [1080, 1240, "repartidores", { momento: "persigue", perseguidor: "furgoneta_fake", titulo: "persigue_prensa" }],
       [1240, 1370, "sprint", { titulo: "sprint" }],
     ],
     control: 712, caja: 640,
@@ -129,15 +133,20 @@ const CALLES = [
       // 06/11 (2): Isidro: «algunos mapas largos al principio se hacen aburridos»:
       // la calma de la salida pasa de 150 a 70-90 m en los niveles largos.
       [0, 80, "calma", { titulo: "main_street" }],
-      [80, 440, "desfile", { titulo: "desfile" }],
-      [440, 660, "autobuses", { titulo: "autobuses" }],
-      [660, 740, "calma"],
+      [80, 260, "desfile", { titulo: "desfile" }],
+      // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+      // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+      // largo del nivel no cambia.
+      [260, 420, "desfile", { momento: "vehiculo", vehiculo: "carroza", titulo: "sube_carroza" }],
+      [420, 640, "autobuses", { titulo: "autobuses" }],
+      [640, 740, "premios", { titulo: "premios" }],
       [740, 1340, "jefe", { titulo: "jefe" }],
       [1340, 1430, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [1430, 1560, "vacas", { titulo: "vacas" }],
-      [1560, 1670, "sprint", { titulo: "sprint" }],
+      [1430, 1580, "vacas", { momento: "persigue", perseguidor: "vaca", titulo: "persigue_vaca" }],
+      [1580, 1670, "sprint", { titulo: "sprint" }],
     ],
-    control: 680, caja: 600,
+    // (El control, detras de los arcos de premio: delante se tapaban.)
+    control: 720, caja: 600,
     chapas: [[540, "bus"], [1490, "arco"], [1620, "carril"]],
     hitos: ["courier", "heladeria", "deposito_agua", "davis"],
     meta: "juzgado_final", metaNombre: { es: "el juzgado", en: "the courthouse" },
@@ -177,14 +186,19 @@ const CALLES = [
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Phoenix: 2.000 m. Las rodadoras nada mas salir y la gran persecucion al final.
+    // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+    // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+    // largo del nivel no cambia.
     tramos: [
       [0, 70, "calma", { titulo: "central" }],
-      [70, 430, "rodadoras", { titulo: "rodadoras" }],
-      [430, 520, "festin", { potenciador: "boost", titulo: "festin" }],
-      [520, 800, "autobuses", { titulo: "autobuses" }],
-      [800, 880, "calma"],
-      [880, 1180, "vallas", { high: ["arco_neon", "pinata"], titulo: "neones" }],
-      [1180, 1400, "suave", { densidad: 0.5 }],
+      [70, 300, "rodadoras", { titulo: "rodadoras" }],
+      [300, 440, "rampa", { titulo: "rampa" }],
+      [440, 520, "festin", { potenciador: "boost", titulo: "festin" }],
+      [520, 720, "autobuses", { titulo: "autobuses" }],
+      [720, 860, "jefe_paso", { titulo: "jefe_paso" }],
+      [860, 1060, "vallas", { high: ["arco_neon", "pinata"], titulo: "neones" }],
+      [1060, 1220, "suave", { densidad: 0.55, momento: "vehiculo", vehiculo: "carrito_golf", titulo: "sube_golf" }],
+      [1220, 1400, "desfile_cruza", { cruzan: ["vaquero"], titulo: "cruzan_vaqueros" }],
       [1400, 1830, "persecucion", { titulo: "caza_brujas" }],
       [1830, 1970, "sprint", { titulo: "sprint_diner" }],
     ],
@@ -230,19 +244,28 @@ const CALLES = [
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Las Vegas: 2.300 m. Las limusinas de entrada, los dados y el debate a mitad.
+    // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+    // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+    // largo del nivel no cambia.
     tramos: [
       [0, 70, "calma", { titulo: "strip" }],
-      [70, 420, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
-      [420, 700, "dados", { titulo: "dados" }],
+      [70, 260, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
+      [260, 410, "alfombra", { titulo: "alfombra" }],
+      [410, 560, "dados", { titulo: "dados" }],
+      [560, 700, "premios", { titulo: "premios" }],
       [700, 780, "calma"],
       [780, 1400, "jefe", { titulo: "debate" }],
       [1400, 1500, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [1500, 1820, "vallas", { high: ["marquesina", "cartel_boda"], titulo: "neones_strip" }],
-      [1820, 2130, "mixto", { densidad: 0.55 }],
-      [2130, 2270, "sprint", { titulo: "sprint_trump" }],
+      [1500, 1680, "vallas", { high: ["marquesina", "cartel_boda"], momento: "gorras", titulo: "gorras" }],
+      [1680, 1840, "mixto", { densidad: 0.6, momento: "vehiculo", vehiculo: "descapotable", titulo: "sube_descapotable" }],
+      [1840, 1980, "convoy", { titulo: "convoy" }],
+      // (El reto, unos 10 s a la velocidad de aqui: 200 m.)
+      [1980, 2180, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2180, 2270, "sprint", { titulo: "sprint_trump" }],
     ],
     control: 712, caja: 1450,
-    chapas: [[560, "arco"], [1700, "carril"], [1980, "bus"]],
+    // (La del autobus, despues del convoy: dentro chocaba con los camiones.)
+    chapas: [[560, "arco"], [1700, "carril"], [2030, "bus"]],
     hitos: ["piramide", "castillo", "torre_eiffel", "fuentes", "cesar", "noria", "campanile"],
     meta: "hotel_trump", metaNombre: { es: "el hotel Trump", en: "Trump Hotel" }, coche: "patrulla",
     // Subiendo por el Strip hacia el norte desde el cartel de bienvenida: el
@@ -290,20 +313,28 @@ const CALLES = [
     // Des Moines: 2.600 m. La soja y los cerdos primero, el caucus y luego el dragon.
     tramos: [
       [0, 70, "calma", { titulo: "locust" }],
-      [70, 450, "soja", { titulo: "soja" }],
-      [450, 750, "cerdos", { titulo: "cerdos" }],
-      [750, 830, "calma"],
-      [830, 1150, "cosechadoras", { titulo: "cosechadoras" }],
+      [70, 280, "soja", { titulo: "soja" }],
+      // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+      // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+      // largo del nivel no cambia.
+      [280, 440, "convoy", { titulo: "convoy" }],
+      [440, 620, "cerdos", { titulo: "cerdos" }],
+      [620, 760, "soja", { momento: "vehiculo", vehiculo: "tractor", titulo: "sube_tractor" }],
+      [760, 830, "calma"],
+      [830, 1000, "cosechadoras", { momento: "persigue", perseguidor: "cosechadora", titulo: "persigue_cosechadora" }],
+      [1000, 1150, "lluvia", { titulo: "lluvia" }],
       [1150, 1250, "festin", { potenciador: "boost", titulo: "festin" }],
-      [1250, 1500, "caucus", { titulo: "caucus" }],
+      [1250, 1500, "caucus", { momento: "reto", titulo: "reto" }],
       [1500, 1580, "calma"],
       // 03/11: el dragon de China viene a por la soja.
       [1580, 2150, "jefe", { jefe: "dragon", titulo: "dragon" }],
-      [2150, 2440, "mixto", { densidad: 0.55 }],
+      [2150, 2300, "desfile_cruza", { cruzan: ["ciervo"], titulo: "cruzan_ciervos" }],
+      [2300, 2440, "mixto", { densidad: 0.55, momento: "gorras", titulo: "gorras" }],
       [2440, 2570, "sprint", { titulo: "sprint_capitolio" }],
     ],
     control: 1512, caja: 1200,
-    chapas: [[350, "arco"], [1050, "carril"], [2300, "arco"]],
+    // (La primera, despues del convoy: dentro chocaba con los camiones.)
+    chapas: [[460, "arco"], [1050, "carril"], [2300, "arco"]],
     hitos: ["parque_esculturas", "hotel_fort", "biblioteca_dm", "ruan", "torre_801", "world_food", "rio"],
     meta: "capitolio_iowa", metaNombre: { es: "el Capitolio", en: "the Capitol" },
     // El helicoptero de la tele, despues del rio: por el centro pasan las
@@ -360,21 +391,32 @@ const CALLES = [
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Washington sigue en 3.300 m (es el final de la gira), con otro orden.
+    // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
+    // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
+    // largo del nivel no cambia.
     tramos: [
       [0, 90, "calma", { titulo: "pennsylvania" }],
-      [90, 500, "comitiva", { titulo: "comitiva" }],
-      [500, 800, "mixto", { densidad: 0.5 }],
+      [90, 330, "comitiva", { titulo: "comitiva" }],
+      [330, 480, "mixto", { densidad: 0.5, momento: "gorras", titulo: "gorras" }],
+      [480, 640, "rampa", { titulo: "rampa" }],
+      [640, 800, "alfombra", { titulo: "alfombra" }],
       [800, 900, "festin", { potenciador: "rocket", titulo: "cohete" }],
-      [900, 1250, "autobuses", { titulo: "autobuses" }],
-      [1250, 1600, "vallas", { high: ["protesta", "dron_tele"], titulo: "protesta" }],
+      [900, 1100, "autobuses", { titulo: "autobuses" }],
+      [1100, 1250, "lluvia", { titulo: "lluvia" }],
+      [1250, 1450, "vallas", { high: ["protesta", "dron_tele"], titulo: "protesta" }],
+      [1450, 1600, "premios", { titulo: "premios" }],
       [1600, 1680, "calma"],
       [1680, 2400, "jefe", { titulo: "jefe_final" }],
       [2400, 2550, "festin", { potenciador: "freeze", titulo: "hielo" }],
-      [2550, 3000, "slalom", { full: ["agentes", "furgoneta", "furgoneta_fake", "segway"], titulo: "recta" }],
-      [3000, 3270, "sprint", { titulo: "sprint_dc" }],
+      [2550, 2750, "slalom", { full: ["agentes", "furgoneta", "furgoneta_fake", "segway"], momento: "vehiculo", vehiculo: "limusina", titulo: "sube_limusina" }],
+      [2750, 2860, "desfile_cruza", { cruzan: ["segway"], titulo: "cruzan_segways" }],
+      // (El reto, unos 10 s a la velocidad de aqui: 210 m.)
+      [2860, 3070, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [3070, 3270, "sprint", { titulo: "sprint_dc" }],
     ],
     control: 1612, caja: 1150,
-    chapas: [[650, "arco"], [1100, "bus"], [2751, "carril"]],
+    // (La primera, despues de la rampa: en la alfombra la cortaba.)
+    chapas: [[610, "arco"], [1100, "bus"], [2751, "carril"]],
     hitos: ["archivos_portico", "fbi", "irs", "correos_torre", "willard", "tesoro"],
     meta: "casa_blanca_final", metaNombre: { es: "la Casa Blanca", en: "the White House" }, coche: "suv",
     // Hacia el oeste: el sur queda a la izquierda y el norte a la derecha.
@@ -422,7 +464,8 @@ export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint"].includes(tipo))
+  // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];

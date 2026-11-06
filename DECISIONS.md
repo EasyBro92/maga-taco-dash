@@ -1205,3 +1205,49 @@ pista se vuelven tacos y el resto del tramo es calle normal (`jefeSeVa`,
 `jefeAcabado` en world.js). Vale también para el dragón de Des Moines.
 Probado con el piloto en Findlay, Las Vegas y Des Moines: ningún chile
 después del jefe y 37-44 obstáculos normales en lo que queda del tramo.
+
+## Los momentos: algo nuevo cada 20 segundos (2026-11-06)
+
+Isidro: «los mapas no deberían ser tan largos o al menos hay que añadir cosas
+para hacerlo menos aburrido los 2 primeros minutos». Medidos con el piloto,
+los niveles duran de 1:22 (Nueva York) a 2:49 (Washington). Entre el jefe,
+los autobuses y el cohete solo pasaban 2 o 3 cosas que cambiaran el juego.
+Le di a elegir entre hacerlos más cortos o meterles más cosas, y eligió «Más
+cosas, muchas más, que no sea tan repetitivo». Eligió los doce momentos que
+le propuse, uno cada 20 segundos. **El largo de los niveles no cambia.**
+
+Los momentos (world.js, «Los momentos»; las piezas nuevas en
+`blender/momentos.py`):
+
+| Momento | Qué pasa | Dónde |
+|---|---|---|
+| Rampa gigante | Tres rampas: lanzan unos 2,8 s por el aire (sube 6 m) por un arco de tacos | Phoenix, Washington |
+| Convoy | Camiones (y algún autobús) escalonados en los tres carriles: se corre por los techos | Las Vegas, Des Moines |
+| Te persiguen | Algo te sigue por detrás todo el tramo; si tropiezas, te pillan | Nueva York (la prensa), Findlay (una vaca), Des Moines (la cosechadora) |
+| Vehículo | Te subes 10 s: va un 20 % más rápido y arrolla todo | Findlay (carroza), Phoenix (carrito de golf), Las Vegas (descapotable), Des Moines (tractor), Washington (limusina) |
+| Lluvia de tacos | Pasa el avión presidencial y los tacos caen del cielo, con su sombra en el suelo | Nueva York, Des Moines, Washington |
+| Reto relámpago | «25 tacos en 10 segundos», con barra y cuenta atrás; premio de 100 tacos | Las Vegas, Des Moines, Washington |
+| Alfombra roja | Va cambiando de carril, con tacos de oro (valen 5); algo encima te echa antes de cada cambio | Las Vegas, Washington |
+| Elige tu premio | Tres arcos, uno por carril, cada uno con un potenciador distinto | Findlay, Las Vegas, Washington |
+| Jefe de paso | El Burrito-Bot tira tres barriles y se va (sin barra ni chiles) | Nueva York, Phoenix |
+| Desfile que cruza | Cada 21 m cruzan dos y dejan un hueco, siempre en el carril de al lado | Phoenix (vaqueros), Des Moines (ciervos), Washington (Segway) |
+| Fans con gorras | La gente de la acera lanza gorras doradas con «x2»: tacos dobles 6 s | Las Vegas, Des Moines, Washington |
+| Momento estrella | Uno grande por ciudad. Falta hacerlo; el primero es el metro de Nueva York | — |
+
+Cómo va por dentro:
+- Los que cambian la calle son tramos con su patrón: `rampa`, `convoy`,
+  `lluvia`, `alfombra`, `premios`, `desfile_cruza` y `jefe_paso`.
+- Los que van encima del tramo de la ciudad llevan `momento` en el tramo:
+  `persigue`, `vehiculo`, `gorras` y `reto`.
+- Las chapas que caían dentro de un convoy o de la alfombra se han movido.
+  Los objetos de la ciudad no salen en esos tramos (`sitiosObjetos`).
+- El punto de control de Findlay pasa de 680 a 720: quedaba pegado detrás de
+  los arcos de premio.
+- Contra el mareo:
+  - en el convoy la cámara se queda a la altura de los techos;
+  - la alfombra es lisa, sin rayas finas;
+  - los perseguidores altos van más atrás, para que no tapen al personaje.
+
+Probado con el piloto en los seis niveles: ningún choque dentro de los
+momentos. Quedan los fallos de siempre del piloto: la cosechadora de Des
+Moines y alguna barrera.
