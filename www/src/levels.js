@@ -126,8 +126,10 @@ const CALLES = [
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Findlay: 1.700 m. Empieza con el desfile, el jefe a mitad y las vacas al final.
     tramos: [
-      [0, 160, "calma", { titulo: "main_street" }],
-      [160, 440, "desfile", { titulo: "desfile" }],
+      // 06/11 (2): Isidro: «algunos mapas largos al principio se hacen aburridos»:
+      // la calma de la salida pasa de 150 a 70-90 m en los niveles largos.
+      [0, 80, "calma", { titulo: "main_street" }],
+      [80, 440, "desfile", { titulo: "desfile" }],
       [440, 660, "autobuses", { titulo: "autobuses" }],
       [660, 740, "calma"],
       [740, 1340, "jefe", { titulo: "jefe" }],
@@ -176,8 +178,8 @@ const CALLES = [
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Phoenix: 2.000 m. Las rodadoras nada mas salir y la gran persecucion al final.
     tramos: [
-      [0, 150, "calma", { titulo: "central" }],
-      [150, 430, "rodadoras", { titulo: "rodadoras" }],
+      [0, 70, "calma", { titulo: "central" }],
+      [70, 430, "rodadoras", { titulo: "rodadoras" }],
       [430, 520, "festin", { potenciador: "boost", titulo: "festin" }],
       [520, 800, "autobuses", { titulo: "autobuses" }],
       [800, 880, "calma"],
@@ -229,8 +231,8 @@ const CALLES = [
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Las Vegas: 2.300 m. Las limusinas de entrada, los dados y el debate a mitad.
     tramos: [
-      [0, 150, "calma", { titulo: "strip" }],
-      [150, 420, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
+      [0, 70, "calma", { titulo: "strip" }],
+      [70, 420, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
       [420, 700, "dados", { titulo: "dados" }],
       [700, 780, "calma"],
       [780, 1400, "jefe", { titulo: "debate" }],
@@ -287,8 +289,8 @@ const CALLES = [
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Des Moines: 2.600 m. La soja y los cerdos primero, el caucus y luego el dragon.
     tramos: [
-      [0, 150, "calma", { titulo: "locust" }],
-      [150, 450, "soja", { titulo: "soja" }],
+      [0, 70, "calma", { titulo: "locust" }],
+      [70, 450, "soja", { titulo: "soja" }],
       [450, 750, "cerdos", { titulo: "cerdos" }],
       [750, 830, "calma"],
       [830, 1150, "cosechadoras", { titulo: "cosechadoras" }],
@@ -359,8 +361,8 @@ const CALLES = [
     // seis median 3,2 km y seguian el mismo orden casi en los mismos metros.
     // Washington sigue en 3.300 m (es el final de la gira), con otro orden.
     tramos: [
-      [0, 150, "calma", { titulo: "pennsylvania" }],
-      [150, 500, "comitiva", { titulo: "comitiva" }],
+      [0, 90, "calma", { titulo: "pennsylvania" }],
+      [90, 500, "comitiva", { titulo: "comitiva" }],
       [500, 800, "mixto", { densidad: 0.5 }],
       [800, 900, "festin", { potenciador: "rocket", titulo: "cohete" }],
       [900, 1250, "autobuses", { titulo: "autobuses" }],

@@ -1355,7 +1355,7 @@ function checkCollisions(paso = 0) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
-    if (o.smashed || o.rozado || o.abierta) continue;   // (abierta: la barrera, con el brazo arriba)
+    if (o.smashed || o.rozado || o.abierta || o.fuera) continue;   // (abierta: la barrera, con el brazo arriba; fuera: se quedo en la acera)
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
     if (o.type === "bus") {
       // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
@@ -1843,7 +1843,12 @@ function frame(dtFijo) {
     elapsed += dt;
     if (nivelActual) {
       // Nivel: la velocidad va con lo recorrido (y un poco mas en el sprint).
-      const k = Math.min(1, distance / nivelActual.largo);
+      // 06/11 (2): Isidro: «algunos mapas largos al principio se hacen aburridos».
+      // La velocidad subia igual por todo el nivel y en Washington (3,3 km)
+      // apenas se notaba en el primer kilometro. Ahora en los primeros 350 m
+      // hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
+      const ARRANQUE = 350, L = nivelActual.largo;
+      const k = distance < ARRANQUE ? 0.45 * (distance / ARRANQUE) : 0.45 + 0.55 * Math.min(1, (distance - ARRANQUE) / Math.max(1, L - ARRANQUE));
       speed = BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k;
       if (tramoMostrado && tramoMostrado.tipo === "sprint") speed *= SPRINT_EXTRA;
     } else speed = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);

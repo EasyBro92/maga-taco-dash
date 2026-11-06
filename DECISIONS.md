@@ -1142,3 +1142,55 @@ Probado con el piloto en los seis niveles. Nueva York, Findlay, Las Vegas y
 Washington: cero choques, con 5–11 cambios de carril y hasta 19 cruces.
 Phoenix: un choque (una calavera). Des Moines: solo con la cosechadora, que
 ya pasaba antes y el piloto no sabe esquivar.
+
+## Coches que giran de verdad, boca de riego en la acera y salida más viva (2026-11-06)
+
+Isidro, tras jugar: «algunos mapas largos al principio se hacen aburridos, en
+NY por ejemplo hay obstáculos mal colocados, los coches giran raro, poco
+natural, hay bocas de agua en medio cuando deberían estar en la acera y
+tirando agua, anima el agua».
+
+- **Cambio de carril**: antes el coche se deslizaba de lado sin avanzar.
+  Ahora arranca, avanza unos 7 m en su sentido mientras se pasa de carril y
+  frena; el morro sigue la curva (unos 19°) y gira sobre las ruedas de atrás.
+  Los que se ven por detrás (taxi, coche de caballos, autocaravana,
+  descapotable, autobús escolar, cortacésped, furgoneta de las Fake News) se
+  alejan; la furgoneta de la prensa, que te mira, viene. Pasa por encima de
+  los tacos que pilla.
+- **Marcha atrás**: el taxi, la camioneta y la limusina se ven por detrás y
+  «arrancaban» hacia ti marcha atrás. Ya no arrancan; solo lo hacen los que
+  te miran (furgoneta, tractor, quitanieves) y la carroza y el carrito de
+  perritos.
+- **Boca de riego**: va en el bordillo de la acera, nunca en el carril del
+  centro, y el chorro cruza su carril (se salta). El agua corre por el
+  chorro, vuelan gotas, salpica al caer y el charco hace ondas; todo suave,
+  sin parpadeos.
+- **Salida**: la velocidad subía igual en todo el nivel y en Washington casi
+  no se notaba en el primer kilómetro. Ahora hace casi la mitad de la subida
+  en los primeros 350 m (de 13 a unos 17-18) y el resto poco a poco. La calma
+  del principio pasa de 150 m a 70-90 m en los cinco niveles largos.
+
+**Mal colocados** (medidos con el piloto buscando cosas que se meten unas en
+otras):
+
+- Dos coches que cambiaban a la vez al mismo carril se encontraban: ahora
+  cada uno cuenta hasta dónde llegará el otro.
+- Un cambio de carril podía dejar un hueco sin salida (a dos carriles del de
+  la fila siguiente, en Las Vegas): ahora desde cualquier carril libre se
+  llega a uno libre de la fila de al lado moviéndose uno.
+- Lo que bota, rueda o arranca ya no atraviesa potenciadores, chapas ni
+  objetos de la ciudad.
+- Lo que cruza no pasa por delante de lo que viene rodando o conduciendo:
+  espera en la acera y, si a 58 m aún no puede, se queda allí (y no choca).
+- Después de una fila cerrada en los tres carriles (vallas, el arco de la
+  chapa) la siguiente no lleva obstáculos: a 7 m salía a veces un coche en tu
+  carril estando aún en el aire.
+- Al empezar cada partida el juego creía que ibas a 17 (o a la velocidad de
+  la partida anterior) y los coches que vienen de frente recorrían más calle
+  de la prevista: en Washington una escolta atravesaba a los agentes.
+
+Probado con el piloto en los seis niveles: Nueva York, Findlay y Las Vegas
+sin choques; en Phoenix, saltos justos (serpiente, calavera); en Des Moines,
+la cosechadora de siempre y un ciervo; en Washington, a veces unos agentes
+justo después de la escolta (hay hueco, el piloto no lo ve). Entre 1 y 10
+cambios de carril por nivel.

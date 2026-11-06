@@ -246,24 +246,24 @@ def brazo(c1, c2, luces=None):
 
 # ---------------------------------------------------------------- Nueva York
 def hidrante():
-    """Una boca de riego abierta en pleno verano: el chorro cruza el carril
-    y deja un charco (se salta)."""
+    """Una boca de riego abierta en pleno verano, en el bordillo de la acera
+    (x = -1,65 desde el centro de su carril): el chorro cruza el carril y cae
+    en el charco (se salta). 06/11: Isidro la quería en la acera y con el agua
+    animada; el chorro, las gotas y las ondas los pone el juego."""
     rojo_h = mat('rojo_hidrante', 0xd8262e, 0.35)
-    cil(rojo_h, -0.62, 0, 0, 0.2, 0.08, 14)
-    cil(rojo_h, -0.62, 0, 0.08, 0.15, 0.5, 14)
-    cil(rojo_h, -0.62, 0, 0.58, 0.18, 0.06, 14)
-    esfera(rojo_h, -0.62, 0, 0.66, 0.15, 2, mitad=True)
-    cil(rojo_h, -0.62, 0, 0.78, 0.05, 0.08, 8)
+    X = -1.65
+    cil(rojo_h, X, 0, 0, 0.2, 0.08, 14)
+    cil(rojo_h, X, 0, 0.08, 0.15, 0.5, 14)
+    cil(rojo_h, X, 0, 0.58, 0.18, 0.06, 14)
+    esfera(rojo_h, X, 0, 0.66, 0.15, 2, mitad=True)
+    cil(rojo_h, X, 0, 0.78, 0.05, 0.08, 8)
     for s in (-1, 1):
-        cil(rojo_h, -0.62, s * 0.18, 0.38, 0.06, 0.12, 8, eje='Y')
-    cil(rojo_h, -0.45, 0, 0.42, 0.08, 0.14, 10, eje='X')                 # la boca abierta
-    agua = mat('agua_chorro', 0x8fd4ff, 0.15)
-    for i in range(12):                                                 # el chorro
-        t = i / 11
-        x = -0.36 + t * 1.25
-        z = 0.42 + 0.38 * math.sin(t * math.pi) - t * 0.35
-        esfera(agua, x, -0.02 * i, z, 0.08 + 0.05 * t, 1, esc=(1.3, 1, 0.8))
-    cil(mat('charco', 0x6fb8e8, 0.1), 0.2, 0, 0.0, 0.72, 0.01, 20)
+        cil(rojo_h, X, s * 0.18, 0.38, 0.06, 0.12, 8, eje='Y')
+    cil(rojo_h, X + 0.17, 0, 0.42, 0.08, 0.14, 10, eje='X')              # la boca abierta
+    caja(mat('tapa_boca', 0x3a3d44, 0.5), X + 0.27, 0, 0.32, 0.03, 0.2, 0.2)   # la llave, colgando
+    # El charco donde cae el chorro (oscuro y brillante: asfalto mojado) y el agua clara encima.
+    cil(mat('asfalto_mojado', 0x3c4352, 0.08), 0.3, 0, 0.0, 0.8, 0.008, 24)
+    cil(mat('charco', 0x7cc4ee, 0.05), 0.45, 0, 0.004, 0.5, 0.008, 22)
 
 def balon():
     """Un balón de baloncesto gigante que viene botando (se salta)."""

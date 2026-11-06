@@ -2322,7 +2322,7 @@ export function createWorld(scene) {
     pancarta: { choque: "high", medio: 0.45, alto: 2.5 },
     globos: { choque: "high", medio: 0.45, alto: 2.4 },
     guardaespaldas: { choque: "full", medio: 0.75, alto: 2.4, centro: 0 },
-    furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3, cambia: 0.75 },
+    furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3, cambia: 0.75, deFrente: true },
     patrulla: { choque: "full", medio: 1.3, alto: 1.2, centro: -1.3, mueve: 7 },
     autobus: { choque: "bus", alto: 1.55 },
     // Lo lanza el jefe: cae del cielo y rueda hacia el jugador. Se salta.
@@ -2392,7 +2392,7 @@ export function createWorld(scene) {
     segway: { choque: "full", medio: 0.45, alto: 2.0, centro: 0, cruza: true },
     // (intX, intZ: donde va el intermitente si no es en la esquina de atras)
     // Nueva York
-    hidrante: { choque: "low", medio: 0.5, alto: 0.95 },
+    hidrante: { choque: "low", medio: 0.35, alto: 0.95, orilla: true },
     balon: { choque: "low", medio: 0.45, alto: 0.9, mueve: 4, bota: true },
     semaforo: { choque: "high", medio: 0.3, alto: 2.4 },
     carruaje: { choque: "full", medio: 1.65, alto: 2.3, centro: -1.65, cambia: 1.26, intX: 0.62, intZ: 0.04 },
@@ -2457,10 +2457,13 @@ export function createWorld(scene) {
     // (mas pequeños que los de los edificios: de cerca tapaban el letrero)
     const halos = crearHalos(lucesDe("obstaculos/" + nombre), "obstaculos/" + nombre, 0.65);
     if (halos) g.add(halos);
-    const sombra = new THREE.Mesh(sombraGeo, sombraMat);
-    sombra.scale.set(m.ancho * 1.15, 1, m.fondo * 1.1 + 0.4);
-    sombra.position.set(0, 0.075, m.frente - m.fondo / 2);
-    g.add(sombra);
+    if (!(TIPOS[nombre] && TIPOS[nombre].orilla)) {
+      const sombra = new THREE.Mesh(sombraGeo, sombraMat);
+      sombra.scale.set(m.ancho * 1.15, 1, m.fondo * 1.1 + 0.4);
+      sombra.position.set(0, 0.075, m.frente - m.fondo / 2);
+      g.add(sombra);
+    }
+    if (nombre === "hidrante") g.userData.agua = aguaHidrante(g);
     if (nombre === "patrulla") {
       const roja = new THREE.Mesh(sirenaGeo, sirenaRoja);
       const azul = new THREE.Mesh(sirenaGeo, sirenaAzul);
@@ -2519,6 +2522,93 @@ export function createWorld(scene) {
       g.userData.vapor = vapor;
     }
     return g;
+  }
+  // 06/11 (2): Isidro: «hay bocas de agua en medio cuando deberian estar en la
+  // acera y tirando agua, anima el agua». La boca va en el bordillo y el chorro
+  // cruza su carril y cae en un charco (se salta): el agua corre por el chorro,
+  // vuelan gotas, salpica al caer y el charco hace ondas. Todo suave (nada parpadea).
+  const CHORRO = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1.38, 0.42, 0), new THREE.Vector3(-0.15, 1.4, 0), new THREE.Vector3(1.05, 0.06, 0));
+  let aguaTex = null, chorroAguaGeo = null, rocioGeo = null, gotaMat = null, ondaGeo = null;
+  function texturasAgua() {
+    if (aguaTex) return;
+    const c = document.createElement("canvas");
+    c.width = 128; c.height = 32;
+    const x = c.getContext("2d");
+    x.fillStyle = "rgba(205,236,255,0.8)"; x.fillRect(0, 0, 128, 32);
+    // Vetas claras a lo largo del chorro (pintadas dos veces para que no se vea la costura).
+    for (let i = 0; i < 16; i++) {
+      x.fillStyle = "rgba(255,255,255," + (0.3 + (i % 3) * 0.18) + ")";
+      for (const d of [0, -128]) x.fillRect(((i * 37) % 128) + d, (i * 7) % 30, 20 + (i % 4) * 9, 2 + (i % 2));
+    }
+    aguaTex = new THREE.CanvasTexture(c);
+    aguaTex.wrapS = aguaTex.wrapT = THREE.RepeatWrapping;
+    aguaTex.repeat.set(3, 1);
+    // El chorro se abre al salir: el tubo se ensancha a lo largo.
+    const tubo = (r, abre) => {
+      const geo = new THREE.TubeGeometry(CHORRO, 36, r, 10, false);
+      const p = geo.attributes.position, filas = 37, cada = 11, v = new THREE.Vector3();
+      for (let i = 0; i < filas; i++) {
+        const centro = CHORRO.getPoint(i / (filas - 1));
+        for (let j = 0; j < cada; j++) {
+          const k = i * cada + j;
+          v.fromBufferAttribute(p, k).sub(centro).multiplyScalar(1 + abre * (i / (filas - 1))).add(centro);
+          p.setXYZ(k, v.x, v.y, v.z);
+        }
+      }
+      return geo;
+    };
+    chorroAguaGeo = tubo(0.085, 1.2);
+    rocioGeo = tubo(0.15, 1.5);
+    const g = document.createElement("canvas");
+    g.width = g.height = 32;
+    const gx = g.getContext("2d");
+    const gr = gx.createRadialGradient(16, 16, 1, 16, 16, 16);
+    gr.addColorStop(0, "rgba(255,255,255,0.95)");
+    gr.addColorStop(0.45, "rgba(200,235,255,0.6)");
+    gr.addColorStop(1, "rgba(190,230,255,0)");
+    gx.fillStyle = gr; gx.fillRect(0, 0, 32, 32);
+    gotaMat = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(g), transparent: true, depthWrite: false });
+    ondaGeo = new THREE.RingGeometry(0.5, 0.58, 32);
+    ondaGeo.rotateX(-Math.PI / 2);
+  }
+  function aguaHidrante(g) {
+    if (typeof document === "undefined") return null;
+    texturasAgua();
+    const nucleo = new THREE.Mesh(chorroAguaGeo, new THREE.MeshBasicMaterial({ map: aguaTex, color: 0xb8e2ff, transparent: true, opacity: 0.92, depthWrite: false }));
+    const rocio = new THREE.Mesh(rocioGeo, new THREE.MeshBasicMaterial({ map: aguaTex, color: 0xdff2ff, transparent: true, opacity: 0.34, depthWrite: false }));
+    g.add(nucleo, rocio);
+    const sprite = () => { const s = new THREE.Sprite(gotaMat.clone()); g.add(s); return s; };
+    const gotas = Array.from({ length: 9 }, sprite);
+    const salpica = Array.from({ length: 5 }, sprite);
+    const ondas = [0, 1].map(() => {
+      const r = new THREE.Mesh(ondaGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+      r.position.set(0.45, 0.035, 0);
+      g.add(r);
+      return r;
+    });
+    return { gotas, salpica, ondas };
+  }
+  function moverAgua(a, fase) {
+    aguaTex.offset.x = -((animClock * 1.8) % 1);
+    a.gotas.forEach((s, k) => {
+      const f = (animClock * 1.1 + k / a.gotas.length + fase) % 1;
+      const p = CHORRO.getPoint(Math.min(1, f * 1.05));
+      s.position.set(p.x, p.y + Math.sin(k * 7.3) * 0.1 * f, Math.sin(k * 3.1) * 0.14 * f);
+      s.scale.setScalar(0.14 + f * 0.16);
+      s.material.opacity = Math.sin(f * Math.PI) * 0.85;
+    });
+    a.salpica.forEach((s, k) => {
+      const f = (animClock * 1.5 + k / a.salpica.length + fase) % 1;
+      const ang = k * 2.4 + fase;
+      s.position.set(1.05 + Math.cos(ang) * 0.4 * f, 0.08 + Math.sin(f * Math.PI) * 0.42, Math.sin(ang) * 0.45 * f);
+      s.scale.setScalar(0.18 + f * 0.3);
+      s.material.opacity = Math.sin(f * Math.PI) * 0.6;
+    });
+    a.ondas.forEach((r, k) => {
+      const f = (animClock * 0.55 + k / a.ondas.length + fase) % 1;
+      r.scale.setScalar(0.3 + f * 0.8);
+      r.material.opacity = Math.sin(f * Math.PI) * 0.4;
+    });
   }
   // Textura de una bocanada de vapor (redonda, blanca y difuminada).
   const vaporMat = new THREE.SpriteMaterial({
@@ -2593,7 +2683,7 @@ export function createWorld(scene) {
     const obj = obstaclePools[pool].acquire();
     obj.visible = true;
     obj.position.set(LANE_X[lane], 0, z);
-    obj.rotation.set(0, nombre === "vaca" || nombre === "cerdo" ? (Math.random() < 0.5 ? 0 : Math.PI) : 0, 0);
+    obj.rotation.set(0, nombre === "vaca" || nombre === "cerdo" ? (Math.random() < 0.5 ? 0 : Math.PI) : t.orilla && lane === 2 ? Math.PI : 0, 0);
     if (!obj.parent) group.add(obj);
     const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
       medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
@@ -2623,17 +2713,24 @@ export function createWorld(scene) {
     // Lo que viene botando o rodando va algo mas rapido que la calle: solo si
     // su carril esta libre en los 60 m de delante (los que le da tiempo a
     // alcanzar); si no, bota en su sitio.
-    if (t.mueve && (t.bota || t.rueda) && obstacles.some((p) => p !== o && !p.smashed && p.lane === o.lane && p.z > o.z && p.z < o.z + 60)) o.mueve = 0;
+    if (t.mueve && (t.bota || t.rueda) && (obstacles.some((p) => p !== o && !p.smashed && p.lane === o.lane && p.z > o.z && p.z < o.z + 60) ||
+      premioEn(o.lane, o.z, o.z + 60))) o.mueve = 0;
     // La acera de la que sale se elige en su primer fotograma, con la fila ya entera.
     if (t.cruza) o.cruce = { lado: 0, fase: 0, azar: Math.random() };
   }
   // Mejor del lado contrario a su carril (asi cruza casi toda la calle), pero
   // nunca a traves de otro obstaculo de su fila: entonces sale de la acera de su lado.
+  // 06/11 (2): tampoco por delante de lo que viene rodando o conduciendo hacia
+  // ti por esos carriles (en Phoenix el vaquero atravesaba las rodadoras).
+  function caminoLibre(o, lado) {
+    const pasa = LANES.filter((l) => (lado > 0 ? l > o.lane : l < o.lane));
+    return !obstacles.some((p) => p !== o && !p.smashed && pasa.includes(p.lane) &&
+      (Math.abs(p.z - o.z) < 4 || (p.mueve > 0 && p.z < o.z + 4 && p.z > o.z - 60))) &&
+      !pasa.some((l) => premioEn(l, o.z - 3, o.z + 3));
+  }
   function aceraDeCruce(o) {
-    const libre = (lado) => !obstacles.some((p) => p !== o && !p.smashed && Math.abs(p.z - o.z) < 4 &&
-      (lado > 0 ? p.lane > o.lane : p.lane < o.lane));
     const lejos = o.lane === 0 ? 1 : o.lane === 2 ? -1 : (o.cruce.azar < 0.5 ? -1 : 1);
-    return libre(lejos) ? lejos : -lejos;
+    return caminoLibre(o, lejos) ? lejos : -lejos;
   }
   // Los carriles sin nada que esquivar en la fila de z (sin contar `sin`, y con `con` cerrado).
   function carrilesLibres(z, sin, con) {
@@ -2648,44 +2745,92 @@ export function createWorld(scene) {
     return libres;
   }
   const alLado = (a, b) => [...a].some((x) => [...b].some((y) => Math.abs(x - y) <= 1));
+  // Potenciadores, chapas y objetos de la ciudad en un carril entre dos z (nada los atraviesa).
+  function premioEn(l, desde, hasta) {
+    const en = (p) => !p.collected && p.lane === l && p.z > desde && p.z < hasta;
+    return powerups.some(en) || chapas.some(en) || tacos.some((t) => t.obj !== undefined && en(t));
+  }
+  // 06/11 (2): Isidro: «los coches giran raro, poco natural»: se deslizaban de
+  // lado sin avanzar. Ahora arrancan, avanzan unos metros en su sentido (los
+  // que se ven por detras se alejan; la furgoneta de la prensa, que te mira,
+  // viene) mientras se pasan de carril con el morro siguiendo la curva, y se paran.
+  const CAMBIO_T = 2.2, CAMBIO_V = 5.5, CAMBIO_D = (CAMBIO_V * CAMBIO_T * 2) / Math.PI;
+  const sentidoDe = (o) => (TIPOS[o.pool] && TIPOS[o.pool].deFrente ? 1 : -1);
+  // Donde tiene que empezar para haber acabado a 28 m del jugador.
+  const inicioCambio = (o) => -Math.max(55, 28 + (ritmo + sentidoDe(o) * 3.5) * CAMBIO_T);
   function carrilParaCambiar(o, l) {
+    const s = sentidoDe(o), largo = 2 * o.medio, zFin = o.z + s * CAMBIO_D;
+    // Lo que barre: de donde esta a donde acaba, con su largo y un margen.
+    const desde = Math.min(o.z, zFin) - largo - 2.5, hasta = Math.max(o.z, zFin) + 2.5;
+    if (premioEn(l, desde, hasta)) return false;
     let antes = null, despues = null;
     for (const p of obstacles) {
       if (p === o || p.smashed) continue;
-      // Nada en el carril al que va, ni en su fila ni pegado delante o detras.
-      if (p.lane === l && p.z > o.z - 9 && p.z < o.z + 4) return false;
-      if (p.mueve && p.lane === l) return false;
-      // Las filas con algo que esquivar mas cerca de el (antes) y mas lejos (despues).
+      let a = p.z + p.centro - p.medio, b = p.z + p.centro + p.medio;
+      const carriles = [p.lane];
+      if (p.cambio && p.cambio.t < 1) {
+        carriles.push(p.cambio.a, p.cambio.de);
+        // El que ya esta cambiando aun va a avanzar: cuenta tambien hasta donde llegara.
+        const sp = sentidoDe(p) * CAMBIO_D * (1 - p.cambio.t);
+        if (sp < 0) a += sp; else b += sp;
+      }
+      // Nada en el carril al que va en todo lo que barre, ni otro que vaya a el.
+      if (carriles.includes(l) && b > desde && a < hasta) return false;
+      if (p.mueve && carriles.includes(l)) return false;
+      // Ni pegado en su propio carril por donde avanza antes de salir.
+      // (Hasta que sale del todo avanza unos 7 m: la furgoneta de las Fake News rozaba una valla.)
+      if (p.lane === o.lane && (s < 0 ? b > o.z - largo - 8 && b <= o.z - largo + 0.5 : a < o.z + 8 && a >= o.z - 0.5)) return false;
+      // Ni con alguien cruzando la calle cerca.
+      if (p.cruce && p.cruce.fase < 2 && p.z > desde - 1.5 && p.z < hasta + 1.5) return false;
+      // Las filas con algo que esquivar mas cerca (antes) y mas lejos (despues) de donde acaba.
       if (p.type !== "full") continue;
-      if (p.z > o.z + 4 && p.z < o.z + 18 && (antes === null || p.z < antes)) antes = p.z;
-      if (p.z < o.z - 4 && p.z > o.z - 18 && (despues === null || p.z > despues)) despues = p.z;
+      if (p.z > zFin + 4 && p.z < zFin + 18 && (antes === null || p.z < antes)) antes = p.z;
+      if (p.z < zFin - 4 && p.z > zFin - 18 && (despues === null || p.z > despues)) despues = p.z;
     }
     // Justa: despues del cambio su fila sigue teniendo un carril libre al lado
     // del libre de la fila de antes y de la de despues (nunca dos carriles de golpe).
-    const ahora = carrilesLibres(o.z, o, l);
+    // 06/11 (2): y sin callejones: desde CUALQUIER carril libre de una fila se
+    // llega a uno libre de la siguiente moviendose uno (en Las Vegas un
+    // descapotable dejaba un hueco a dos carriles del de la fila de detras).
+    // La fila de la que sale ya no lo cuenta (se habra ido al llegar el jugador).
+    const ahora = carrilesLibres(zFin, o, l);
     if (!ahora.size) return false;
-    if (antes !== null && !alLado(carrilesLibres(antes), ahora)) return false;
-    if (despues !== null && !alLado(ahora, carrilesLibres(despues))) return false;
+    // (Con 11 m o mas entre filas da tiempo a cruzar dos carriles.)
+    const sigue = (a, b, hueco) => hueco >= 11 ? alLado(a, b) : [...a].every((x) => [...b].some((y) => Math.abs(x - y) <= 1));
+    if (antes !== null && !sigue(carrilesLibres(antes, o), ahora, antes - zFin)) return false;
+    if (despues !== null && !sigue(ahora, carrilesLibres(despues, o), zFin - despues)) return false;
     return true;
   }
   const suave = (k) => k * k * (3 - 2 * k);
   function moverNuevo(o, dt) {
     const m = o.mesh;
-    if (o.puedeCambiar && !o.mueve && o.z > -90) {
+    if (o.puedeCambiar && !o.mueve && o.z > inicioCambio(o) - 28) {
       o.puedeCambiar = false;
       const destinos = [o.lane - 1, o.lane + 1].filter((l) => l >= 0 && l <= 2 && carrilParaCambiar(o, l));
-      if (destinos.length) o.cambio = { a: elegirDe(destinos), desde: LANE_X[o.lane], t: 0 };
+      if (destinos.length) o.cambio = { a: elegirDe(destinos), de: o.lane, desde: LANE_X[o.lane], t: 0 };
     }
     if (o.cambio) {
-      const c = o.cambio, dir = Math.sign(LANE_X[c.a] - c.desde);
+      const c = o.cambio, salto = LANE_X[c.a] - c.desde, dir = Math.sign(salto), s = sentidoDe(o);
       const ints = m.userData.intermitentes;
       if (ints) ints.forEach((h, i) => { h.material.opacity = c.t < 1 && (i === 0) === (dir < 0) ? 0.35 + 0.35 * Math.sin(animClock * 8) : 0; });
-      if (o.z > -62 && c.t < 1) {
-        c.t = Math.min(1, c.t + dt / 0.9);
-        m.position.x = c.desde + (LANE_X[c.a] - c.desde) * suave(c.t);
-        m.rotation.y = -dir * 0.14 * Math.sin(Math.PI * c.t);
-        if (Math.abs(m.position.x - LANE_X[c.a]) < Math.abs(m.position.x - c.desde)) o.lane = c.a;
-        if (c.t === 1) { o.lane = c.a; m.rotation.y = 0; }
+      if (c.t < 1 && (c.t > 0 || o.z > inicioCambio(o))) {
+        c.t = Math.min(1, c.t + dt / CAMBIO_T);
+        // Arranca, avanza y frena; el paso de carril va en medio, cuando ya anda.
+        const v = CAMBIO_V * Math.sin(Math.PI * c.t);
+        o.z += s * v * dt;
+        const w = Math.min(1, Math.max(0, (c.t - 0.1) / 0.8));
+        const vx = (salto * 6 * w * (1 - w)) / (0.8 * CAMBIO_T);
+        // El morro apunta hacia donde va (los que se ven por detras miran a -z).
+        const giro = Math.atan2(s * vx, Math.max(0.5, v));
+        m.rotation.y = giro;
+        // Gira sobre las ruedas de atras (la furgoneta tiene el origen en el morro).
+        m.position.x = c.desde + salto * suave(w) + (s > 0 ? 1.5 : 0.4) * o.medio * Math.sin(giro);
+        if (w > 0.5) o.lane = c.a;
+        if (c.t === 1) { o.lane = c.a; m.rotation.y = 0; m.position.x = LANE_X[c.a]; }
+        // Pasa por encima de los tacos que pilla (como los coches que arrancan).
+        for (const t of tacos) {
+          if (!t.collected && t.obj === undefined && Math.abs(t.mesh.position.x - m.position.x) < 1.1 && t.z < o.z + 0.4 && t.z > o.z - 2 * o.medio - 0.4) { t.collected = true; t.atropellado = true; }
+        }
       }
     }
     if (o.cruce) {
@@ -2695,7 +2840,11 @@ export function createWorld(scene) {
         m.position.x = c.lado * 6.4;
         m.rotation.y = c.lado > 0 ? Math.PI : 0;
       }
-      if (c.fase === 0 && o.z > -95) c.fase = 1;
+      // Si viene algo por su camino, espera en la acera; si a 58 m aun no puede, se queda alli.
+      if (c.fase === 0 && o.z > -95) {
+        if (caminoLibre(o, c.lado)) c.fase = 1;
+        else if (o.z > -58) { c.fase = 3; o.fuera = true; }
+      }
       if (c.fase === 1) {
         const falta = destino - m.position.x;
         const tiempo = Math.max(0.2, (-o.z - 32) / Math.max(8, ritmo));
@@ -3092,6 +3241,8 @@ export function createWorld(scene) {
       if (o.smashed || o.z <= z || o.z > z + alcance) continue;
       if (o.lane === lane) return false;
     }
+    // 06/11 (2): ni potenciadores, chapas u objetos (la furgoneta atravesaba un microfono).
+    if (premioEn(lane, z, z + alcance)) return false;
     const filas = {};
     for (const o of obstacles) {
       if (o.smashed || o.z <= z || o.type !== "full") continue;
@@ -3512,17 +3663,28 @@ export function createWorld(scene) {
   // 05/11: «haz mas dinamicos los modelos». Algunos coches parados arrancan y
   // vienen hacia ti (como los trenes de Subway Surfers), si no deja la fila
   // imposible (cocheCabe, lo mismo que mira el coche patrulla).
-  const CONDUCEN = new Set(["taxi", "furgoneta", "pickup", "limusina", "tractor", "quitanieves", "carroza", "perritos"]);
+  // 06/11 (2): solo los que miran hacia ti (o no tienen delante ni detras). El
+  // taxi, la camioneta y la limusina se ven por detras: venian marcha atras.
+  const CONDUCEN = new Set(["furgoneta", "tractor", "quitanieves", "carroza", "perritos"]);
   function quizaArranca(o, z) {
     if (!CONDUCEN.has(o.pool) || o.mueve || Math.random() > 0.35) return;
     if (cocheCabe(o.lane, z, 4)) o.mueve = 4;
   }
   // Carril que se deja libre un trecho (detras de una chapa escondida).
   let reserva = null;
+  // 06/11 (2): despues de una fila cerrada en los tres carriles (vallas, el
+  // arco de la chapa...) la siguiente no lleva obstaculos: a 7 m, con el
+  // jugador aun en el aire, salia a veces un coche en su carril.
+  let ultimaCerrada = -1e9, respiro = false;
   function obst(lane, type, z, d, lista) {
-    if (lane === carrilOcupado) return null;
+    if (lane === carrilOcupado || respiro) return null;
     if (reserva && lane === reserva.lane && d > reserva.desde && d <= reserva.hasta) return null;
-    return spawnObstacle(lane, type, z, USAR_BLENDER ? nombreObstaculo(type, d, lista) : undefined);
+    let nombre = USAR_BLENDER ? nombreObstaculo(type, d, lista) : undefined;
+    // 06/11 (2): lo que va en la acera (la boca de riego) nunca sale en el carril del centro.
+    const orilla = (n) => n && TIPOS[n] && TIPOS[n].orilla;
+    for (let i = 0; i < 5 && lane === 1 && orilla(nombre); i++) nombre = nombreObstaculo(type, d, lista);
+    if (lane === 1 && orilla(nombre)) nombre = DE_TIPO[type].find((n) => obstaclePools[n] && !orilla(n));
+    return spawnObstacle(lane, type, z, nombre);
   }
   // 05/11: Isidro: «en todos los niveles hay demasiados tacos, se hace
   // monotono». Antes salian unos 0,6 por metro, casi siempre en los tres
@@ -4006,12 +4168,16 @@ export function createWorld(scene) {
       const t = tramoEn(d);
       const k = Math.round((d - t.desde) / ROW_SPACING);
       filaD = d; tacosFila = 0; maxFila = t.tipo === "festin" ? 2 : 1; carrilTacos = -1;
+      respiro = d > ultimaCerrada && d - ultimaCerrada <= ROW_SPACING + 0.5;
       (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
       if (nivel && nivel.objeto && USAR_BLENDER) {
         const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && Math.abs(sd - d) <= ROW_SPACING / 2);
         if (i >= 0) { objHechos.add(i); ponerObjeto(z, i); }
       }
-    } finally { carrilOcupado = -1; filaD = null; }
+    } finally {
+      carrilOcupado = -1; filaD = null; respiro = false;
+      if (new Set(obstacles.filter((o) => o.z === z && o.type !== "bus").map((o) => o.lane)).size === 3) ultimaCerrada = d;
+    }
   }
 
   function ensureRows() {
@@ -4586,6 +4752,7 @@ export function createWorld(scene) {
         o.mesh.userData.sirena[0].visible = on;
         o.mesh.userData.sirena[1].visible = !on;
       }
+      if (o.mesh.userData.agua && !o.smashed) moverAgua(o.mesh.userData.agua, o.phase);
       if (o.mesh.userData.vapor) {
         // El vapor de la alcantarilla sube, crece y se deshace.
         o.mesh.userData.vapor.forEach((s, k) => {
@@ -4677,6 +4844,12 @@ export function createWorld(scene) {
   // los que se empieza). `chapasHechas`: las chapas que ya no hay que poner.
   function reset(desde = 0, opciones = {}) {
     totalScrolled = desde;
+    // 06/11 (2): se sale a 13 (BASE_SPEED de main.js). Antes seguia el ritmo de
+    // la partida anterior (o 17) y los coches de la salida, que se calculan con
+    // el, recorrian mas calle de la prevista: en Washington una escolta
+    // atravesaba a los agentes a 130 m.
+    ritmo = 13;
+    ultimaCerrada = -1e9;
     reiniciarVida();
     cajasCarrera = opciones.cajaHecha ? 1 : 0;
     perseguir(false, true);
