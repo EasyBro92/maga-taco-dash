@@ -1730,7 +1730,8 @@ export function createWorld(scene) {
       // Las Vegas (29/10): cielo morado arriba y rosa en el horizonte, la
       // bruma malva y la calzada oscura; los neones ponen la luz.
       // 31/10: mas contraste (Isidro): cielo mas oscuro, niebla mas oscura y menos lavada.
-      Object.assign(BIOME_COLORS.city, { sky: 0xe27c9a, skyTop: 0x1c1748, fog: 0x7a5c90, horizon: 0x3a2c5c, ground: 0x8e8096, sidewalk: 0xa898aa, road: 0x3a3c48 });
+      // 06/11 (4): la calzada algo mas clara: los obstaculos oscuros se perdian en ella.
+      Object.assign(BIOME_COLORS.city, { sky: 0xe27c9a, skyTop: 0x1c1748, fog: 0x7a5c90, horizon: 0x3a2c5c, ground: 0x8e8096, sidewalk: 0xa898aa, road: 0x585a68 });
     }
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });

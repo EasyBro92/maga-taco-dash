@@ -1251,3 +1251,16 @@ Cómo va por dentro:
 Probado con el piloto en los seis niveles: ningún choque dentro de los
 momentos. Quedan los fallos de siempre del piloto: la cosechadora de Des
 Moines y alguna barrera.
+
+## Las Vegas, más clara (2026-11-06)
+
+Isidro: «el mapa de las Vegas es algo oscuro, cuesta ver los obstáculos». El
+sol del anochecer venía de delante, así que la cara de cada obstáculo que mira
+al jugador quedaba a oscuras sobre una calzada también oscura. Ahora:
+- una luz suave por detrás de la cámara (`fill`) ilumina esas caras;
+- el relleno del cielo (`hemi`) es más claro;
+- la calzada es algo más clara.
+
+El cielo morado y los neones no cambian. Medido en la parte de la calle de la
+pantalla, el brillo sube de 49 a 79; el de Nueva York es 112 y el de
+Washington, 100.

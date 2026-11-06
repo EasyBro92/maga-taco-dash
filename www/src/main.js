@@ -302,6 +302,7 @@ let fin = null;
 const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.position.clone(), hemi: hemi.color.getHex(), suelo: hemi.groundColor.getHex() };
 function aplicarLuz(luz) {
   sunGlare.visible = true;
+  fill.color.set(0xffffff); fill.intensity = 0.35; fill.position.set(-3, 4, -6);
   if (camera.far !== 320) { camera.far = 320; camera.updateProjectionMatrix(); }
   if (luz === "manana") {
     // Mañana: sol claro y algo bajo, de frente a la derecha; cielo limpio.
@@ -318,8 +319,14 @@ function aplicarLuz(luz) {
   } else if (luz === "anochecer") {
     // Anochecer (Las Vegas): el sol ya casi no esta, luz rosada y baja desde
     // el oeste; el cielo morado da la luz de relleno. Lo demas lo ponen los neones.
-    sun.color.set(0xff9f95); sun.intensity = 0.9; sun.position.set(-8, 4, -1);
-    hemi.color.set(0xa090e0); hemi.groundColor.set(0x3c2c46);
+    // 06/11 (4): Isidro: «el mapa de Las Vegas es algo oscuro, cuesta ver los
+    // obstaculos». El sol venia de delante y lo que se ve de cada obstaculo (la
+    // cara que mira al jugador) quedaba a oscuras. Ahora una luz suave por
+    // detras de la camara, como la de las farolas y los neones, ilumina esa
+    // cara, y el relleno del cielo es mas claro. El cielo sigue de noche.
+    sun.color.set(0xffaaa0); sun.intensity = 1.0; sun.position.set(-8, 4, -1);
+    hemi.color.set(0xd0c4f6); hemi.groundColor.set(0x6a5878);
+    fill.color.set(0xfff0e8); fill.intensity = 1.15; fill.position.set(1.5, 6, 10);
   } else if (luz === "invierno") {
     // Mañana de invierno (Des Moines): sol bajo y blanco por delante a la
     // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
