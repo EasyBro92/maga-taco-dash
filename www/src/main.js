@@ -1556,7 +1556,7 @@ function checkPowerups() {
     } else if (p.kind === "rocket") {
       rocketTimeLeft = ROCKET_DURATION;
       if (monturaCohete) monturaCohete.visible = true;
-      world.setCielo(true);
+      world.setCielo(true, speed * (boostTimeLeft > 0 ? BOOST_MULT : 1), ROCKET_DURATION);
       isSliding = false; character.setSlidePose(false);
       showBubble(t("powerupRocket") + "!");
       flashExpression("happy", 1.5);
@@ -1599,7 +1599,7 @@ if (PRUEBA) {
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
     rayo: () => { freezeTimeLeft = FREEZE_DURATION; },
-    cohete: () => { rocketTimeLeft = ROCKET_DURATION; if (monturaCohete) monturaCohete.visible = true; world.setCielo(true); },
+    cohete: () => { rocketTimeLeft = ROCKET_DURATION; if (monturaCohete) monturaCohete.visible = true; world.setCielo(true, speed, ROCKET_DURATION); },
     jefe: () => { nextJefeAt = 0; },
     // Empieza el nivel de Washington (o el que se diga) sin pasar por el mapa.
     nivel: async (id = "washington") => { await empezarNivel(NIVELES.find((n) => n.id === id)); },
@@ -1892,7 +1892,7 @@ function frame(dtFijo) {
       // Las ultimas filas antes de aterrizar salen vacias: se aterriza limpio.
       if (rocketTimeLeft < 1.6) world.setCielo(false);
       if (monturaCohete) monturaCohete.rotation.z = Math.sin(elapsed * 9) * 0.05;
-      if (rocketTimeLeft === 0 && monturaCohete) monturaCohete.visible = false;
+      if (rocketTimeLeft === 0) { if (monturaCohete) monturaCohete.visible = false; world.quitarCielo(); }
       updatePowerupBadge();
     }
 

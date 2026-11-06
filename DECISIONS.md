@@ -1059,3 +1059,20 @@ automático y él eligió (tras compararlo con Subway Surfers y Minion Rush):
 Pendiente, elegido por él: el momento estrella de cada nivel (en Blender, uno
 por uno), dos o tres obstáculos nuevos por ciudad y las animaciones del
 presidente con Meshy (enseñarle antes los créditos).
+
+## Los tacos del cohete ya no se quedan en el aire (2026-11-06)
+
+Isidro: «en todos los niveles, cuando se acaba el cohete presidencial se siguen
+viendo los tacos en el aire». Al despegar se llenaba de tacos el cielo hasta el
+horizonte (280 m) y las filas nuevas eran solo tacos del cielo, pero el vuelo
+recorre unos 130 m: el resto se quedaba flotando al aterrizar, encima de una
+calle vacía. Ahora:
+
+- La calle se sigue llenando como siempre mientras se vuela (los niveles salen
+  iguales con cohete o sin él).
+- En el cielo solo hay tacos hasta donde llega el vuelo, menos el último
+  segundo y medio.
+- Donde se aterriza no queda ningún obstáculo (los autobuses sí, se cae en el techo).
+- Al acabar, los que quedasen arriba se van con un destello (`quitarCielo`).
+
+Probado en cinco niveles: ningún choque al aterrizar y ningún taco arriba.

@@ -2922,18 +2922,39 @@ export function createWorld(scene) {
     for (let i = -2; i <= 2; i++) spawnTaco(lane, z - i * 1.1, 0.9 + 1.25 * (1 - (i * i) / 5), oro && i === 0);
   }
 
-  // ---- Cohete: mientras se vuela, las filas nuevas son tacos en el cielo ----
+  // ---- Cohete: tacos en el cielo mientras se vuela ----
+  // 06/11: Isidro: «una vez se acaba el cohete, se siguen viendo los tacos en
+  // el aire». Antes, al despegar se llenaba el cielo de tacos hasta el
+  // horizonte (280 m) y las filas nuevas eran solo tacos del cielo, pero el
+  // vuelo recorre unos 130 m: el resto se quedaba flotando al aterrizar,
+  // encima de una calle vacia. Ahora la calle se sigue llenando como siempre,
+  // el cielo solo tiene tacos hasta donde llega el vuelo (menos el ultimo
+  // segundo y medio, para aterrizar limpio), donde se aterriza no queda ningun
+  // obstaculo y, al acabar, los que quedasen arriba se van con un destello.
   let cielo = false, carrilCielo = 1;
-  function setCielo(v) {
-    // Al despegar se llena de tacos el cielo de delante: si no, los primeros
-    // tardarian 5 s en llegar desde el horizonte y el vuelo dura 6.5.
+  // vel: metros por segundo; tiempo: segundos de vuelo.
+  function setCielo(v, vel = 20, tiempo = 6.5) {
     if (v && !cielo) {
-      for (let z = -10; z > lastRowZ; z -= 1.4) {
+      const hasta = -Math.max(20, vel * (tiempo - 1.6));
+      for (let z = -10; z > hasta; z -= 1.4) {
         if (Math.random() < 0.12) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
         spawnTaco(carrilCielo, z, CIELO_Y + 0.9);
       }
+      // Donde se aterriza (al acabar el vuelo y caer), sin obstaculos.
+      const aterriza = vel * (tiempo + 0.8);
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const o = obstacles[i];
+        if (o.type === "bus" || o.z > -(aterriza - 15) || o.z < -(aterriza + 30)) continue;
+        o.mesh.position.y = 0;
+        if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; }
+        obstaclePools[o.pool].release(o.mesh);
+        obstacles.splice(i, 1);
+      }
     }
     cielo = v;
+  }
+  function quitarCielo() {
+    for (const it of tacos) if (!it.collected && it.baseY >= CIELO_Y) { it.collected = true; it.atropellado = true; }
   }
 
   // ---- Jefe: el Burrito-Bot (22/10/2026) ----
@@ -3769,12 +3790,6 @@ export function createWorld(scene) {
   function generarFila(z) {
     const d = totalScrolled - z;
     if (nivel && d > nivel.largo - 30) return;
-    if (cielo) {
-      // Volando en cohete: una hilera de tacos en el cielo que va cambiando de carril.
-      if (Math.random() < 0.5) carrilCielo = Math.max(0, Math.min(2, carrilCielo + (Math.random() < 0.5 ? -1 : 1)));
-      for (let i = 0; i < 5; i++) spawnTaco(carrilCielo, z - i * 1.4, CIELO_Y + 0.9);
-      return;
-    }
     carrilOcupado = busFilas > 0 ? busCarril : -1;
     if (busFilas > 0) busFilas--;
     try {
@@ -4521,7 +4536,7 @@ export function createWorld(scene) {
   showMidLayer("city");
 
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
-    congelar, setCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
+    congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor };
 }
