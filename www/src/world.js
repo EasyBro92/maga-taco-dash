@@ -2322,7 +2322,7 @@ export function createWorld(scene) {
     pancarta: { choque: "high", medio: 0.45, alto: 2.5 },
     globos: { choque: "high", medio: 0.45, alto: 2.4 },
     guardaespaldas: { choque: "full", medio: 0.75, alto: 2.4, centro: 0 },
-    furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3 },
+    furgoneta: { choque: "full", medio: 1.3, alto: 2.8, centro: -1.3, cambia: 0.75 },
     patrulla: { choque: "full", medio: 1.3, alto: 1.2, centro: -1.3, mueve: 7 },
     autobus: { choque: "bus", alto: 1.55 },
     // Lo lanza el jefe: cae del cielo y rueda hacia el jugador. Se salta.
@@ -2331,7 +2331,7 @@ export function createWorld(scene) {
   // 27/10: los de cada ciudad (blender/obstaculos2.py). Si alguno no carga,
   // se usan los de siempre.
   const TIPOS_LOCALES = {
-    taxi: { choque: "full", medio: 1.4, alto: 1.5, centro: -1.4 },
+    taxi: { choque: "full", medio: 1.4, alto: 1.5, centro: -1.4, cambia: 0.55 },
     alcantarilla: { choque: "low", medio: 0.55, alto: 0.8 },
     andamio: { choque: "high", medio: 0.45, alto: 2.5 },
     contenedor: { choque: "full", medio: 1.15, alto: 1.35, centro: -1.15 },
@@ -2382,6 +2382,14 @@ export function createWorld(scene) {
     votantes: { choque: "full", medio: 1.2, alto: 2.0, centro: -0.85 },
     // 03/11: la bola de fuego del dragon de China: cae de su boca y rueda hacia ti. Se salta.
     bola_fuego: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
+    // 06/11: cinco nuevos por ciudad, con movimiento (blender/obstaculos3.py).
+    //   cambia: altura del intermitente (se pasa al carril de al lado)
+    //   cruza: viene de la acera y se para en su carril · barrera: el brazo sube y baja
+    microfonos: { choque: "low", medio: 0.4, alto: 0.95 },
+    barrera_control: { choque: "low", medio: 0.25, alto: 1.05, barrera: true },
+    dron_tele: { choque: "high", medio: 0.5, alto: 2.4, flota: true },
+    furgoneta_fake: { choque: "full", medio: 1.45, alto: 2.0, centro: -1.45, cambia: 0.92 },
+    segway: { choque: "full", medio: 0.45, alto: 2.0, centro: 0, cruza: true },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2439,6 +2447,34 @@ export function createWorld(scene) {
       azul.position.set(0.28, 0.58, 0.06);
       g.add(roja, azul);
       g.userData.sirena = [roja, azul];
+    }
+    // 06/11: el brazo de la barrera va en su pieza (la bisagra es su origen).
+    if (hayModelo("obstaculos/" + nombre + "_brazo")) {
+      const brazo = modelo("obstaculos/" + nombre + "_brazo");
+      brazo.position.set(-0.72, 0.95, 0);
+      g.add(brazo);
+      g.userData.brazo = brazo;
+    }
+    const tipo = TIPOS[nombre];
+    if (tipo && tipo.cambia) {
+      // Los intermitentes, en las esquinas de atras: un brillo ambar suave.
+      g.userData.intermitentes = [-1, 1].map((s) => {
+        const h = halo(0.9, 0, 0xffa21a);
+        h.position.set(s * (m.ancho / 2 - 0.12), tipo.cambia, m.frente + 0.05);
+        g.add(h);
+        return h;
+      });
+    }
+    if (tipo && tipo.flota) {
+      // Las cuatro helices: discos borrosos (girando no se veria nada mejor, y asi no parpadean).
+      const disco = new THREE.MeshBasicMaterial({ color: 0x3a3d44, transparent: true, opacity: 0.28, depthWrite: false });
+      const geo = new THREE.CircleGeometry(0.26, 20);
+      geo.rotateX(-Math.PI / 2);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const d = new THREE.Mesh(geo, disco);
+        d.position.set(sx * 0.58, 1.82, sz * 0.44);
+        g.add(d);
+      }
     }
     if (nombre === "alcantarilla") {
       // El vapor que sale de la alcantarilla: tres bocanadas que suben y se deshacen.
@@ -2528,7 +2564,98 @@ export function createWorld(scene) {
     const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
       medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
     obstacles.push(o);
+    prepararMovimiento(o, t);
     return o;
+  }
+
+  // ---- 06/11: obstaculos que se mueven de otra forma ----
+  // Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+  // dinamismo». Eligio las cuatro formas; todas se ven venir de lejos y
+  // siempre queda un carril libre:
+  //   cambia   se pasa al carril de al lado: el intermitente avisa desde
+  //            unos 90 m y el cambio se hace a unos 60 (nunca hacia un carril
+  //            con algo cerca, ni dejando un coche entre el y el jugador)
+  //   cruza    espera en la acera, cruza la calle y se para en su carril antes
+  //            de llegar (a 26 m, como la vaca), y se vuelve a mirarte
+  //   barrera  el brazo sube y baja despacio: arriba se pasa, abajo se salta
+  //   bota     viene botando hacia ti (se salta)
+  function prepararMovimiento(o, t) {
+    const ints = o.mesh.userData.intermitentes;
+    if (ints) for (const h of ints) h.material.opacity = 0;
+    if (t.cambia) o.puedeCambiar = Math.random() < 0.6;
+    if (t.barrera) o.barrera = true;
+    if (t.bota) o.bota = true;
+    if (t.cruza) {
+      // Viene del lado contrario a su carril: asi cruza casi toda la calle.
+      const lado = o.lane === 0 ? 1 : o.lane === 2 ? -1 : (Math.random() < 0.5 ? -1 : 1);
+      o.cruce = { lado, fase: 0 };
+      o.mesh.position.x = lado * 6.4;
+      o.mesh.rotation.y = lado > 0 ? Math.PI : 0;
+    }
+  }
+  function carrilParaCambiar(o, l) {
+    for (const p of obstacles) {
+      if (p === o || p.smashed) continue;
+      // Nada en su fila del carril al que va (ni pegado delante o detras).
+      if (p.lane === l && p.z > o.z - 9 && p.z < o.z + 4) return false;
+      if (p.mueve && p.lane === l) return false;
+      // Que se pueda salir del carril al que va: en el que deja libre no hay
+      // nada que esquivar entre el y el jugador.
+      if (p.lane === o.lane && p.type === "full" && p.z > o.z && p.z < o.z + 11) return false;
+    }
+    return true;
+  }
+  const suave = (k) => k * k * (3 - 2 * k);
+  function moverNuevo(o, dt) {
+    const m = o.mesh;
+    if (o.puedeCambiar && !o.mueve && o.z > -90) {
+      o.puedeCambiar = false;
+      const destinos = [o.lane - 1, o.lane + 1].filter((l) => l >= 0 && l <= 2 && carrilParaCambiar(o, l));
+      if (destinos.length) o.cambio = { a: elegirDe(destinos), desde: LANE_X[o.lane], t: 0 };
+    }
+    if (o.cambio) {
+      const c = o.cambio, dir = Math.sign(LANE_X[c.a] - c.desde);
+      const ints = m.userData.intermitentes;
+      if (ints) ints.forEach((h, i) => { h.material.opacity = c.t < 1 && (i === 0) === (dir < 0) ? 0.35 + 0.35 * Math.sin(animClock * 8) : 0; });
+      if (o.z > -62 && c.t < 1) {
+        c.t = Math.min(1, c.t + dt / 0.9);
+        m.position.x = c.desde + (LANE_X[c.a] - c.desde) * suave(c.t);
+        m.rotation.y = -dir * 0.14 * Math.sin(Math.PI * c.t);
+        if (Math.abs(m.position.x - LANE_X[c.a]) < Math.abs(m.position.x - c.desde)) o.lane = c.a;
+        if (c.t === 1) { o.lane = c.a; m.rotation.y = 0; }
+      }
+    }
+    if (o.cruce) {
+      const c = o.cruce, destino = LANE_X[o.lane];
+      if (c.fase === 0 && o.z > -95) c.fase = 1;
+      if (c.fase === 1) {
+        const falta = destino - m.position.x;
+        const tiempo = Math.max(0.2, (-o.z - 32) / Math.max(8, ritmo));
+        const v = Math.min(9, Math.max(1.6, Math.abs(falta) / tiempo));
+        m.position.x += Math.sign(falta) * Math.min(Math.abs(falta), v * dt);
+        m.position.y = Math.abs(Math.sin(animClock * 7 + o.phase)) * 0.03;
+        if (Math.abs(destino - m.position.x) < 0.01) c.fase = 2;
+      } else if (c.fase === 2) {
+        // Parado en su carril: se vuelve a mirarte (para hacerte una foto).
+        m.position.x = destino; m.position.y = 0;
+        const fin = m.rotation.y > 0.5 ? 1.5 * Math.PI : -0.5 * Math.PI;
+        m.rotation.y += (fin - m.rotation.y) * Math.min(1, dt * 4);
+      }
+    }
+    if (o.barrera && m.userData.brazo) {
+      const P = 4.4, t = (((animClock + o.phase) % P) + P) % P;
+      const k = t < 1.4 ? 0 : t < 2.2 ? (t - 1.4) / 0.8 : t < 3.6 ? 1 : 1 - (t - 3.6) / 0.8;
+      m.userData.brazo.rotation.z = suave(k) * 1.35;
+      o.abierta = suave(k) > 0.6;
+    }
+    if (o.bota) {
+      m.position.y = Math.abs(Math.sin(animClock * 4.2 + o.phase)) * 0.7;
+      m.rotation.x -= dt * 4;
+    }
+    if (TIPOS[o.pool] && TIPOS[o.pool].flota) {
+      m.position.y = Math.sin(animClock * 1.6 + o.phase) * 0.05;
+      m.rotation.y = Math.sin(animClock * 0.7 + o.phase) * 0.12;
+    }
   }
 
   // Altura del suelo bajo el jugador en un carril: la rampa y el techo del
@@ -3282,7 +3409,7 @@ export function createWorld(scene) {
     // 31/10: cada zona con los suyos (fuera conos, barricadas, pancartas y globos).
     city: { low: ["alcantarilla", "basura"], high: ["andamio", "viga"], full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
     town: { low: ["paca", "calabazas"], high: ["guirnalda", "globos"], full: ["tractor", "carroza", "vaca", "furgoneta"] },
-    dc: { low: ["valla_metal", "cajas"], high: ["protesta"], full: ["agentes", "furgoneta", "guardaespaldas"] },
+    dc: { low: ["valla_metal", "cajas", "microfonos", "barrera_control"], high: ["protesta", "dron_tele"], full: ["agentes", "furgoneta", "guardaespaldas", "furgoneta_fake", "segway"] },
     desert: { low: ["nopal", "calavera"], high: ["arco_neon", "cartel_ruta"], full: ["saguaro", "pickup", "furgoneta"] },
   };
   // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
@@ -4368,6 +4495,7 @@ export function createWorld(scene) {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
         } else if (VIDA[o.pool]) vida(o, dt);
+        moverNuevo(o, dt);
       }
       if (o.pool === "dado" && !o.smashed) {
         // Rueda de arista en arista: el centro sube y baja para no hundirse.

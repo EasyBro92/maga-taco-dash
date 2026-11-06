@@ -37,7 +37,9 @@ const LISTA = {
     "sacos_soja", "monton_soja", "monton_nieve", "urna", "sinfin", "pancarta_caucus", "quitanieves",
     "munieco_nieve", "cerdo", "cosechadora", "votantes",
     // 03/11: el dragon de China (blender/dragon.py), por piezas, y su bola de fuego
-    "dragon_cabeza", "dragon_mandibula", "dragon_cuerpo", "dragon_patas", "dragon_cola", "bola_fuego"],
+    "dragon_cabeza", "dragon_mandibula", "dragon_cuerpo", "dragon_patas", "dragon_cola", "bola_fuego",
+    // 06/11: cinco nuevos por ciudad, con movimiento (blender/obstaculos3.py)
+    "microfonos", "barrera_control", "barrera_control_brazo", "dron_tele", "furgoneta_fake", "segway"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

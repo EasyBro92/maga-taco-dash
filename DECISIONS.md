@@ -1076,3 +1076,33 @@ calle vacía. Ahora:
 - Al acabar, los que quedasen arriba se van con un destello (`quitarCielo`).
 
 Probado en cinco niveles: ningún choque al aterrizar y ningún taco arriba.
+
+## Obstáculos nuevos que se mueven: Washington (2026-11-06)
+
+Isidro, jugando en Pennsylvania Avenue: «se hacen repetitivos los obstáculos,
+faltan más tipos y más dinamismo». Washington solo tenía seis distintos (uno
+solo para agacharse). Eligió **cinco nuevos por ciudad** (dos para saltar,
+uno para agacharse y dos para esquivar), las **cuatro formas de moverse** y
+hacerlo antes que el metro de Nueva York. Modelos en `blender/obstaculos3.py`;
+el movimiento, en `moverNuevo` (world.js), y sirve para cualquier ciudad:
+
+- **Cambia de carril**: el intermitente (un brillo ámbar suave) avisa desde
+  unos 90 m y se pasa al carril de al lado hacia los 60 m. Nunca a un carril
+  con algo en su fila, ni con un coche que venga, ni dejando un coche entre él
+  y el jugador en el carril que deja. La furgoneta blanca de siempre y los
+  taxis también lo hacen ahora (seis de cada diez).
+- **Cruza la calle**: espera en la acera, cruza y se para en su carril antes
+  de los 32 m; luego se vuelve a mirarte.
+- **Barrera que sube y baja**: el brazo baja, sube y vuelve a bajar despacio
+  (ciclo de 4,4 s). Arriba se pasa sin más; abajo se salta.
+- **Bota hacia ti**: preparado para las ciudades que lo lleven.
+
+Washington: **micrófonos de la prensa** en su tarima «PRESS» (saltar),
+**barrera del control del Servicio Secreto** (sube y baja), **dron de la tele
+de las Fake News** a la altura de la cabeza (agacharse), **furgoneta de las
+Fake News** con parabólica (cambia de carril) y **turista en Segway** (cruza).
+Él eligió los tres primeros; la barrera y el Segway, Claude.
+
+Probado con el piloto automático en todo el nivel: 20 cambios de carril y 19
+cruces; ningún choque con las furgonetas que cambian (el piloto mira el
+intermitente, como una persona).

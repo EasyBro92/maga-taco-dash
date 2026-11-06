@@ -1355,7 +1355,7 @@ function checkCollisions(paso = 0) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
-    if (o.smashed || o.rozado) continue;
+    if (o.smashed || o.rozado || o.abierta) continue;   // (abierta: la barrera, con el brazo arriba)
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
     if (o.type === "bus") {
       // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
@@ -1590,7 +1590,7 @@ function checkPowerups() {
 const PRUEBA = /prueba/.test(location.search);
 if (PRUEBA) {
   window.__juego = {
-    world, character, renderer, scene, inmortal: false, choques: 0, tropiezos: 0,
+    world, character, renderer, scene, camera, inmortal: false, choques: 0, tropiezos: 0,
     botas: () => { botasTimeLeft = BOTAS_DURATION; },
     perseguido: () => persigueLeft,
     cajas: { abrir: () => abrirCaja(pintarCajaBtn), guardar: guardarCaja, diario: () => premioDiario(pintarCajaBtn), pintar: () => pintarCajaBtn() },

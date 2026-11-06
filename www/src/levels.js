@@ -332,8 +332,12 @@ const CALLES = [
     kit: { minPlantas: 6, maxPlantas: 10 },
     horizonte: "dc",
     potenciadores: ["magnet", "shield", "boost", "mega", "freeze", "rocket", "botas"],
-    obstaculos: { low: ["valla_metal", "cajas", "cajas"], high: ["protesta"],
-      full: ["agentes", "agentes", "furgoneta", "guardaespaldas"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: microfonos de la prensa, la barrera del control (sube
+    // y baja), el dron de la tele, la furgoneta de las Fake News (cambia de
+    // carril) y el turista en Segway (cruza la calle).
+    obstaculos: { low: ["valla_metal", "cajas", "microfonos", "barrera_control"], high: ["protesta", "dron_tele"],
+      full: ["agentes", "furgoneta", "guardaespaldas", "furgoneta_fake", "segway"] },
     publico: { personas: ["ejecutivo", "fan", "turista", "senora", "ejecutivo"], valla: "verja", cada: 2 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
@@ -345,11 +349,11 @@ const CALLES = [
       [500, 800, "mixto", { densidad: 0.5 }],
       [800, 900, "festin", { potenciador: "rocket", titulo: "cohete" }],
       [900, 1250, "autobuses", { titulo: "autobuses" }],
-      [1250, 1600, "vallas", { high: ["protesta"], titulo: "protesta" }],
+      [1250, 1600, "vallas", { high: ["protesta", "dron_tele"], titulo: "protesta" }],
       [1600, 1680, "calma"],
       [1680, 2400, "jefe", { titulo: "jefe_final" }],
       [2400, 2550, "festin", { potenciador: "freeze", titulo: "hielo" }],
-      [2550, 3000, "slalom", { full: ["agentes", "furgoneta"], titulo: "recta" }],
+      [2550, 3000, "slalom", { full: ["agentes", "furgoneta", "furgoneta_fake", "segway"], titulo: "recta" }],
       [3000, 3270, "sprint", { titulo: "sprint_dc" }],
     ],
     control: 1612, caja: 1150,
