@@ -63,8 +63,11 @@ const CALLES = [
     kit: { minPlantas: 5, maxPlantas: 11 },
     horizonte: "manhattan", cameoJefe: true,
     // 31/10: cada mapa con sus obstaculos (Isidro: «que los mapas se sientan diferentes»).
-    obstaculos: { low: ["alcantarilla", "basura", "basura"], high: ["andamio", "viga"],
-      full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: la boca de riego abierta, el balon que viene botando, el semaforo colgado,
+    // el coche de caballos (cambia de carril) y el paseador de perros (cruza).
+    obstaculos: { low: ["alcantarilla", "basura", "hidrante", "balon"], high: ["andamio", "viga", "semaforo"],
+      full: ["taxi", "contenedor", "perritos", "furgoneta", "carruaje", "paseador"] },
     publico: { personas: ["ejecutivo", "turista", "chico", "senora", "turista"], valla: "policia", cada: 2 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
@@ -73,7 +76,7 @@ const CALLES = [
     tramos: [
       [0, 280, "tutorial"],
       [280, 480, "suave", { densidad: 0.4, titulo: "quinta" }],
-      [480, 700, "slalom", { full: ["taxi"], titulo: "atasco" }],
+      [480, 700, "slalom", { full: ["taxi", "taxi", "carruaje"], titulo: "atasco" }],
       [700, 780, "calma"],
       [780, 980, "obras", { titulo: "obras" }],
       [980, 1080, "festin", { potenciador: "magnet", titulo: "festin" }],
@@ -112,8 +115,11 @@ const CALLES = [
     // Main Street de pueblo: ladrillo, de una a tres plantas sobre las tiendas.
     kit: { pueblo: true, minPlantas: 1, maxPlantas: 3 },
     horizonte: "ohio",
-    obstaculos: { low: ["paca", "calabazas", "calabazas"], high: ["guirnalda", "globos"],
-      full: ["tractor", "carroza", "vaca", "furgoneta"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: el paso a nivel del tren (sube y baja), los pavos (cruzan), la bandera
+    // gigante, el cortacesped (cambia de carril) y el puesto de limonada.
+    obstaculos: { low: ["paca", "calabazas", "paso_nivel", "pavos"], high: ["guirnalda", "globos", "bandera_grande"],
+      full: ["tractor", "carroza", "vaca", "furgoneta", "cortacesped", "limonada"] },
     publico: { personas: ["abuelo", "senora", "fan", "chico", "abuelo"], valla: "banderas", cada: 2 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
@@ -159,8 +165,11 @@ const CALLES = [
     // Centro de Phoenix: estuco de colores calidos, de dos a nueve plantas.
     kit: { desierto: true, minPlantas: 2, maxPlantas: 9 },
     horizonte: "phoenix",
-    obstaculos: { low: ["nopal", "nopal", "calavera"], high: ["arco_neon", "cartel_ruta"],
-      full: ["saguaro", "pickup", "pickup", "furgoneta"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: la serpiente de cascabel, la rueda suelta que viene botando, la piñata,
+    // la autocaravana (cambia de carril) y el vaquero a caballo (cruza).
+    obstaculos: { low: ["nopal", "calavera", "serpiente", "rueda_loca"], high: ["arco_neon", "cartel_ruta", "pinata"],
+      full: ["saguaro", "pickup", "furgoneta", "autocaravana", "vaquero"] },
     publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
@@ -172,7 +181,7 @@ const CALLES = [
       [430, 520, "festin", { potenciador: "boost", titulo: "festin" }],
       [520, 800, "autobuses", { titulo: "autobuses" }],
       [800, 880, "calma"],
-      [880, 1180, "vallas", { high: ["arco_neon"], titulo: "neones" }],
+      [880, 1180, "vallas", { high: ["arco_neon", "pinata"], titulo: "neones" }],
       [1180, 1400, "suave", { densidad: 0.5 }],
       [1400, 1830, "persecucion", { titulo: "caza_brujas" }],
       [1830, 1970, "sprint", { titulo: "sprint_diner" }],
@@ -209,8 +218,11 @@ const CALLES = [
     // Hoteles y casinos: altos, claros y con letreros de neon.
     kit: { vegas: true, minPlantas: 4, maxPlantas: 12 },
     horizonte: "vegas", debate: true,
-    obstaculos: { low: ["fichas", "fichas"], high: ["marquesina"],
-      full: ["tragaperras", "limusina", "elvis", "elvis", "furgoneta"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: la ruleta, la barrera del aparcamiento (sube y baja), el cartel de la
+    // capilla de bodas, el descapotable rosa (cambia de carril) y las bailarinas (cruzan).
+    obstaculos: { low: ["fichas", "ruleta", "barrera_valet"], high: ["marquesina", "cartel_boda"],
+      full: ["tragaperras", "limusina", "elvis", "furgoneta", "descapotable", "bailarinas"] },
     publico: { personas: ["turista", "fan", "ejecutivo", "senora", "chico"], valla: "verja", cada: 2 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los
@@ -218,12 +230,12 @@ const CALLES = [
     // Las Vegas: 2.300 m. Las limusinas de entrada, los dados y el debate a mitad.
     tramos: [
       [0, 150, "calma", { titulo: "strip" }],
-      [150, 420, "slalom", { full: ["limusina"], titulo: "limusinas" }],
+      [150, 420, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
       [420, 700, "dados", { titulo: "dados" }],
       [700, 780, "calma"],
       [780, 1400, "jefe", { titulo: "debate" }],
       [1400, 1500, "festin", { potenciador: "mega", titulo: "gigante" }],
-      [1500, 1820, "vallas", { high: ["marquesina"], titulo: "neones_strip" }],
+      [1500, 1820, "vallas", { high: ["marquesina", "cartel_boda"], titulo: "neones_strip" }],
       [1820, 2130, "mixto", { densidad: 0.55 }],
       [2130, 2270, "sprint", { titulo: "sprint_trump" }],
     ],
@@ -264,8 +276,11 @@ const CALLES = [
     // Centro de oficinas hasta el rio y, despues, el East Village de ladrillo.
     kit: { minPlantas: 4, maxPlantas: 13, nieve: true },
     horizonte: "iowa",
-    obstaculos: { low: ["sacos_soja", "monton_nieve", "urna"], high: ["sinfin", "pancarta_caucus"],
-      full: ["quitanieves", "monton_soja", "munieco_nieve", "votantes", "furgoneta"] },
+    // 06/11: Isidro: «se hacen repetitivos los obstaculos, faltan mas tipos y mas
+    // dinamismo». Nuevos: la bola de nieve que viene rodando, el niño en trineo (cruza), la rama
+    // nevada con el jilguero, el autobus escolar (cambia de carril) y el ciervo (cruza).
+    obstaculos: { low: ["sacos_soja", "monton_nieve", "urna", "bola_nieve", "trineo"], high: ["sinfin", "pancarta_caucus", "rama_nevada"],
+      full: ["quitanieves", "monton_soja", "munieco_nieve", "votantes", "furgoneta", "bus_escolar", "ciervo"] },
     publico: { personas: ["granjero", "abuelo", "senora", "granjero", "fan", "chico"], valla: "banderas", cada: 2 },
     // 05/11: Isidro: «los primeros niveles deben ser mas cortos y luego ir
     // alargandose» y «los niveles se siguen sintiendo muy iguales». Antes los

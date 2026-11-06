@@ -2390,6 +2390,37 @@ export function createWorld(scene) {
     dron_tele: { choque: "high", medio: 0.5, alto: 2.4, flota: true },
     furgoneta_fake: { choque: "full", medio: 1.45, alto: 2.0, centro: -1.45, cambia: 0.92 },
     segway: { choque: "full", medio: 0.45, alto: 2.0, centro: 0, cruza: true },
+    // (intX, intZ: donde va el intermitente si no es en la esquina de atras)
+    // Nueva York
+    hidrante: { choque: "low", medio: 0.5, alto: 0.95 },
+    balon: { choque: "low", medio: 0.45, alto: 0.9, mueve: 4, bota: true },
+    semaforo: { choque: "high", medio: 0.3, alto: 2.4 },
+    carruaje: { choque: "full", medio: 1.65, alto: 2.3, centro: -1.65, cambia: 1.26, intX: 0.62, intZ: 0.04 },
+    paseador: { choque: "full", medio: 0.7, alto: 1.8, centro: 0.3, cruza: true },
+    // Findlay
+    paso_nivel: { choque: "low", medio: 0.25, alto: 1.05, barrera: true },
+    pavos: { choque: "low", medio: 0.4, alto: 0.9, cruza: true },
+    bandera_grande: { choque: "high", medio: 0.2, alto: 2.4 },
+    cortacesped: { choque: "full", medio: 0.8, alto: 1.75, centro: -0.8, cambia: 0.44, intX: 0.38, intZ: 0.04 },
+    limonada: { choque: "full", medio: 0.45, alto: 2.2, centro: 0 },
+    // Phoenix
+    serpiente: { choque: "low", medio: 0.45, alto: 0.8 },
+    rueda_loca: { choque: "low", medio: 0.35, alto: 0.95, mueve: 4, bota: true },
+    pinata: { choque: "high", medio: 0.3, alto: 2.4 },
+    autocaravana: { choque: "full", medio: 1.8, alto: 2.6, centro: -1.8, cambia: 0.92, intX: 0.8, intZ: 0.04 },
+    vaquero: { choque: "full", medio: 0.95, alto: 2.5, centro: 0.05, cruza: true },
+    // Las Vegas
+    ruleta: { choque: "low", medio: 0.75, alto: 0.9 },
+    barrera_valet: { choque: "low", medio: 0.25, alto: 1.05, barrera: true },
+    cartel_boda: { choque: "high", medio: 0.2, alto: 2.4 },
+    descapotable: { choque: "full", medio: 1.6, alto: 1.5, centro: -1.6, cambia: 0.73, intX: 0.73, intZ: 0.04 },
+    bailarinas: { choque: "full", medio: 0.35, alto: 2.4, centro: 0, cruza: true },
+    // Des Moines
+    bola_nieve: { choque: "low", medio: 0.45, alto: 0.9, mueve: 4, rueda: true },
+    trineo: { choque: "low", medio: 0.55, alto: 0.9, cruza: true },
+    rama_nevada: { choque: "high", medio: 0.3, alto: 2.4 },
+    bus_escolar: { choque: "full", medio: 1.8, alto: 2.4, centro: -1.8, cambia: 2.1, intX: 0.6, intZ: 0.04 },
+    ciervo: { choque: "full", medio: 0.7, alto: 1.9, centro: 0, cruza: true },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2460,7 +2491,7 @@ export function createWorld(scene) {
       // Los intermitentes, en las esquinas de atras: un brillo ambar suave.
       g.userData.intermitentes = [-1, 1].map((s) => {
         const h = halo(0.9, 0, 0xffa21a);
-        h.position.set(s * (m.ancho / 2 - 0.12), tipo.cambia, m.frente + 0.05);
+        h.position.set(s * (tipo.intX || m.ancho / 2 - 0.12), tipo.cambia, tipo.intZ !== undefined ? tipo.intZ : m.frente + 0.05);
         g.add(h);
         return h;
       });
@@ -2526,6 +2557,9 @@ export function createWorld(scene) {
     marquesina: "mecer", cartel_ruta: "mecer", andamio: "brisa",
     nopal: "brisa", saguaro: "brisa", munieco_nieve: "brisa", arco_neon: "brisa",
     fichas: "girar", urna: "girar",
+    // 06/11: los nuevos
+    bandera_grande: "brisa", pinata: "brisa", cartel_boda: "brisa", rama_nevada: "brisa", serpiente: "brisa",
+    ruleta: "girar", limonada: "brisa",
   };
   function vida(o, dt) {
     const m = o.mesh, t = animClock + o.phase;
@@ -2582,27 +2616,56 @@ export function createWorld(scene) {
   function prepararMovimiento(o, t) {
     const ints = o.mesh.userData.intermitentes;
     if (ints) for (const h of ints) h.material.opacity = 0;
-    if (t.cambia) o.puedeCambiar = Math.random() < 0.6;
+    if (t.cambia) o.puedeCambiar = Math.random() < 0.8;
     if (t.barrera) o.barrera = true;
     if (t.bota) o.bota = true;
-    if (t.cruza) {
-      // Viene del lado contrario a su carril: asi cruza casi toda la calle.
-      const lado = o.lane === 0 ? 1 : o.lane === 2 ? -1 : (Math.random() < 0.5 ? -1 : 1);
-      o.cruce = { lado, fase: 0 };
-      o.mesh.position.x = lado * 6.4;
-      o.mesh.rotation.y = lado > 0 ? Math.PI : 0;
-    }
+    if (t.rueda) o.rueda = true;
+    // Lo que viene botando o rodando va algo mas rapido que la calle: solo si
+    // su carril esta libre en los 60 m de delante (los que le da tiempo a
+    // alcanzar); si no, bota en su sitio.
+    if (t.mueve && (t.bota || t.rueda) && obstacles.some((p) => p !== o && !p.smashed && p.lane === o.lane && p.z > o.z && p.z < o.z + 60)) o.mueve = 0;
+    // La acera de la que sale se elige en su primer fotograma, con la fila ya entera.
+    if (t.cruza) o.cruce = { lado: 0, fase: 0, azar: Math.random() };
   }
+  // Mejor del lado contrario a su carril (asi cruza casi toda la calle), pero
+  // nunca a traves de otro obstaculo de su fila: entonces sale de la acera de su lado.
+  function aceraDeCruce(o) {
+    const libre = (lado) => !obstacles.some((p) => p !== o && !p.smashed && Math.abs(p.z - o.z) < 4 &&
+      (lado > 0 ? p.lane > o.lane : p.lane < o.lane));
+    const lejos = o.lane === 0 ? 1 : o.lane === 2 ? -1 : (o.cruce.azar < 0.5 ? -1 : 1);
+    return libre(lejos) ? lejos : -lejos;
+  }
+  // Los carriles sin nada que esquivar en la fila de z (sin contar `sin`, y con `con` cerrado).
+  function carrilesLibres(z, sin, con) {
+    const libres = new Set(LANES);
+    for (const p of obstacles) {
+      if (p === sin || p.smashed || p.type !== "full" || Math.abs(p.z - z) >= 4) continue;
+      libres.delete(p.lane);
+      // El que esta cambiando (o con el intermitente puesto) cuenta en los dos carriles.
+      if (p.cambio && p.cambio.t < 1) libres.delete(p.cambio.a);
+    }
+    if (con !== undefined) libres.delete(con);
+    return libres;
+  }
+  const alLado = (a, b) => [...a].some((x) => [...b].some((y) => Math.abs(x - y) <= 1));
   function carrilParaCambiar(o, l) {
+    let antes = null, despues = null;
     for (const p of obstacles) {
       if (p === o || p.smashed) continue;
-      // Nada en su fila del carril al que va (ni pegado delante o detras).
+      // Nada en el carril al que va, ni en su fila ni pegado delante o detras.
       if (p.lane === l && p.z > o.z - 9 && p.z < o.z + 4) return false;
       if (p.mueve && p.lane === l) return false;
-      // Que se pueda salir del carril al que va: en el que deja libre no hay
-      // nada que esquivar entre el y el jugador.
-      if (p.lane === o.lane && p.type === "full" && p.z > o.z && p.z < o.z + 11) return false;
+      // Las filas con algo que esquivar mas cerca de el (antes) y mas lejos (despues).
+      if (p.type !== "full") continue;
+      if (p.z > o.z + 4 && p.z < o.z + 18 && (antes === null || p.z < antes)) antes = p.z;
+      if (p.z < o.z - 4 && p.z > o.z - 18 && (despues === null || p.z > despues)) despues = p.z;
     }
+    // Justa: despues del cambio su fila sigue teniendo un carril libre al lado
+    // del libre de la fila de antes y de la de despues (nunca dos carriles de golpe).
+    const ahora = carrilesLibres(o.z, o, l);
+    if (!ahora.size) return false;
+    if (antes !== null && !alLado(carrilesLibres(antes), ahora)) return false;
+    if (despues !== null && !alLado(ahora, carrilesLibres(despues))) return false;
     return true;
   }
   const suave = (k) => k * k * (3 - 2 * k);
@@ -2627,6 +2690,11 @@ export function createWorld(scene) {
     }
     if (o.cruce) {
       const c = o.cruce, destino = LANE_X[o.lane];
+      if (!c.lado) {
+        c.lado = aceraDeCruce(o);
+        m.position.x = c.lado * 6.4;
+        m.rotation.y = c.lado > 0 ? Math.PI : 0;
+      }
       if (c.fase === 0 && o.z > -95) c.fase = 1;
       if (c.fase === 1) {
         const falta = destino - m.position.x;
@@ -2650,8 +2718,9 @@ export function createWorld(scene) {
     }
     if (o.bota) {
       m.position.y = Math.abs(Math.sin(animClock * 4.2 + o.phase)) * 0.7;
-      m.rotation.x -= dt * 4;
+      if (o.mueve) m.rotation.x += dt * 4;
     }
+    if (o.rueda && o.mueve) m.rotation.x += dt * 6;
     if (TIPOS[o.pool] && TIPOS[o.pool].flota) {
       m.position.y = Math.sin(animClock * 1.6 + o.phase) * 0.05;
       m.rotation.y = Math.sin(animClock * 0.7 + o.phase) * 0.12;
@@ -3407,10 +3476,10 @@ export function createWorld(scene) {
   // Obstaculos de cada sitio: los del nivel, o los de la zona en el sin fin.
   const LOCALES_ZONA = {
     // 31/10: cada zona con los suyos (fuera conos, barricadas, pancartas y globos).
-    city: { low: ["alcantarilla", "basura"], high: ["andamio", "viga"], full: ["taxi", "taxi", "contenedor", "perritos", "furgoneta"] },
-    town: { low: ["paca", "calabazas"], high: ["guirnalda", "globos"], full: ["tractor", "carroza", "vaca", "furgoneta"] },
+    city: { low: ["alcantarilla", "basura", "hidrante", "balon"], high: ["andamio", "viga", "semaforo"], full: ["taxi", "contenedor", "perritos", "furgoneta", "carruaje", "paseador"] },
+    town: { low: ["paca", "calabazas", "paso_nivel", "pavos"], high: ["guirnalda", "globos", "bandera_grande"], full: ["tractor", "carroza", "vaca", "furgoneta", "cortacesped", "limonada"] },
     dc: { low: ["valla_metal", "cajas", "microfonos", "barrera_control"], high: ["protesta", "dron_tele"], full: ["agentes", "furgoneta", "guardaespaldas", "furgoneta_fake", "segway"] },
-    desert: { low: ["nopal", "calavera"], high: ["arco_neon", "cartel_ruta"], full: ["saguaro", "pickup", "furgoneta"] },
+    desert: { low: ["nopal", "calavera", "serpiente", "rueda_loca"], high: ["arco_neon", "cartel_ruta", "pinata"], full: ["saguaro", "pickup", "furgoneta", "autocaravana", "vaquero"] },
   };
   // El carril que ocupa un autobus de la fila anterior: ahi no se pone nada.
   let carrilOcupado = -1;
@@ -3637,11 +3706,11 @@ export function createWorld(scene) {
     desfile(z, d, t, k) {
       if (k % 3 === 0) {
         const p = [1, 0, 2, 1, 2, 0][(k / 3) % 6];
-        obst(p, "full", z, d, ["carroza"]);
+        obst(p, "full", z, d, ["carroza", "carroza", "cortacesped"]);
         const otros = LANES.filter((l) => l !== p);
-        obst(otros[k % 2], "low", z, d, ["paca"]);
+        obst(otros[k % 2], "low", z, d, ["paca", "pavos"]);
         tacosEn(otros[1 - (k % 2)], z, 4);
-      } else if (k % 3 === 2 && Math.random() < 0.6) obst(Math.floor(Math.random() * 3), "high", z, d, ["guirnalda"]);
+      } else if (k % 3 === 2 && Math.random() < 0.6) obst(Math.floor(Math.random() * 3), "high", z, d, ["guirnalda", "bandera_grande"]);
     },
     // Washington: la comitiva viene de frente y los agentes cortan el paso.
     comitiva(z, d, t, k) {
@@ -3666,7 +3735,7 @@ export function createWorld(scene) {
       }
       if (k % 3 === 1) {
         const l = Math.floor(Math.random() * 3);
-        obst(l, "full", z, d, ["saguaro"]);
+        obst(l, "full", z, d, ["saguaro", "vaquero"]);
         tacosEn((l + 1 + Math.floor(Math.random() * 2)) % 3, z, 4);
       }
     },
@@ -3743,7 +3812,7 @@ export function createWorld(scene) {
         tacosEn(2 - desde, z - 2, 3);
       } else if (k % 3 === 1) {
         const l = Math.floor(Math.random() * 3);
-        obst(l, "full", z, d, ["quitanieves", "munieco_nieve"]);
+        obst(l, "full", z, d, ["quitanieves", "munieco_nieve", "ciervo", "bus_escolar"]);
         LANES.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 3));
       } else tacosEn(Math.floor(Math.random() * 3), z, 4);
     },

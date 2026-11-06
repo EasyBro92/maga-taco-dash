@@ -1106,3 +1106,39 @@ Fake News** con parabólica (cambia de carril) y **turista en Segway** (cruza).
 Probado con el piloto automático en todo el nivel: 20 cambios de carril y 19
 cruces; ningún choque con las furgonetas que cambian (el piloto mira el
 intermitente, como una persona).
+
+## Obstáculos nuevos en las otras cinco ciudades (2026-11-06)
+
+Lo mismo que en Washington: cinco por ciudad, con las cuatro formas de
+moverse repartidas. Los eligió Claude; Isidro puede cambiar cualquiera.
+
+| Ciudad | Para saltar | Para agacharse | Para esquivar |
+|---|---|---|---|
+| Nueva York | boca de riego abierta · balón de baloncesto que viene botando | semáforo colgado | coche de caballos de Central Park (cambia de carril) · paseador con cinco perros (cruza) |
+| Findlay | paso a nivel del tren (sube y baja) · pavos escapados (cruzan) | bandera gigante de Flag City | cortacésped con el granjero (cambia de carril) · puesto de limonada |
+| Phoenix | serpiente de cascabel · rueda de camión que viene botando | piñata de burro | autocaravana (cambia de carril) · vaquero a caballo (cruza) |
+| Las Vegas | ruleta girando · barrera del aparcamiento VALET (sube y baja) | cartel de neón de la capilla de bodas | descapotable rosa de los recién casados (cambia de carril) · bailarinas con plumas (cruzan) |
+| Des Moines | bola de nieve que viene rodando · niño en trineo (cruza) | rama nevada con un jilguero | autobús escolar (cambia de carril) · ciervo (cruza) |
+
+También salen en los tramos propios donde pegan: el cortacésped, los pavos
+y la bandera en el desfile de Findlay; el coche de caballos en el atasco de
+Nueva York; el vaquero entre las rodadoras; el descapotable entre las
+limusinas; la piñata y el cartel de bodas en las filas de neones; el ciervo y
+el autobús escolar con los cerdos. Las bailarinas no van con los dados (los
+dados ruedan y las atravesaban).
+
+**Reglas para que sea justo:**
+
+- **Cambio de carril**: solo si, después, la fila sigue teniendo un carril
+  libre al lado del libre de la fila de antes y de la de después (nunca hay que
+  cruzar dos carriles de golpe, como en el atasco). Mientras cambia, cuenta en
+  los dos carriles. Nunca a un carril con algo cerca o con algo que venga.
+- **Lo que cruza** sale de la acera contraria si el camino está libre en su
+  fila; si no, de la de su lado (nunca atraviesa otro obstáculo).
+- **Lo que bota o rueda** solo viene hacia ti si su carril está libre en los
+  60 m de delante; si no, bota en su sitio.
+
+Probado con el piloto en los seis niveles. Nueva York, Findlay, Las Vegas y
+Washington: cero choques, con 5–11 cambios de carril y hasta 19 cruces.
+Phoenix: un choque (una calavera). Des Moines: solo con la cosechadora, que
+ya pasaba antes y el piloto no sabe esquivar.
