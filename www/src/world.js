@@ -1824,7 +1824,8 @@ export function createWorld(scene) {
       }
       animarPieza(p, mesh);
       // Los halos de sus neones (no en el kit: sus rotulos ya llevan su brillo).
-      if (p.pieza !== "kit" && fuerzaHalos() > 0) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
+      // (07/11: las lamparas del metro brillan aunque el nivel sea de dia: su fuerza la pone factorMetro.)
+      if (p.pieza !== "kit" && (fuerzaHalos() > 0 || p.pieza.startsWith("metro_"))) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
       group.add(mesh);
       calleViva.push({ mesh, fin: p.ancho + 40 });
     }
@@ -2432,6 +2433,14 @@ export function createWorld(scene) {
     rampa_salto: { choque: "rampa", alto: RAMPA_ALTO },
     camion: { choque: "bus", alto: 1.55 },
     arco_premio: { choque: "nada" },
+    // 07/11: el metro de Nueva York (blender/metro.py). El tren viene de frente
+    // por su via; el vagon parado tiene rampa y techo a 2,2 (como el autobus);
+    // el coche se engancha detras sin rampa.
+    tren: { choque: "full", medio: 11.5, alto: 2.2, centro: -11.5, mueve: 5 },
+    vagon: { choque: "bus", techo: 2.2, rampa: 3.0, largo: 14.4 },
+    coche_metro: { choque: "bus", techo: 2.2, rampa: 0, largo: 11.6 },
+    torniquete: { choque: "low", medio: 0.5, alto: 1.05 },
+    cartel_metro: { choque: "high", medio: 0.3, alto: 2.2 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2700,7 +2709,9 @@ export function createWorld(scene) {
     obj.rotation.set(0, nombre === "vaca" || nombre === "cerdo" ? (Math.random() < 0.5 ? 0 : Math.PI) : t.orilla && lane === 2 ? Math.PI : 0, 0);
     if (!obj.parent) group.add(obj);
     const o = { mesh: obj, lane, type: t.choque || type, pool, z, phase: Math.random() * Math.PI * 2,
-      medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null };
+      medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null,
+      // (07/11: los vagones del metro son mas altos y largos que el autobus.)
+      techo: t.techo || BUS_TECHO, rampa: t.rampa ?? BUS_RAMPA, largo: t.largo || BUS_LARGO };
     obstacles.push(o);
     prepararMovimiento(o, t);
     return o;
@@ -2899,8 +2910,8 @@ export function createWorld(scene) {
       if (Math.abs(x - LANE_X[o.lane]) > (o.type === "rampa" ? 1.1 : 0.85)) continue;
       const d = o.z;
       if (o.type === "rampa") { if (d >= 0 && d <= RAMPA_LARGO) h = Math.max(h, RAMPA_ALTO * d / RAMPA_LARGO); continue; }
-      if (d < 0 || d > BUS_LARGO) continue;
-      h = Math.max(h, d < BUS_RAMPA ? BUS_TECHO * d / BUS_RAMPA : BUS_TECHO);
+      if (d < 0 || d > o.largo) continue;
+      h = Math.max(h, d < o.rampa ? o.techo * d / o.rampa : o.techo);
     }
     return h;
   }
@@ -4208,6 +4219,67 @@ export function createWorld(scene) {
       for (const l of LANES) if (l !== libre) obst(l, "full", z, d, quien);
       for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 07/11: el metro de Nueva York, el momento estrella del nivel 1 ----
+    // Primero las vias: trenes que vienen de frente por una via de los lados y,
+    // en las otras dos, cada 14 m una cosa (torniquetes que se saltan, vagones
+    // parados con rampa y carteles colgados que se pasan agachado), siempre con
+    // un carril libre y tacos en el.
+    metro_vias(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      // Una de las vias de los lados es la de los trenes que vienen de frente:
+      // en ella no se pone nada mas. Salen al final del tramo (filas 13, 16 y
+      // 19): recorren unos 60 m hacia ti y te cruzas con ellos ya dentro del metro.
+      if (t.via === undefined) t.via = Math.random() < 0.5 ? 0 : 2;
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || !obstaclePools.tren) return;
+      if (k === 13 || k === 16 || k === 19) { spawnObstacle(t.via, "full", z, "tren"); return; }
+      if (k < 12 && k % 4 === 2) for (let i = 0; i < 4; i++) spawnTaco(t.via, z - 2 - i * 1.4, 0.9);
+      if (k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado && l !== t.via);
+      const otro = (l) => libres.find((x) => x !== l);
+      const cosa = ["tornos", "vagon", "cartel", "tornos", "cartel", "vagon", "tornos", "cartel", "tornos"][(k / 2 - 1) % 9];
+      if (cosa === "vagon" && libres.length === 2) {
+        const l = elegirDe(libres);
+        spawnObstacle(l, "bus", z, "vagon");
+        busCarril = l; busFilas = 2;
+        for (let i = 0; i < 7; i++) spawnTaco(l, z - 3.6 - i * 1.4, 2.2 + 0.9, i === 6);
+        return;
+      }
+      if (libres.length < 2) return;
+      const l = elegirDe(libres);
+      obst(l, cosa === "cartel" ? "high" : "low", z, d, [cosa === "cartel" ? "cartel_metro" : "torniquete"]);
+      for (let i = 0; i < 5; i++) spawnTaco(otro(l), z - i * 1.4, 0.9);
+    },
+    // Luego el techo del tren: tres trenes parados, uno por via (el del centro
+    // empieza una fila antes). Se sube por la rampa del primer vagon y se
+    // corre por los techos: tacos y, de vez en cuando, un cartel colgado en un
+    // techo (se pasa agachado o cambiando de techo). Al acabar, se baja a la via.
+    metro_techo(z, d, t, k) {
+      if (!obstaclePools.vagon || !obstaclePools.coche_metro) { PATRONES.metro_vias(z, d, t, k); return; }
+      if (k <= 1) {
+        const lanes = k === 0 ? [1] : [0, 2], coches = k === 0 ? 8 : 7;
+        t.trenes = t.trenes || {};
+        for (const l of lanes) {
+          spawnObstacle(l, "bus", z, "vagon");
+          for (let i = 0; i < coches; i++) spawnObstacle(l, "bus", z - 14.4 - i * 11.6, "coche_metro");
+          t.trenes[l] = { desde: d, hasta: d + 14.4 + coches * 11.6 };
+        }
+        if (k === 0) for (let i = 0; i < 4; i++) spawnTaco(1, z + 3 - i * 1.4, 0.9);
+        return;
+      }
+      if (!t.trenes) return;
+      const encima = LANES.filter((l) => t.trenes[l] && d > t.trenes[l].desde + 6 && d < t.trenes[l].hasta - 3);
+      if (!encima.length) {
+        if (k % 2 === 0) for (let i = 0; i < 4; i++) spawnTaco(SERPIENTE[k % SERPIENTE.length], z - i * 1.4, 0.9);
+        return;
+      }
+      const lane = encima.includes(SERPIENTE[k % SERPIENTE.length]) ? SERPIENTE[k % SERPIENTE.length] : encima[0];
+      if (k % 2 === 0) for (let i = 0; i < 4; i++) spawnTaco(lane, z - i * 1.6, 2.2 + 0.9, i === 3 && k % 6 === 0);
+      if (k % 3 === 2 && encima.length >= 2) {
+        const o = spawnObstacle(elegirDe(encima.filter((l) => l !== lane)), "high", z, "cartel_metro");
+        o.base = 2.2; o.mesh.position.y = 2.2;
+      }
+    },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
     jefe_paso(z, d, t, k) {
       if (k % 2 === 1) return;
@@ -4229,6 +4301,18 @@ export function createWorld(scene) {
   // rampa la necesita para saber donde se cae.
   let velEn = null;
   function setVelEn(f) { velEn = f; }
+
+  // -- 07/11: el metro. `nivel.metro` = [donde empieza, donde acaba]. Dentro no se
+  // ve la calle (aceras, gente, banderas, arboles...) y la luz pasa poco a poco
+  // a la de la estacion: calida y fija, con niebla oscura al fondo del tunel. --
+  const COLOR_METRO = new THREE.Color(0x2e2620);
+  function metroEn(dist) { const m = nivel && nivel.metro; return !!m && dist > m[0] - 2 && dist < m[1] + 2; }
+  function factorMetro() {
+    const m = nivel && nivel.metro;
+    if (!m) return 0;
+    const s = (a, b) => { const x = Math.min(1, Math.max(0, (totalScrolled - a) / (b - a))); return x * x * (3 - 2 * x); };
+    return s(m[0] - 6, m[0] + 22) * (1 - s(m[1] - 26, m[1] + 4));
+  }
 
   // -- Tacos que caen del cielo; una sombra en el suelo dice donde caeran. --
   const sombraCaeGeo = new THREE.CircleGeometry(0.42, 18);
@@ -4447,6 +4531,8 @@ export function createWorld(scene) {
     chapas.push({ mesh, lane, z, baseY: y, idx, collected: false, phase: Math.random() * 6 });
   }
   function filaChapa(z, d, tipo, idx) {
+    // 07/11: en el techo del tren del metro (la fila sigue con lo suyo).
+    if (tipo === "techo") { spawnChapa(1, z - 3, 2.2 + 1.0, idx); return "sigue"; }
     if (tipo === "bus" && USAR_BLENDER && busFilas === 0) { filaBus(z, d, 1, idx); return; }
     if (tipo === "carril") {
       const l = Math.random() < 0.5 ? 0 : 2;
@@ -4476,7 +4562,7 @@ export function createWorld(scene) {
       if (z > SALIDA_LIMPIA_Z) { if (z < -20) PATRONES.calma(z, d, null, 0); return; }
       if (nivel && nivel.chapas) {
         const i = nivel.chapas.findIndex(([cd]) => Math.abs(cd - d) <= ROW_SPACING / 2);
-        if (i >= 0 && !chapasHechas.has(i)) { chapasHechas.add(i); filaChapa(z, d, nivel.chapas[i][1], i); return; }
+        if (i >= 0 && !chapasHechas.has(i)) { chapasHechas.add(i); if (filaChapa(z, d, nivel.chapas[i][1], i) !== "sigue") return; }
       }
       // 28/10: la caja sorpresa del nivel, sola en su fila con tacos a los lados.
       if (nivel && nivel.caja && USAR_BLENDER && cajasCarrera === 0 && Math.abs(nivel.caja - d) <= ROW_SPACING / 2) {
@@ -4934,7 +5020,12 @@ export function createWorld(scene) {
     sidewalkMat.color.copy(blendA);
     blendA.set(cFrom.fog); blendB.set(cTo.fog); blendA.lerp(blendB, blend.t);
     scene.fog.color.copy(blendA);
-    scene.background.copy(blendA);
+    const fm = factorMetro();
+    if (fm > 0) scene.fog.color.lerp(COLOR_METRO, fm);
+    scene.fog.near = 130 - 95 * fm; scene.fog.far = 285 - 125 * fm;
+    if (haloMat) haloMat.uniforms.fuerza.value = Math.max(fuerzaHalos(), fm);
+    if (horizonte) horizonte.mostrar(fm < 0.5);
+    scene.background.copy(scene.fog.color);
     const zoneNow = currentZoneName(totalScrolled);
     if (zoneNow !== lastZoneName) {
       lastZoneName = zoneNow;
@@ -4968,6 +5059,7 @@ export function createWorld(scene) {
         p.mesh.rotation.x += dt * p.mesh.userData.spinSpeed;
         p.mesh.rotation.z += dt * p.mesh.userData.spinSpeed * 0.6;
       }
+      p.mesh.visible = !metroEn(totalScrolled - p.mesh.position.z);
       if (p.mesh.position.z > DESPAWN_Z) {
         outerPools[p.biome][p.poolIndex].release(p.mesh);
         outerProps.splice(i, 1);
@@ -4978,6 +5070,7 @@ export function createWorld(scene) {
     for (let i = citySigns.length - 1; i >= 0; i--) {
       const sign = citySigns[i];
       sign.position.z += dz;
+      sign.visible = !metroEn(totalScrolled - sign.position.z);
       if (sign.position.z > DESPAWN_Z) { disposeCitySign(sign); citySigns.splice(i, 1); }
     }
 
@@ -5000,7 +5093,7 @@ export function createWorld(scene) {
     for (const d of decor) {
       d.position.z += dz; if (d.position.z > 6) d.position.z -= Math.abs(SPAWN_Z);
       d.scale.setScalar(Math.max(0.001, edgeFade(d.position.z, 6, 5)));
-      d.visible = !(nivel && totalScrolled - d.position.z > nivel.largo - 10);
+      d.visible = !(nivel && totalScrolled - d.position.z > nivel.largo - 10) && !metroEn(totalScrolled - d.position.z);
       if (d.userData.kind === "flag") {
         d.userData.flagMesh.rotation.y = Math.sin(animClock * 3 + d.userData.phase) * 0.3;
       } else if (d.userData.kind === "person") {
@@ -5014,7 +5107,7 @@ export function createWorld(scene) {
     for (const b of bunting) {
       b.position.z += dz; if (b.position.z > 4) b.position.z -= Math.abs(SPAWN_Z);
       b.scale.setScalar(Math.max(0.001, edgeFade(b.position.z, 4, 4)));
-      b.visible = !(nivel && totalScrolled - b.position.z > nivel.largo - 10);
+      b.visible = !(nivel && totalScrolled - b.position.z > nivel.largo - 10) && !metroEn(totalScrolled - b.position.z);
       b.rotation.z = Math.sin(animClock * 2.2 + b.userData.phase) * 0.22;
     }
 
@@ -5092,7 +5185,8 @@ export function createWorld(scene) {
           if (!t.collected && t.lane === o.lane && Math.abs(t.z - (o.z + o.centro)) < o.medio) { t.collected = true; t.atropellado = true; }
         }
       }
-      if (o.z > DESPAWN_Z + (o.type === "bus" ? BUS_LARGO : 0) || o.mesh.position.y < -6) {
+      // (07/11: lo largo, como el tren del metro, cuando ha pasado entero; antes desaparecia de golpe.)
+      if (o.z > DESPAWN_Z + (o.type === "bus" ? o.largo : Math.max(0, -2 * o.centro)) || o.mesh.position.y < -6) {
         o.mesh.position.y = 0;
         if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; }
         obstaclePools[o.pool].release(o.mesh);
@@ -5252,5 +5346,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo };
+    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro };
 }

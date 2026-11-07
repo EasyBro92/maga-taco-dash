@@ -82,13 +82,21 @@ const CALLES = [
       [420, 560, "slalom", { full: ["taxi", "taxi", "carruaje"], titulo: "atasco" }],
       [560, 700, "jefe_paso", { titulo: "jefe_paso" }],
       [700, 780, "calma"],
-      [780, 980, "obras", { titulo: "obras" }],
-      [980, 1080, "festin", { potenciador: "magnet", titulo: "festin" }],
-      [1080, 1240, "repartidores", { momento: "persigue", perseguidor: "furgoneta_fake", titulo: "persigue_prensa" }],
+      // 07/11: el momento estrella, el metro (en lugar de las obras y el festin).
+      // Primero las vias y luego el techo del tren; la estacion, en `fondo`.
+      [780, 930, "metro_vias", { titulo: "metro" }],
+      [930, 1078, "metro_techo", { titulo: "metro_techo" }],
+      [1078, 1240, "repartidores", { momento: "persigue", perseguidor: "furgoneta_fake", titulo: "persigue_prensa" }],
       [1240, 1370, "sprint", { titulo: "sprint" }],
     ],
     control: 712, caja: 640,
-    chapas: [[430, "arco"], [880, "carril"], [1180, "arco"]],
+    // (La segunda, en el techo del tren del metro.)
+    chapas: [[430, "arco"], [995, "techo"], [1180, "arco"]],
+    // 07/11: el metro: la boca a ras de calle justo despues de la biblioteca,
+    // dos trozos de tunel, la estacion 5 Av (150 m), cuatro de tunel y la salida.
+    metro: [772, 1082],
+    // (El helicoptero, fuera del metro.)
+    helicoptero: [420, 1150],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
     meta: "flatiron", metaNombre: { es: "el Flatiron", en: "the Flatiron" },
     // Bajando por la Quinta Avenida desde la calle 56: el este queda a la izquierda.
@@ -106,7 +114,12 @@ const CALLES = [
       ...cuadras(2), ["kit", 2],                                              // 32nd - 23rd
     ],
     // Al fondo, el Flatiron con el camion de tacos delante (ahi se para).
-    fondo: [{ pieza: "flatiron", d: 1445, centro: true }],
+    fondo: [{ pieza: "flatiron", d: 1445, centro: true },
+      { pieza: "metro_boca", d: 772, cruza: true },
+      ...[780, 804].map((d) => ({ pieza: "metro_tunel", d, cruza: true })),
+      ...[828, 858, 888, 918, 948].map((d) => ({ pieza: "metro_estacion", d, cruza: true })),
+      ...[978, 1002, 1026, 1050].map((d) => ({ pieza: "metro_tunel", d, cruza: true })),
+      { pieza: "metro_salida", d: 1074, cruza: true }],
     final: "camion",
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
   },
@@ -465,7 +478,7 @@ export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -492,6 +505,8 @@ export const ANCHO = {
   archivos_ala: 20, archivos_portico: 34, justicia: 20, irs: 20, correos: 20, correos_torre: 30,
   reagan: 20, wilson: 40, pershing: 40, canada: 30, cristal: 30, navy: 40, fbi: 20, willard: 35,
   galeria_este: 40, tesoro: 60, casa_blanca_final: 76,
+  // 07/11: el metro de Nueva York
+  metro_boca: 8, metro_tunel: 24, metro_estacion: 30, metro_salida: 8,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

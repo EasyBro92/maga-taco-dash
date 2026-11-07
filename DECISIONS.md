@@ -1264,3 +1264,53 @@ al jugador quedaba a oscuras sobre una calzada también oscura. Ahora:
 El cielo morado y los neones no cambian. Medido en la parte de la calle de la
 pantalla, el brillo sube de 49 a 79; el de Nueva York es 112 y el de
 Washington, 100.
+
+## El metro de Nueva York, el momento estrella del nivel 1 (2026-11-07)
+
+Lo que eligió Isidro: primero se corre por las vías y luego por el techo del
+tren; va junto a la biblioteca, en la estación 5 Av; estación antigua; se entra
+por una boca a ras de calle. Ocupa el sitio de las obras y el festín, y el
+nivel sigue midiendo 1.400 m.
+
+**La calle** (`blender/metro.py`, carpeta nueva_york; van en `fondo` como
+piezas que cruzan la calle):
+
+| Metros | Pieza |
+|---|---|
+| 772 | La boca: fachada de piedra justo después de la biblioteca, «SUBWAY» con el 7 morado, «5 AV» en mosaico y las farolas de globo verde |
+| 780–828 | Dos trozos de túnel: hormigón, pilares negros, cables y lámparas |
+| 828–978 | La estación 5 Av: andenes con el borde amarillo, azulejo blanco, la franja granate con «5 AV», dos filas de columnas verdes, bancos, carteles colgados y lámparas cálidas. Techo a 11 m |
+| 978–1074 | Cuatro trozos de túnel |
+| 1074 | La salida, con la luz del día al fondo |
+
+Las paredes de la estación van a 8,3 m del centro: lo que sobresale de las
+fachadas (toldos, escalones) llega hasta 8,5.
+
+**Lo que se juega:**
+- **Las vías (780–930).** Una de las vías de los lados es la de los trenes
+  plateados que vienen de frente con los faros encendidos: salen tres y te los
+  cruzas a unos 805, 826 y 847 m. En las otras dos vías, cada 14 m, torniquetes
+  (se saltan), carteles colgados (se pasan agachado) o vagones parados con
+  rampa (techo a 2,2 m, con tacos encima).
+- **El techo del tren (930–1078).** Tres trenes parados, uno por vía. Se sube
+  por la rampa del primer vagón y se corre por los techos unos 100 m, con
+  tacos, la chapa del nivel y carteles colgados encima de algún techo. Al
+  acabar, se baja a la vía y se sale a la calle.
+
+**Por dentro:**
+- La luz pasa poco a poco a la de la estación, cálida y fija
+  (`world.factorMetro`, `luzMetro` en main.js).
+- La niebla se vuelve oscura al fondo del túnel. Los halos de las lámparas
+  brillan aunque el nivel sea de día.
+- No se ven la gente, las banderas, los árboles, los letreros ni el
+  horizonte de la calle.
+- En el techo del tren la cámara se queda a la altura de los techos.
+- Cada «autobús» lleva ahora su techo, su rampa y su largo (el vagón es más
+  alto y largo que el autobús).
+- Lo que va encima de un techo lleva `base`: desde abajo no se toca.
+- Lo largo (el tren) desaparece cuando ha pasado entero.
+- La chapa que estaba en 880 va ahora en el techo del tren (995). El
+  helicóptero sale fuera del metro (420 y 1150).
+
+Probado con el piloto: tres veces seguidas sin chocar, unos 6 s por los techos
+y la luz cambia del todo. Los demás niveles siguen igual.

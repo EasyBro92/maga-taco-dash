@@ -300,7 +300,34 @@ let fin = null;
 
 // Luz del nivel. El atardecer: sol bajo, dorado y de lado; cielo calido.
 const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.position.clone(), hemi: hemi.color.getHex(), suelo: hemi.groundColor.getHex() };
+// 07/11: la luz de la estacion del metro (calida y fija). Se mezcla poco a
+// poco con la del nivel al entrar y al salir (world.factorMetro).
+let luzBase = null, metroAntes = 0;
+const HEMI_METRO = new THREE.Color(0xffd6a0), SUELO_METRO = new THREE.Color(0x7a5a3c), FILL_METRO = new THREE.Color(0xffc890);
+function guardarLuzBase() {
+  luzBase = { sunI: sun.intensity, hemiC: hemi.color.clone(), hemiG: hemi.groundColor.clone(), hemiI: hemi.intensity,
+    fillI: fill.intensity, fillC: fill.color.clone(), fillP: fill.position.clone() };
+}
+function luzMetro() {
+  const f = world.factorMetro();
+  if (!luzBase || (f === 0 && metroAntes === 0)) return;
+  metroAntes = f;
+  sun.intensity = luzBase.sunI + (0.2 - luzBase.sunI) * f;
+  hemi.color.copy(luzBase.hemiC).lerp(HEMI_METRO, f);
+  hemi.groundColor.copy(luzBase.hemiG).lerp(SUELO_METRO, f);
+  hemi.intensity = luzBase.hemiI + (1.05 - luzBase.hemiI) * f;
+  fill.color.copy(luzBase.fillC).lerp(FILL_METRO, f);
+  fill.intensity = luzBase.fillI + (0.7 - luzBase.fillI) * f;
+  fill.position.copy(luzBase.fillP).lerp(_fillMetro, f);
+  sunGlare.visible = f < 0.3;
+}
+const _fillMetro = new THREE.Vector3(0, 6, 10);
 function aplicarLuz(luz) {
+  metroAntes = 0;
+  aplicarLuzNivel(luz);
+  guardarLuzBase();
+}
+function aplicarLuzNivel(luz) {
   sunGlare.visible = true;
   fill.color.set(0xffffff); fill.intensity = 0.35; fill.position.set(-3, 4, -6);
   if (camera.far !== 320) { camera.far = 320; camera.updateProjectionMatrix(); }
@@ -1389,8 +1416,10 @@ function checkCollisions(paso = 0) {
       // Autobus: solo choca si te lo encuentras de lado o de frente a ras de
       // suelo (por la rampa se sube sin mas). `o.z` es lo que llevas metido
       // desde el pie de la rampa; la rampa mide 2.2 y el autobus entero 10.2.
-      if (o.z < 0.3 || o.z > 10.2) continue;
-      const suelo = o.z < 2.2 ? 1.55 * o.z / 2.2 : 1.55;
+      // (07/11: cada uno con su largo, su rampa y su techo; el coche del metro no tiene rampa.)
+      const largo = o.largo || 10.2, rampa = o.rampa ?? 2.2, techo = o.techo || 1.55;
+      if (o.z < (rampa ? 0.3 : -0.2) || o.z > largo) continue;
+      const suelo = o.z < rampa ? techo * o.z / rampa : techo;
       if (py > suelo - 0.45) {
         if (o.z > 2.2 && !o.contado) { o.contado = true; avisarMisiones(misiones.evento("autobus")); }
         continue;
@@ -1399,7 +1428,10 @@ function checkCollisions(paso = 0) {
       const zc = o.z + (o.centro || 0);
       const medio = o.medio || 0.7;
       if (zc < -medio || zc > medio) continue;
-      if (o.type === "low" && py > 0.55) {
+      // 07/11: lo que va encima del techo del tren (`base`): desde abajo no se toca.
+      const base = o.base || 0;
+      if (base && py + 1.6 < base) continue;
+      if (o.type === "low" && py > base + 0.55) {
         if (!o.contado) { o.contado = true; avisarMisiones(misiones.evento("saltos")); }
         continue;
       }
@@ -1407,7 +1439,7 @@ function checkCollisions(paso = 0) {
         if (!o.contado) { o.contado = true; avisarMisiones(misiones.evento("deslizar")); }
         continue;
       }
-      if (o.alto !== undefined && py > o.alto - 0.1) continue;   // le pasas por encima
+      if (o.alto !== undefined && py > base + o.alto - 0.1) continue;   // le pasas por encima
       // Con las botas se salta por encima de los coches y de todo lo que se esquiva.
       if (botasTimeLeft > 0 && o.type === "full" && py > (o.alto !== undefined ? o.alto : 1.8) - 0.1) continue;
     }
@@ -2170,6 +2202,8 @@ function frame(dtFijo) {
     // altura de los techos (bajar y subir en cada hueco era otro vaiven).
     let alturaCam = rocketTimeLeft > 0 ? py : superSalto ? py * 0.85 : world.surfaceAt(playerX);
     if (tramoMostrado && tramoMostrado.tipo === "convoy") alturaCam = Math.max(alturaCam, 1.55);
+    if (tramoMostrado && tramoMostrado.tipo === "metro_techo") alturaCam = Math.max(alturaCam, 2.2);
+    luzMetro();
     camY += ((alturaCam * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 2.5);
     camera.position.y = RACE_CAM.pos.y + camY + shakeY;
     camera.updateProjectionMatrix();

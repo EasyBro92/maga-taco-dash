@@ -323,6 +323,12 @@ export function crearHorizonte(scene) {
       const blanco = sitio === "desierto" || sitio === "phoenix" ? 0xfff2e0 : sitio === "vegas" ? 0xffc8e4 : 0xffffff;
       for (const n of nubes) n.material.color.set(blanco);
     },
+    // 07/11: dentro del metro no se ve el horizonte.
+    mostrar(v) {
+      if (banda.visible === v) return;
+      banda.visible = v;
+      for (const n of nubes) n.visible = v;
+    },
     animar(dt) {
       for (const n of nubes) {
         n.position.x += n.userData.v * dt;
