@@ -146,12 +146,11 @@ const CALLES = [
       // 06/11 (2): Isidro: «algunos mapas largos al principio se hacen aburridos»:
       // la calma de la salida pasa de 150 a 70-90 m en los niveles largos.
       [0, 80, "calma", { titulo: "main_street" }],
-      [80, 260, "desfile", { titulo: "desfile" }],
-      // 06/11 (3): Isidro: «más cosas, muchas más, que no sea tan repetitivo».
-      // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
-      // largo del nivel no cambia.
-      [260, 420, "desfile", { momento: "vehiculo", vehiculo: "carroza", titulo: "sube_carroza" }],
-      [420, 640, "autobuses", { titulo: "autobuses" }],
+      // 07/11: el momento estrella: el tunel de banderas del 4 de julio, por
+      // encima de las carrozas del desfile (en lugar del desfile y de subirse a
+      // la carroza). Las banderas, en `fondo`.
+      [80, 380, "banderas", { titulo: "banderas" }],
+      [380, 640, "autobuses", { titulo: "autobuses" }],
       [640, 740, "premios", { titulo: "premios" }],
       [740, 1340, "jefe", { titulo: "jefe" }],
       [1340, 1430, "festin", { potenciador: "mega", titulo: "gigante" }],
@@ -175,7 +174,8 @@ const CALLES = [
       ...cuadras(14), ["kit", 2],
     ],
     // Al fondo, el juzgado del condado con la plaza y el escenario del mitin.
-    fondo: [{ pieza: "juzgado_final", d: 1740, centro: true }],
+    fondo: [{ pieza: "juzgado_final", d: 1740, centro: true },
+      ...Array.from({ length: 17 }, (_, i) => ({ pieza: "banderas_arco", d: 86 + i * 18, cruza: true }))],
     final: "mitin",
     acera: ["findlay/farola_bandera", "ciudad/arbol_ciudad"],
   },
@@ -507,6 +507,7 @@ export const ANCHO = {
   galeria_este: 40, tesoro: 60, casa_blanca_final: 76,
   // 07/11: el metro de Nueva York
   metro_boca: 8, metro_tunel: 24, metro_estacion: 30, metro_salida: 8,
+  banderas_arco: 2,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

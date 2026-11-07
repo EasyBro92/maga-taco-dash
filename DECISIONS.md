@@ -1314,3 +1314,31 @@ fachadas (toldos, escalones) llega hasta 8,5.
 
 Probado con el piloto: tres veces seguidas sin chocar, unos 6 s por los techos
 y la luz cambia del todo. Los demás niveles siguen igual.
+
+## Los momentos estrella de las otras cinco ciudades (2026-11-07)
+
+Isidro: «Perfecto, hazlos». Eligió uno por ciudad; se hacen de uno en uno y
+cada uno se publica al acabarlo (`blender/estrellas.py`):
+
+| Ciudad | Momento estrella |
+|---|---|
+| Findlay | Túnel de banderas del 4 de julio, por encima de las carrozas del desfile |
+| Phoenix | Puente de madera del tren sobre un cañón rojo |
+| Las Vegas | Dentro del casino Trump, con lluvia de fichas al salir |
+| Des Moines | La Feria del Estado: vaca de mantequilla, puestos, noria y cerdos |
+| Washington | Dentro del Capitolio (lo eligió él en lugar de «drenar el pantano») |
+
+### Findlay: el túnel de banderas (80–380 m)
+
+Ocupa el sitio del desfile y de subirse a la carroza.
+- Cada 18 m, dos mástiles en las aceras con una bandera gigante colgada sobre
+  cada acera. Por encima de la calle van guirnaldas en abanico, a más de
+  9,5 m: la cámara pasa por debajo y no por dentro.
+- Por el carril del centro, una carroza cada 14 m (`carroza_desfile`: rampa
+  detrás y cubierta azul con estrellas a 1,4 m). Se corre por encima saltando
+  de una a otra.
+- Por los lados, alguna carroza y obstáculos en el suelo; tacos encima de las
+  carrozas.
+- Cae confeti durante todo el tramo.
+
+Probado con el piloto: 30 carrozas, unos 12 s por encima de ellas, sin choques.

@@ -2441,6 +2441,8 @@ export function createWorld(scene) {
     coche_metro: { choque: "bus", techo: 2.2, rampa: 0, largo: 11.6 },
     torniquete: { choque: "low", medio: 0.5, alto: 1.05 },
     cartel_metro: { choque: "high", medio: 0.3, alto: 2.2 },
+    // 07/11: Findlay, la carroza del desfile del tunel de banderas (blender/estrellas.py).
+    carroza_desfile: { choque: "bus", techo: 1.4, rampa: 2.4, largo: 9.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4278,6 +4280,31 @@ export function createWorld(scene) {
       if (k % 3 === 2 && encima.length >= 2) {
         const o = spawnObstacle(elegirDe(encima.filter((l) => l !== lane)), "high", z, "cartel_metro");
         o.base = 2.2; o.mesh.position.y = 2.2;
+      }
+    },
+    // ---- 07/11: Findlay, el tunel de banderas del 4 de julio (momento estrella) ----
+    // Banderas gigantes colgadas sobre las aceras y guirnaldas sobre la calle
+    // (piezas de `fondo`). Por el carril del centro, una carroza cada dos filas:
+    // se corre por encima saltando de una a otra (o se cae al hueco y se vuelve
+    // a subir por la rampa). Por los lados, alguna carroza y, en el suelo, pacas
+    // y calabazas. Tacos encima de las carrozas; el confeti lo pone main.js.
+    banderas(z, d, t, k) {
+      if (!obstaclePools.carroza_desfile) { PATRONES.desfile(z, d, t, k); return; }
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 1 || k > n - 3) { if (k % 2 === 0) for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      t.lados = t.lados || {};
+      if (k % 2 === 1) {
+        spawnObstacle(1, "bus", z, "carroza_desfile");
+        for (let i = 0; i < 5; i++) spawnTaco(1, z - 3.0 - i * 1.3, 1.4 + 0.9, i === 4 && k % 6 === 1);
+      }
+      if (k % 4 === 2) {
+        const l = Math.floor(k / 4) % 2 === 0 ? 0 : 2;
+        spawnObstacle(l, "bus", z, "carroza_desfile");
+        t.lados[l] = d + 10;
+        for (let i = 0; i < 4; i++) spawnTaco(l, z - 3.2 - i * 1.4, 1.4 + 0.9);
+      } else if (k % 2 === 0) {
+        const op = [0, 2].filter((l) => !(t.lados[l] > d));
+        if (op.length) obst(elegirDe(op), "low", z, d);
       }
     },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).

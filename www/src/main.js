@@ -1689,7 +1689,7 @@ if (PRUEBA) {
 // ---- 06/11 (3): los momentos (ver world.js) ----
 // Los que van encima de un tramo de la ciudad se arrancan al entrar en el
 // tramo y se acaban al salir: te persiguen, el vehiculo y el reto relampago.
-let montado = false, superSalto = false, persigueMomento = false, dobleLeft = 0, reto = null;
+let montado = false, superSalto = false, persigueMomento = false, dobleLeft = 0, reto = null, confetiReloj = 0;
 const VEHICULO_MULT = 1.2, DOBLE_DURATION = 6, RETO_TIEMPO = 10, RETO_META = 25, RETO_PREMIO = 100;
 function velNivel(d) {
   // 06/11 (2): en los primeros 350 m hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
@@ -1987,6 +1987,11 @@ function frame(dtFijo) {
     }
     const frameSpeed = speed * (boostTimeLeft > 0 ? BOOST_MULT : 1) * (montado ? VEHICULO_MULT : 1);
     if (dobleLeft > 0) { dobleLeft = Math.max(0, dobleLeft - dt); updatePowerupBadge(); }
+    // 07/11: confeti en el tunel de banderas de Findlay.
+    if (tramoMostrado && tramoMostrado.tipo === "banderas") {
+      confetiReloj -= dt;
+      if (confetiReloj <= 0) { spawnConfetti(12); confetiReloj = 2.2; }
+    }
     if (reto) {
       reto.t -= dt;
       if (reto.n >= RETO_META) acabarReto(true);

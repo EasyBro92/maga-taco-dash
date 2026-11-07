@@ -48,7 +48,9 @@ const LISTA = {
     // 06/11 (3): los momentos (blender/momentos.py)
     "rampa_salto", "camion", "avion", "arco_premio", "carrito_golf",
     // 07/11: el metro de Nueva York (blender/metro.py)
-    "tren", "vagon", "coche_metro", "torniquete", "cartel_metro"],
+    "tren", "vagon", "coche_metro", "torniquete", "cartel_metro",
+    // 07/11: los momentos estrella de cada ciudad (blender/estrellas.py)
+    "carroza_desfile"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
