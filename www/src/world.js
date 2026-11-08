@@ -1753,6 +1753,10 @@ export function createWorld(scene) {
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
+    if (luz === "pradera") {
+      // 08/11: Omaha, atardecer en la pradera: cielo rosado y naranja, bruma calida.
+      Object.assign(BIOME_COLORS.city, { sky: 0xffb486, skyTop: 0x5f6fc0, fog: 0xf4c09a, horizon: 0xb07a72, ground: 0xc9a27a });
+    }
     if (luz === "invierno") {
       // Des Moines (01/11): mañana de invierno. Cielo frio y limpio, bruma
       // blanquecina, el suelo y las aceras con nieve y el asfalto mojado.
@@ -2480,6 +2484,14 @@ export function createWorld(scene) {
     // salta) y la vagoneta de mano que viene por la via.
     tablones_rotos: { choque: "low", medio: 0.9, alto: 0.3, centro: -0.9 },
     vagoneta: { choque: "full", medio: 1.2, alto: 1.6, centro: -1.2, mueve: 6 },
+    // 08/11: Omaha (blender/omaha.py): las cajas de Filetes Trump, el rollo de
+    // heno que viene rodando, el cartel del asador, el camion de ganado (cambia
+    // de carril) y el aficionado de los Cornhuskers (cruza).
+    caja_filetes: { choque: "low", medio: 0.45, alto: 0.85 },
+    rodillo_heno: { choque: "low", medio: 0.65, alto: 1.2, mueve: 5, rueda: true },
+    cartel_steak: { choque: "high", medio: 0.3, alto: 2.2 },
+    camion_ganado: { choque: "full", medio: 3.1, alto: 2.8, centro: -3.1, cambia: 0.7 },
+    fan_huskers: { choque: "full", medio: 0.35, alto: 2.2, centro: 0, cruza: true },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2512,6 +2524,15 @@ export function createWorld(scene) {
 
   function construirObstaculo(nombre) {
     const g = modeloConContorno("obstaculos/" + nombre);
+    // 08/11: el rollo de heno esta hecho alrededor de su eje: gira solo el rollo
+    // (no la sombra), un poco por encima del suelo.
+    if (nombre === "rodillo_heno" && g) {
+      const r = new THREE.Group();
+      while (g.children.length) r.add(g.children[0]);
+      r.position.y = 0.6;
+      g.add(r);
+      g.userData.rueda = r;
+    }
     const m = medidas("obstaculos/" + nombre);
     // (mas pequeños que los de los edificios: de cerca tapaban el letrero)
     const halos = crearHalos(lucesDe("obstaculos/" + nombre), "obstaculos/" + nombre, 0.65);
@@ -2933,7 +2954,7 @@ export function createWorld(scene) {
       m.position.y = Math.abs(Math.sin(animClock * 4.2 + o.phase)) * 0.7;
       if (o.mueve) m.rotation.x += dt * 4;
     }
-    if (o.rueda && o.mueve) m.rotation.x += dt * 6;
+    if (o.rueda && o.mueve) { if (m.userData.rueda) m.userData.rueda.rotation.x -= dt * 8; else m.rotation.x += dt * 6; }
     if (TIPOS[o.pool] && TIPOS[o.pool].flota) {
       m.position.y = Math.sin(animClock * 1.6 + o.phase) * 0.05;
       m.rotation.y = Math.sin(animClock * 0.7 + o.phase) * 0.12;
@@ -3495,7 +3516,7 @@ export function createWorld(scene) {
   // Cuanto brillan los halos segun la luz del nivel (de dia no se ven).
   function fuerzaHalos() {
     const luz = nivel && nivel.luz;
-    return luz === "anochecer" ? 1 : luz === "atardecer" ? 0.45 : 0;
+    return luz === "anochecer" ? 1 : luz === "atardecer" ? 0.45 : luz === "pradera" ? 0.35 : 0;
   }
   // Las farolas de la acera: donde esta la bombilla de cada una.
   const HALOS_ACERA = {
@@ -4469,6 +4490,31 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: Omaha, la estampida en los corrales (momento estrella) ----
+    // Vallas con vacas a los dos lados, el granero y el arco de la entrada
+    // (piezas de `fondo`); por la calle, vacas sueltas, rollos de heno que
+    // vienen rodando, cajas de Filetes Trump y algun camion de ganado. Detras,
+    // te persigue una vaca (`momento: "persigue"`).
+    corrales(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 6 === 4 && obstaclePools.rodillo_heno) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "rodillo_heno");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["caja_filetes", "paca"], high: ["cartel_steak"], full: ["vaca", "vaca", "camion_ganado"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "full", "full", "high"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
     // ---- 08/11: Phoenix, el puente sobre el cañon (momento estrella) ----
     // Se sale de la ciudad entre paredes de roca roja, se cruza el puente de
     // madera del tren (con el precipicio a los lados) y se vuelve. En el puente:
@@ -4623,6 +4669,7 @@ export function createWorld(scene) {
   const VEHICULOS = {
     taxi: { alto: 1.45, z: 1.6 }, limusina: { alto: 1.45, z: 2.4 }, descapotable: { alto: 0.75, z: 0.6 },
     carroza: { alto: 0.95, z: 1.0, gira: true }, tractor: { alto: 2.2, z: 1.4, gira: true }, carrito_golf: { alto: 0.37, z: 0.25 },
+    carruaje: { alto: 1.05, z: 0.9 },
   };
   const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0 };
   function montarVehiculo(nombre, x) {

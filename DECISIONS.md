@@ -1485,3 +1485,37 @@ dragón, aranceles».
   dibujaba. Ahora se ven las dos.
 - **Las armas:** chiles para el Burrito-Bot (Findlay, Washington y el sin fin);
   sellos de aranceles para el dragón. En el debate, micrófonos.
+
+## Nivel 6: Omaha, Nebraska (2026-11-08)
+
+Isidro: «haz más mapas, todos los que puedas, con sus respectivos escenarios
+y obstáculos, su dinamismo». Para Omaha eligió el final en la antigua
+estación art déco y la luz de atardecer en la pradera (`pradera`).
+Historia: tierra de vacas, con cajas de Filetes Trump por la calle.
+
+- **La calle** (Farnam Street, 2.700 m, `blender/omaha.py`):
+  - la torre del First National (la más alta de Nebraska), la torre Woodmen,
+    los almacenes de ladrillo del Old Market con su marquesina de bombillas y
+    el teatro Orpheum con su letrero vertical;
+  - al fondo, Union Station, con su reloj y los ventanales art déco.
+- **Obstáculos nuevos:**
+  - cajas de Filetes Trump (se saltan);
+  - el rollo de heno que viene rodando;
+  - el cartel del asador (agacharse);
+  - el camión de ganado, que cambia de carril;
+  - el aficionado de los Cornhuskers con su gorro de mazorca, que cruza.
+- **Momento estrella, la estampida en los corrales (440–790):**
+  - el arco «UNION STOCK YARDS»;
+  - vallas con vacas, graneros rojos y pacas;
+  - vacas y rollos de heno por la calle;
+  - una vaca que te persigue.
+- **Momentos**, uno cada 20 s: rampa, premios, camiones de ganado, lluvia de
+  tacos, gorras, el coche de caballos del Old Market (vehículo nuevo), jefe de
+  paso, convoy, Huskers que cruzan, reto y alfombra roja.
+- **Lo demás:**
+  - el objeto de la ciudad son filetes;
+  - la música es country con banjo;
+  - el mensaje al ganar: «Hasta las vacas me quieren».
+
+Probado con el piloto: 2:18, el nivel se completa y todos los obstáculos nuevos
+salen.

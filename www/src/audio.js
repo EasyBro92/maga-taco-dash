@@ -216,6 +216,11 @@ const CANCIONES = {
     melodia: [67, 71, 74, null, 74, 76, 74, 71, 72, null, 69, 72, 71, null, 67, null,
       67, 71, 74, null, 79, null, 78, 76, 74, null, 72, 69, 67, null, null, null],
     timbre: "banjo" },
+  // Omaha (08/11): country de la pradera al atardecer, con banjo.
+  omaha: { bpm: 128, swing: 0.55, acordes: [G, C, D, G], bateria: "country", bajo: "alterna",
+    melodia: [67, null, 71, 74, null, 71, 69, null, 67, null, 64, 67, 69, null, null, null,
+      67, null, 71, 74, null, 76, 74, 71, 72, null, 71, 69, 67, null, null, null],
+    timbre: "banjo" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

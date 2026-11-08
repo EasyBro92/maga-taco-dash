@@ -225,6 +225,26 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: el filete de Omaha (un chuleton con su hueso en T).
+  filete(x) {
+    x.save();
+    x.translate(128, 132); x.rotate(-0.25);
+    const carne = () => { x.beginPath(); x.ellipse(0, 0, 100, 74, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; carne(); x.stroke();
+    carne(); x.fillStyle = "#f4e6c8"; x.fill();                      // la grasa del borde
+    x.beginPath(); x.ellipse(0, 0, 86, 60, 0, 0, Math.PI * 2);
+    const g = x.createRadialGradient(-20, -20, 10, 0, 0, 90);
+    g.addColorStop(0, "#c8503c"); g.addColorStop(1, "#8a2a22");
+    x.fillStyle = g; x.fill();
+    x.strokeStyle = "rgba(60,20,10,0.55)"; x.lineWidth = 7;            // las marcas de la parrilla
+    for (let k = -2; k <= 2; k++) { x.beginPath(); x.moveTo(-60 + k * 22, -44); x.lineTo(-20 + k * 22, 44); x.stroke(); }
+    x.fillStyle = "#fbf6ea"; x.strokeStyle = CONTORNO; x.lineWidth = 6;   // el hueso en T
+    x.beginPath(); x.rect(-8, -50, 16, 100); x.fill(); x.stroke();
+    x.beginPath(); x.rect(-36, -10, 72, 16); x.fill(); x.stroke();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; carne(); x.stroke();
+    x.restore();
+  },
+
   // La ficha de casino (Las Vegas).
   ficha(x) {
     const cx = 128, cy = 128;

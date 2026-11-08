@@ -250,6 +250,8 @@ const POSTS = {
     en: "The greatest witch hunt in history and I still win Arizona. Nobody runs like me!" },
   vegas: { es: "He ganado el debate. Todo el mundo lo dice. El Burrito-Bot sigue echando chispas. ¡Hecho en China, roto en América!",
     en: "I won the debate. Everybody says so. Burrito-Bot is still sparking. Made in China, broken in America!" },
+  omaha: { es: "¡Nebraska vota ROJO! Hasta las vacas me quieren. Los Filetes Trump eran los mejores: nadie los compró porque eran demasiado buenos.",
+    en: "Nebraska votes RED! Even the cows love me. Trump Steaks were the best: nobody bought them because they were too good." },
   des_moines: { es: "¡Iowa vota ROJO en el caucus! Los granjeros me quieren, aunque la soja siga sin venderse. ¡Tremendo!",
     en: "Iowa votes RED in the caucus! The farmers love me, even if the soybeans still won't sell. TREMENDOUS!" },
 };

@@ -361,6 +361,11 @@ function aplicarLuzNivel(luz) {
     sun.color.set(0xffaaa0); sun.intensity = 1.0; sun.position.set(-8, 4, -1);
     hemi.color.set(0xd0c4f6); hemi.groundColor.set(0x6a5878);
     fill.color.set(0xfff0e8); fill.intensity = 1.15; fill.position.set(1.5, 6, 10);
+  } else if (luz === "pradera") {
+    // 08/11: Omaha, atardecer en la pradera: sol bajo y naranja por el oeste.
+    sun.color.set(0xffa868); sun.intensity = 1.25; sun.position.set(-8, 4.5, -3);
+    hemi.color.set(0xffd8bc); hemi.groundColor.set(0x8a6248);
+    fill.intensity = 0.55; fill.position.set(1, 5, 9);
   } else if (luz === "invierno") {
     // Mañana de invierno (Des Moines): sol bajo y blanco por delante a la
     // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
@@ -580,7 +585,9 @@ const NOMBRE_HITO = {
     cesar: "El palacio romano", noria: "La noria gigante", campanile: "El campanario de Venecia",
     parque_esculturas: "Parque de esculturas", hotel_fort: "Hotel Fort Des Moines", biblioteca_dm: "Biblioteca central",
     ruan: "La torre de acero", torre_801: "801 Grand, la torre más alta de Iowa", world_food: "Salón del Premio Mundial de la Alimentación",
-    rio: "El río Des Moines" },
+    rio: "El río Des Moines",
+    first_national: "First National, la torre más alta de Nebraska", woodmen: "La torre Woodmen", old_market: "El Old Market",
+    orpheum: "El teatro Orpheum" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -588,7 +595,9 @@ const NOMBRE_HITO = {
     piramide: "The pyramid", castillo: "The castle", torre_eiffel: "The Eiffel Tower", fuentes: "The fountains",
     cesar: "The Roman palace", noria: "The giant wheel", campanile: "The Venice bell tower",
     parque_esculturas: "Sculpture Park", biblioteca_dm: "Central Library", ruan: "The steel tower",
-    torre_801: "801 Grand, Iowa's tallest tower", world_food: "World Food Prize Hall", rio: "The Des Moines River" },
+    torre_801: "801 Grand, Iowa's tallest tower", world_food: "World Food Prize Hall", rio: "The Des Moines River",
+    first_national: "First National, Nebraska's tallest tower", woodmen: "Woodmen Tower", old_market: "The Old Market",
+    orpheum: "The Orpheum Theater" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];

@@ -402,6 +402,62 @@ const CALLES = [
     acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad"],
   },
   {
+    // 08/11/2026: Isidro: «haz más mapas, todos los que puedas, con sus
+    // escenarios, obstáculos y su dinamismo». Nivel 6: Omaha (blender/omaha.py).
+    // Eligió final en Union Station (art déco) y atardecer en la pradera. Tierra
+    // de vacas: cajas de Filetes Trump por la calle y la estampida en los
+    // corrales (el momento estrella).
+    id: "omaha", nombre: "Farnam Street", lugar: "Omaha, Nebraska", listo: true,
+    zona: "city", carpeta: "omaha", luz: "pradera", semilla: 1854,
+    largo: 2700, linea: 11.5, velMax: 23,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 9 },
+    horizonte: "iowa",
+    obstaculos: { low: ["caja_filetes", "rodillo_heno", "paca", "calabazas"], high: ["cartel_steak", "guirnalda", "bandera_grande"],
+      full: ["camion_ganado", "fan_huskers", "vaca", "carruaje", "furgoneta", "tractor"] },
+    publico: { personas: ["granjero", "fan", "abuelo", "senora", "chico", "granjero"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "omaha" }],
+      [70, 300, "vallas", { low: ["caja_filetes", "caja_filetes", "paca"], high: ["cartel_steak"], titulo: "filetes" }],
+      [300, 440, "rampa", { titulo: "rampa" }],
+      // El momento estrella: la estampida en los corrales de ganado.
+      [440, 790, "corrales", { momento: "persigue", perseguidor: "vaca", titulo: "corrales" }],
+      [790, 860, "calma"],
+      [860, 1010, "premios", { titulo: "premios" }],
+      [1010, 1180, "slalom", { full: ["camion_ganado", "camion_ganado", "carruaje"], titulo: "camiones_ganado" }],
+      [1180, 1330, "lluvia", { titulo: "lluvia" }],
+      [1330, 1530, "vallas", { low: ["caja_filetes", "rodillo_heno"], high: ["cartel_steak"], momento: "gorras", titulo: "gorras" }],
+      [1530, 1690, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "carruaje", titulo: "sube_carruaje" }],
+      [1690, 1830, "jefe_paso", { titulo: "jefe_paso" }],
+      [1830, 1990, "convoy", { titulo: "convoy" }],
+      [1990, 2140, "desfile_cruza", { cruzan: ["fan_huskers"], titulo: "cruzan_huskers" }],
+      [2140, 2350, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2350, 2500, "alfombra", { titulo: "alfombra" }],
+      [2500, 2650, "sprint", { titulo: "sprint_omaha" }],
+    ],
+    control: 1312, caja: 1100,
+    // En los corrales no hay edificios: las vallas, las vacas y el granero.
+    sinEdificios: [440, 806],
+    chapas: [[620, "arco"], [1250, "carril"], [2180, "bus"]],
+    hitos: ["first_national", "woodmen", "old_market", "orpheum"],
+    meta: "union_station", metaNombre: { es: "Union Station", en: "Union Station" },
+    // Bajando por Farnam Street hacia la estación.
+    izquierda: [
+      40, ["kit", 3], 14, ["first_national", 1], ["kit", 2], 14, ...cuadras(4),
+      ...cuadras(5), ["old_market", 1], ["kit", 2], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 2], 14, ...cuadras(1), ["woodmen", 1], ["kit", 2], 14, ...cuadras(9),
+      ["orpheum", 1], ["kit", 2], 14, ...cuadras(14),
+    ],
+    fondo: [{ pieza: "union_station", d: 2760, centro: true },
+      { pieza: "corrales_entrada", d: 440, cruza: true },
+      ...Array.from({ length: 12 }, (_, i) => ({ pieza: "corrales", d: 444 + i * 30, cruza: true }))],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [3, 3.2, 30], mira: [0, 10, -20] },
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -502,7 +558,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -542,6 +598,8 @@ export const ANCHO = {
   capitolio_fachada: 10, capitolio_pasillo: 30, capitolio_rotonda: 30, capitolio_salida: 8,
   feria_entrada: 4, feria_puestos: 30, feria_puestos_b: 30, feria_noria: 2,
   canon_corte: 30, canon_puente: 30,
+  // 08/11: Omaha
+  first_national: 30, woodmen: 30, old_market: 40, orpheum: 30, union_station: 90, corrales_entrada: 2, corrales: 30,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
