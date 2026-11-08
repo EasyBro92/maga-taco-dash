@@ -1642,3 +1642,54 @@ luz de tarde.
   - la música es soul de la Motown.
 
 Probado con el piloto: 2:26, el nivel se completa y salen todos los obstáculos.
+
+## Repaso del 08/11/2026 (tarde): lo que dijo Isidro al probar los niveles nuevos
+
+> «faltan detalles en los mapas, me gustan pero se sienten muy parecidos, cuando
+> juego y paso un nivel, al darle a jugar no me envia al último nivel
+> disponible [...] mejora el diseño de los animales, las animaciones como
+> caminan, los micrófono se ven muy claros [...] los obstáculos que tira el
+> burrito bot se hunden en el suelo, falta que tenga sentido la carretera, hay
+> coches que se cruzan donde no hay carreteras, añade algun cruce, y haz que el
+> personaje tenga que cambiar a otra carretera de vez en cuando, en algunos
+> sitios aparecen tuneles o tiendas sin ningún sentido [...] como el circuito»
+
+Se aplicó lo recomendado sin preguntar:
+
+- **Siguiente nivel.** Al ganar sale el botón grande «SIGUIENTE: nombre» y el
+  mapa ya trae elegido el siguiente que toca (antes volvía a salir el mismo).
+- **El barril del Robot Burrito** giraba sobre su base y medio barril se metía
+  en el suelo: ahora gira sobre su eje.
+- **Micrófono** (el que se coge en Las Vegas): de verdad, con rejilla de metal
+  oscuro, mango negro mate y anillo cromado (`blender/animales.py`).
+- **Animales** (`blender/animales.py`): vaca, cerdo, ciervo, alce, pavos y los
+  caballos del coche de Central Park y del carro de San Luis.
+  - Rehechos con forma de animal: lomo, pecho, cabeza con hocico, ojos con
+    brillo, orejas, cola y pelo con algo de textura.
+  - Las patas van aparte: el juego (`world.js`, ANDAR) las mueve al paso que
+    lleva el animal, y la vaca que te persigue va al galope.
+- **Cruces de verdad** (`levels.js`, crucesDeNivel; `world.js`, hacerCruce).
+  - Cada hueco entre edificios es una calle lateral con asfalto, paso de
+    cebra, stop, raya amarilla, semáforo y letrero verde («1st St»...).
+  - Cada dos, la calle sigue también al otro lado (se quita el edificio que
+    la tapaba).
+  - Los coches solo cruzan en los cruces de cuatro, por su carril, y a veces
+    hay uno esperando en el stop.
+- **Desvíos** (aplicarGiros): uno o dos por nivel, hacia el 35 % y el 70 %.
+  - La calle está cortada por obras y hay vallas «ROAD CLOSED / DETOUR» en
+    dos carriles (`blender/calles.py`); también flechas en el suelo y un
+    cartel naranja.
+  - Hay que ponerse en el carril del giro; al llegar, el cartel verde de la
+    calle nueva («OLIVE ST →») tapa la pantalla y ya vas por la otra calle.
+  - Findlay y Phoenix no tienen sitio tranquilo para un desvío.
+- **Entradas con sentido:**
+  - **Súper de San Luis:** un edificio que ocupa la manzana, con escaparates,
+    marquesina y puertas de cristal que se abren solas.
+  - **Metro de Nueva York:** un edificio de estación de lado a lado, como
+    Grand Central.
+  - **Circuito de Indianápolis:** el muro del circuito con taquillas y un
+    túnel de 30 m bajo las gradas.
+- **Más variedad:**
+  - Omaha, Wichita, San Luis, Indianápolis y Detroit tienen su estilo de
+    edificios: colores, plantas, cornisas, depósitos y tiendas propias.
+  - En las aceras hay bancos, buzones, bocas de riego y farolas con bandera.

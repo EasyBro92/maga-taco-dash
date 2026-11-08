@@ -423,6 +423,14 @@ function nivelEnCurso(hechos) {
   return NIVELES.find((n) => nivelAbierto(n, hechos) && !hechos[n.id])
     || [...NIVELES].reverse().find((n) => hechos[n.id]) || NIVELES[0];
 }
+// 08/11/2026: al ganar, el siguiente que toca (el primero abierto sin pasar
+// despues de este; si ya estan todos pasados, el siguiente abierto).
+function siguienteAbierto(n, hechos) {
+  const resto = NIVELES.slice(NIVELES.indexOf(n) + 1);
+  return resto.find((x) => nivelAbierto(x, hechos) && !hechos[x.id])
+    || NIVELES.find((x) => x !== n && nivelAbierto(x, hechos) && !hechos[x.id])
+    || resto.find((x) => nivelAbierto(x, hechos)) || null;
+}
 function abrirMapa() {
   const svg = document.getElementById("mapaSvg");
   const hechos = getNiveles();
@@ -900,6 +908,14 @@ function completarNivel() {
   des.innerHTML = avisos.map((a) => `<div>${icono("candado").replace("#9aa4b8", "#2fa84f").replace("#9aa4b8", "#2fa84f")} ${a}</div>`).join("");
   des.classList.toggle("hidden", !avisos.length);
   pintarMisiones("misionesNivel");
+  // 08/11/2026: el boton grande lleva al siguiente nivel, y el mapa ya lo
+  // trae elegido (antes volvia a salir el mismo).
+  const sig = siguienteAbierto(n, ahora);
+  const bSig = document.getElementById("nivelFinSiguiente");
+  bSig.classList.toggle("hidden", !sig);
+  document.getElementById("nivelFinMapa").className = sig ? "smallBtn" : "bigBtn";
+  if (sig) bSig.textContent = `${t("siguienteNivel")}: ${sig.nombre}`;
+  nivelElegido = sig ? sig.id : null;
   document.getElementById("nivelFin").classList.remove("hidden");
   spawnConfetti(45);
   sndFanfarria();
@@ -932,6 +948,24 @@ function pintarBarraJefe(vida) {
 // 31/10: llega el helicoptero de la tele de las Fake News.
 world.onHelicoptero(() => {
   setTimeout(() => { if (gameState === "playing") showBubble((FRASES[getLang()] || FRASES.es).furgoneta, 1600); }, 1200);
+});
+// 08/11/2026 (2): el desvio (levels.js, aplicarGiros). Al llegar al cruce, el
+// cartel verde con la calle nueva pasa tapando la pantalla y, tapada, se quita
+// la manzana que cerraba la calle de enfrente: ya vas por la otra calle.
+world.onGiro((lado, calle, quitarMuro) => {
+  const el = document.getElementById("giroCalle");
+  el.querySelector("small").textContent = t("ahoraPor");
+  el.querySelector(".placa").textContent = lado > 0 ? `${calle.toUpperCase()} →` : `← ${calle.toUpperCase()}`;
+  el.getAnimations().forEach((a) => a.cancel());
+  el.classList.remove("hidden");
+  el.animate([{ transform: `translateX(${lado * 105}%)` }, { transform: "translateX(0)" }], { duration: 260, easing: "ease-out", fill: "forwards" });
+  // (Con temporizadores y no al acabar la animacion: si la pagina no se ve,
+  // las animaciones no avanzan y la manzana se quedaba puesta.)
+  setTimeout(() => { quitarMuro(); vibrate(20); }, 270);
+  setTimeout(() => {
+    el.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-lado * 105}%)` }], { duration: 260, easing: "ease-in", fill: "forwards" });
+    setTimeout(() => el.classList.add("hidden"), 280);
+  }, 620);
 });
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
@@ -2377,6 +2411,11 @@ function mostrarDiario() {
 }
 document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
 document.getElementById("nivelFinMapa").addEventListener("click", () => { volverAlMenu(); abrirMapa(); });
+document.getElementById("nivelFinSiguiente").addEventListener("click", () => {
+  volverAlMenu(); abrirMapa();
+  const b = document.getElementById("mapaJugar");
+  if (b) b.click();
+});
 document.getElementById("nivelFinRepetir").addEventListener("click", () => {
   intento = nuevoIntento();
   resetRun();

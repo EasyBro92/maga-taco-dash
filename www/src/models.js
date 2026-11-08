@@ -20,6 +20,8 @@ const LISTA = {
   publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero", "valla_policia", "verja"],
   obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
     "rayo", "cohete", "barril", "chile", "jefe",
+    // 08/11 (2): las patas de los animales (blender/animales.py) y el microfono
+    "corte_der", "corte_izq", "vaca_pata", "cerdo_pata", "ciervo_pata", "alce_pata", "pavo_pata", "caballo_pata", "clydesdale_pata", "microfono",
     // 27/10: los de cada ciudad (blender/obstaculos2.py)
     "taxi", "alcantarilla", "andamio", "contenedor", "paca", "tractor", "carroza", "guirnalda",
     "valla_metal", "protesta", "agentes", "suv",

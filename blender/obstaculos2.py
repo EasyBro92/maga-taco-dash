@@ -976,7 +976,7 @@ PIEZAS = {
     'perritos':     (perritos,     'obstaculos', dict(lado=512)),
     'bici':         (bici,         'obstaculos', dict(lado=512, bisel=0.0)),
     'calabazas':    (calabazas,    'obstaculos', dict(lado=256, bisel=0.0)),
-    'vaca':         (vaca,         'obstaculos', dict(lado=512, bisel=0.0)),
+    # vaca (08/11 (2): ahora en animales.py, con las patas aparte)
     'calavera':     (calavera,     'obstaculos', dict(lado=256, bisel=0.0)),
     'cartel_ruta':  (cartel_ruta,  'obstaculos', dict(lado=512, bisel=0.0)),
     'elvis':        (elvis,        'obstaculos', dict(lado=512, bisel=0.0)),
@@ -989,7 +989,7 @@ PIEZAS = {
     'pancarta_caucus': (pancarta_caucus, 'obstaculos', dict(lado=512, bisel=0.0)),
     'quitanieves':     (quitanieves,     'obstaculos', dict(lado=512)),
     'munieco_nieve':   (munieco_nieve,   'obstaculos', dict(lado=256, bisel=0.0)),
-    'cerdo':           (cerdo,           'obstaculos', dict(lado=256, bisel=0.0)),
+    # cerdo (08/11 (2): ahora en animales.py, con las patas aparte)
     'cosechadora':     (cosechadora,     'obstaculos', dict(lado=512)),
     'votantes':        (votantes,        'obstaculos', dict(lado=512, bisel=0.0)),
     'valla_policia': (valla_policia, 'publico',    dict(lado=256)),

@@ -94,7 +94,9 @@ const CALLES = [
     chapas: [[430, "arco"], [995, "techo"], [1180, "arco"]],
     // 07/11: el metro: la boca a ras de calle justo despues de la biblioteca,
     // dos trozos de tunel, la estacion 5 Av (150 m), cuatro de tunel y la salida.
-    interior: { rango: [772, 1082], tipo: "metro" },
+    // (08/11 (2): la boca es un edificio de estacion de lado a lado: sin los
+    // edificios de los lados, que se metian en ella.)
+    interior: { rango: [772, 1082], tipo: "metro", sinEdificios: [760, 1090] },
     // (El helicoptero, fuera del metro.)
     helicoptero: [420, 1150],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
@@ -121,7 +123,8 @@ const CALLES = [
       ...[978, 1002, 1026, 1050].map((d) => ({ pieza: "metro_tunel", d, cruza: true })),
       { pieza: "metro_salida", d: 1074, cruza: true }],
     final: "camion",
-    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/hidrante", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/buzon"],
   },
   {
     id: "pueblo", nombre: "Main Street", lugar: "Findlay, Ohio", listo: true,
@@ -411,7 +414,7 @@ const CALLES = [
     zona: "city", carpeta: "omaha", luz: "pradera", semilla: 1854,
     largo: 2700, linea: 11.5, velMax: 23,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
-    kit: { minPlantas: 3, maxPlantas: 9 },
+    kit: { minPlantas: 3, maxPlantas: 8, estilo: "omaha" },
     horizonte: "iowa",
     obstaculos: { low: ["caja_filetes", "rodillo_heno", "paca", "calabazas"], high: ["cartel_steak", "guirnalda", "bandera_grande"],
       full: ["camion_ganado", "fan_huskers", "vaca", "carruaje", "furgoneta", "tractor"] },
@@ -455,7 +458,8 @@ const CALLES = [
       ...Array.from({ length: 12 }, (_, i) => ({ pieza: "corrales", d: 444 + i * 30, cruza: true }))],
     final: "parada", parada: 6,
     camaraFinal: { pos: [3, 3.2, 30], mira: [0, 10, -20] },
-    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/arbol_ciudad", "ciudad/farola_ciudad", "ciudad/buzon"],
   },
   {
     // 08/11/2026: nivel 7: Wichita (blender/wichita.py). Eligió final en el
@@ -466,7 +470,7 @@ const CALLES = [
     zona: "city", carpeta: "wichita", luz: "tornado", semilla: 1870,
     largo: 2800, linea: 11.5, velMax: 23.5,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
-    kit: { minPlantas: 2, maxPlantas: 8 },
+    kit: { minPlantas: 2, maxPlantas: 7, estilo: "wichita" },
     horizonte: "kansas",
     obstaculos: { low: ["tejado_volando", "paca", "calabazas"], high: ["valla_volando", "vaca_volando", "guirnalda"],
       full: ["espantapajaros", "bruja_bici", "tractor", "furgoneta", "vaca"] },
@@ -509,7 +513,8 @@ const CALLES = [
       { pieza: "tornado_embudo", d: 860, cruza: true, x: 30 }],
     final: "parada", parada: 4,
     camaraFinal: { pos: [3, 3.0, 28], mira: [0, 12, -24] },
-    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/arbol_ciudad", "findlay/farola_bandera", "ciudad/banco", "ciudad/arbol_ciudad", "findlay/farola_bandera", "ciudad/hidrante"],
   },
   {
     // 08/11/2026: nivel 8: San Luis (blender/sanluis.py). Isidro: «Aplica todas
@@ -520,7 +525,7 @@ const CALLES = [
     zona: "city", carpeta: "san_luis", luz: "manana", semilla: 1764,
     largo: 2900, linea: 11.5, velMax: 23.5,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
-    kit: { minPlantas: 4, maxPlantas: 12 },
+    kit: { minPlantas: 4, maxPlantas: 12, estilo: "san_luis" },
     horizonte: "ohio",
     obstaculos: { low: ["caja_precio", "carrito_compra", "basura", "conos"], high: ["etiqueta_precio", "andamio", "semaforo"],
       full: ["carro_clydesdale", "fan_cardinals", "taxi", "furgoneta", "contenedor"] },
@@ -546,7 +551,10 @@ const CALLES = [
       [2700, 2860, "sprint", { titulo: "sprint_arco" }],
     ],
     control: 1312, caja: 1100,
-    interior: { rango: [450, 800], tipo: "super" },
+    // (08/11 (2): el super ocupa la manzana entera: sin edificios a los lados.
+    // Acaba en 796, donde acaba su salida: antes quedaban 4 m sin suelo.)
+    interior: { rango: [450, 796], tipo: "super", sinEdificios: [440, 806] },
+    extras: ["super_puerta"],
     chapas: [[620, "arco"], [1250, "carril"], [2250, "bus"]],
     hitos: ["old_courthouse", "busch_stadium", "union_station_stl"],
     meta: "arco_gateway", metaNombre: { es: "el arco Gateway", en: "the Gateway Arch" },
@@ -567,7 +575,8 @@ const CALLES = [
     camaraFinal: { pos: [0, 3.0, 18], mira: [0, 22, -40] },
     // Al final, el parque junto al rio: sin edificios.
     sinEdificios: [2880, 3800],
-    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad", "ciudad/hidrante", "ciudad/arbol_ciudad", "ciudad/farola_ciudad", "ciudad/banco"],
   },
   {
     // 08/11/2026: nivel 9: Indianápolis (blender/indy.py). Isidro: «Aplica todas
@@ -579,7 +588,7 @@ const CALLES = [
     zona: "city", carpeta: "indianapolis", luz: "mediodia", semilla: 1911,
     largo: 2900, linea: 11.5, velMax: 24,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
-    kit: { minPlantas: 4, maxPlantas: 14 },
+    kit: { minPlantas: 4, maxPlantas: 14, estilo: "indy" },
     horizonte: "ohio",
     obstaculos: { low: ["pila_neumaticos", "conos", "basura"], high: ["bandera_cuadros", "andamio", "semaforo"],
       full: ["coche_seguridad", "taxi", "furgoneta", "contenedor"] },
@@ -619,15 +628,18 @@ const CALLES = [
       40, ["kit", 2], 14, ...cuadras(1), ["statehouse_in", 1], ["kit", 2], 14, ...cuadras(6),
       ["jw_marriott", 1], ["kit", 2], 14, ...cuadras(19),
     ],
-    // (Las piezas que cruzan empiezan en `d`: las gradas, de 2340 a 2910, justo
-    // donde se quita la calle y hasta la meta, sin huecos ni suelos encima de otros.)
+    // (Las piezas que cruzan empiezan en `d`. 08/11 (2): el muro del circuito
+    // en 2336 y el tunel por debajo de las gradas hasta 2370 (su suelo empieza
+    // en 2340, donde se quita la calle); despues las gradas hasta la meta, sin
+    // huecos ni suelos encima de otros.)
     fondo: [{ pieza: "meta_indy", d: 2910, centro: true },
       { pieza: "circuito_entrada", d: 2336, cruza: true },
-      ...Array.from({ length: 19 }, (_, i) => ({ pieza: "grada", d: 2340 + i * 30, cruza: true }))],
+      ...Array.from({ length: 18 }, (_, i) => ({ pieza: "grada", d: 2370 + i * 30, cruza: true }))],
     // Se para encima de la franja de ladrillos, y la camara mira la Pagoda.
     final: "parada", parada: -0.5,
     camaraFinal: { pos: [2.4, 2.8, 10], mira: [-9, 9, -16] },
-    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "findlay/farola_bandera", "ciudad/banco", "ciudad/arbol_ciudad", "ciudad/buzon"],
   },
   {
     // 08/11/2026: nivel 10: Detroit (blender/detroit.py). Se aplico lo
@@ -639,7 +651,7 @@ const CALLES = [
     zona: "city", carpeta: "detroit", luz: "tarde", semilla: 1701,
     largo: 2950, linea: 11.5, velMax: 24,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
-    kit: { minPlantas: 4, maxPlantas: 14 },
+    kit: { minPlantas: 4, maxPlantas: 14, estilo: "detroit" },
     horizonte: "ohio",
     obstaculos: { low: ["pila_neumaticos", "conos", "basura"], high: ["pancarta_canada", "andamio", "semaforo"],
       full: ["coche_arancel", "taxi", "furgoneta", "contenedor"] },
@@ -689,7 +701,8 @@ const CALLES = [
     // Se para al pie de la escalinata, y la camara mira hacia arriba.
     final: "parada", parada: 14,
     camaraFinal: { pos: [5, 3.2, 21], mira: [0, 24, -40] },
-    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+    // 08/11 (2): mas cosas en la acera y distintas en cada ciudad.
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/buzon", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/hidrante"],
   },
   {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
@@ -799,7 +812,7 @@ export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -839,7 +852,7 @@ export const ANCHO = {
   // 08/11: San Luis
   old_courthouse: 30, busch_stadium: 40, union_station_stl: 30, arco_gateway: 100, super_entrada: 8, super_pasillo: 30, super_salida: 8,
   // 08/11: Indianápolis
-  soldiers_monument: 30, statehouse_in: 40, lucas_oil: 40, jw_marriott: 30, grada: 30, circuito_entrada: 4, meta_indy: 80,
+  soldiers_monument: 30, statehouse_in: 40, lucas_oil: 40, jw_marriott: 30, grada: 30, circuito_entrada: 34, meta_indy: 80,
   // 08/11: Detroit
   spirit_detroit: 30, guardian_building: 30, fox_theatre: 30, puno_joe_louis: 20, ren_cen: 100, torre_ambassador: 4,
   puente_amb_0: 30, puente_amb_1: 30, puente_amb_2: 30, puente_amb_3: 30, puente_amb_4: 30, puente_amb_5: 30,
@@ -906,8 +919,9 @@ function recorrerLado(nivel, lista, lado, anchoDe, alEdificio, alCruce) {
 // largo de la calle), lado }. Necesita el ancho de cada pieza (medidas).
 export function colocarNivel(nivel, anchoDe) {
   const salida = [];
+  const { quitar } = crucesDeNivel(nivel);
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
-  recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
+  recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => { if (!(e.pieza === "kit" && quitar.has(e.d))) salida.push(e); });
   // (`cruza`: de lado a lado de la calle, como el puente o las pasarelas de Des Moines)
   for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, x: f.x || 0, giro: !!f.giro, ancho: anchoDe(f.pieza) });
   // El arco del punto de control, de lado a lado de la calle.
@@ -943,9 +957,10 @@ export function largoDeLados(nivel) {
 // (26/10: los cruces se miden con el ancho real de cada edificio del kit.)
 export function sueloDeNivel(nivel) {
   const salida = [];
-  recorrerLado(nivel, nivel.izquierda, -1, (k) => ANCHO[k] || 20, () => {}, (d, hueco) => {
-    if (hueco >= 12) salida.push({ tipo: "cebra", d: d + hueco / 2 });
-  });
+  // 08/11 (2): cada calle lateral es un cruce de verdad (ver crucesDeNivel).
+  for (const c of crucesDeNivel(nivel).cruces) {
+    salida.push({ tipo: "cruce", d: c.d, lados: c.lados, cuatro: c.cuatro, n: c.n, giro: (nivel.giros || []).find((g) => g.d === c.d) || null });
+  }
   const azar = azarConSemilla(nivel.semilla + 7);
   for (let x = 30; x < nivel.largo - 40; x += 45 + azar() * 25) {
     salida.push({ tipo: "tapa", d: x, x: (azar() < 0.5 ? -1 : 1) * 3.1 });
@@ -982,6 +997,104 @@ export function azarConSemilla(semilla) {
   };
 }
 
+// ---- Cruces y desvios (08/11/2026) ----
+// Isidro: «falta que tenga sentido la carretera, hay coches que se cruzan donde
+// no hay carreteras, añade algun cruce, y haz que el personaje tenga que
+// cambiar a otra carretera de vez en cuando».
+// Antes habia un paso de cebra en cada hueco de la acera izquierda y por alli
+// cruzaban coches aunque enfrente hubiera un edificio. Ahora cada hueco de 12 m
+// o mas es una calle lateral con su asfalto (world.js, hacerCruce). Cuando los
+// huecos de los dos lados coinciden es un cruce de cuatro; y, de cada dos
+// huecos de la izquierda, se abre tambien la calle a la derecha quitando los
+// edificios del kit que la tapaban. Solo en los cruces de cuatro cruzan coches.
+// Nada de cruces en los interiores, donde no hay edificios, en los arcos y
+// puentes del fondo, ni al salir o al llegar.
+export function crucesDeNivel(nivel, anchoDe = (k) => ANCHO[k] || 20) {
+  if (nivel._cruces) return nivel._cruces;
+  const huecos = { [-1]: [], [1]: [] }, edif = { [-1]: [], [1]: [] };
+  for (const lado of [-1, 1]) {
+    recorrerLado(nivel, lado < 0 ? nivel.izquierda : nivel.derecha, lado, anchoDe,
+      (e) => edif[lado].push(e), (d, h) => { if (h >= 12) huecos[lado].push([d, d + h]); });
+  }
+  const prohibido = [[-1e9, 50], [nivel.largo - 50, 1e9]];
+  const ri = nivel.interior && nivel.interior.rango;
+  if (ri) prohibido.push([ri[0] - 25, ri[1] + 25]);
+  const si = nivel.interior && nivel.interior.sinEdificios;
+  if (Array.isArray(si)) prohibido.push(si);
+  if (nivel.sinEdificios) prohibido.push(nivel.sinEdificios);
+  for (const f of nivel.fondo || []) if (f.cruza || f.centro) prohibido.push([f.d - 20, f.d + (anchoDe(f.pieza) || 20) + 20]);
+  if (nivel.control) prohibido.push([nivel.control - 12, nivel.control + 12]);
+  const libre = (c) => !prohibido.some((r) => c - 7 < r[1] && c + 7 > r[0]);
+  const cruces = [], quitar = new Set();
+  let n = 0;
+  for (const [a, b] of huecos[-1]) {
+    const c = (a + b) / 2;
+    if (!libre(c)) continue;
+    const otro = huecos[1].find(([x, y]) => Math.min(b, y) - Math.max(a, x) >= 11);
+    if (otro) { cruces.push({ d: (Math.max(a, otro[0]) + Math.min(b, otro[1])) / 2, lados: [-1, 1], cuatro: true }); continue; }
+    if (n++ % 2 === 0) {
+      const tapan = edif[1].filter((e) => e.d < c + 6.5 && e.d + e.ancho > c - 6.5);
+      if (tapan.length && tapan.every((e) => e.pieza === "kit")) {
+        tapan.forEach((e) => quitar.add(e.d));
+        cruces.push({ d: c, lados: [-1, 1], cuatro: true });
+        continue;
+      }
+    }
+    cruces.push({ d: c, lados: [-1], cuatro: false });
+  }
+  for (const [a, b] of huecos[1]) {
+    const c = (a + b) / 2;
+    if (!libre(c) || cruces.some((x) => Math.abs(x.d - c) < 16)) continue;
+    cruces.push({ d: c, lados: [1], cuatro: false });
+  }
+  cruces.sort((x, y) => x.d - y.d);
+  cruces.forEach((c, i) => { c.n = i + 1; });   // el numero de la calle (1st St, 2nd St...)
+  nivel._cruces = { cruces, quitar };
+  return nivel._cruces;
+}
+
+// Los desvios: dos por nivel (hacia el 35 % y el 70 %), en un cruce con calle
+// hacia el lado del giro y dentro de un tramo tranquilo (sin momento). La
+// calle de enfrente esta cortada por obras y hay que ponerse en el carril de
+// ese lado; al llegar se gira a la otra calle (main.js pone el cartel verde
+// con su nombre). El tramo «giro» va de 60 m antes del cruce a 25 m despues.
+const TRAMOS_GIRO = ["mixto", "calma", "vallas", "slalom", "suave", "lluvia", "premios"];
+export const CALLES_GIRO = {
+  nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
+  vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
+  wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], washington: ["15th St NW", "Constitution Ave"],
+};
+function aplicarGiros(nivel) {
+  const { cruces } = crucesDeNivel(nivel);
+  const lejos = [nivel.control, nivel.caja, ...(nivel.chapas || []).map(([d]) => d)].filter((x) => x != null);
+  const giros = [];
+  for (const [f, pref] of [[0.35, 1], [0.7, -1]]) {
+    const objetivo = nivel.largo * f;
+    const vale = cruces.filter((c) => {
+      if (Math.abs(c.d - objetivo) > nivel.largo * 0.2 || lejos.some((x) => Math.abs(x - c.d) < 45)) return false;
+      if (giros.some((g) => Math.abs(g.d - c.d) < 300)) return false;
+      const t = nivel.tramos.find(([a, b]) => c.d >= a && c.d < b);
+      // (los momentos pequeños, el reto y las gorras, se acaban en el desvio)
+      const op = t && t[3] || {};
+      return t && TRAMOS_GIRO.includes(t[2]) && !op.vehiculo && (!op.momento || ["reto", "gorras"].includes(op.momento)) && c.d - 65 >= t[0] && c.d + 30 <= t[1];
+    }).sort((a, b) => Math.abs(a.d - objetivo) - Math.abs(b.d - objetivo));
+    const c = vale.find((x) => x.lados.includes(pref)) || vale[0];
+    if (!c) continue;
+    const lado = c.lados.includes(pref) ? pref : c.lados[0];
+    giros.push({ d: c.d, lado, n: giros.length, calle: (CALLES_GIRO[nivel.id] || [])[giros.length] || `${c.n + 1}th St` });
+  }
+  for (const g of giros) {
+    const i = nivel.tramos.findIndex(([a, b]) => g.d >= a && g.d < b);
+    const [a, b, tipo, op] = nivel.tramos[i];
+    const { titulo, momento, ...resto } = op || {};
+    nivel.tramos.splice(i, 1, [a, g.d - 60, tipo, op],
+      [g.d - 60, g.d + 25, "giro", { lado: g.lado, cruce: g.d, titulo: g.lado > 0 ? "giro_der" : "giro_izq" }],
+      [g.d + 25, b, tipo, resto]);
+  }
+  nivel.giros = giros;
+}
+
 // Piezas que hay que cargar para jugar un nivel (las de su calle, el fondo y la puerta).
 export function piezasDeNivel(nivel) {
   const set = new Set();
@@ -995,3 +1108,6 @@ export function piezasDeNivel(nivel) {
 export function usaKit(nivel) {
   return [nivel.izquierda, nivel.derecha].some((lado) => lado.some((it) => Array.isArray(it) && it[0] === "kit"));
 }
+
+// 08/11 (2): los desvios de cada nivel (aqui, cuando ya existe ANCHO).
+for (const n of NIVELES) if (n.tramos && n.izquierda) aplicarGiros(n);

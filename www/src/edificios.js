@@ -39,6 +39,40 @@ const COLORES_VEGAS = [0xf6f1e6, 0xf3e6c8, 0xe9d6b8, 0xf2c7c0, 0xbfe3e0, 0xe8d08
 
 const elegir = (azar, lista) => lista[Math.floor(azar() * lista.length)];
 
+// 08/11/2026 (2): Isidro: «faltan detalles en los mapas, me gustan pero se
+// sienten muy parecidos». Las ciudades nuevas tenian todas los mismos
+// edificios: ahora cada una lleva su estilo (`kit.estilo` en levels.js), con
+// sus plantas, sus colores, sus cornisas, sus remates, sus toldos y los
+// rotulos de sus tiendas.
+const ESTILOS = {
+  // Omaha: el Old Market, almacenes de ladrillo rojo oscuro con depositos de agua.
+  omaha: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_ladrillo", "planta_lisa", "planta_miradores"],
+    ladrillos: [0x8a3f2e, 0x7a3428, 0x9a4a36, 0x6e3a2c, 0xa85a3e], piedras: [0xd8c3a8, 0xc9b08a, 0xe2d2b0],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_deposito", 0.35], bajos: ["bajo_tiendas", "bajo_tiendas", "bajo_grande"],
+    toldos: [0x2d5a3a, 0x7a2a32, 0x1f2a3a, 0xb8862b],
+    rotulos: ["STEAKHOUSE", "OLD MARKET", "ANTIQUES", "BREWERY", "CANDY", "BOOKS", "BBQ", "SADDLERY", "GALLERY", "ICE CREAM"] },
+  // Wichita: arenisca y ladrillo claro, pocas plantas y aire del oeste.
+  wichita: { plantas: ["planta_lisa", "planta_balcones", "planta_ladrillo", "planta_frontones"],
+    ladrillos: [0xc98b6a, 0xb8704f, 0xd09a72], piedras: [0xe8cfa6, 0xe2d2b0, 0xd8c2a0, 0xf0dcc0, 0xcdb48e],
+    cornisas: ["cornisa_clasica", "cornisa_deco"], remate: ["remate_atico", 0.15], toldos: [0x8a3a2a, 0x2a4a6a, 0xb8862b, 0x3a5a3a],
+    rotulos: ["WESTERN WEAR", "BOOTS", "BBQ", "AVIATION", "SADDLES", "DINER", "RODEO", "HARDWARE", "PIZZA", "COFFEE"] },
+  // San Luis: el ladrillo rojo de toda la vida con cornisas de piedra.
+  san_luis: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_frontones", "planta_miradores", "planta_lisa"],
+    ladrillos: [0xa8402e, 0x9a3a2a, 0xb8503a, 0x8a3428], piedras: [0xe4dcc8, 0xd8ccb4, 0xcfc3aa],
+    cornisas: ["cornisa_clasica", "cornisa_clasica", "cornisa_deco"], remate: ["remate_mansarda", 0.15], toldos: [0xc8202e, 0x1f3a6a, 0x2d5a3a, 0xf2c230],
+    rotulos: ["TOASTED RAVIOLI", "BLUES CLUB", "BBQ", "BREWERY", "CUSTARD", "BASEBALL", "GOOEY BUTTER", "PRETZELS", "JAZZ", "BAKERY"] },
+  // Indianapolis: la piedra caliza de Indiana, clara, y torres de cristal.
+  indy: { plantas: ["planta_frontones", "planta_lisa", "planta_cristal", "planta_lisa", "planta_balcones"],
+    ladrillos: [0xb8704f], piedras: [0xe6dcc6, 0xefe6d2, 0xdcd0b8, 0xe9e0cc, 0xd8ccb0], cristal: [0xcfd8de, 0xbcd0e0, 0xd9dbe0],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.15], toldos: [0x1d1f25, 0xc8202e, 0x1f3a8a, 0xf2c230],
+    rotulos: ["RACING GEAR", "PIT STOP", "TIRES", "CHECKERED", "DINER", "PIZZA", "SPEED SHOP", "TROPHIES", "COFFEE", "BURGERS"] },
+  // Detroit: art deco, ladrillo oscuro y terracota, y alguna torre de cristal.
+  detroit: { plantas: ["planta_lisa", "planta_ladrillo", "planta_cristal", "planta_miradores", "planta_ladrillo"],
+    ladrillos: [0x7a3a2e, 0x6a3428, 0x8a4a34, 0x5e3026], piedras: [0xc98a5a, 0xb8a080, 0x9a8a78, 0xd8b890, 0x8a7a6e], cristal: [0x9aaabb, 0xb0bcc8],
+    cornisas: ["cornisa_deco", "cornisa_deco", "cornisa_clasica"], remate: ["remate_antena", 0.25], toldos: [0x1d1f25, 0x7a2a32, 0x2a4a6a, 0xc0532f],
+    rotulos: ["CONEY ISLAND", "MOTOWN", "RECORDS", "AUTO PARTS", "COFFEE", "PIZZA", "SOUL FOOD", "HOT DOGS", "GARAGE", "TIRES"] },
+};
+
 // Rotulo pintado: letras de color sobre fondo oscuro o claro.
 const rotulos = {};
 function texturaRotulo(texto, fondo, letra, neon = false) {
@@ -99,8 +133,8 @@ export function construirEdificio(azar, ancho, opciones = {}) {
   const noble = azar() < 0.35 ? "planta_frontones" : planta;
   const cornisa = planta === "planta_cristal" ? "cornisa_simple" : elegir(azar, ["cornisa_clasica", "cornisa_clasica", "cornisa_deco"]);
   const remate = elegir(azar, REMATES);
-  const toldo = elegir(azar, TOLDOS);
-  const rotulo = elegir(azar, ROTULOS);
+  let toldo = elegir(azar, TOLDOS);
+  let rotulo = elegir(azar, ROTULOS);
   const fondoRotulo = azar() < 0.5 ? "#22304f" : "#2b2b2e";
   const letraRotulo = elegir(azar, ["#ffd23f", "#ffffff", "#f6c27a", "#e8f4ff"]);
   let rotuloV = null;
@@ -136,6 +170,19 @@ export function construirEdificio(azar, ancho, opciones = {}) {
     estilo = { planta: p, noble: p, color: c, colorBajo: azar() < 0.5 ? c : elegir(azar, [0xf3ece0, 0xe8cfa6, 0xc98e66]),
       bajo: azar() < 0.75 ? "bajo_tiendas" : "bajo_grande", cornisa: p === "planta_cristal" ? "cornisa_simple" : (azar() < 0.6 ? "cornisa_simple" : "cornisa_deco"),
       remate: azar() < 0.15 ? "remate_antena" : azar() < 0.15 ? "remate_atico" : null };
+  }
+
+  const est = ESTILOS[opciones.estilo];
+  if (est) {
+    // (Se elige despues de lo normal, como los otros: no cambia los niveles de antes.)
+    const p = elegir(azar, est.plantas);
+    const c = p === "planta_ladrillo" ? elegir(azar, est.ladrillos) : p === "planta_cristal" ? elegir(azar, est.cristal || [0xd9dbe0, 0xcfd8de]) : elegir(azar, est.piedras);
+    estilo = { planta: p, noble: azar() < 0.3 && p !== "planta_cristal" ? "planta_frontones" : p, color: c,
+      colorBajo: azar() < 0.6 ? c : elegir(azar, est.piedras), bajo: elegir(azar, est.bajos || BAJOS),
+      cornisa: p === "planta_cristal" ? "cornisa_simple" : elegir(azar, est.cornisas),
+      remate: azar() < est.remate[1] ? est.remate[0] : null };
+    toldo = elegir(azar, est.toldos);
+    rotulo = elegir(azar, est.rotulos);
   }
 
   let grande = null;

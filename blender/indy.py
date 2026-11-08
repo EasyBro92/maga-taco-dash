@@ -123,12 +123,67 @@ def grada():
             cil(hierro(), s * 16.8, y, 0, 0.2, 11.5, 8)
 
 def circuito_entrada():
-    """La puerta de la entrada al circuito, de lado a lado, con el letrero."""
+    """La entrada al circuito (08/11 (2)). Isidro: «el circuito que aparece ...
+    no de forma realista». Antes era una puerta suelta y detrás, de golpe, las
+    gradas. Ahora la calle llega al muro del circuito (ladrillo, 13,5 m de alto
+    y 140 de ancho), con el letrero, el logo de la rueda con alas y las
+    taquillas; detrás asoman las gradas con su tejado, y se entra por un
+    túnel de 30 m por debajo de ellas, como en el de verdad. Al salir del
+    túnel empieza la recta. Va de d a d + 34: el muro en y = -17 y el suelo
+    desde y = -13 (donde levels.js quita la calle) hasta y = 17."""
+    L = 34.0
+    y0 = -L / 2
+    T, H = 4.3, 10.0      # (10 m: la cámara del juego va alta y con menos se veía el techo por encima)
+    M = 13.5              # alto del muro
+    muro = ladrillo()
+    hormi = mat_bloques('hormigon_tunel_in', 0x8a867e, 0x7a766e, ancho=2.4, alto=1.2, grosor=0.01, variacion=1.04)
     for s in (-1, 1):
-        caja(ladrillo(), s * 9.5, 0, 0, 2.0, 2.0, 10.0)
-    caja(mat('letrero_ims', 0x1f3a8a, 0.5), 0, 0, 8.6, 21.0, 1.0, 2.0)
-    texto(blanco(), 'INDIANAPOLIS MOTOR SPEEDWAY', 0, -0.52, 9.6, tam=0.75, prof=0.05)
-    caja(cuadros('cuadros_puerta', -10.5, 21.0), 0, -0.52, 8.6, 21.0, 0.05, 0.4)
+        caja(muro, s * (T + (70 - T) / 2), y0 + 0.6, 0, 70 - T, 1.2, M)
+        caja(blanco(), s * (T + (70 - T) / 2), y0 + 0.6, M, 70 - T, 1.5, 0.35)
+    caja(muro, 0, y0 + 0.6, H, T * 2, 1.2, M - H)
+    caja(blanco(), 0, y0 + 0.6, M, T * 2, 1.5, 0.35)
+    for s in (-1, 1):                                       # el marco del túnel
+        caja(blanco(), s * (T + 0.25), y0 - 0.1, 0, 0.5, 0.3, H + 0.5)
+    caja(blanco(), 0, y0 - 0.1, H, T * 2 + 1.0, 0.3, 0.5)
+    # Detrás del muro asoman las gradas, con su tejado y sus columnas.
+    caja(mat('grada_trasera', 0xb8b4ac, 0.7), 0, y0 + 8.0, M, 140, 14, 5.5)
+    for x in range(-66, 67, 12):
+        caja(hierro(), x, y0 + 2.2, M, 0.3, 0.3, 7.0)
+    caja(mat('tejadillo_grada', 0xe8e4dc, 0.5), 0, y0 + 8.0, M + 7.0, 140, 16, 0.4)
+    # El letrero azul con la franja de cuadros, encima del túnel.
+    caja(mat('letrero_ims', 0x1f3a8a, 0.5), 0, y0 - 0.15, H + 0.8, 26.0, 0.6, 2.4)
+    texto(blanco(), 'INDIANAPOLIS MOTOR SPEEDWAY', 0, y0 - 0.5, H + 1.8, tam=0.85, prof=0.05)
+    caja(cuadros('cuadros_puerta', -13.0, 26.0, 13), 0, y0 - 0.5, H + 0.85, 26.0, 0.05, 0.45)
+    # El logo, la rueda con alas, a los dos lados del túnel.
+    for s in (-1, 1):
+        x = s * 13.0
+        cil(blanco(), x, y0 - 0.05, 7.0, 1.3, 0.2, 24, eje='Y')
+        cil(mat('rueda_logo', 0x1f3a8a, 0.5), x, y0 - 0.15, 7.0, 1.0, 0.1, 24, eje='Y')
+        for w in (-1, 1):
+            for k in range(3):
+                caja(blanco(), x + w * (1.75 + k * 0.45), y0 - 0.1, 6.7 + k * 0.35, 0.8 - k * 0.15, 0.1, 0.25)
+    # Las taquillas, a los lados de la entrada.
+    for s in (-1, 1):
+        x = s * 21.0
+        caja(mat('taquilla', 0xe8e4dc, 0.5), x, y0 - 1.6, 0, 4.0, 2.4, 2.8)
+        caja(vidrio(), x, y0 - 2.82, 1.0, 3.0, 0.05, 1.1)
+        caja(rojo(), x, y0 - 1.6, 2.8, 4.4, 2.8, 0.3)
+        texto(blanco(), 'TICKETS', x, y0 - 3.05, 2.3, tam=0.35, prof=0.02)
+    # El túnel: paredes y techo de hormigón, las luces y el suelo.
+    yt0, yt1 = y0 + 1.2, 13.0
+    for s in (-1, 1):
+        caja(hormi, s * (T + 0.2), (yt0 + yt1) / 2, 0, 0.4, yt1 - yt0, H)
+    caja(hormi, 0, (yt0 + yt1) / 2, H, T * 2 + 0.8, yt1 - yt0, 0.4)
+    for y in (-12.0, -6.0, 0.0, 6.0, 11.0):
+        caja(luz('luz_tunel_in', 0xffe2b0, 1.2), 0, y, H - 0.08, 1.4, 0.5, 0.06)
+    caja(mat('asfalto_pista', 0x45474d, 0.8), 0, 2.0, 0, 8.4, 30, 0.06)
+    # A la salida del túnel, el muro de la pista y la hierba, como en las gradas.
+    for s in (-1, 1):
+        caja(mat('cesped_pista', 0x5a9a48, 0.8), s * 5.8, 15.0, 0, 2.8, 4.0, 0.05)
+        caja(blanco(), s * 4.35, 15.0, 0, 0.3, 4.0, 1.1)
+        caja(rojo(), s * 4.18, 15.0, 0.75, 0.04, 4.0, 0.18)
+        caja(mat('grada_hormigon', 0xb8b4ac, 0.7), s * 12.0, 15.0, 0, 10.0, 4.0, 8.0)
+        caja(mat('grada_hormigon', 0xb8b4ac, 0.7), s * (T + 2.6), 13.6, 0, 4.4, 1.2, H + 0.4)   # la boca de dentro
 
 def meta_indy():
     """La meta: la franja de ladrillos de lado a lado (el jugador se para
@@ -245,7 +300,7 @@ PIEZAS = {
     'lucas_oil':         (lucas_oil,         'indianapolis', dict(lado=1024, segmentos=2, min_bisel=1.0)),
     'jw_marriott':       (jw_marriott,       'indianapolis', dict(lado=1024, segmentos=2)),
     'grada':             (grada,             'indianapolis', dict(lado=2048, bisel=0.0, segmentos=2)),
-    'circuito_entrada':  (circuito_entrada,  'indianapolis', dict(lado=512, bisel=0.0)),
+    'circuito_entrada':  (circuito_entrada,  'indianapolis', dict(lado=2048, bisel=0.0, suelo=False)),
     'meta_indy':         (meta_indy,         'indianapolis', dict(lado=2048, segmentos=1, min_bisel=2.0)),
     'indycar':           (indycar,           'obstaculos', dict(lado=512)),
     'pila_neumaticos':   (pila_neumaticos,   'obstaculos', dict(lado=256, bisel=0.0)),

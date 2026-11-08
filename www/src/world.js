@@ -2,7 +2,7 @@ import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo, lucesDe } from "./models.js";
-import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel, sitiosObjetos } from "./levels.js";
+import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel, sitiosObjetos, crucesDeNivel } from "./levels.js";
 import { construirEdificio, soltarEdificio } from "./edificios.js";
 import { lienzo as lienzoPegatina } from "./pegatinas.js";
 import { crearHorizonte } from "./horizonte.js";
@@ -1767,10 +1767,28 @@ export function createWorld(scene) {
       Object.assign(BIOME_COLORS.city, { sky: 0xe4eef8, skyTop: 0x6f9fd8, fog: 0xe6edf4, horizon: 0x9fb0c4, ground: 0xf0f4f8, sidewalk: 0xdde3ea, road: 0x50545e });
     }
   }
+  // Las puertas automaticas: empiezan a abrirse a 32 m y a 14 ya estan abiertas.
+  const puertasAuto = [];
+  function moverPuertas() {
+    for (let i = puertasAuto.length - 1; i >= 0; i--) {
+      const m = puertasAuto[i];
+      if (!m.parent) { puertasAuto.splice(i, 1); continue; }
+      const dist = -(m.position.z + m.userData.zp);
+      const k = suave(Math.min(1, Math.max(0, (32 - dist) / 18)));
+      for (const h of m.userData.hojas) h.position.x = h.userData.x0 + Math.sign(h.userData.x0) * 3.8 * k;
+    }
+  }
+  function quitarPieza(mesh) {
+    group.remove(mesh);
+    soltarEdificio(mesh);
+    if (mesh.userData.muro) { mesh.userData.muro.forEach(soltarEdificio); mesh.userData.muro = null; }
+  }
   function prepararCalle() {
     if (haloMat) haloMat.uniforms.fuerza.value = fuerzaHalos();
-    for (const p of calleViva) { group.remove(p.mesh); soltarEdificio(p.mesh); }
+    for (const p of calleViva) quitarPieza(p.mesh);
     calleViva.length = 0;
+    for (const car of cochesCruce) group.remove(car);
+    cochesCruce.length = 0; cruces.length = 0; giroPendiente = null; puertasAuto.length = 0;
     casaBlanca = null;
     calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
     siguientePieza = 0;
@@ -1782,14 +1800,14 @@ export function createWorld(scene) {
   // dentro para no invadir la acera; la fachada queda un poco mas atras.
   function actualizarCalle(dz) {
     if (!nivel) return;
+    moverPuertas();
     // Primero se mueve lo que ya estaba y despues se pone lo nuevo (si no, lo
     // recien puesto avanzaba dz de mas y salia mas cerca de lo que toca).
     for (let i = calleViva.length - 1; i >= 0; i--) {
       const p = calleViva[i];
       p.mesh.position.z += dz;
       if (p.mesh.position.z > DESPAWN_Z + p.fin && p.mesh !== casaBlanca) {
-        group.remove(p.mesh);
-        soltarEdificio(p.mesh);
+        quitarPieza(p.mesh);
         calleViva.splice(i, 1);
       }
     }
@@ -1801,11 +1819,10 @@ export function createWorld(scene) {
         // (08/11: dentro de un interior, no: tambien se transparentaban.)
         const ri = nivel.interior && nivel.interior.rango;
         if (ri && p.d > ri[0] - 6 && p.d < ri[1] + 6) continue;
-        const m = p.tipo === "cebra" ? hacerCebra() : p.tipo === "tapa" ? hacerTapa() : hacerMarca(p);
+        const m = p.tipo === "cruce" ? hacerCruce(p) : p.tipo === "cebra" ? hacerCebra() : p.tipo === "tapa" ? hacerTapa() : hacerMarca(p);
         m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
-        if (p.tipo === "cebra") apuntarCruce(m);
         group.add(m);
-        calleViva.push({ mesh: m, fin: 10 });
+        calleViva.push({ mesh: m, fin: p.tipo === "cruce" ? 14 : 10 });
         continue;
       }
       if (p.arco) {
@@ -1834,6 +1851,19 @@ export function createWorld(scene) {
         mesh.position.set(p.x || 0, 0, -(p.d + p.ancho / 2 - totalScrolled));
         // (08/11: dada la vuelta: la segunda mitad del puente de Detroit.)
         if (p.giro) mesh.rotation.y = Math.PI;
+        // 08/11 (2): las puertas automaticas del super: cuatro hojas de cristal
+        // que se abren solas al acercarse, en la entrada y en la salida.
+        if ((p.pieza === "super_entrada" || p.pieza === "super_salida") && hayModelo(`${nivel.carpeta}/super_puerta`)) {
+          mesh.userData.zp = p.pieza === "super_entrada" ? 3.4 : -3.4;
+          mesh.userData.hojas = [-2.85, -0.95, 0.95, 2.85].map((x) => {
+            const h = modelo(`${nivel.carpeta}/super_puerta`);
+            h.position.set(x, 0, mesh.userData.zp);
+            h.userData.x0 = x;
+            mesh.add(h);
+            return h;
+          });
+          puertasAuto.push(mesh);
+        }
         // El agua del rio va casi a ras del suelo: que no parpadee con el.
         if (p.pieza === "rio") mesh.traverse((o) => { if (o.material) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = -1; o.material.polygonOffsetUnits = -2; } });
       } else if (p.centro) {
@@ -1886,7 +1916,10 @@ export function createWorld(scene) {
     }
     const pools = acerasNivel[nivel.id];
     aceraNivel.n = (aceraNivel.n || 0) + 1;
+    // (08/11 (2): ni arboles ni farolas en medio de una calle lateral.)
+    const d = totalScrolled - z, cs = crucesDeNivel(nivel).cruces;
     for (const side of [-1, 1]) {
+      if (cs.some((c) => c.lados.includes(side) && Math.abs(c.d - d) < 6.5)) continue;
       for (let k = 0; k < 1; k++) {
         const idx = (aceraNivel.n + (side > 0 ? 1 : 0)) % pools.length;
         const mesh = pools[idx].acquire();
@@ -1968,6 +2001,210 @@ export function createWorld(scene) {
     l.position.set(0, 0.072, 3.2);
     g.add(l);
     return g;
+  }
+  // ---- 08/11/2026 (2): los cruces de verdad (levels.js, crucesDeNivel) ----
+  // Isidro: «hay coches que se cruzan donde no hay carreteras, añade algun
+  // cruce». Cada calle lateral lleva su asfalto hasta el fondo, el paso de
+  // cebra por la acera, la linea de stop, la raya amarilla del medio, el
+  // semaforo en la esquina y el letrero verde con su nombre (1st St, 2nd
+  // St...); en la calle grande, las cebras a los dos lados del cruce. Solo en
+  // los cruces de cuatro cruzan coches (siempre lejos) y a veces hay uno
+  // esperando en el stop. En un desvio, ademas, la manzana de enfrente cierra
+  // la calle, las flechas del suelo y el cartel naranja «DETOUR».
+  const LATERAL_X0 = 3.4, LATERAL_LARGO = 27, LATERAL_ANCHO = 10;
+  const lateralGeo = new THREE.PlaneGeometry(LATERAL_ANCHO, LATERAL_LARGO).rotateX(-Math.PI / 2).rotateY(Math.PI / 2);
+  let lateralMat = null;
+  function materialLateral() {
+    if (!lateralMat) {
+      // El asfalto de la calle, con su textura a la misma escala pero quieta
+      // (la de la calle grande corre bajo los pies).
+      lateralMat = toon(0x5c6170, { shininess: 20 });
+      lateralMat.polygonOffset = true; lateralMat.polygonOffsetFactor = -2; lateralMat.polygonOffsetUnits = -4;
+    }
+    const base = carpetMat.map;
+    if (base && (!lateralMat.map || lateralMat.userData.base !== base)) {
+      const tex = base.clone();
+      tex.needsUpdate = true;
+      tex.offset.set(0, 0);
+      tex.repeat.set((base.repeat.x * LATERAL_ANCHO) / (LANE_WIDTH * 3), (base.repeat.y * LATERAL_LARGO) / 400);
+      lateralMat.map = tex; lateralMat.userData.base = base; lateralMat.needsUpdate = true;
+    }
+    lateralMat.color.copy(carpetMat.color);
+    return lateralMat;
+  }
+  const bordeLateralGeo = new THREE.BoxGeometry(0.44, 0.16, LATERAL_ANCHO);
+  const rayaLateralGeo = new THREE.BoxGeometry(0.6, 0.02, 3.4);
+  const stopGeo = new THREE.BoxGeometry(0.4, 0.02, 4.4);
+  const amarillaGeo = new THREE.BoxGeometry(LATERAL_LARGO - 6, 0.02, 0.1);
+  const amarillaMat = sobreCalzada(toon(0xf2c23a));
+  const posteGeo = new THREE.CylinderGeometry(0.05, 0.05, 3.2, 8).translate(0, 1.6, 0);
+  const posteMat = toon(0x5a6068);
+  const placaGeo = new THREE.BoxGeometry(1.7, 0.32, 0.04);
+  const ORDINAL = (n) => n + ([, "st", "nd", "rd"][n % 100 >= 11 && n % 100 <= 13 ? 0 : n % 10] || "th");
+  function texturaCartel(dibujar, w = 256, h = 64) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    dibujar(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+  const placasCalle = {};
+  function placaCalle(nombre) {
+    if (!placasCalle[nombre]) {
+      const tex = texturaCartel((g, w, h) => {
+        g.fillStyle = "#1f6b3a"; g.fillRect(0, 0, w, h);
+        g.strokeStyle = "#ffffff"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8);
+        g.fillStyle = "#ffffff"; g.font = "bold 38px Arial"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(nombre, w / 2, h / 2 + 2);
+      });
+      placasCalle[nombre] = [toon(0x1f6b3a), toon(0x1f6b3a), toon(0x1f6b3a), toon(0x1f6b3a),
+        new THREE.MeshBasicMaterial({ map: tex }), new THREE.MeshBasicMaterial({ map: tex })];
+    }
+    return placasCalle[nombre];
+  }
+  // El letrero de la calle en su poste, mirando al jugador.
+  function letreroCalle(nombre) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(posteGeo, posteMat));
+    const p = new THREE.Mesh(placaGeo, placaCalle(nombre));
+    p.position.set(0, 3.0, 0);
+    g.add(p);
+    return g;
+  }
+  let flechaMat = null, desvioMats = {};
+  function flechaSuelo(lado) {
+    if (!flechaMat) {
+      // La flecha blanca pintada del carril que gira (sale de frente y tuerce).
+      flechaMat = [-1, 1].map((s) => {
+        const tex = texturaCartel((g, w, h) => {
+          g.fillStyle = "#f4f2ea";
+          g.fillRect(w / 2 - 9, h * 0.35, 18, h * 0.65);
+          g.beginPath(); g.arc(w / 2 + s * 34, h * 0.35, 34, s > 0 ? Math.PI : 0, s > 0 ? 1.5 * Math.PI : 1.5 * Math.PI, s < 0);
+          g.lineWidth = 18; g.strokeStyle = "#f4f2ea"; g.stroke();
+          g.beginPath(); g.moveTo(w / 2 + s * 34, h * 0.35 - 34 - 26); g.lineTo(w / 2 + s * 80, h * 0.35 - 34); g.lineTo(w / 2 + s * 34, h * 0.35 - 34 + 26); g.fill();
+        }, 128, 256);
+        return sobreCalzada(new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+      });
+    }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3).rotateX(-Math.PI / 2), flechaMat[lado > 0 ? 1 : 0]);
+    m.position.y = 0.075;
+    return m;
+  }
+  function cartelDesvio(lado) {
+    if (!desvioMats[lado]) {
+      const tex = texturaCartel((g, w, h) => {
+        g.fillStyle = "#1b1c20"; g.fillRect(0, 0, w, h);
+        g.fillStyle = "#f26a1b"; g.fillRect(6, 6, w - 12, h - 12);
+        g.fillStyle = "#1b1c20"; g.font = "bold 46px Arial"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText("DETOUR", w / 2, h * 0.32);
+        g.fillRect(w / 2 - 70, h * 0.66 - 9, 140, 18);
+        g.beginPath(); g.moveTo(w / 2 + lado * 100, h * 0.66); g.lineTo(w / 2 + lado * 60, h * 0.66 - 32); g.lineTo(w / 2 + lado * 60, h * 0.66 + 32); g.fill();
+      }, 256, 192);
+      desvioMats[lado] = new THREE.MeshBasicMaterial({ map: tex });
+    }
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(posteGeo, posteMat));
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.35), desvioMats[lado]);
+    p.position.set(0, 2.6, 0.06);
+    g.add(p);
+    return g;
+  }
+  function hacerCruce(p) {
+    const g = new THREE.Group();
+    const mat = materialLateral();
+    for (const s of p.lados) {
+      const calleL = new THREE.Mesh(lateralGeo, mat);
+      calleL.position.set(s * (LATERAL_X0 + LATERAL_LARGO / 2), 0.036, 0);
+      calleL.receiveShadow = true;
+      g.add(calleL);
+      const borde = new THREE.Mesh(bordeLateralGeo, mat);   // tapa el bordillo en la boca de la calle
+      borde.position.set(s * 3.95, 0.08, 0);
+      g.add(borde);
+      for (let k = 0; k < 7; k++) {                          // la cebra de la acera
+        const b = new THREE.Mesh(rayaLateralGeo, cebraMat);
+        b.rotation.y = Math.PI / 2;
+        b.position.set(s * 6.1, 0.06, -3.9 + k * 1.3);
+        g.add(b);
+      }
+      const stop = new THREE.Mesh(stopGeo, cebraMat);        // el stop, en el carril que llega
+      stop.position.set(s * 8.8, 0.06, -s * 2.5);
+      g.add(stop);
+      for (const dz of [-0.11, 0.11]) {
+        const a = new THREE.Mesh(amarillaGeo, amarillaMat);
+        a.position.set(s * (9.2 + (LATERAL_LARGO - 6) / 2), 0.06, dz);
+        g.add(a);
+      }
+      if (hayModelo("ciudad/semaforo")) {
+        const sem = modelo("ciudad/semaforo");
+        sem.position.set(s * 8.4, 0, 6.4);
+        sem.rotation.y = s < 0 ? 0 : Math.PI;
+        g.add(sem);
+      }
+      const letrero = letreroCalle(`${ORDINAL(p.n || 1)} St`);
+      letrero.position.set(s * 8.4, 0, -6.4);
+      g.add(letrero);
+    }
+    // Las cebras de la calle grande, a los dos lados del cruce.
+    const cerca = hacerCebra();
+    cerca.position.z = 7.2;
+    g.add(cerca);
+    if (p.cuatro) {
+      const lejos = hacerCebra();
+      lejos.position.z = -7.2;
+      lejos.rotation.y = Math.PI;
+      g.add(lejos);
+    }
+    if (p.giro) {
+      // El desvio: la manzana de enfrente cierra la calle (se quita al girar).
+      const s = p.giro.lado, muro = [];
+      for (const x of [-12, 12]) {
+        const b = construirEdificio(azarConSemilla(nivel.semilla * 31 + Math.round(p.d) + x), 24, { ...nivel.kit });
+        b.position.set(x, 0, -LATERAL_ANCHO / 2 - 1.2 - (b.userData.frente || 1.3));
+        g.add(b);
+        muro.push(b);
+      }
+      g.userData.muro = muro;
+      for (const dz of [26, 46]) {
+        const f = flechaSuelo(s);
+        f.position.set(LANE_X[s > 0 ? 2 : 0], 0.075, dz);
+        g.add(f);
+      }
+      const cartel = cartelDesvio(s);
+      cartel.position.set(s * 5.3, 0, 40);
+      g.add(cartel);
+      giroPendiente = { g, lado: s, calle: p.giro.calle, hecho: false };
+    } else if (p.cuatro) {
+      cruces.push({ g, hecho: false });
+      // A veces hay un coche esperando en el stop de una de las calles.
+      const vale = COCHES_CRUCE.filter((k) => hayModelo(k));
+      if (vale.length && Math.random() < 0.55) {
+        const s = p.lados[Math.floor(Math.random() * p.lados.length)], dir = -s;
+        const car = modelo(vale[Math.floor(Math.random() * vale.length)]);
+        car.position.set(s * 11.6, 0, dir * 2.5);
+        car.rotation.y = dir > 0 ? 0 : Math.PI;
+        g.add(car);
+      }
+    }
+    return g;
+  }
+  // El desvio: al llegar al cruce, main.js tapa la pantalla con el cartel de
+  // la calle nueva y entonces se quita la manzana de enfrente.
+  let giroPendiente = null, alGiro = null;
+  function onGiro(fn) { alGiro = fn; }
+  function quitarMuro(g = giroPendiente && giroPendiente.g) {
+    if (!g || !g.userData.muro) return;
+    for (const b of g.userData.muro) { g.remove(b); soltarEdificio(b); }
+    g.userData.muro = null;
+  }
+  function vigilarGiro() {
+    const gp = giroPendiente;
+    if (!gp || gp.hecho) return;
+    if (!gp.g.parent) { giroPendiente = null; return; }
+    if (gp.g.position.z > -7.5) {
+      gp.hecho = true;
+      const g = gp.g;
+      if (alGiro) alGiro(gp.lado, gp.calle, () => quitarMuro(g)); else quitarMuro(g);
+    }
   }
   const tapaGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 18);
   const tapaMat = sobreCalzada(toon(0x4a4c52));
@@ -2493,6 +2730,10 @@ export function createWorld(scene) {
     // salta) y la vagoneta de mano que viene por la via.
     tablones_rotos: { choque: "low", medio: 0.9, alto: 0.3, centro: -0.9 },
     vagoneta: { choque: "full", medio: 1.2, alto: 1.6, centro: -1.2, mueve: 6 },
+    // 08/11 (2): la valla de obras de los desvios (blender/calles.py): ni se
+    // salta ni se pasa por debajo, hay que ir al carril del giro.
+    corte_der: { choque: "full", medio: 0.35, alto: 2.6 },
+    corte_izq: { choque: "full", medio: 0.35, alto: 2.6 },
     // 08/11: Omaha (blender/omaha.py): las cajas de Filetes Trump, el rollo de
     // heno que viene rodando, el cartel del asador, el camion de ganado (cambia
     // de carril) y el aficionado de los Cornhuskers (cruza).
@@ -2566,19 +2807,84 @@ export function createWorld(scene) {
   const sirenaAzul = new THREE.MeshBasicMaterial({ color: 0x2a6bff });
   const sirenaGeo = new THREE.BoxGeometry(0.28, 0.12, 0.2);
 
+  // 08/11/2026 (2): Isidro: «mejora el diseño de los animales, las animaciones
+  // como caminan». Los animales (blender/animales.py) son un cuerpo sin patas y
+  // una pata con el origen en la cadera: aqui se ponen en su sitio (caderas en
+  // coordenadas de Blender: x delante, y de lado, z arriba) y se balancean al
+  // ritmo de lo que anda de verdad el animal (parado, quietas).
+  //   eje: "z" los que cruzan mirando a +x; "x" los caballos, que miran a -z.
+  //   zancada: metros por paso; amp: cuanto se abren; fases: el orden de los
+  //   pasos (delante izq., delante der., detras izq., detras der.: en diagonal).
+  const CUATRO = [0, Math.PI, Math.PI, 0];
+  const cuatroPatas = (x0, x1, y, z) => [[x0, y, z], [x0, -y, z], [x1, y, z], [x1, -y, z]];
+  const ANDAR = {
+    vaca: { pata: "vaca_pata", eje: "z", zancada: 1.3, amp: 0.38, fases: CUATRO, patas: cuatroPatas(0.6, -0.62, 0.24, 0.95) },
+    cerdo: { pata: "cerdo_pata", eje: "z", zancada: 0.55, amp: 0.45, fases: CUATRO, patas: cuatroPatas(0.34, -0.36, 0.17, 0.38) },
+    ciervo: { pata: "ciervo_pata", eje: "z", zancada: 1.2, amp: 0.42, fases: CUATRO, patas: cuatroPatas(0.33, -0.35, 0.12, 0.85) },
+    alce: { pata: "alce_pata", eje: "z", zancada: 1.8, amp: 0.34, fases: CUATRO, patas: cuatroPatas(0.62, -0.62, 0.27, 1.25) },
+    pavos: { pata: "pavo_pata", eje: "z", zancada: 0.4, amp: 0.5, fases: [0, Math.PI, 1, 1 + Math.PI],
+      patas: [[0.15, -0.22, 0.25], [0.15, -0.38, 0.25], [-0.2, 0.4, 0.25], [-0.2, 0.24, 0.25]] },
+    carruaje: { pata: "caballo_pata", eje: "x", zancada: 1.4, amp: 0.3, fases: CUATRO,
+      patas: [[-0.17, 2.95, 0.95], [0.17, 2.95, 0.95], [-0.17, 2.15, 0.95], [0.17, 2.15, 0.95]] },
+    carro_clydesdale: { pata: "clydesdale_pata", eje: "x", zancada: 1.7, amp: 0.28,
+      fases: [...CUATRO, ...CUATRO.map((f) => f + 0.6)],
+      patas: [-0.45, 0.45].flatMap((x) => [[x - 0.2, 5.15, 1.25], [x + 0.2, 5.15, 1.25], [x - 0.2, 4.05, 1.25], [x + 0.2, 4.05, 1.25]]) },
+  };
+  function ponerPatas(g, nombre) {
+    const an = ANDAR[nombre];
+    if (!an || !g || !hayModelo("obstaculos/" + an.pata)) return;
+    g.userData.patas = an.patas.map(([x, y, z]) => {
+      const p = new THREE.Group();
+      p.position.set(x, z, -y);
+      p.add(modelo("obstaculos/" + an.pata));
+      g.add(p);
+      return p;
+    });
+    g.userData.andar = { fase: 0, v: 0, px: null, pz: null };
+  }
+  // Mueve las patas al paso de `v` (m/s); devuelve cuanto anda (0 parado, 1 andando).
+  function moverPatas(m, nombre, dt, v) {
+    const an = ANDAR[nombre], u = m.userData.andar;
+    u.v += (v - u.v) * Math.min(1, dt * 6);
+    const k = Math.min(1, u.v / 0.9);
+    u.fase += (dt * Math.min(u.v, 4) * 2 * Math.PI) / an.zancada;
+    const amp = an.amp * k;
+    m.userData.patas.forEach((p, i) => {
+      const a = Math.sin(u.fase + an.fases[i]) * amp;
+      if (an.eje === "x") p.rotation.x = a; else p.rotation.z = a;
+    });
+    return k;
+  }
+  // Lo que anda sobre la calle un obstaculo con patas (sin contar lo que se
+  // mueve la calle hacia el jugador).
+  function andarObstaculo(o, dt, dz) {
+    const m = o.mesh, u = m.userData.andar;
+    if (!(dt > 0)) return;
+    const vx = u.px === null ? 0 : (m.position.x - u.px) / dt;
+    const vz = u.pz === null ? 0 : (o.z - u.pz - dz) / dt;
+    u.px = m.position.x; u.pz = o.z;
+    const k = moverPatas(m, o.pool, dt, Math.min(10, Math.hypot(vx, vz)));
+    if (ANDAR[o.pool].eje === "z" && k > 0.05) m.position.y = Math.abs(Math.sin(u.fase)) * 0.03 * k;
+  }
+
   function construirObstaculo(nombre) {
     const g = modeloConContorno("obstaculos/" + nombre);
     // 08/11: el rollo de heno esta hecho alrededor de su eje: gira solo el rollo
     // (no la sombra), un poco por encima del suelo.
     // (Y el barril de sirope de Detroit.)
-    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45 };
+    // 08/11 (2): el barril del Robot Burrito tiene el eje a 0,42 m del suelo y
+    // giraba alrededor de la base: medio barril se metia en el suelo. Ahora
+    // gira sobre su eje (EJE_ALTO: lo que hay que bajarlo dentro del giro).
+    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42 };
+    const EJE_ALTO = { barril: 0.42 };
     if (EJE_RUEDA[nombre] && g) {
       const r = new THREE.Group();
-      while (g.children.length) r.add(g.children[0]);
+      while (g.children.length) { const c = g.children[0]; c.position.y -= EJE_ALTO[nombre] || 0; r.add(c); }
       r.position.y = EJE_RUEDA[nombre];
       g.add(r);
       g.userData.rueda = r;
     }
+    ponerPatas(g, nombre);
     const m = medidas("obstaculos/" + nombre);
     // (mas pequeños que los de los edificios: de cerca tapaban el letrero)
     const halos = crearHalos(lucesDe("obstaculos/" + nombre), "obstaculos/" + nombre, 0.65);
@@ -2814,6 +3120,7 @@ export function createWorld(scene) {
     const t = USAR_BLENDER ? TIPOS[pool] : { medio: 0.7, alto: type === "low" ? 0.6 : 3 };
     const obj = obstaclePools[pool].acquire();
     obj.visible = true;
+    if (obj.userData.andar) { obj.userData.andar.px = null; obj.userData.andar.pz = null; obj.userData.andar.v = 0; }
     obj.position.set(LANE_X[lane], 0, z);
     obj.rotation.set(0, nombre === "vaca" || nombre === "cerdo" ? (Math.random() < 0.5 ? 0 : Math.PI) : t.orilla && lane === 2 ? Math.PI : 0, 0);
     if (!obj.parent) group.add(obj);
@@ -3351,6 +3658,17 @@ export function createWorld(scene) {
     rocket: makePool(() => { const g = modeloConContorno("obstaculos/cohete") || buildPowerupIcon("boost"); g.scale.setScalar(0.42); return g; }),
     // 25/10: microfono dorado, la carga para lanzar una frase.
     micro: makePool(() => {
+      // 08/11 (2): Isidro: «los micrófono se ven muy claros hazlos mas
+      // realistas»: el de blender/animales.py (rejilla de metal oscuro, mango
+      // negro mate y anillo cromado). Si no carga, el dorado de antes.
+      if (hayModelo("obstaculos/microfono")) {
+        const g = new THREE.Group();
+        const mic = modelo("obstaculos/microfono");
+        mic.rotation.z = 0.35;
+        mic.scale.setScalar(1.3);
+        g.add(mic);
+        return g;
+      }
       const g = new THREE.Group();
       const oro = toon(0xf2c23a, { emissive: 0x3a2a00 });
       const rejilla = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), toon(0xd9dde3, { emissive: 0x222222 }));
@@ -3596,6 +3914,7 @@ export function createWorld(scene) {
     if (perseguidor.on && perseguidor.clave !== clave) {
       if (perseguidor.mesh) group.remove(perseguidor.mesh);
       perseguidor.mesh = modelo(clave);
+      ponerPatas(perseguidor.mesh, clave.slice(11));
       perseguidor.clave = clave;
       perseguidor.z = 18; perseguidor.x = x;
       perseguidor.luces = null;
@@ -3632,6 +3951,11 @@ export function createWorld(scene) {
     perseguidor.x += (x - perseguidor.x) * Math.min(1, dt * 3);
     m.visible = perseguidor.z < 16;
     m.position.set(perseguidor.x, 0, perseguidor.z);
+    // (La vaca que te persigue va al galope.)
+    if (m.userData.patas) {
+      const k = moverPatas(m, perseguidor.clave.slice(11), dt, perseguidor.on ? 6 : 0);
+      m.position.y = Math.abs(Math.sin(m.userData.andar.fase)) * 0.06 * k;
+    }
   }
   // ---- 03/11/2026: el dragon de China (Des Moines y el sin fin) ----
   // Isidro: «un jefe dragon brillante». Se le gana como al Burrito-Bot (chiles
@@ -4045,6 +4369,18 @@ export function createWorld(scene) {
       else if (k > 2 && ![7, 9, 16, 18, 25, 27, 33, 35].includes(k)) tacosEn(1, z, 4);
     },
     suave(z, d, t) { filaMixta(z, d, t.densidad || 0.4); },
+    // 08/11 (2): el desvio (levels.js, aplicarGiros): tacos que llevan al
+    // carril del giro y, 12 m antes del cruce, la valla de obras en los otros dos.
+    // Como en las obras de verdad, los carriles se cierran de uno en uno: a
+    // 36 m del cruce el mas lejano y a 12 m tambien el del medio.
+    giro(z, d, t) {
+      const carril = t.lado > 0 ? 2 : 0, lejos = 2 - carril;
+      const pieza = obstaclePools[t.lado > 0 ? "corte_der" : "corte_izq"] ? (t.lado > 0 ? "corte_der" : "corte_izq") : undefined;
+      if (Math.abs(d - (t.cruce - 36)) <= ROW_SPACING / 2) spawnObstacle(lejos, "full", z, pieza);
+      if (Math.abs(d - (t.cruce - 12)) <= ROW_SPACING / 2) {
+        for (const l of LANES) if (l !== carril) spawnObstacle(l, "full", z, pieza);
+      } else if (d < t.cruce - 20 && d > t.desde + 10) tacosEn(carril, z, 3);
+    },
     mixto(z, d, t) { filaMixta(z, d, t.densidad || 0.55); },
     // Filas enteras: o se salta, o se pasa agachado (o se elige carril).
     vallas(z, d, t, k) {
@@ -5168,25 +5504,25 @@ export function createWorld(scene) {
 
   // -- Coches que cruzan por los cruces, siempre lejos (nunca cerca del jugador) --
   const COCHES_CRUCE = ["ciudad/coche_rojo", "ciudad/coche_azul", "ciudad/taxi"];
-  const cruces = [];    // { cebra (su grupo), hecho }
+  // (08/11 (2): solo por los cruces de cuatro, por su carril de la calle lateral.)
+  const cruces = [];    // { g (el cruce), hecho }
   const cochesCruce = [];
-  function apuntarCruce(cebra) {
-    if (Math.random() < 0.65) cruces.push({ cebra, hecho: false });
-  }
   function moverCruces(dt) {
+    vigilarGiro();
     for (let i = cruces.length - 1; i >= 0; i--) {
       const c = cruces[i];
-      const z = c.cebra.position.z;
-      if (!c.cebra.parent || z > -60) { cruces.splice(i, 1); continue; }
+      const z = c.g.position.z;
+      if (!c.g.parent || z > -60) { cruces.splice(i, 1); continue; }
       if (!c.hecho && z > -150) {
         c.hecho = true;
         const vale = COCHES_CRUCE.filter((k) => hayModelo(k));
         if (!vale.length) continue;
         const car = modelo(vale[Math.floor(Math.random() * vale.length)]);
         const dir = Math.random() < 0.5 ? -1 : 1;
-        car.position.set(-dir * 17, 0, z - 5 + dir * 1.4);
+        car.position.set(-dir * 30, 0, z + dir * 2.5);
         car.rotation.y = dir > 0 ? 0 : Math.PI;
         car.userData.dir = dir;
+        car.userData.cruce = c.g;
         group.add(car);
         cochesCruce.push(car);
       }
@@ -5194,7 +5530,9 @@ export function createWorld(scene) {
     for (let i = cochesCruce.length - 1; i >= 0; i--) {
       const car = cochesCruce[i];
       car.position.x += car.userData.dir * 10 * dt;
-      if (Math.abs(car.position.x) > 18 || car.position.z > -40) { group.remove(car); cochesCruce.splice(i, 1); }
+      // (va con su cruce: la calle se mueve hacia el jugador)
+      if (car.userData.cruce) car.position.z = car.userData.cruce.position.z + car.userData.dir * 2.5;
+      if (Math.abs(car.position.x) > 31 || car.position.z > 12) { group.remove(car); cochesCruce.splice(i, 1); }
     }
   }
 
@@ -5599,7 +5937,7 @@ export function createWorld(scene) {
         o.mesh.position.y = Math.max(0, o.mesh.position.y + o.cae.vy * dt);
         if (o.mesh.position.y === 0) o.cae = null;
       }
-      if (o.pool === "barril" && o.mueve) o.mesh.rotation.x -= dt * 9;   // rueda
+      if (o.pool === "barril" && o.mueve) { const r = o.mesh.userData.rueda; if (r) r.rotation.x -= dt * 9; else o.mesh.rotation.x -= dt * 9; }   // rueda
       if (o.pool === "bola_fuego") {
         // Las llamas dan vueltas despacio y la bola lleva su halo naranja (fijo).
         o.mesh.rotation.y += dt * 2.5;
@@ -5621,6 +5959,7 @@ export function createWorld(scene) {
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
         } else if (VIDA[o.pool]) vida(o, dt);
         moverNuevo(o, dt);
+        if (o.mesh.userData.patas) andarObstaculo(o, dt, dz);
       }
       if (o.pool === "caja_arancel" && !o.smashed && !o.cae) {
         const a = (o.mesh.rotation.x += dt * 5);
@@ -5824,5 +6163,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
+    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
 }

@@ -312,16 +312,24 @@ def carruaje():
     esfera(mat('piel_cochero', 0xf0c4a0, 0.6), 0, 1.55, 1.92, 0.15, 2)
     cil(negro(), 0, 1.55, 2.02, 0.12, 0.3, 12)                          # chistera
     cil(negro(), 0, 1.55, 2.02, 0.2, 0.02, 12)
-    # el caballo
-    blanco_c = mat('caballo_blanco', 0xf1eee8, 0.55)
-    esfera(blanco_c, 0, 2.55, 1.15, 0.38, 2, esc=(0.8, 1.6, 0.85))
-    for sx in (-1, 1):
-        for y in (2.1, 2.95):
-            cil(blanco_c, sx * 0.18, y, 0, 0.07, 0.95, 8)
-            cil(negro(), sx * 0.18, y, 0, 0.08, 0.08, 8)
-    rama(blanco_c, (0, 3.05, 1.35), (0, 3.35, 1.85), 0.14, 0.12, 8)       # el cuello
-    esfera(blanco_c, 0, 3.45, 1.9, 0.14, 2, esc=(0.8, 1.5, 0.8))
-    rama(mat('crin', 0x8a7a6a, 0.6), (0, 2.0, 1.3), (0, 1.85, 0.75), 0.06, 0.03, 6)   # la cola
+    # el caballo (08/11 (2): con forma de caballo y SIN patas: son la pieza
+    # caballo_pata de animales.py, que el juego mueve al andar; las caderas
+    # estan en world.js, ANDAR.carruaje)
+    blanco_c = mat_bloques('pelo_caballo_bl', 0xf1eee8, 0xf1eee8, ancho=0.07, alto=0.12, grosor=0.0, desfase=0.37, variacion=1.09)
+    crin = mat('crin', 0x9a8c7c, 0.6)
+    esfera(blanco_c, 0, 2.55, 1.2, 0.4, 3, esc=(0.78, 1.55, 0.85))
+    esfera(blanco_c, 0, 2.95, 1.24, 0.3, 3)                                # el pecho
+    esfera(blanco_c, 0, 2.13, 1.27, 0.3, 3)                                # la grupa
+    rama(blanco_c, (0, 2.98, 1.38), (0, 3.28, 1.9), 0.17, 0.11, 12)        # el cuello
+    rama(crin, (0, 2.9, 1.5), (0, 3.2, 2.0), 0.05, 0.04, 6)                # la crin
+    rama(blanco_c, (0, 3.3, 1.98), (0, 3.52, 1.68), 0.1, 0.075, 12)        # la cabeza
+    esfera(blanco_c, 0, 3.53, 1.65, 0.08, 2)
+    for s in (-1, 1):
+        rama(blanco_c, (s * 0.05, 3.26, 2.02), (s * 0.07, 3.24, 2.14), 0.03, 0.006, 6)   # orejas
+        caja(negro(), s * 0.1, 3.36, 1.86, 0.02, 0.1, 0.09)                # anteojeras
+        esfera(negro(), s * 0.075, 3.43, 1.84, 0.02, 1)
+    rama(crin, (0, 1.85, 1.38), (0, 1.75, 0.8), 0.06, 0.035, 6)            # la cola
+    cil(mat('arnes', 0x241a14, 0.5), 0, 2.75, 1.2, 0.35, 0.07, 18, eje='Y')   # el arnes
     for s in (-1, 1):
         rama(mat('varas', 0x2a1a12, 0.5), (s * 0.4, 1.5, 0.8), (s * 0.35, 2.6, 1.1), 0.025, 0.025, 6)
 
@@ -792,7 +800,7 @@ PIEZAS = {
     # Findlay
     'paso_nivel':            (paso_nivel,            'obstaculos', dict(lado=256, bisel=0.0)),
     'paso_nivel_brazo':      (paso_nivel_brazo,      'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
-    'pavos':                 (pavos,                 'obstaculos', dict(lado=256, bisel=0.0)),
+    # pavos (08/11 (2): ahora en animales.py, con las patas aparte)
     'bandera_grande':        (bandera_grande,        'obstaculos', dict(lado=256, bisel=0.0)),
     'cortacesped':           (cortacesped,           'obstaculos', dict(lado=256, bisel=0.0)),
     'limonada':              (limonada,              'obstaculos', dict(lado=512, bisel=0.0)),
@@ -814,7 +822,7 @@ PIEZAS = {
     'trineo':                (trineo,                'obstaculos', dict(lado=256, bisel=0.0)),
     'rama_nevada':           (rama_nevada,           'obstaculos', dict(lado=256, bisel=0.0)),
     'bus_escolar':           (bus_escolar,           'obstaculos', dict(lado=512)),
-    'ciervo':                (ciervo,                'obstaculos', dict(lado=256, bisel=0.0)),
+    # ciervo (08/11 (2): ahora en animales.py, con las patas aparte)
 }
 
 correr(PIEZAS)

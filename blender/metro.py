@@ -173,19 +173,40 @@ def farola_globo(x, y):
     cil(hierro, x, y, 4.02, 0.08, 0.18, 10, r2=0.02)
 
 def metro_boca():
-    """La boca a ras de calle: una fachada de piedra de lado a lado con el
-    hueco del túnel, «SUBWAY» y «5 AV» encima, el 7 morado y las farolas de
-    globo verde a los lados. Por dentro, 8 m de túnel ya con azulejo."""
+    """La boca (08/11 (2)). Isidro: «aparecen tuneles ... sin ningún sentido».
+    Antes era una fachada suelta del ancho de la calle. Ahora es un edificio
+    de estación de lado a lado de la avenida, como Grand Central al final de
+    Park Avenue: 80 m de ancho y 26 de alto, de piedra, con ventanales altos,
+    pisos de ventanas, el reloj, la cornisa y fondo hacia atrás (levels.js
+    quita los edificios de los lados). El hueco del túnel, el letrero
+    «SUBWAY» y «5 AV», el 7 morado y las farolas de globo verde como antes.
+    Por dentro, 8 m de túnel ya con azulejo."""
     D = 8.0
     y0 = -D / 2
-    W = ANCHO_CALLE
+    W = 40.0
     piedra = caliza()
-    # La fachada: a los lados del hueco y por encima.
+    ventanas = mat_ventanas('ventanas_terminal', 0x3a4a5e, 0xe4d7bd, paso_x=2.4, paso_z=3.0, hueco_x=1.4, hueco_z=1.9)
     for s in (-1, 1):
-        caja(piedra, s * (TUNEL + (W - TUNEL) / 2), y0 + 0.6, 0, W - TUNEL, 1.2, 16)
+        caja(piedra, s * (TUNEL + (W - TUNEL) / 2), y0 + 0.6, 0, W - TUNEL, 1.2, TECHO)
+        caja(ventanas, s * (TUNEL + (W - TUNEL) / 2), y0 + 0.6, TECHO, W - TUNEL, 1.2, 15)
+        for k in range(3):                                   # los ventanales altos
+            x = s * (10.0 + k * 9.5)
+            caja(mat('ventanal_term', 0x2c3e55, 0.2), x, y0 - 0.02, 1.4, 4.4, 0.1, 8.2)
+            for j in range(1, 4):
+                caja(mat('marco_term', 0x3a3a3e, 0.4), x - 2.2 + j * 1.1, y0 - 0.06, 1.4, 0.12, 0.1, 8.2)
+            caja(mat('marco_term', 0x3a3a3e, 0.4), x, y0 - 0.06, 5.4, 4.4, 0.1, 0.12)
+        caja(piedra, s * W, y0 + 10.6, 0, 1.2, 20, 26)        # el edificio sigue hacia atrás
     caja(piedra, 0, y0 + 0.6, TECHO, TUNEL * 2, 1.2, 5)
-    caja(mat('cornisa_boca', 0xd6c6a6, 0.5), 0, y0 + 0.4, 15.6, W * 2 + 0.4, 1.6, 0.6)
+    caja(ventanas, 0, y0 + 0.6, TECHO + 5, TUNEL * 2, 1.2, 10)
+    caja(mat('cornisa_boca', 0xd6c6a6, 0.5), 0, y0 + 0.3, TECHO - 0.3, W * 2 + 0.4, 1.8, 0.6)
+    caja(mat('cornisa_boca', 0xd6c6a6, 0.5), 0, y0 + 0.3, 25.6, W * 2 + 0.6, 2.0, 0.8)
+    caja(mat('tejado_term', 0x3d6a5a, 0.6), 0, y0 + 10.6, 26.2, W * 2, 20, 0.5)
     caja(mat('zocalo_boca', 0x8f8a80, 0.6), 0, y0 + 0.5, 0, W * 2, 1.4, 0.7)
+    # El reloj, encima del letrero.
+    cil(ocre(), 0, y0 + 0.02, 19.2, 1.9, 0.15, 32, eje='Y')
+    cil(mat('esfera_reloj', 0xf4eedc, 0.4), 0, y0 - 0.08, 19.2, 1.6, 0.15, 32, eje='Y')
+    caja(negro(), 0, y0 - 0.2, 19.2, 0.1, 0.05, 1.15)
+    caja(negro(), 0.4, y0 - 0.2, 19.15, 0.8, 0.05, 0.1)
     # El marco del hueco y el letrero.
     for s in (-1, 1):
         caja(mat('marco_boca', 0x3a3a3e, 0.4), s * (TUNEL + 0.2), y0 - 0.05, 0, 0.4, 0.3, TECHO + 0.4)
@@ -201,7 +222,6 @@ def metro_boca():
     for s in (-1, 1):
         farola_globo(s * 5.4, y0 - 0.6)
         farola_globo(s * 9.6, y0 - 0.6)
-        # La barandilla de hierro verde de la escalera de toda la vida.
         hierro = mat('hierro_verde', 0x24503a, 0.5)
         caja(hierro, s * 7.5, y0 - 0.6, 1.0, 3.6, 0.06, 0.06)
         for k in range(7):
@@ -213,8 +233,6 @@ def metro_boca():
     caja(techo_m(), 0, 0.6, TECHO, TUNEL * 2 + 0.6, D - 1.2, 0.4)
     lamparas_techo(1.5, (-2.2, 2.2))
 
-
-# ---------------------------------------------------------------- los trenes
 def coche_tren(y0, L=11.4, cabina=False, cola=True):
     """Un coche plateado del 7: costados de acero, la franja morada, ventanas
     y puertas, techo claro (por donde se corre) y los bogies debajo. El techo
@@ -317,7 +335,7 @@ def cartel_metro():
 
 
 PIEZAS = {
-    'metro_boca':     (metro_boca,     'nueva_york', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'metro_boca':     (metro_boca,     'nueva_york', dict(lado=2048, bisel=0.0, segmentos=2)),
     'metro_estacion': (metro_estacion, 'nueva_york', dict(lado=2048, bisel=0.0, segmentos=2)),
     'metro_tunel':    (metro_tunel,    'nueva_york', dict(lado=1024, bisel=0.0)),
     'metro_salida':   (metro_salida,   'nueva_york', dict(lado=512, bisel=0.0)),

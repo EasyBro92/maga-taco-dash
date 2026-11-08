@@ -133,6 +133,8 @@ def arco_gateway():
 # ================================================================ el súper de los aranceles
 PARED = 8.3
 TECHO = 10.0
+PUERTA = 3.8          # media puerta del súper (08/11 (2))
+ALTO_PUERTA = 3.4
 def suelo_super(): return mat_bloques('suelo_super', 0xeef0f2, 0xdfe2e6, ancho=1.2, alto=1.2, grosor=0.015, variacion=1.02)
 
 def gondola(x, y, lado, k):
@@ -168,31 +170,60 @@ def super_pasillo():
         caja(luz_tubo(), x, 0, TECHO - 0.12, 0.25, L - 1.0, 0.1)
 
 def super_entrada():
-    """La fachada del súper de lado a lado de la calle: «TARIFF MART» en rojo,
-    las puertas de cristal abiertas, la pancarta de los precios y carritos
-    en fila a los lados."""
+    """La fachada del súper (08/11 (2)). Isidro: «aparecen tuneles o tiendas
+    sin ningún sentido, parecen abiertas de par en par». Antes era una caja
+    más estrecha que la calle con un hueco enorme. Ahora es un súper de verdad
+    que ocupa la manzana entera (levels.js quita los edificios de los lados):
+    60 m de ancho y 13 de alto, con fondo hacia atrás, la franja roja, el
+    letrero «TARIFF MART», escaparates con carteles de precios, la marquesina
+    con la pancarta y una entrada del tamaño de una puerta. Las cuatro hojas
+    de cristal (super_puerta) las pone world.js y se abren solas al llegar;
+    encima, el cristal fijo. Carritos en fila a los lados."""
     D = 8.0
     y0 = -D / 2
-    W = 11.75
+    W = 30.0
+    fachada = mat('fachada_super', 0xeceae4, 0.6)
     for s in (-1, 1):
-        caja(mat('fachada_super', 0xeceae4, 0.6), s * (4.6 + (W - 4.6) / 2), y0 + 0.6, 0, W - 4.6, 1.2, 12)
-        for k in range(8):
-            caja(mat('carrito_fila', 0xb8bec6, 0.3), s * (5.6 + k * 0.6), y0 - 0.8, 0.3, 0.55, 0.9, 0.7)
-    caja(mat('fachada_super', 0xeceae4, 0.6), 0, y0 + 0.6, TECHO, 9.2, 1.2, 2)
-    caja(rojo(), 0, y0 - 0.05, 10.2, 18.0, 0.3, 1.6)
-    texto(blanco(), 'TARIFF MART', 0, y0 - 0.25, 11.0, tam=1.2, prof=0.08)
-    caja(mat('pancarta_precios', 0xf2c230, 0.5), 0, y0 - 0.1, 8.6, 8.6, 0.1, 1.0)
-    texto(rojo(), 'NEW PRICES!', 0, y0 - 0.18, 9.1, tam=0.6, prof=0.03)
+        caja(fachada, s * (PUERTA + (W - PUERTA) / 2), y0 + 0.6, 0, W - PUERTA, 1.2, 13)
+        caja(hierro(), s * PUERTA, y0 + 0.5, 0, 0.2, 0.3, 9.0)                    # el marco
+        for k in range(4):                                                    # los escaparates
+            x = s * (7.2 + k * 5.6)
+            caja(vidrio(), x, y0 - 0.02, 0.6, 4.6, 0.1, 3.6)
+            caja(hierro(), x, y0 - 0.06, 0.5, 4.8, 0.14, 0.12)
+            c = (0xf2c230, 0xd8283a)[k % 2]
+            caja(mat('cartel_esc_%x' % c, c, 0.5), x, y0 - 0.09, 1.5, 2.6, 0.04, 1.4)
+            texto(rojo() if k % 2 == 0 else blanco(), ('+145%', 'SALE', '$999', 'TARIFFS')[k], x, y0 - 0.12, 2.0, tam=0.42, prof=0.02)
+        for k in range(8):                                                    # carritos en fila
+            caja(mat('carrito_fila', 0xb8bec6, 0.3), s * (5.0 + k * 0.6), y0 - 0.8, 0.3, 0.55, 0.9, 0.7)
+        caja(fachada, s * W, y0 + 20, 0, 1.0, 40, 13)                         # el edificio sigue hacia atrás
+    caja(mat('tejado_super', 0xb8bcc2, 0.8), 0, y0 + 20, 13, W * 2 + 1, 40, 0.3)
+    # Encima de la puerta: el cristal fijo con sus montantes y, arriba, la fachada.
+    caja(vidrio(), 0, y0 + 0.62, ALTO_PUERTA, PUERTA * 2, 0.1, 9.0 - ALTO_PUERTA)
+    for x in (-1.9, 0.0, 1.9):
+        caja(hierro(), x, y0 + 0.55, ALTO_PUERTA, 0.12, 0.16, 9.0 - ALTO_PUERTA)
+    caja(hierro(), 0, y0 + 0.55, ALTO_PUERTA - 0.1, PUERTA * 2, 0.18, 0.22)
+    caja(fachada, 0, y0 + 0.6, 9.0, PUERTA * 2, 1.2, 4.0)
+    # La franja roja de arriba y el letrero.
+    caja(rojo(), 0, y0 - 0.05, 11.7, W * 2, 0.3, 1.3)
+    caja(rojo(), 0, y0 - 0.12, 9.2, 20.0, 0.3, 2.3)
+    texto(blanco(), 'TARIFF MART', 0, y0 - 0.32, 9.9, tam=1.5, prof=0.08)
+    # La marquesina con la pancarta de los precios.
+    caja(rojo(), 0, y0 - 1.6, 4.5, 12.0, 3.2, 0.4)
     for s in (-1, 1):
-        caja(vidrio(), s * 3.4, y0 + 0.2, 0, 2.2, 0.06, 4.0)
-        caja(hierro(), s * 4.6, y0 + 0.2, 0, 0.15, 0.2, 8.6)
+        cil(hierro(), s * 5.6, y0 - 2.95, 0, 0.1, 4.5, 10)
+    caja(mat('pancarta_precios', 0xf2c230, 0.5), 0, y0 - 3.24, 3.5, 8.6, 0.06, 1.0)
+    texto(rojo(), 'NEW PRICES!', 0, y0 - 3.3, 3.95, tam=0.6, prof=0.03)
+    # El umbral bajo la puerta y el vestíbulo (suelo, paredes y techo).
+    caja(suelo_super(), 0, y0 + 0.6, 0, PUERTA * 2, 1.2, 0.09)
     caja(suelo_super(), 0, 0.6, 0, 9.2, D - 1.2, 0.09)
     for s in (-1, 1):
         caja(blanco(), s * 4.75, 0.6, 0, 0.3, D - 1.2, TECHO)
     caja(mat('techo_super', 0xe8eaee, 0.6), 0, 0.6, TECHO, 9.8, D - 1.2, 0.3)
 
 def super_salida():
-    """Las cajas registradoras y la salida, con la luz de fuera."""
+    """Las cajas registradoras y, al fondo, la pared de la salida con su
+    puerta de cristal (las hojas, super_puerta, las pone world.js y se abren
+    al llegar). Encima, «THANK YOU»."""
     D = 8.0
     caja(suelo_super(), 0, 0, 0, 9.2, D, 0.09)
     for s in (-1, 1):
@@ -200,11 +231,28 @@ def super_salida():
         caja(mat('caja_registradora', 0x2a2c31, 0.5), s * 4.0, -1.0, 0, 0.9, 2.4, 1.0)
         caja(mat('pantalla_caja', 0x6fd0ff, 0.3), s * 4.0, -1.0, 1.0, 0.3, 0.4, 0.35)
         caja(blanco(), s * 6.5, -D / 2 + 0.15, 0, 3.6, 0.3, TECHO)
+        caja(blanco(), s * (PUERTA + (4.9 - PUERTA) / 2), D / 2 - 0.6, 0, 4.9 - PUERTA, 1.2, TECHO)
+        caja(hierro(), s * PUERTA, D / 2 - 0.7, 0, 0.2, 0.3, 9.0)
     caja(mat('techo_super', 0xe8eaee, 0.6), 0, 0, TECHO, 9.8, D, 0.3)
-    caja(rojo(), 0, D / 2 - 0.4, TECHO - 1.0, 9.2, 0.4, 1.0)
-    texto(blanco(), 'THANK YOU', 0, D / 2 - 0.62, TECHO - 0.5, tam=0.5, prof=0.03)
+    caja(vidrio(), 0, D / 2 - 0.62, ALTO_PUERTA, PUERTA * 2, 0.1, TECHO - ALTO_PUERTA)
+    for x in (-1.9, 0.0, 1.9):
+        caja(hierro(), x, D / 2 - 0.68, ALTO_PUERTA, 0.12, 0.16, TECHO - ALTO_PUERTA)
+    caja(hierro(), 0, D / 2 - 0.68, ALTO_PUERTA - 0.1, PUERTA * 2, 0.18, 0.22)
+    caja(rojo(), 0, D / 2 - 1.3, 6.2, 7.0, 0.3, 1.0)
+    texto(blanco(), 'THANK YOU', 0, D / 2 - 1.48, 6.7, tam=0.5, prof=0.03)
 
-# ================================================================ los obstáculos
+def super_puerta():
+    """Una hoja de la puerta automática: marco de aluminio, cristal, la barra
+    y la pegatina. El origen, abajo en el centro."""
+    alu = mat('aluminio_puerta', 0xaab0b8, 0.3)
+    caja(mat('cristal_puerta', 0x8fb4cc, 0.12), 0, 0, 0.08, 1.8, 0.04, ALTO_PUERTA - 0.16)
+    caja(alu, 0, 0, 0, 1.9, 0.07, 0.08)
+    caja(alu, 0, 0, ALTO_PUERTA - 0.08, 1.9, 0.07, 0.08)
+    for s in (-1, 1):
+        caja(alu, s * 0.92, 0, 0, 0.06, 0.07, ALTO_PUERTA)
+    caja(alu, 0, -0.05, 1.0, 1.4, 0.03, 0.05)
+    caja(mat('pegatina_puerta', 0xf2c230, 0.5), 0, -0.03, 1.5, 0.5, 0.01, 0.2)
+
 def etiqueta_precio():
     """La etiqueta de precio gigante colgada de un cable: «$999». Se pasa
     agachado (el juego la hace crecer al acercarse)."""
@@ -252,15 +300,25 @@ def carro_clydesdale():
             cil(mat('rueda_carro', 0xd8c890, 0.6), s * 1.0, y, 0.55, 0.55, 0.1, 16, eje='X')
         caja(mat('piloto', 0xc0262c, 0.3), s * 0.7, 0.08, 0.75, 0.16, 0.03, 0.12)
         caja(mat('intermitente', 0xffa21a, 0.3), s * 0.7, 0.08, 0.95, 0.16, 0.03, 0.08)
-    # Los caballos.
-    marron = mat('caballo', 0x5a3420, 0.6)
+    # Los caballos (08/11 (2): con forma de caballo y SIN patas: son la pieza
+    # clydesdale_pata de animales.py, que el juego mueve al andar; las
+    # caderas estan en world.js, ANDAR.carro_clydesdale).
+    marron = mat_bloques('pelo_clyde', 0x5a3420, 0x5a3420, ancho=0.07, alto=0.12, grosor=0.0, desfase=0.37, variacion=1.09)
+    crin = mat('crin_clyde', 0x2a1a10, 0.7)
     for x in (-0.45, 0.45):
-        caja(marron, x, 4.6, 1.2, 0.55, 2.0, 0.8)
-        caja(marron, x, 5.7, 1.7, 0.4, 0.6, 0.9, inclina=-0.5)
-        for y in (3.9, 5.2):
-            cil(blanco(), x, y, 0, 0.11, 0.4, 6)
-            cil(marron, x, y, 0.4, 0.09, 0.85, 6)
-        caja(mat('crin', 0x2a1a10, 0.7), x, 5.5, 2.15, 0.12, 0.6, 0.25)
+        esfera(marron, x, 4.6, 1.62, 0.5, 3, esc=(0.75, 1.75, 0.85))
+        esfera(marron, x, 5.15, 1.66, 0.38, 3)                             # el pecho
+        esfera(marron, x, 4.05, 1.7, 0.4, 3)                               # la grupa
+        rama(marron, (x, 5.32, 1.85), (x, 5.68, 2.42), 0.24, 0.15, 12)     # el cuello
+        rama(crin, (x, 5.22, 2.0), (x, 5.58, 2.52), 0.07, 0.05, 6)
+        rama(marron, (x, 5.72, 2.48), (x, 6.0, 2.12), 0.15, 0.11, 12)      # la cabeza
+        esfera(blanco(), x, 6.02, 2.08, 0.11, 2)                           # el morro blanco
+        for s in (-1, 1):
+            rama(marron, (x + s * 0.07, 5.68, 2.55), (x + s * 0.09, 5.66, 2.7), 0.04, 0.008, 6)
+            caja(mat('anteojera', 0x111111, 0.4), x + s * 0.15, 5.82, 2.3, 0.02, 0.13, 0.11)
+        cil(mat('collera', 0x1d1f25, 0.4), x, 5.38, 1.95, 0.34, 0.13, 18, eje='Y')   # la collera
+        cil(mat('borde_oro', 0xe0b040, 0.3), x, 5.32, 1.95, 0.36, 0.03, 18, eje='Y')
+        rama(crin, (x, 3.72, 1.95), (x, 3.62, 1.35), 0.07, 0.04, 6)        # la cola
     caja(madera, 0, 3.4, 1.0, 0.1, 1.6, 0.1)
 
 def fan_cardinals():
@@ -283,8 +341,9 @@ PIEZAS = {
     'busch_stadium':      (busch_stadium,      'san_luis', dict(lado=1024, segmentos=2, min_bisel=1.0)),
     'union_station_stl':  (union_station_stl,  'san_luis', dict(lado=1024, segmentos=2, min_bisel=1.0)),
     'arco_gateway':       (arco_gateway,       'san_luis', dict(lado=2048, segmentos=1, min_bisel=2.0)),
-    'super_entrada':      (super_entrada,      'san_luis', dict(lado=1024, bisel=0.0)),
+    'super_entrada':      (super_entrada,      'san_luis', dict(lado=2048, bisel=0.0)),
     'super_pasillo':      (super_pasillo,      'san_luis', dict(lado=2048, bisel=0.0, segmentos=2)),
+    'super_puerta':       (super_puerta,       'san_luis', dict(lado=128, bisel=0.0, suelo=False)),
     'super_salida':       (super_salida,       'san_luis', dict(lado=512, bisel=0.0)),
     'etiqueta_precio':    (etiqueta_precio,    'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
     'carrito_compra':     (carrito_compra,     'obstaculos', dict(lado=256, bisel=0.0)),

@@ -298,7 +298,7 @@ PIEZAS = {
     'ren_cen':           (ren_cen,           'detroit', dict(lado=2048, segmentos=1, min_bisel=2.0)),
     'torre_ambassador':  (torre_ambassador,  'detroit', dict(lado=1024, bisel=0.0, suelo=False)),
     'coche_arancel':     (coche_arancel,     'obstaculos', dict(lado=512)),
-    'alce':              (alce,              'obstaculos', dict(lado=256, bisel=0.0)),
+    # alce (08/11 (2): ahora en animales.py, con las patas aparte)
     'canadiense':        (canadiense,        'obstaculos', dict(lado=256, bisel=0.0)),
     'barril_sirope':     (barril_sirope,     'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
     'pancarta_canada':   (pancarta_canada,   'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
