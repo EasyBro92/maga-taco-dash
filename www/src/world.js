@@ -1830,6 +1830,9 @@ export function createWorld(scene) {
           const puertas = [];
           for (const lado of [-1, 1]) {
             const hoja = modelo(`${nivel.carpeta}/puerta_cb`);
+            // 08/11: Isidro: «la puerta cuando entra, no se ven las 2». La de la
+            // derecha se cierra dada la vuelta y por detras no se dibujaba.
+            if (hoja) hoja.traverse((o) => { if (o.material) o.material.side = THREE.DoubleSide; });
             if (!hoja) continue;
             hoja.position.set(lado * 1.3, 1.0, 0.06);
             hoja.rotation.y = Math.PI / 2;
@@ -3670,11 +3673,12 @@ export function createWorld(scene) {
       tiro: paso ? 2.0 : 5.5 });
     return true;
   }
-  const chileGeo = () => modelo(hayModelo("obstaculos/arancel") ? "obstaculos/arancel" : "obstaculos/chile");
+  const conArancel = () => jefe.tipo === "dragon" && hayModelo("obstaculos/arancel");
+  const chileGeo = () => modelo(conArancel() ? "obstaculos/arancel" : "obstaculos/chile");
   function dispararJefe(x, y) {
     if (!jefeActivo()) return;
     const m = chileGeo();
-    m.scale.setScalar(hayModelo("obstaculos/arancel") ? 1.9 : 1.6);
+    m.scale.setScalar(conArancel() ? 1.9 : 1.6);
     m.position.set(x, y, 0);
     group.add(m);
     disparos.push({ mesh: m, t: 0, x0: x, y0: y });
@@ -4200,7 +4204,9 @@ export function createWorld(scene) {
       const lane = Math.floor(Math.random() * 3);
       tacosEn(lane, z, 4);
       // 08/11: aranceles en lugar de chiles, y menos (antes el 55 % de las filas).
-      const arma = nivel && nivel.debate ? "micro" : powerupPools.arancel && hayModelo("obstaculos/arancel") ? "arancel" : "chile";
+      // 08/11 (2): Isidro: «al Burrito-Bot sí quiero que le tire chiles, al dragón aranceles».
+      const esDragon = (t && t.jefe === "dragon") || (jefe.activo && jefe.tipo === "dragon");
+      const arma = nivel && nivel.debate ? "micro" : esDragon && powerupPools.arancel && hayModelo("obstaculos/arancel") ? "arancel" : "chile";
       if (EXTRAS && Math.random() < 0.27) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
 

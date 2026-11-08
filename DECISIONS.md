@@ -1470,3 +1470,18 @@ Ocupa el sitio de los neones.
 Con esto están los seis momentos estrella. Probado con el piloto en los seis
 niveles: se completan todos. Los choques que quedan son los de siempre: el
 desfile de vaqueros, la fila de la chapa de Findlay y la cosechadora.
+
+## El final de la Casa Blanca y las armas de cada jefe (2026-11-08)
+
+Isidro: «al llegar a la Casa Blanca el personaje gira de forma poco natural,
+¿delante de la Casa Blanca hay una fuente? (si no, corrígela), y la puerta
+cuando entra: no se ven las 2. Al Burrito-Bot sí quiero tirarle chiles; al
+dragón, aranceles».
+- **La fuente se queda:** la hay de verdad, en el jardín norte, el que da a
+  Pennsylvania Avenue.
+- **El giro:** al rodearla, el personaje iba de lado mirando siempre al
+  frente. Ahora mira hacia donde va por la curva del camino.
+- **La puerta:** la hoja derecha se cierra dada la vuelta y por detrás no se
+  dibujaba. Ahora se ven las dos.
+- **Las armas:** chiles para el Burrito-Bot (Findlay, Washington y el sin fin);
+  sellos de aranceles para el dragón. En el debate, micrófonos.

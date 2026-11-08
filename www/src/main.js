@@ -660,6 +660,14 @@ function frameFinal(dt) {
   const u = -cb.position.z;
   const xCamino = u > 9 && u < 31 ? 11 * Math.sin(((u - 9) / 22) * Math.PI) : 0;
   playerX += (xCamino - playerX) * Math.min(1, dt * 6);
+  // 08/11: Isidro: «al llegar a la Casa Blanca el personaje gira de forma poco
+  // natural». Rodeaba la fuente de lado, mirando siempre al frente. Ahora mira
+  // hacia donde va por la curva (la pendiente del camino).
+  if (fin.fase <= 1) {
+    const pendiente = u > 9 && u < 31 ? -11 * Math.cos(((u - 9) / 22) * Math.PI) * (Math.PI / 22) : 0;
+    const rumbo = -Math.atan(pendiente);
+    character.object3D.rotation.y += (rumbo - character.object3D.rotation.y) * Math.min(1, dt * 6);
+  }
   let dz = 0;
   if (fin.fase === 0) {
     fin.v = Math.max(7, Math.min(fin.v - dt * 5, -zPasos * 1.6 + 6));
