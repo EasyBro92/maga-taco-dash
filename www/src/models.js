@@ -54,7 +54,9 @@ const LISTA = {
     // 08/11: Omaha (blender/omaha.py)
     "caja_filetes", "rodillo_heno", "cartel_steak", "camion_ganado", "fan_huskers",
     // 08/11: Wichita (blender/wichita.py)
-    "valla_volando", "vaca_volando", "tejado_volando", "espantapajaros", "bruja_bici"],
+    "valla_volando", "vaca_volando", "tejado_volando", "espantapajaros", "bruja_bici",
+    // 08/11: San Luis (blender/sanluis.py)
+    "etiqueta_precio", "carrito_compra", "caja_precio", "carro_clydesdale", "fan_cardinals"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -77,7 +79,7 @@ function materialDe(original, shininess, specular) {
 // Donde brilla cada pieza (neones y bombillas): lo apunta Blender en
 // models/<carpeta>/luces.json ({ pieza: [[x, y, z, radio, color], ...] }).
 // Solo las carpetas que lo tienen (las demas darian un error 404).
-const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita"]);   // (07/11: las lamparas del metro)
+const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita", "san_luis"]);   // (07/11: las lamparas del metro)
 const luces = {};
 async function cargarLuces(carpeta) {
   if (!CON_LUCES.has(carpeta) || luces[carpeta]) return;

@@ -1860,7 +1860,7 @@ export function createWorld(scene) {
       animarPieza(p, mesh);
       // Los halos de sus neones (no en el kit: sus rotulos ya llevan su brillo).
       // (07/11: las lamparas de los interiores brillan aunque el nivel sea de dia: su fuerza la pone factorMetro.)
-      if (p.pieza !== "kit" && (fuerzaHalos() > 0 || /^(metro|casino|capitolio)_/.test(p.pieza))) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
+      if (p.pieza !== "kit" && (fuerzaHalos() > 0 || /^(metro|casino|capitolio|super)_/.test(p.pieza))) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
       group.add(mesh);
       calleViva.push({ mesh, fin: p.ancho + 40 });
     }
@@ -2504,6 +2504,15 @@ export function createWorld(scene) {
     tejado_volando: { choque: "low", medio: 0.6, alto: 0.7, mueve: 4, bota: true },
     espantapajaros: { choque: "full", medio: 0.4, alto: 2.4, centro: -0.3 },
     bruja_bici: { choque: "full", medio: 1.1, alto: 2.0, centro: -0.8, cambia: 0.6 },
+    // 08/11: San Luis (blender/sanluis.py): la etiqueta de precio gigante (crece
+    // al acercarse; agacharse), el carrito que viene rodando, las cajas con el
+    // precio nuevo, el carro de cerveza con caballos (cambia de carril) y el
+    // aficionado de los Cardinals (cruza).
+    etiqueta_precio: { choque: "high", medio: 0.3, alto: 2.2 },
+    carrito_compra: { choque: "low", medio: 0.55, alto: 1.05, mueve: 5, rueda: true, sinGiro: true },
+    caja_precio: { choque: "low", medio: 0.45, alto: 0.85 },
+    carro_clydesdale: { choque: "full", medio: 3.2, alto: 2.3, centro: -3.2, cambia: 0.7 },
+    fan_cardinals: { choque: "full", medio: 0.35, alto: 2.4, centro: 0, cruza: true },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2969,7 +2978,9 @@ export function createWorld(scene) {
       m.position.y = Math.abs(Math.sin(animClock * 4.2 + o.phase)) * 0.7;
       if (o.mueve) m.rotation.x += dt * 4;
     }
-    if (o.rueda && o.mueve) { if (m.userData.rueda) m.userData.rueda.rotation.x -= dt * 8; else m.rotation.x += dt * 6; }
+    if (o.rueda && o.mueve && !(TIPOS[o.pool] && TIPOS[o.pool].sinGiro)) { if (m.userData.rueda) m.userData.rueda.rotation.x -= dt * 8; else m.rotation.x += dt * 6; }
+    // 08/11: San Luis: «las etiquetas de precio no paran de crecer»: al acercarse.
+    if (o.pool === "etiqueta_precio") m.scale.setScalar(0.75 + 0.5 * (1 - Math.min(1, Math.max(0, -o.z / 70))));
     if (TIPOS[o.pool] && TIPOS[o.pool].flota) {
       m.position.y = Math.sin(animClock * 1.6 + o.phase) * 0.05;
       m.rotation.y = Math.sin(animClock * 0.7 + o.phase) * 0.12;
@@ -4505,6 +4516,30 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: San Luis, el súper de los aranceles (momento estrella) ----
+    // El pasillo central es la calle: estanterias a los lados (piezas de
+    // `fondo`). Por el: etiquetas de precio que crecen (agacharse), carritos que
+    // vienen rodando, cajas con el precio nuevo y clientes que cruzan.
+    super(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 6 === 4 && obstaclePools.carrito_compra) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "carrito_compra");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["caja_precio"], high: ["etiqueta_precio"], full: ["fan_cardinals", "paseador"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "high", "high", "full"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 8 === 2 && i === 4);
+    },
     // ---- 08/11: Wichita: el camino de baldosas amarillas y el tornado ----
     // Las baldosas cubren la calle; por ellas, el espantapajaros, la señorita
     // Gulch en bici, tejados que vienen botando y vallas que cruzan volando, con
@@ -4625,6 +4660,8 @@ export function createWorld(scene) {
     metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
     casino: { color: new THREE.Color(0x6a3a58), near: 60, far: 210 },
     capitolio: { color: new THREE.Color(0xd9cdb6), near: 60, far: 210 },
+    // (El súper de San Luis: blanco de fluorescentes.)
+    super: { color: new THREE.Color(0xdfe4ea), near: 60, far: 220 },
     // (El cañon de Phoenix: polvo anaranjado y lejos, para que se vea lo hondo que es.)
     canon: { color: new THREE.Color(0xc98a5e), near: 150, far: 310 },
   };
@@ -4752,7 +4789,7 @@ export function createWorld(scene) {
   const VEHICULOS = {
     taxi: { alto: 1.45, z: 1.6 }, limusina: { alto: 1.45, z: 2.4 }, descapotable: { alto: 0.75, z: 0.6 },
     carroza: { alto: 0.95, z: 1.0, gira: true }, tractor: { alto: 2.2, z: 1.4, gira: true }, carrito_golf: { alto: 0.37, z: 0.25 },
-    carruaje: { alto: 1.05, z: 0.9 },
+    carruaje: { alto: 1.05, z: 0.9 }, carro_clydesdale: { alto: 1.5, z: 0.3 },
   };
   const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0 };
   function montarVehiculo(nombre, x) {

@@ -226,6 +226,11 @@ const CANCIONES = {
     melodia: [69, null, 72, 76, null, 74, 72, null, 69, null, 67, 69, 72, null, null, null,
       69, null, 72, 76, null, 77, 76, 74, 72, null, 71, 67, 69, null, null, null],
     timbre: "pluck" },
+  // San Luis (08/11): el blues de San Luis, con swing y metales.
+  san_luis: { bpm: 116, swing: 0.62, acordes: [C7, F7, C7, G7], bateria: "swing", bajo: "camina",
+    melodia: [72, null, 75, 76, null, 72, 70, null, 67, null, 70, 72, null, null, null, null,
+      72, null, 75, 76, null, 79, 77, 75, 72, null, 70, 67, 72, null, null, null],
+    timbre: "metal" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

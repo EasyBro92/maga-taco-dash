@@ -310,6 +310,7 @@ const LUZ_INTERIOR = {
   metro: { hemi: new THREE.Color(0xffd6a0), suelo: new THREE.Color(0x7a5a3c), hemiI: 1.05, fill: new THREE.Color(0xffc890), fillI: 0.7, sunI: 0.2 },
   casino: { hemi: new THREE.Color(0xffd8b8), suelo: new THREE.Color(0xa04060), hemiI: 1.45, fill: new THREE.Color(0xfff0d0), fillI: 1.3, sunI: 0.3 },
   capitolio: { hemi: new THREE.Color(0xfff2dc), suelo: new THREE.Color(0xb39c7a), hemiI: 1.2, fill: new THREE.Color(0xfff4e4), fillI: 0.85, sunI: 0.35 },
+  super: { hemi: new THREE.Color(0xf4f8ff), suelo: new THREE.Color(0xb0b8c2), hemiI: 1.3, fill: new THREE.Color(0xffffff), fillI: 1.0, sunI: 0.3 },
 };
 function guardarLuzBase() {
   luzBase = { sunI: sun.intensity, hemiC: hemi.color.clone(), hemiG: hemi.groundColor.clone(), hemiI: hemi.intensity,
@@ -594,7 +595,8 @@ const NOMBRE_HITO = {
     rio: "El río Des Moines",
     first_national: "First National, la torre más alta de Nebraska", woodmen: "La torre Woodmen", old_market: "El Old Market",
     orpheum: "El teatro Orpheum",
-    epic_center: "Epic Center, la torre más alta de Kansas", museo_aviacion: "Museo de la aviación", century_ii: "Century II" },
+    epic_center: "Epic Center, la torre más alta de Kansas", museo_aviacion: "Museo de la aviación", century_ii: "Century II",
+    old_courthouse: "El antiguo juzgado", busch_stadium: "El estadio de los Cardinals", union_station_stl: "Union Station" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -605,7 +607,8 @@ const NOMBRE_HITO = {
     torre_801: "801 Grand, Iowa's tallest tower", world_food: "World Food Prize Hall", rio: "The Des Moines River",
     first_national: "First National, Nebraska's tallest tower", woodmen: "Woodmen Tower", old_market: "The Old Market",
     orpheum: "The Orpheum Theater",
-    epic_center: "Epic Center, Kansas's tallest tower", museo_aviacion: "Aviation museum", century_ii: "Century II" },
+    epic_center: "Epic Center, Kansas's tallest tower", museo_aviacion: "Aviation museum", century_ii: "Century II",
+    old_courthouse: "The Old Courthouse", busch_stadium: "The Cardinals ballpark", union_station_stl: "Union Station" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];

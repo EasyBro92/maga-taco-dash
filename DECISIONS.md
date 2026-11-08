@@ -1555,3 +1555,27 @@ el de El Mago de Oz se lleva las vallas.
   desplazadas a un lado (`x` en `fondo`).
 
 Probado con el piloto: 2:18, el nivel se completa y salen todos los obstáculos.
+
+## Nivel 8: San Luis, Misuri (08/11/2026)
+
+Isidro: «Aplica todas las preguntas que digas recomendados». Se aplicó lo
+recomendado: final bajo el arco Gateway y mañana soleada.
+
+- **Historia:** las etiquetas de precio no paran de crecer (los aranceles).
+- **Escenario (`blender/sanluis.py`):** el antiguo juzgado, el estadio de los
+  Cardinals, Union Station y, al fondo de la calle, el arco Gateway.
+- **Obstáculos nuevos:**
+  - la etiqueta de precio gigante, que crece al acercarse (agacharse);
+  - el carrito de la compra que viene rodando;
+  - las cajas con el precio nuevo;
+  - el carro de cerveza con caballos, que cambia de carril (y al que te subes);
+  - el aficionado de los Cardinals, que cruza.
+- **Momento estrella, el súper de los aranceles (450–800):** se entra en un
+  supermercado; el pasillo central es la calle, con estanterías, luz de
+  fluorescentes y «PRICES +145%» en las paredes.
+- **Final:** el jugador se para delante del arco y la cámara mira hacia arriba
+  para verlo entero; sin edificios en el último tramo para que no lo tapen.
+- **Lo demás:** el objeto son las etiquetas de precio; la música, un blues de
+  San Luis con swing.
+
+Probado con el piloto: 2:25, el nivel se completa y salen todos los obstáculos.

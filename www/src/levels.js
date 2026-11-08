@@ -512,6 +512,64 @@ const CALLES = [
     acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 08/11/2026: nivel 8: San Luis (blender/sanluis.py). Isidro: «Aplica todas
+    // las preguntas que digas recomendados»: final bajo el arco Gateway y mañana
+    // soleada. Historia: las etiquetas de precio no paran de crecer (los
+    // aranceles). Momento estrella: el súper de los aranceles, por dentro.
+    id: "san_luis", nombre: "Market Street", lugar: "San Luis, Misuri", listo: true,
+    zona: "city", carpeta: "san_luis", luz: "manana", semilla: 1764,
+    largo: 2900, linea: 11.5, velMax: 23.5,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 12 },
+    horizonte: "ohio",
+    obstaculos: { low: ["caja_precio", "carrito_compra", "basura", "conos"], high: ["etiqueta_precio", "andamio", "semaforo"],
+      full: ["carro_clydesdale", "fan_cardinals", "taxi", "furgoneta", "contenedor"] },
+    publico: { personas: ["ejecutivo", "fan", "turista", "senora", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "san_luis" }],
+      [70, 300, "vallas", { low: ["caja_precio", "carrito_compra"], high: ["etiqueta_precio"], titulo: "precios" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      // El momento estrella: el súper de los aranceles (el súper, en `fondo`).
+      [450, 800, "super", { titulo: "super" }],
+      [800, 870, "calma"],
+      [870, 1020, "premios", { titulo: "premios" }],
+      [1020, 1200, "slalom", { full: ["carro_clydesdale", "carro_clydesdale", "taxi"], titulo: "clydesdales" }],
+      [1200, 1350, "lluvia", { titulo: "lluvia" }],
+      [1350, 1550, "vallas", { low: ["caja_precio", "carrito_compra"], high: ["etiqueta_precio"], momento: "gorras", titulo: "gorras" }],
+      [1550, 1710, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "carro_clydesdale", titulo: "sube_clydesdale" }],
+      [1710, 1850, "jefe_paso", { titulo: "jefe_paso" }],
+      [1850, 2010, "convoy", { titulo: "convoy" }],
+      [2010, 2160, "desfile_cruza", { cruzan: ["fan_cardinals"], titulo: "cruzan_cardinals" }],
+      [2160, 2370, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2370, 2520, "alfombra", { titulo: "alfombra" }],
+      [2520, 2700, "mixto", { densidad: 0.55, titulo: "" }],
+      [2700, 2860, "sprint", { titulo: "sprint_arco" }],
+    ],
+    control: 1312, caja: 1100,
+    interior: { rango: [450, 800], tipo: "super" },
+    chapas: [[620, "arco"], [1250, "carril"], [2250, "bus"]],
+    hitos: ["old_courthouse", "busch_stadium", "union_station_stl"],
+    meta: "arco_gateway", metaNombre: { es: "el arco Gateway", en: "the Gateway Arch" },
+    izquierda: [
+      40, ["kit", 3], 14, ["old_courthouse", 1], ["kit", 2], 14, ...cuadras(8),
+      ["union_station_stl", 1], ["kit", 2], 14, ...cuadras(17),
+    ],
+    derecha: [
+      40, ["kit", 2], 14, ...cuadras(1), ["busch_stadium", 1], ["kit", 2], 14, ...cuadras(28),
+    ],
+    fondo: [{ pieza: "arco_gateway", d: 2950, centro: true },
+      { pieza: "super_entrada", d: 450, cruza: true },
+      ...Array.from({ length: 11 }, (_, i) => ({ pieza: "super_pasillo", d: 458 + i * 30, cruza: true })),
+      { pieza: "super_salida", d: 788, cruza: true }],
+    // Se para en el paseo, a 30 m del arco, y la camara mira hacia arriba (el
+    // arco entero no cabe en el movil en vertical: se ve la curva de arriba).
+    final: "parada", parada: 18,
+    camaraFinal: { pos: [0, 3.0, 18], mira: [0, 22, -40] },
+    // Al final, el parque junto al rio: sin edificios.
+    sinEdificios: [2880, 3800],
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -612,7 +670,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -656,6 +714,8 @@ export const ANCHO = {
   first_national: 30, woodmen: 30, old_market: 40, orpheum: 30, union_station: 90, corrales_entrada: 2, corrales: 30,
   // 08/11: Wichita
   epic_center: 30, century_ii: 40, museo_aviacion: 30, guardian_llanuras: 90, tornado_embudo: 2,
+  // 08/11: San Luis
+  old_courthouse: 30, busch_stadium: 40, union_station_stl: 30, arco_gateway: 100, super_entrada: 8, super_pasillo: 30, super_salida: 8,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

@@ -225,6 +225,23 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: la etiqueta de precio de San Luis (los aranceles: «$$$»).
+  etiqueta(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(-0.35);
+    const forma = () => {
+      x.beginPath();
+      x.moveTo(-60, -70); x.lineTo(70, -70); x.lineTo(70, 70); x.lineTo(-60, 70); x.lineTo(-100, 0); x.closePath();
+    };
+    x.lineWidth = 24; x.strokeStyle = "#fff"; forma(); x.stroke();
+    forma(); x.fillStyle = "#fff6d8"; x.fill();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.beginPath(); x.arc(-66, 0, 11, 0, Math.PI * 2); x.fillStyle = "#fff"; x.fill(); x.stroke();
+    x.fillStyle = "#d8202a"; x.font = "900 70px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText("$$", 14, 4);
+    x.restore();
+  },
+
   // 08/11: los zapatos de rubi de Dorothy (Wichita, El Mago de Oz).
   zapato(x) {
     const zapato = (cx, cy, giro) => {
