@@ -94,7 +94,7 @@ const CALLES = [
     chapas: [[430, "arco"], [995, "techo"], [1180, "arco"]],
     // 07/11: el metro: la boca a ras de calle justo despues de la biblioteca,
     // dos trozos de tunel, la estacion 5 Av (150 m), cuatro de tunel y la salida.
-    metro: [772, 1082],
+    interior: { rango: [772, 1082], tipo: "metro" },
     // (El helicoptero, fuera del metro.)
     helicoptero: [420, 1150],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
@@ -263,10 +263,13 @@ const CALLES = [
     tramos: [
       [0, 70, "calma", { titulo: "strip" }],
       [70, 260, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
-      [260, 410, "alfombra", { titulo: "alfombra" }],
-      [410, 560, "dados", { titulo: "dados" }],
-      [560, 700, "premios", { titulo: "premios" }],
-      [700, 780, "calma"],
+      [260, 380, "alfombra", { titulo: "alfombra" }],
+      // 07/11: el momento estrella: dentro del casino Trump (la sala, en
+      // `fondo`) y, al salir, una lluvia de fichas delante de la torre Eiffel.
+      // Justo antes de la torre: dentro del casino no se veria.
+      [380, 550, "casino", { titulo: "casino" }],
+      [550, 650, "lluvia", { fichas: true, titulo: "lluvia_fichas" }],
+      [650, 780, "dados", { titulo: "dados" }],
       [780, 1400, "jefe", { titulo: "debate" }],
       [1400, 1500, "festin", { potenciador: "mega", titulo: "gigante" }],
       [1500, 1680, "vallas", { high: ["marquesina", "cartel_boda"], momento: "gorras", titulo: "gorras" }],
@@ -296,7 +299,11 @@ const CALLES = [
       ...cuadras(4), ["kit", 2],
     ],
     // Al fondo, la torre dorada con la alfombra roja hasta la acera.
-    fondo: [{ pieza: "hotel_trump", d: 2352, centro: true }],
+    fondo: [{ pieza: "hotel_trump", d: 2352, centro: true },
+      { pieza: "casino_entrada", d: 380, cruza: true },
+      ...[388, 418, 448, 478, 508].map((d) => ({ pieza: "casino_sala", d, cruza: true })),
+      { pieza: "casino_salida", d: 538, cruza: true }],
+    interior: { rango: [380, 546], tipo: "casino" },
     final: "parada", parada: 11,
     // Para el final: mas abajo y mirando hacia arriba, que se vea la torre.
     camaraFinal: { pos: [3.0, 2.3, 19], mira: [0, 9, -12] },
@@ -478,7 +485,7 @@ export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -507,7 +514,7 @@ export const ANCHO = {
   galeria_este: 40, tesoro: 60, casa_blanca_final: 76,
   // 07/11: el metro de Nueva York
   metro_boca: 8, metro_tunel: 24, metro_estacion: 30, metro_salida: 8,
-  banderas_arco: 2,
+  banderas_arco: 2, casino_entrada: 8, casino_sala: 30, casino_salida: 8,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

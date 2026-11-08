@@ -1824,8 +1824,8 @@ export function createWorld(scene) {
       }
       animarPieza(p, mesh);
       // Los halos de sus neones (no en el kit: sus rotulos ya llevan su brillo).
-      // (07/11: las lamparas del metro brillan aunque el nivel sea de dia: su fuerza la pone factorMetro.)
-      if (p.pieza !== "kit" && (fuerzaHalos() > 0 || p.pieza.startsWith("metro_"))) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
+      // (07/11: las lamparas de los interiores brillan aunque el nivel sea de dia: su fuerza la pone factorMetro.)
+      if (p.pieza !== "kit" && (fuerzaHalos() > 0 || /^(metro|casino|capitolio)_/.test(p.pieza))) { const h = crearHalos(lucesDe(clave), clave); if (h) mesh.add(h); }
       group.add(mesh);
       calleViva.push({ mesh, fin: p.ancho + 40 });
     }
@@ -3108,20 +3108,48 @@ export function createWorld(scene) {
   const tacoOroPool = makePool(buildTacoOro);
   function soltarTaco(it) {
     if (it.obj !== undefined) group.remove(it.mesh);
-    else (it.oro ? tacoOroPool : tacoPool).release(it.mesh);
+    else (it.ficha ? fichaPool : it.oro ? tacoOroPool : tacoPool).release(it.mesh);
   }
   // La fila de tramo que se esta generando (ver tacosEn, mas abajo).
   let filaD = null, tacosFila = 0, maxFila = 1, arcoD = -1e9, carrilTacos = -1;
 
-  function spawnTaco(lane, z, y, oro = false) {
-    const mesh = (oro ? tacoOroPool : tacoPool).acquire();
-    randomizeTacoLumps(mesh);
+  // 07/11: la ficha de casino de la lluvia de fichas de Las Vegas (vale 5).
+  let fichaGeo = null, fichaMats = null;
+  function buildFicha() {
+    if (!fichaGeo) {
+      fichaGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.08, 24);
+      fichaGeo.rotateX(Math.PI / 2);
+      let cara = null;
+      if (typeof document !== "undefined") {
+        const c = document.createElement("canvas"); c.width = c.height = 128;
+        const g = c.getContext("2d");
+        g.fillStyle = "#c8102e"; g.beginPath(); g.arc(64, 64, 64, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#ffffff";
+        for (let k = 0; k < 8; k++) { g.save(); g.translate(64, 64); g.rotate(k * Math.PI / 4); g.fillRect(-9, -64, 18, 22); g.restore(); }
+        g.fillStyle = "#f2c230"; g.beginPath(); g.arc(64, 64, 34, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#7a0a1a"; g.font = "900 44px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("T", 64, 67);
+        cara = new THREE.CanvasTexture(c); cara.colorSpace = THREE.SRGBColorSpace;
+      }
+      const canto = toon(0xc8102e, { emissive: 0x2a0008 });
+      const tapa = toon(0xffffff, { map: cara, emissive: 0x220a00 });
+      fichaMats = [canto, tapa, tapa];
+    }
+    const g = new THREE.Group();
+    const m = new THREE.Mesh(fichaGeo, fichaMats);
+    m.scale.setScalar(1.25);
+    g.add(m);
+    return g;
+  }
+  const fichaPool = makePool(buildFicha);
+  function spawnTaco(lane, z, y, oro = false, ficha = false) {
+    const mesh = (ficha ? fichaPool : oro ? tacoOroPool : tacoPool).acquire();
+    if (!ficha) randomizeTacoLumps(mesh);
     mesh.visible = true;
     mesh.rotation.y = 0;
     mesh.position.set(LANE_X[lane], y || 0.9, z);
     if (!mesh.parent) group.add(mesh);
     if (mesh.userData.sombraCae) mesh.userData.sombraCae.visible = false;
-    tacos.push({ mesh, lane, z, baseY: y || 0.9, phase: Math.random() * Math.PI * 2, collected: false, oro });
+    tacos.push({ mesh, lane, z, baseY: y || 0.9, phase: Math.random() * Math.PI * 2, collected: false, oro, ficha, vale: ficha ? 5 : undefined });
   }
 
   // ---- Chispas al recoger un taco (pool reciclado) ----
@@ -4165,8 +4193,8 @@ export function createWorld(scene) {
       const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
       if (k < 2 || k > n - 2) return;
       const lane = SERPIENTE[k % SERPIENTE.length], luego = SERPIENTE[(k + 1) % SERPIENTE.length];
-      for (let i = 0; i < 4; i++) spawnTacoQueCae(lane, z - 0.8 - i * 1.5);
-      if (k % 4 === 0) spawnTacoQueCae((lane + 1) % 3 === luego ? (lane + 2) % 3 : (lane + 1) % 3, z - 3.5, true);
+      for (let i = 0; i < 4; i++) spawnTacoQueCae(lane, z - 0.8 - i * 1.5, false, !!t.fichas);
+      if (k % 4 === 0 && !t.fichas) spawnTacoQueCae((lane + 1) % 3 === luego ? (lane + 2) % 3 : (lane + 1) % 3, z - 3.5, true);
       if (k % 3 === 2) {
         const otros = LANES.filter((l) => l !== lane && l !== luego);
         if (otros.length) obst(elegirDe(otros), "low", z, d);
@@ -4307,6 +4335,32 @@ export function createWorld(scene) {
         if (op.length) obst(elegirDe(op), "low", z, d);
       }
     },
+    // ---- 07/11: Las Vegas, dentro del casino Trump (momento estrella) ----
+    // La sala (piezas de `fondo`): moqueta, tragaperras, mesas, columnas de
+    // oro y lamparas de arana. Por el pasillo: dados que vienen rodando,
+    // tragaperras, ruletas y montones de fichas, y las bailarinas que cruzan.
+    casino(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 4 === 0 && obstaclePools.dado) {
+        // Un dado que viene rodando por un carril con sitio (como en el tramo de los dados).
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "dado");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      if (k % 2 === 1) return;
+      const L = { low: ["fichas", "ruleta"], high: ["marquesina"], full: ["tragaperras", "bailarinas"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "full", "high", "full"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 8 === 2 && i === 4);
+    },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
     jefe_paso(z, d, t, k) {
       if (k % 2 === 1) return;
@@ -4329,13 +4383,19 @@ export function createWorld(scene) {
   let velEn = null;
   function setVelEn(f) { velEn = f; }
 
-  // -- 07/11: el metro. `nivel.metro` = [donde empieza, donde acaba]. Dentro no se
-  // ve la calle (aceras, gente, banderas, arboles...) y la luz pasa poco a poco
-  // a la de la estacion: calida y fija, con niebla oscura al fondo del tunel. --
-  const COLOR_METRO = new THREE.Color(0x2e2620);
-  function metroEn(dist) { const m = nivel && nivel.metro; return !!m && dist > m[0] - 2 && dist < m[1] + 2; }
+  // -- 07/11: los interiores (el metro, el casino, el Capitolio). `nivel.interior`
+  // = { rango: [donde empieza, donde acaba], tipo }. Dentro no se ve la calle
+  // (aceras, gente, banderas, arboles, el horizonte...) y la luz y la niebla
+  // pasan poco a poco a las de dentro (la luz la pone main.js). --
+  const NIEBLA_INTERIOR = {
+    metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
+    casino: { color: new THREE.Color(0x6a3a58), near: 60, far: 210 },
+    capitolio: { color: new THREE.Color(0xd9cdb6), near: 60, far: 210 },
+  };
+  function tipoInterior() { return (nivel && nivel.interior && nivel.interior.tipo) || null; }
+  function metroEn(dist) { const m = nivel && nivel.interior && nivel.interior.rango; return !!m && dist > m[0] - 2 && dist < m[1] + 2; }
   function factorMetro() {
-    const m = nivel && nivel.metro;
+    const m = nivel && nivel.interior && nivel.interior.rango;
     if (!m) return 0;
     const s = (a, b) => { const x = Math.min(1, Math.max(0, (totalScrolled - a) / (b - a))); return x * x * (3 - 2 * x); };
     return s(m[0] - 6, m[0] + 22) * (1 - s(m[1] - 26, m[1] + 4));
@@ -4345,8 +4405,8 @@ export function createWorld(scene) {
   const sombraCaeGeo = new THREE.CircleGeometry(0.42, 18);
   sombraCaeGeo.rotateX(-Math.PI / 2);
   const sombraCaeMat = sobreCalzada(new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }));
-  function spawnTacoQueCae(lane, z, oro = false) {
-    spawnTaco(lane, z, 0.9, oro);
+  function spawnTacoQueCae(lane, z, oro = false, ficha = false) {
+    spawnTaco(lane, z, 0.9, oro, ficha);
     const it = tacos[tacos.length - 1];
     it.cae = 13;
     let s = it.mesh.userData.sombraCae;
@@ -5047,9 +5107,9 @@ export function createWorld(scene) {
     sidewalkMat.color.copy(blendA);
     blendA.set(cFrom.fog); blendB.set(cTo.fog); blendA.lerp(blendB, blend.t);
     scene.fog.color.copy(blendA);
-    const fm = factorMetro();
-    if (fm > 0) scene.fog.color.lerp(COLOR_METRO, fm);
-    scene.fog.near = 130 - 95 * fm; scene.fog.far = 285 - 125 * fm;
+    const fm = factorMetro(), ni = NIEBLA_INTERIOR[tipoInterior()];
+    if (fm > 0 && ni) scene.fog.color.lerp(ni.color, fm);
+    scene.fog.near = 130 + ((ni ? ni.near : 130) - 130) * fm; scene.fog.far = 285 + ((ni ? ni.far : 285) - 285) * fm;
     if (haloMat) haloMat.uniforms.fuerza.value = Math.max(fuerzaHalos(), fm);
     if (horizonte) horizonte.mostrar(fm < 0.5);
     scene.background.copy(scene.fog.color);
@@ -5373,5 +5433,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro };
+    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior };
 }

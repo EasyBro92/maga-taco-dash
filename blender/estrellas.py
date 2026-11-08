@@ -142,9 +142,127 @@ def carroza_desfile():
             cil(mat('rueda_carroza', 0x1d1e21, 0.8), s * 0.92, y, 0.3, 0.3, 0.2, 14, eje='X')
 
 
+# ================================================================ Las Vegas
+PARED_V = 8.3                 # lo que sobresale de las fachadas (a 11,5) llega hasta 8,5
+TECHO_V = 11.0
+def oro_v():      return mat('oro_casino', 0xe8b84a, 0.25)
+# (07/11: mas claros: Isidro dijo que Las Vegas era oscura y no se veian los obstaculos.)
+def granate():    return mat('granate_casino', 0x9a2a3e, 0.5)
+def moqueta():    return mat_bloques('moqueta_casino', 0xa8263a, 0x962032, ancho=2.4, alto=2.4, grosor=0.04, variacion=1.03)
+def cristal_n():  return mat('cristal_negro', 0x6a5040, 0.15)
+def bombilla():   return luz('bombilla_casino', 0xffe2a8, 1.6)
+
+def tragaperras_fila(x, y0, n, lado):
+    """Una fila de tragaperras mirando al pasillo (lado: hacia donde miran, -1 = -x)."""
+    pantallas = [luz('pantalla_%d' % k, c, 1.1) for k, c in enumerate((0x6fd0ff, 0xff7ad0, 0xffd04a))]
+    for k in range(n):
+        y = y0 + k * 0.85
+        caja(mat('mueble_slot', 0x2a2c3a, 0.4), x, y, 0.3, 0.7, 0.75, 1.7)
+        caja(pantallas[k % 3], x + lado * 0.36, y, 1.1, 0.02, 0.55, 0.6)
+        caja(oro_v(), x + lado * 0.36, y, 1.85, 0.02, 0.6, 0.12)
+        cil(mat('taburete', 0x8a1a2a, 0.5), x + lado * 0.85, y, 0.3, 0.2, 0.55, 10)
+
+def casino_sala():
+    """Un trozo de 30 m del casino Trump por dentro: moqueta granate, filas
+    de tragaperras a los lados sobre una tarima, mesas de ruleta y de cartas,
+    columnas doradas, paredes de espejo y oro, letreros de neón y lámparas de
+    araña colgando sobre la calle (altas: la cámara pasa por debajo)."""
+    L = 30.0
+    W = PARED_V
+    caja(moqueta(), 0, 0, 0, 7.8, L, 0.09)                     # el pasillo, por encima de las rayas
+    for s in (-1, 1):
+        caja(moqueta(), s * (3.9 + (W - 3.9) / 2), 0, 0, W - 3.9, L, 0.3)   # la tarima
+        caja(oro_v(), s * 3.92, 0, 0, 0.06, L, 0.32)
+        # Tragaperras junto a la pared y mesas entre las columnas.
+        tragaperras_fila(s * 7.4, -L / 2 + 1.0, 33, -s)
+        for y in (-7.5, 7.5):
+            cil(mat('tapete', 0x1f6a3a, 0.7), s * 5.6, y, 0.3, 1.0, 0.9, 20)
+            cil(oro_v(), s * 5.6, y, 1.2, 1.05, 0.06, 20)
+            cil(mat('ruleta_c', 0x2a1810, 0.5), s * 5.6, y, 1.26, 0.35, 0.08, 18)
+        for y in (0.0,):
+            caja(mat('tapete', 0x1f6a3a, 0.7), s * 5.6, y, 0.3, 1.2, 2.4, 0.9)
+            caja(oro_v(), s * 5.6, y, 1.2, 1.3, 2.5, 0.05)
+        # La pared: espejo oscuro con marcos dorados y los neones.
+        caja(cristal_n(), s * (W + 0.1), 0, 0.3, 0.2, L, TECHO_V - 0.3)
+        for y in (-12, -4, 4, 12):
+            caja(oro_v(), s * (W - 0.02), y, 0.3, 0.06, 0.18, TECHO_V - 0.3)
+        caja(oro_v(), s * (W - 0.02), 0, 3.6, 0.06, L, 0.12)
+        for y, texto_n, c in ((-7.5, 'SLOTS', 0xff5ad0), (7.5, '777', 0x6fe0ff)):
+            o = texto(luz('neon_%s' % texto_n, c, 1.8), texto_n, 0, 0, 0, tam=1.1, prof=0.05)
+            o.rotation_euler = (math.pi / 2, 0, -s * math.pi / 2)   # (mirando al pasillo)
+            o.location = (s * (W - 0.08), y, 5.0)
+        # Columnas doradas.
+        for y in (-11.25, -3.75, 3.75, 11.25):
+            cil(oro_v(), s * 4.25, y, 0.3, 0.28, TECHO_V - 0.3, 16)
+            cil(oro_v(), s * 4.25, y, 0.3, 0.42, 0.4, 16)
+            cil(oro_v(), s * 4.25, y, TECHO_V - 0.6, 0.42, 0.5, 16)
+    # El techo artesonado y las lámparas de araña.
+    caja(granate(), 0, 0, TECHO_V, W * 2 + 0.4, L, 0.4)
+    for y in (-11.25, -3.75, 3.75, 11.25):
+        caja(oro_v(), 0, y, TECHO_V - 0.35, W * 2, 0.3, 0.35)
+    for y in (-7.5, 7.5):
+        for x in (-2.2, 2.2):
+            cil(oro_v(), x, y, 10.2, 0.03, 0.8, 6)
+            cil(oro_v(), x, y, 9.9, 0.9, 0.08, 16)
+            for k in range(8):
+                a = k * math.pi / 4
+                esfera(bombilla(), x + math.cos(a) * 0.8, y + math.sin(a) * 0.8, 10.05, 0.09, 1)
+            esfera(mat('cristal_lampara', 0xf4f0ff, 0.1), x, y, 9.8, 0.35, 2, esc=(1, 1, 1.4))
+
+def casino_entrada():
+    """La fachada del casino Trump de lado a lado del Strip: cristal negro con
+    marcos dorados, «TRUMP» en letras de oro gigantes, la entrada con la
+    marquesina de bombillas y una alfombra roja hasta la calle."""
+    D = 8.0
+    y0 = -D / 2
+    W = 11.75
+    for s in (-1, 1):
+        caja(cristal_n(), s * (4.6 + (W - 4.6) / 2), y0 + 0.6, 0, W - 4.6, 1.2, 18)
+        for x in (5.4, 8.0, 10.6):
+            caja(oro_v(), s * x, y0 - 0.02, 0, 0.25, 0.3, 18)
+    caja(cristal_n(), 0, y0 + 0.6, TECHO_V, 9.2, 1.2, 7)
+    for z in (11.0, 13.5, 17.8):
+        caja(oro_v(), 0, y0 - 0.03, z, W * 2, 0.32, 0.25)
+    # TRUMP en letras de oro.
+    texto(oro_v(), 'TRUMP', 0, y0 - 0.1, 15.6, tam=3.0, prof=0.25)
+    # La marquesina de la entrada, con bombillas.
+    caja(oro_v(), 0, y0 - 1.2, 10.4, 10.4, 2.6, 0.5)
+    for k in range(26):
+        x = -5.0 + k * 0.4
+        esfera(bombilla(), x, y0 - 2.55, 10.55, 0.08, 1)
+    for s in (-1, 1):
+        caja(oro_v(), s * 4.8, y0 - 0.1, 0, 0.4, 0.4, 10.4)
+        for k in range(18):
+            esfera(bombilla(), s * 4.55, y0 - 0.35, 0.6 + k * 0.55, 0.07, 1)
+    # La alfombra roja hasta la acera (y por dentro, la moqueta).
+    caja(mat('alfombra_casino', 0xb01028, 0.6), 0, y0 - 5, 0, 4.2, 10, 0.1)
+    caja(moqueta(), 0, 0.6, 0, 9.2, D - 1.2, 0.09)
+    for s in (-1, 1):
+        caja(cristal_n(), s * 4.75, 0.6, 0, 0.3, D - 1.2, TECHO_V)
+    caja(granate(), 0, 0.6, TECHO_V, 9.8, D - 1.2, 0.4)
+
+def casino_salida():
+    """La salida al Strip: el marco dorado por dentro, con la luz de fuera."""
+    D = 8.0
+    caja(moqueta(), 0, 0, 0, 9.2, D, 0.09)
+    for s in (-1, 1):
+        caja(cristal_n(), s * 4.75, 0, 0, 0.3, D, TECHO_V)
+        caja(oro_v(), s * 4.3, D / 2 - 0.4, 0, 0.6, 0.6, TECHO_V)
+        for k in range(16):
+            esfera(bombilla(), s * 4.0, D / 2 - 0.75, 0.6 + k * 0.6, 0.07, 1)
+        # Los muros de los lados hasta la fachada (por si se ve el hueco).
+        caja(cristal_n(), s * 8.3, 0, 0, 7.0, 0.3, TECHO_V).location.y = -D / 2 + 0.15
+    caja(granate(), 0, 0, TECHO_V, 9.8, D, 0.4)
+    caja(oro_v(), 0, D / 2 - 0.4, TECHO_V - 1.0, 9.2, 0.6, 1.0)
+    texto(oro_v(), 'THANK YOU', 0, D / 2 - 0.75, TECHO_V - 0.5, tam=0.6, prof=0.03)
+
+
 PIEZAS = {
     'banderas_arco':   (banderas_arco,   'findlay',    dict(lado=1024, bisel=0.0)),
     'carroza_desfile': (carroza_desfile, 'obstaculos', dict(lado=1024)),
+    'casino_entrada':  (casino_entrada,  'vegas',      dict(lado=1024, bisel=0.0)),
+    'casino_sala':     (casino_sala,     'vegas',      dict(lado=2048, bisel=0.0, segmentos=2)),
+    'casino_salida':   (casino_salida,   'vegas',      dict(lado=512, bisel=0.0)),
 }
 
 correr(PIEZAS)

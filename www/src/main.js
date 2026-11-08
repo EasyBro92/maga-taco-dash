@@ -303,21 +303,27 @@ const LUZ_NORMAL = { sun: sun.color.getHex(), sunI: sun.intensity, sunPos: sun.p
 // 07/11: la luz de la estacion del metro (calida y fija). Se mezcla poco a
 // poco con la del nivel al entrar y al salir (world.factorMetro).
 let luzBase = null, metroAntes = 0;
-const HEMI_METRO = new THREE.Color(0xffd6a0), SUELO_METRO = new THREE.Color(0x7a5a3c), FILL_METRO = new THREE.Color(0xffc890);
+// La luz de cada interior: el metro, calida y algo oscura; el casino, dorada y
+// roja; el Capitolio, blanca y calida, la mas clara.
+const LUZ_INTERIOR = {
+  metro: { hemi: new THREE.Color(0xffd6a0), suelo: new THREE.Color(0x7a5a3c), hemiI: 1.05, fill: new THREE.Color(0xffc890), fillI: 0.7, sunI: 0.2 },
+  casino: { hemi: new THREE.Color(0xffd8b8), suelo: new THREE.Color(0xa04060), hemiI: 1.45, fill: new THREE.Color(0xfff0d0), fillI: 1.3, sunI: 0.3 },
+  capitolio: { hemi: new THREE.Color(0xfff2dc), suelo: new THREE.Color(0xb39c7a), hemiI: 1.2, fill: new THREE.Color(0xfff4e4), fillI: 0.85, sunI: 0.35 },
+};
 function guardarLuzBase() {
   luzBase = { sunI: sun.intensity, hemiC: hemi.color.clone(), hemiG: hemi.groundColor.clone(), hemiI: hemi.intensity,
     fillI: fill.intensity, fillC: fill.color.clone(), fillP: fill.position.clone() };
 }
 function luzMetro() {
-  const f = world.factorMetro();
-  if (!luzBase || (f === 0 && metroAntes === 0)) return;
+  const f = world.factorMetro(), li = LUZ_INTERIOR[world.tipoInterior()];
+  if (!luzBase || !li || (f === 0 && metroAntes === 0)) return;
   metroAntes = f;
-  sun.intensity = luzBase.sunI + (0.2 - luzBase.sunI) * f;
-  hemi.color.copy(luzBase.hemiC).lerp(HEMI_METRO, f);
-  hemi.groundColor.copy(luzBase.hemiG).lerp(SUELO_METRO, f);
-  hemi.intensity = luzBase.hemiI + (1.05 - luzBase.hemiI) * f;
-  fill.color.copy(luzBase.fillC).lerp(FILL_METRO, f);
-  fill.intensity = luzBase.fillI + (0.7 - luzBase.fillI) * f;
+  sun.intensity = luzBase.sunI + (li.sunI - luzBase.sunI) * f;
+  hemi.color.copy(luzBase.hemiC).lerp(li.hemi, f);
+  hemi.groundColor.copy(luzBase.hemiG).lerp(li.suelo, f);
+  hemi.intensity = luzBase.hemiI + (li.hemiI - luzBase.hemiI) * f;
+  fill.color.copy(luzBase.fillC).lerp(li.fill, f);
+  fill.intensity = luzBase.fillI + (li.fillI - luzBase.fillI) * f;
   fill.position.copy(luzBase.fillP).lerp(_fillMetro, f);
   sunGlare.visible = f < 0.3;
 }
@@ -1700,7 +1706,7 @@ function velNivel(d) {
 world.setVelEn((d) => (nivelActual ? velNivel(d) : null));
 function empezarMomento(tr) {
   if (!tr || !nivelActual || gameState !== "playing") return;
-  if (tr.tipo === "lluvia") world.lanzarAvion();
+  if (tr.tipo === "lluvia" && !tr.fichas) world.lanzarAvion();
   if (tr.momento === "persigue") {
     persigueMomento = true; persigueLeft = 1e6;
     world.perseguir(true, false, tr.perseguidor || null);

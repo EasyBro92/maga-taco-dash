@@ -1342,3 +1342,24 @@ Ocupa el sitio del desfile y de subirse a la carroza.
 - Cae confeti durante todo el tramo.
 
 Probado con el piloto: 30 carrozas, unos 12 s por encima de ellas, sin choques.
+
+### Las Vegas: dentro del casino Trump (380–550 m) y la lluvia de fichas (550–650)
+
+Ocupa el sitio de los dados y de los premios. Va justo antes de la torre
+Eiffel del París: dentro del casino no se vería.
+- **La fachada (380):** cruza el Strip, con «TRUMP» en letras de oro gigantes,
+  la marquesina de bombillas y una alfombra roja hasta la acera.
+- **La sala (388–538):** moqueta roja, filas de tragaperras con pantallas de
+  colores sobre una tarima, mesas de ruleta y de cartas, columnas de oro,
+  letreros de neón («SLOTS», «777») y lámparas de araña.
+- **Por el pasillo:** dados que vienen rodando, tragaperras, ruletas, montones
+  de fichas y bailarinas que cruzan.
+- **La lluvia de fichas al salir:** fichas de casino que caen del cielo con su
+  sombra; cada una vale 5 tacos.
+
+El metro pasa a ser un caso de los interiores (`nivel.interior` = { rango,
+tipo }), cada uno con su luz y su niebla. Como Isidro dijo que Las Vegas era
+oscura, el casino va más claro que la calle de noche: brillo 61-67 dentro,
+78-94 fuera.
+
+Probado con el piloto: sin choques, la luz cambia del todo y caen 44 fichas.
