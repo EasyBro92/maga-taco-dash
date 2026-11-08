@@ -1519,3 +1519,39 @@ Historia: tierra de vacas, con cajas de Filetes Trump por la calle.
 
 Probado con el piloto: 2:18, el nivel se completa y todos los obstáculos nuevos
 salen.
+
+## Nivel 7: Wichita, Kansas (2026-11-08)
+
+Isidro eligió el final en el Guardián de las Llanuras y la luz de cielo de
+tornado (`tornado`: verde gris, sin relámpagos que parpadeen, con la luz de
+relleno por detrás para que se vean los obstáculos). Historia: un tornado como
+el de El Mago de Oz se lleva las vallas.
+
+- **La calle** (Douglas Avenue, 2.800 m, `blender/wichita.py`):
+  - el Epic Center escalonado (la torre más alta de Kansas), Century II
+    (redondo, con el tejado azul de gajos) y el museo de la aviación, con una
+    avioneta subida a un poste;
+  - al fondo, el Guardián de las Llanuras en su roca, con el anillo de
+    braseros de fuego.
+- **Obstáculos nuevos:**
+  - la valla y la vaca que se lleva el tornado: cruzan por el aire, hay que
+    agacharse;
+  - el trozo de tejado que viene botando;
+  - el espantapájaros;
+  - la señorita Gulch en bicicleta, con Toto en la cesta, que cambia de carril.
+- **El camino de baldosas amarillas (450–620):** de lado a lado de la calle,
+  con tacos dorados. Se pinta como la alfombra roja, porque si no el asfalto se
+  transparentaba.
+- **Momento estrella, el tornado (700–1000):**
+  - se sale a la pradera, sin edificios;
+  - el embudo gira despacio a la derecha;
+  - por la calle vuela de todo.
+  - En el horizonte de Kansas también se ve un embudo a lo lejos.
+- **Lo demás:**
+  - el objeto de la ciudad son los zapatos de rubí de Dorothy;
+  - la música es más tensa, en menor;
+  - el mensaje al ganar: «no hay sitio como la Casa Blanca».
+- **Para el juego en general:** las piezas que cruzan la calle pueden ir
+  desplazadas a un lado (`x` en `fondo`).
+
+Probado con el piloto: 2:18, el nivel se completa y salen todos los obstáculos.

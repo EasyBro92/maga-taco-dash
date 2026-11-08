@@ -458,6 +458,60 @@ const CALLES = [
     acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 08/11/2026: nivel 7: Wichita (blender/wichita.py). Eligió final en el
+    // Guardián de las Llanuras y cielo de tornado. Historia: un tornado como el
+    // de El Mago de Oz se lleva las vallas. Momento estrella: el tornado pasa
+    // junto a la calle; y el camino de baldosas amarillas.
+    id: "wichita", nombre: "Douglas Avenue", lugar: "Wichita, Kansas", listo: true,
+    zona: "city", carpeta: "wichita", luz: "tornado", semilla: 1870,
+    largo: 2800, linea: 11.5, velMax: 23.5,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 8 },
+    horizonte: "kansas",
+    obstaculos: { low: ["tejado_volando", "paca", "calabazas"], high: ["valla_volando", "vaca_volando", "guirnalda"],
+      full: ["espantapajaros", "bruja_bici", "tractor", "furgoneta", "vaca"] },
+    publico: { personas: ["granjero", "abuelo", "senora", "fan", "chico", "granjero"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "wichita" }],
+      [70, 300, "mixto", { densidad: 0.5, titulo: "viento" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 620, "baldosas", { titulo: "baldosas" }],
+      [620, 700, "calma"],
+      // El momento estrella: el tornado pasa junto a la calle.
+      [700, 1000, "tornado", { titulo: "tornado" }],
+      [1000, 1150, "premios", { titulo: "premios" }],
+      [1150, 1330, "slalom", { full: ["bruja_bici", "bruja_bici", "tractor"], titulo: "gulch" }],
+      [1330, 1480, "lluvia", { titulo: "lluvia" }],
+      [1480, 1680, "vallas", { low: ["tejado_volando", "paca"], high: ["valla_volando"], momento: "gorras", titulo: "gorras" }],
+      [1680, 1840, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "tractor", titulo: "sube_tractor" }],
+      [1840, 1990, "jefe_paso", { titulo: "jefe_paso" }],
+      [1990, 2150, "convoy", { titulo: "convoy" }],
+      [2150, 2300, "desfile_cruza", { cruzan: ["valla_volando", "vaca_volando"], titulo: "vuelan" }],
+      [2300, 2510, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2510, 2640, "alfombra", { titulo: "alfombra" }],
+      [2640, 2760, "sprint", { titulo: "sprint_wichita" }],
+    ],
+    control: 1412, caja: 1100,
+    // En el tornado se sale a la pradera: sin edificios, para que se vea el embudo.
+    sinEdificios: [700, 1010],
+    chapas: [[560, "arco"], [1260, "carril"], [2400, "bus"]],
+    hitos: ["epic_center", "museo_aviacion", "century_ii"],
+    meta: "guardian_llanuras", metaNombre: { es: "el Guardián de las Llanuras", en: "the Keeper of the Plains" },
+    izquierda: [
+      40, ["kit", 3], 14, ["epic_center", 1], ["kit", 2], 14, ...cuadras(10),
+      ["museo_aviacion", 1], ["kit", 2], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 2], 14, ...cuadras(4), ["century_ii", 1], ["kit", 2], 14, ...cuadras(20),
+    ],
+    fondo: [{ pieza: "guardian_llanuras", d: 2860, centro: true },
+      // El tornado, a la derecha y lejos (gira despacio).
+      { pieza: "tornado_embudo", d: 860, cruza: true, x: 30 }],
+    final: "parada", parada: 4,
+    camaraFinal: { pos: [3, 3.0, 28], mira: [0, 12, -24] },
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -558,14 +612,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -600,6 +654,8 @@ export const ANCHO = {
   canon_corte: 30, canon_puente: 30,
   // 08/11: Omaha
   first_national: 30, woodmen: 30, old_market: 40, orpheum: 30, union_station: 90, corrales_entrada: 2, corrales: 30,
+  // 08/11: Wichita
+  epic_center: 30, century_ii: 40, museo_aviacion: 30, guardian_llanuras: 90, tornado_embudo: 2,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
@@ -666,7 +722,7 @@ export function colocarNivel(nivel, anchoDe) {
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
   recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
   // (`cruza`: de lado a lado de la calle, como el puente o las pasarelas de Des Moines)
-  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, ancho: anchoDe(f.pieza) });
+  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, x: f.x || 0, ancho: anchoDe(f.pieza) });
   // El arco del punto de control, de lado a lado de la calle.
   if (nivel.control) salida.push({ pieza: "arco_control", d: nivel.control, lado: 0, arco: true, ancho: 2 });
   return salida.sort((a, b) => a.d - b.d);

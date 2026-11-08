@@ -181,6 +181,28 @@ const SITIOS = {
     x.fillStyle = "rgba(255,230,140,0.95)"; x.fillRect(tx - 30, SUELO - th - 4, 60, 3);
     x.fillStyle = "rgba(255,60,60,1)"; x.beginPath(); x.arc(tx, SUELO - th - 102, 4, 0, Math.PI * 2); x.fill();
   },
+  // 08/11: Kansas (Wichita): la llanura de trigo hasta el horizonte, elevadores
+  // de grano y, a lo lejos, el embudo del tornado bajo la nube (quieto: el que
+  // gira es el de cerca, en la calle).
+  kansas(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 40; i++) x.lineTo((i / 40) * ANCHO, SUELO - 6 - Math.sin(i * 0.5) * 3 - r() * 2);
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.fillStyle = c.silo;
+    for (let k = 0; k < 7; k++) {
+      const cx = 200 + k * 560 + r() * 200;
+      x.fillRect(cx, SUELO - 90, 26, 90); x.fillRect(cx + 26, SUELO - 70, 22, 70); x.fillRect(cx + 4, SUELO - 104, 16, 14);
+    }
+    x.fillStyle = c.granero;
+    for (let k = 0; k < 9; k++) { const cx = 90 + k * 430 + r() * 120; x.fillRect(cx, SUELO - 22, 34, 22); }
+    // La nube del tornado y el embudo.
+    x.fillStyle = c.cerca;
+    x.beginPath(); x.ellipse(1700, SUELO - 210, 520, 70, 0, 0, Math.PI * 2); x.fill();
+    x.beginPath();
+    x.moveTo(1600, SUELO - 200); x.quadraticCurveTo(1680, SUELO - 90, 1700, SUELO);
+    x.lineTo(1716, SUELO); x.quadraticCurveTo(1740, SUELO - 100, 1820, SUELO - 200); x.closePath(); x.fill();
+  },
   iowa(x, c, r) {
     // Iowa en invierno (01/11): campos llanos nevados hasta donde se ve,
     // hileras de arboles, granjas rojas con el tejado blanco, silos, un
@@ -247,7 +269,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

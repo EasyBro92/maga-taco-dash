@@ -225,6 +225,31 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: los zapatos de rubi de Dorothy (Wichita, El Mago de Oz).
+  zapato(x) {
+    const zapato = (cx, cy, giro) => {
+      x.save(); x.translate(cx, cy); x.rotate(giro);
+      const forma = () => {
+        x.beginPath();
+        x.moveTo(-70, 10); x.quadraticCurveTo(-72, -30, -40, -34); x.lineTo(10, -20);
+        x.quadraticCurveTo(60, -16, 70, 12); x.quadraticCurveTo(66, 30, 30, 30); x.lineTo(-50, 30);
+        x.quadraticCurveTo(-70, 30, -70, 10); x.closePath();
+      };
+      x.lineWidth = 22; x.strokeStyle = "#fff"; forma(); x.stroke();
+      const g = x.createLinearGradient(0, -34, 0, 30);
+      g.addColorStop(0, "#ff4a5a"); g.addColorStop(1, "#a8101e");
+      forma(); x.fillStyle = g; x.fill();
+      x.fillStyle = "rgba(255,255,255,0.75)";
+      for (let k = 0; k < 14; k++) { x.beginPath(); x.arc(-55 + (k * 37) % 115, -18 + (k * 23) % 40, 3, 0, Math.PI * 2); x.fill(); }
+      x.fillStyle = "#7a0a14"; x.fillRect(-62, 22, 14, 26);           // el tacon
+      x.beginPath(); x.ellipse(18, -18, 16, 10, 0, 0, Math.PI * 2); x.fillStyle = "#ff8a9a"; x.fill();   // el lazo
+      x.lineWidth = 6; x.strokeStyle = CONTORNO; forma(); x.stroke();
+      x.restore();
+    };
+    zapato(118, 104, -0.15);
+    zapato(138, 168, 0.1);
+  },
+
   // 08/11: el filete de Omaha (un chuleton con su hueso en T).
   filete(x) {
     x.save();

@@ -221,6 +221,11 @@ const CANCIONES = {
     melodia: [67, null, 71, 74, null, 71, 69, null, 67, null, 64, 67, 69, null, null, null,
       67, null, 71, 74, null, 76, 74, 71, 72, null, 71, 69, 67, null, null, null],
     timbre: "banjo" },
+  // Wichita (08/11): llanura antes de la tormenta, mas tensa (menor).
+  wichita: { bpm: 126, swing: 0.5, acordes: [Am, F, C, G], bateria: "country", bajo: "alterna",
+    melodia: [69, null, 72, 76, null, 74, 72, null, 69, null, 67, 69, 72, null, null, null,
+      69, null, 72, 76, null, 77, 76, 74, 72, null, 71, 67, 69, null, null, null],
+    timbre: "pluck" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

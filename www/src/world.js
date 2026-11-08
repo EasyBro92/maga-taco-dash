@@ -1753,6 +1753,10 @@ export function createWorld(scene) {
     if (luz === "atardecer") {
       Object.assign(BIOME_COLORS.dc, { sky: 0xffd2a8, skyTop: 0x6d7fc4, fog: 0xf6d2b0, horizon: 0x8d7f9c });
     }
+    if (luz === "tornado") {
+      // 08/11: Wichita, cielo de tornado: verde gris, sin relampagos (nada parpadea).
+      Object.assign(BIOME_COLORS.city, { sky: 0x9fae94, skyTop: 0x4a584c, fog: 0x9ca892, horizon: 0x6c7664, ground: 0x8c8e6c });
+    }
     if (luz === "pradera") {
       // 08/11: Omaha, atardecer en la pradera: cielo rosado y naranja, bruma calida.
       Object.assign(BIOME_COLORS.city, { sky: 0xffb486, skyTop: 0x5f6fc0, fog: 0xf4c09a, horizon: 0xb07a72, ground: 0xc9a27a });
@@ -1824,7 +1828,7 @@ export function createWorld(scene) {
       if (p.cruza) {
         // De lado a lado de la calle (el puente, las pasarelas de Des Moines):
         // su origen en el centro de la calle, a lo largo de su ancho.
-        mesh.position.set(0, 0, -(p.d + p.ancho / 2 - totalScrolled));
+        mesh.position.set(p.x || 0, 0, -(p.d + p.ancho / 2 - totalScrolled));
         // El agua del rio va casi a ras del suelo: que no parpadee con el.
         if (p.pieza === "rio") mesh.traverse((o) => { if (o.material) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = -1; o.material.polygonOffsetUnits = -2; } });
       } else if (p.centro) {
@@ -2492,6 +2496,14 @@ export function createWorld(scene) {
     cartel_steak: { choque: "high", medio: 0.3, alto: 2.2 },
     camion_ganado: { choque: "full", medio: 3.1, alto: 2.8, centro: -3.1, cambia: 0.7 },
     fan_huskers: { choque: "full", medio: 0.35, alto: 2.2, centro: 0, cruza: true },
+    // 08/11: Wichita (blender/wichita.py): la valla y la vaca que se lleva el
+    // tornado (cruzan por el aire: agacharse), el trozo de tejado que viene
+    // botando, el espantapajaros y la señorita Gulch en bici (cambia de carril).
+    valla_volando: { choque: "high", medio: 0.3, alto: 2.3, centro: 0, cruza: true },
+    vaca_volando: { choque: "high", medio: 0.45, alto: 2.4, centro: 0, cruza: true },
+    tejado_volando: { choque: "low", medio: 0.6, alto: 0.7, mueve: 4, bota: true },
+    espantapajaros: { choque: "full", medio: 0.4, alto: 2.4, centro: -0.3 },
+    bruja_bici: { choque: "full", medio: 1.1, alto: 2.0, centro: -0.8, cambia: 0.6 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2717,6 +2729,9 @@ export function createWorld(scene) {
     // 06/11 (3): la alfombra roja, un trozo por fila (se pisa: no choca).
     TIPOS.alfombra = { choque: "nada" };
     obstaclePools.alfombra = makePool(crearAlfombra);
+    // 08/11: el camino de baldosas amarillas de Wichita (de lado a lado de la calle).
+    TIPOS.baldosa = { choque: "nada" };
+    obstaclePools.baldosa = makePool(crearBaldosa);
   }
 
   // La vaca de su tramo: anda de lado a lado mientras esta lejos; al
@@ -3516,7 +3531,7 @@ export function createWorld(scene) {
   // Cuanto brillan los halos segun la luz del nivel (de dia no se ven).
   function fuerzaHalos() {
     const luz = nivel && nivel.luz;
-    return luz === "anochecer" ? 1 : luz === "atardecer" ? 0.45 : luz === "pradera" ? 0.35 : 0;
+    return luz === "anochecer" ? 1 : luz === "atardecer" ? 0.45 : luz === "pradera" ? 0.35 : luz === "tornado" ? 0.3 : 0;
   }
   // Las farolas de la acera: donde esta la bombilla de cada una.
   const HALOS_ACERA = {
@@ -4490,6 +4505,46 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: Wichita: el camino de baldosas amarillas y el tornado ----
+    // Las baldosas cubren la calle; por ellas, el espantapajaros, la señorita
+    // Gulch en bici, tejados que vienen botando y vallas que cruzan volando, con
+    // tacos dorados en el carril libre.
+    baldosas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 1) return;
+      if (obstaclePools.baldosa) spawnObstacle(1, "nada", z, "baldosa");
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const L = { low: ["tejado_volando"], high: ["valla_volando"], full: ["espantapajaros", "bruja_bici"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "full", "full", "high"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 2; i++) { spawnTaco(libre, z - 1.5 - i * 3, 0.9, true); tacos[tacos.length - 1].vale = 5; }
+    },
+    // El tornado (momento estrella): el embudo pasa a la derecha (pieza de
+    // `fondo`, gira despacio) y por la calle vuela de todo: tejados que botan,
+    // vallas y vacas que cruzan por el aire.
+    tornado(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 4 === 2 && obstaclePools.tejado_volando) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "tejado_volando");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["paca", "calabazas"], high: ["valla_volando", "vaca_volando"], full: ["espantapajaros", "tractor"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "high", "high", "full"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
     // ---- 08/11: Omaha, la estampida en los corrales (momento estrella) ----
     // Vallas con vacas a los dos lados, el granero y el arco de la entrada
     // (piezas de `fondo`); por la calle, vacas sueltas, rollos de heno que
@@ -4660,6 +4715,34 @@ export function createWorld(scene) {
     }
     const g = new THREE.Group();
     g.add(new THREE.Mesh(alfombraGeo, alfombraMat));
+    return g;
+  }
+
+  // -- 08/11: el camino de baldosas amarillas (Wichita, El Mago de Oz): un trozo
+  // de 7 m por fila que cubre los tres carriles. Baldosas grandes y de poco
+  // contraste: las juntas finas en el suelo parpadean al pasar. --
+  let baldosaGeo = null, baldosaMat = null;
+  function crearBaldosa() {
+    if (!baldosaGeo) {
+      baldosaGeo = new THREE.PlaneGeometry(LANE_WIDTH * 3 + 0.2, ROW_SPACING + 0.05);
+      baldosaGeo.rotateX(-Math.PI / 2);
+      baldosaGeo.translate(0, 0.03, -ROW_SPACING / 2);
+      let mapa = null;
+      if (typeof document !== "undefined") {
+        const c = document.createElement("canvas"); c.width = 128; c.height = 128;
+        const g = c.getContext("2d");
+        g.fillStyle = "#e9b93a"; g.fillRect(0, 0, 128, 128);
+        g.fillStyle = "#f4c84a";
+        for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 3; fx++) g.fillRect(fx * 43 + (fy % 2) * 21 + 2, fy * 32 + 2, 39, 28);
+        mapa = new THREE.CanvasTexture(c);
+        mapa.colorSpace = THREE.SRGBColorSpace;
+        mapa.wrapS = mapa.wrapT = THREE.RepeatWrapping;
+        mapa.repeat.set(2, 2);
+      }
+      baldosaMat = sobreCalzada(new THREE.MeshLambertMaterial({ map: mapa, color: 0xffffff }));
+    }
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(baldosaGeo, baldosaMat));
     return g;
   }
 
@@ -4917,6 +5000,8 @@ export function createWorld(scene) {
       mesh.userData.rueda = r;
     }
     if (p.pieza === "fuentes") mesh.userData.chorros = chorrosFuente(mesh);
+    // 08/11: el tornado de Wichita gira sobre si mismo, despacio.
+    if (p.pieza === "tornado_embudo") mesh.userData.gira = true;
   }
   // Las 17 boquillas de blender/vegas.py (fuentes): los chorros suben y bajan
   // en ola, como el espectaculo de agua, cada uno con su altura.
@@ -5177,6 +5262,7 @@ export function createWorld(scene) {
     for (const p of calleViva) {
       const u = p.mesh.userData;
       if (u.rueda) u.rueda.rotation.z += dt * 0.12;
+      if (u.gira) p.mesh.rotation.y += dt * 0.9;
       if (u.chorros) moverChorros(u.chorros);
     }
     // gente andando (solo en los niveles: en el sin fin las fachadas van mas cerca)
