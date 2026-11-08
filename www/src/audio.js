@@ -241,6 +241,11 @@ const CANCIONES = {
     melodia: [76, null, 74, 72, null, 69, null, 72, 74, null, 72, 69, null, null, null, null,
       76, null, 79, 77, 76, null, 74, 72, 74, null, 76, 72, 69, null, null, null],
     timbre: "metal" },
+  // Chicago (08/11): blues de Chicago, con guitarra y bajo que camina.
+  chicago: { bpm: 104, swing: 0.66, acordes: [C7, F7, G7, C7], bateria: "swing", bajo: "camina",
+    melodia: [67, null, 70, 72, null, 75, 72, 70, 67, null, null, 70, 72, null, null, null,
+      72, null, 75, 77, null, 79, 77, 75, 72, null, 70, 67, 70, null, 67, null],
+    timbre: "pluck" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

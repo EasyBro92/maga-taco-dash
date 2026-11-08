@@ -461,7 +461,7 @@ function crearMuneco(cosmetics) {
     "antebrazo_traje", "mano", "muslo_traje", "espinilla_traje", "zapato"];
   const pieza = {};
   for (const n of PARTES) pieza[n] = medidas("personaje/" + n);
-  let tupePivot = null, corbataPivot = null;
+  let tupePivot = null, corbataPivot = null, vientoTupe = 0;
   if (PARTES.every((n) => pieza[n])) {
     const seQueda = new Set([mouth, eyeGroup.left, eyeGroup.right, browL, browR, headGroup,
       leftArm, rightArm, leftLegRig.knee, rightLegRig.knee, leftArmRig.elbow, rightArmRig.elbow]);
@@ -628,7 +628,7 @@ function crearMuneco(cosmetics) {
       swoop2.rotation.set(SWOOP2_BASE.x, SWOOP2_BASE.y + hairLag * 0.4, SWOOP2_BASE.z - bob * 0.07);
       // La corbata y la chaqueta ondean hacia atras con la velocidad.
       tie.rotation.x = -0.25 - Math.min(0.5, (speedFactor - 1) * 0.5) - Math.sin(runPhase * 2) * 0.12;
-      if (tupePivot) tupePivot.rotation.set(-bob * 0.05, hairLag * 0.25, -bob * 0.03);
+      if (tupePivot) tupePivot.rotation.set(-bob * 0.05 - vientoTupe * 0.8, hairLag * 0.25, -bob * 0.03);
       // La corbata de Blender cuelga del nudo: se separa un poco de la tripa a cada paso.
       if (corbataPivot) corbataPivot.rotation.x = -0.04 - Math.max(0, Math.sin(runPhase * 2)) * 0.12;
       updateBlink(dt);
@@ -738,6 +738,8 @@ function crearMuneco(cosmetics) {
       if (k === 1) root.scale.set(1, 1, 1);
     },
 
+    // 08/11: Chicago: el viento le levanta el tupe.
+    setViento(k) { vientoTupe = k; },
     setShieldActive(active) {
       shield.visible = active;
     },

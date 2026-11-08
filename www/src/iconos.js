@@ -41,6 +41,7 @@ const ICONOS = {
   jefe: svg(`<rect x="5.5" y="4" width="13" height="16" rx="6" fill="#f0cf8a" stroke="#b5813a" stroke-width="1.6"/><rect x="7.5" y="9" width="3.5" height="2.6" rx="1" fill="${R}"/><rect x="13" y="9" width="3.5" height="2.6" rx="1" fill="${R}"/><path d="M8.5 15.5h7" stroke="${T}" stroke-width="2" stroke-linecap="round"/>`),
   repetir: svg(`<path d="M5 12a7 7 0 1 0 2.1-5" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round"/><path d="M5 3.5v4h4" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`),
   casa: svg(`<path d="M3.5 11L12 4l8.5 7" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9.5h12V10" fill="none" stroke="${T}" stroke-width="2.4" stroke-linejoin="round"/>`),
+  paraguas: svg(`<path d="M3 12.5a9 8.5 0 0118 0c-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0z" fill="${A}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12.5v6a2 2 0 01-4 0" fill="none" stroke="${T}" stroke-width="2" stroke-linecap="round"/>`),
   avion: svg(`<path d="M21 3.5L3 11l6.5 2.5L12 20l3-6.5z" fill="${B}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/>`),
 };
 

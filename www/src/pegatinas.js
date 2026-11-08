@@ -225,6 +225,37 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: el bote de laca de Chicago (para que el viento no le levante el tupe).
+  laca(x) {
+    x.save();
+    x.translate(124, 140); x.scale(0.9, 0.9); x.rotate(-0.12);
+    x.lineJoin = "round";
+    const bote = () => {
+      x.beginPath();
+      x.moveTo(-44, -60); x.quadraticCurveTo(-44, -76, -28, -76); x.lineTo(28, -76); x.quadraticCurveTo(44, -76, 44, -60);
+      x.lineTo(44, 84); x.quadraticCurveTo(44, 100, 28, 100); x.lineTo(-28, 100); x.quadraticCurveTo(-44, 100, -44, 84);
+      x.closePath();
+    };
+    const tapa = () => { x.beginPath(); x.moveTo(-30, -76); x.quadraticCurveTo(-30, -112, 0, -112); x.quadraticCurveTo(30, -112, 30, -76); x.closePath(); };
+    x.lineWidth = 24; x.strokeStyle = "#fff"; bote(); x.stroke(); tapa(); x.stroke();
+    x.beginPath(); x.arc(58, -118, 26, 0, Math.PI * 2); x.stroke();
+    bote(); x.fillStyle = "#e8b33a"; x.fill();
+    x.fillStyle = "#f6d36a"; x.fillRect(-30, -66, 12, 156);
+    x.fillStyle = "#d8202a"; x.fillRect(-44, -10, 88, 52);
+    // La estrella blanca en la etiqueta.
+    x.fillStyle = "#fbf8f2";
+    x.beginPath();
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 9 : 21; x.lineTo(Math.cos(a) * rr, 16 + Math.sin(a) * rr); }
+    x.closePath(); x.fill();
+    tapa(); x.fillStyle = "#2f6bd8"; x.fill();
+    x.fillStyle = "#fbf8f2"; x.fillRect(-6, -122, 12, 12);
+    // La nube de laca.
+    x.fillStyle = "rgba(190,225,255,0.95)";
+    for (const [px, py, rr] of [[40, -118, 12], [58, -130, 10], [66, -108, 11], [78, -124, 8]]) { x.beginPath(); x.arc(px, py, rr, 0, Math.PI * 2); x.fill(); }
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; bote(); x.stroke(); tapa(); x.stroke();
+    x.restore();
+  },
+
   // 08/11: la botella de sirope de arce de Detroit (los canadienses del puente).
   sirope(x) {
     x.save();

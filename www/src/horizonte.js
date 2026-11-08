@@ -181,6 +181,41 @@ const SITIOS = {
     x.fillStyle = "rgba(255,230,140,0.95)"; x.fillRect(tx - 30, SUELO - th - 4, 60, 3);
     x.fillStyle = "rgba(255,60,60,1)"; x.beginPath(); x.arc(tx, SUELO - th - 102, 4, 0, Math.PI * 2); x.fill();
   },
+  // 08/11: Chicago: a la izquierda (el este) el lago Michigan, liso hasta el
+  // horizonte, con veleros; delante y a la derecha, el Loop: la Willis Tower
+  // (negra, en escalones, con sus dos antenas), el Aon (la losa blanca) y el
+  // Two Prudential (con la aguja).
+  chicago(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 5, 1500, 7);
+    for (let i = 0; i < 9; i++) {
+      const bx = 120 + i * 150 + r() * 60;
+      x.fillStyle = c.vela;
+      x.beginPath(); x.moveTo(bx, SUELO - 5); x.lineTo(bx, SUELO - 22); x.lineTo(bx + 10, SUELO - 5); x.fill();
+    }
+    for (const [capa, color, hMin, hMax] of [[0, c.lejos, 50, 170], [1, c.cerca, 30, 120]]) {
+      let cx = 1380 + capa * 90;
+      while (cx < ANCHO + 20) {
+        const w = 24 + r() * 55;
+        const h = hMin + r() * (hMax - hMin) * (r() < 0.15 ? 1.4 : 1);
+        torre(x, [cx, 0], w, h, color, r, r() < 0.2 ? "antena" : r() < 0.1 ? "escalones" : null);
+        cx += w * (capa ? 0.95 : 0.8);
+      }
+      if (capa === 0) {
+        torre(x, [1880, 0], 52, 270, color, r, null);                         // el Aon
+        x.fillStyle = color;
+        x.fillRect(1780, SUELO - 230, 40, 232);                                // el Two Prudential
+        x.beginPath(); x.moveTo(1780, SUELO - 230); x.lineTo(1800, SUELO - 300); x.lineTo(1820, SUELO - 230); x.fill();
+      }
+    }
+    // La Willis Tower, delante de todo.
+    const wx = 2520;
+    x.fillStyle = c.willis;
+    x.fillRect(wx, SUELO - 250, 72, 252);
+    x.fillRect(wx + 24, SUELO - 310, 48, 62);
+    x.fillRect(wx + 24, SUELO - 345, 24, 40);
+    x.fillRect(wx + 30, SUELO - 400, 4, 58); x.fillRect(wx + 40, SUELO - 390, 4, 48);
+  },
   // 08/11: Kansas (Wichita): la llanura de trigo hasta el horizonte, elevadores
   // de grano y, a lo lejos, el embudo del tornado bajo la nube (quieto: el que
   // gira es el de cerca, en la calle).
@@ -269,7 +304,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -280,6 +315,9 @@ function colores(sitio, cielo, niebla) {
     monumento: mezcla(0xf3ece0, cielo, 0.2),
     nieve: mezcla(0xf6f9fc, cielo, 0.25),
     molino: mezcla(0xf4f6f8, cielo, 0.35),
+    lago: mezcla(0x2f6fa8, cielo, 0.35),
+    vela: mezcla(0xffffff, cielo, 0.2),
+    willis: mezcla(0x2a2e36, cielo, 0.3),
   };
 }
 

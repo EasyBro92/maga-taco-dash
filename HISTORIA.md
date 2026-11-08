@@ -51,12 +51,12 @@ Jefe: **el Rey Pingüino**.
 | # | Ciudad | Votos | Qué pasa |
 |---|---|---|---|
 | 5 | Des Moines, Iowa | +6 | La primera votación de verdad. Granjeros con montañas de soja que China ya no compra. Al final llega el dragón de China y él le grita «¡China!». *(hecho)* |
-| 6 | Omaha, Nebraska | +5 | Tierra de vacas. Cajas de sus «Filetes Trump», los que nadie compró. |
-| 7 | Wichita, Kansas | +6 | Un tornado como el de *El mago de Oz* se lleva las vallas. |
-| 8 | San Luis, Misuri | +10 | El arco Gateway. Las etiquetas de precio crecen por los aranceles. |
-| 9 | Indianápolis, Indiana | +11 | El circuito de las 500 millas: coches de carreras. |
-| 10 | Detroit, Míchigan | +15 | Coches con aranceles. En el puente a Canadá, canadienses enfadados porque quiere hacerlos el estado 51: alces y sirope de arce. |
-| 11 | Chicago, Illinois | +19 | La ciudad del viento: el viento le levanta el tupé. |
+| 6 | Omaha, Nebraska | +5 | Tierra de vacas. Cajas de sus «Filetes Trump», los que nadie compró. *(hecho)* |
+| 7 | Wichita, Kansas | +6 | Un tornado como el de *El mago de Oz* se lleva las vallas. *(hecho)* |
+| 8 | San Luis, Misuri | +10 | El arco Gateway. Las etiquetas de precio crecen por los aranceles. *(hecho)* |
+| 9 | Indianápolis, Indiana | +11 | El circuito de las 500 millas: coches de carreras. *(hecho)* |
+| 10 | Detroit, Míchigan | +15 | Coches con aranceles. En el puente a Canadá, canadienses enfadados porque quiere hacerlos el estado 51: alces y sirope de arce. *(hecho)* |
+| 11 | Chicago, Illinois | +19 | La ciudad del viento: el viento le levanta el tupé. *(hecho)* |
 | 12 | Milwaukee, Wisconsin | +10 | Se sube a un camión de la basura con chaleco, como hizo de verdad. Quesos. |
 | 13 | Minneapolis, Minnesota | +10 | Lagos helados y pistas de hockey de los canadienses. |
 | 14 | Monte Rushmore, Dakota del Sur | +3 | Quiere su cara en la montaña con los cuatro presidentes. El escultor dice que no… de momento. |

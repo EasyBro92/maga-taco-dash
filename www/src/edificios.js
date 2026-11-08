@@ -71,6 +71,12 @@ const ESTILOS = {
     ladrillos: [0x7a3a2e, 0x6a3428, 0x8a4a34, 0x5e3026], piedras: [0xc98a5a, 0xb8a080, 0x9a8a78, 0xd8b890, 0x8a7a6e], cristal: [0x9aaabb, 0xb0bcc8],
     cornisas: ["cornisa_deco", "cornisa_deco", "cornisa_clasica"], remate: ["remate_antena", 0.25], toldos: [0x1d1f25, 0x7a2a32, 0x2a4a6a, 0xc0532f],
     rotulos: ["CONEY ISLAND", "MOTOWN", "RECORDS", "AUTO PARTS", "COFFEE", "PIZZA", "SOUL FOOD", "HOT DOGS", "GARAGE", "TIRES"] },
+  // Chicago: la escuela de Chicago (miradores y ventanas anchas), terracota
+  // blanca, caliza y torres de cristal.
+  chicago: { plantas: ["planta_miradores", "planta_miradores", "planta_lisa", "planta_frontones", "planta_cristal", "planta_ladrillo"],
+    ladrillos: [0x9a4a36, 0x7a3a2e, 0xb8704f], piedras: [0xe6dcc6, 0xd8ccb0, 0xefe6d2, 0xf4f0e6, 0xc9b896], cristal: [0x9fb4c4, 0xb8c8d4, 0x8aa0b4],
+    cornisas: ["cornisa_clasica", "cornisa_deco", "cornisa_simple"], remate: ["remate_antena", 0.15], toldos: [0x1f3a6a, 0xc8202e, 0x2d5a3a, 0x1d1f25],
+    rotulos: ["DEEP DISH", "HOT DOGS", "BLUES", "JAZZ CLUB", "POPCORN", "STEAKHOUSE", "THEATRE", "RECORDS", "PIZZA", "BOOKS"] },
 };
 
 // Rotulo pintado: letras de color sobre fondo oscuro o claro.

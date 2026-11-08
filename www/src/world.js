@@ -1766,6 +1766,10 @@ export function createWorld(scene) {
       // blanquecina, el suelo y las aceras con nieve y el asfalto mojado.
       Object.assign(BIOME_COLORS.city, { sky: 0xe4eef8, skyTop: 0x6f9fd8, fog: 0xe6edf4, horizon: 0x9fb0c4, ground: 0xf0f4f8, sidewalk: 0xdde3ea, road: 0x50545e });
     }
+    if (luz === "otono") {
+      // 08/11: Chicago, mañana de otoño con viento: cielo azul limpio y frio.
+      Object.assign(BIOME_COLORS.city, { sky: 0xcfe4f6, skyTop: 0x3a78d0, fog: 0xd4e3f0, horizon: 0x8a9cb4 });
+    }
   }
   // Las puertas automaticas: empiezan a abrirse a 32 m y a 14 ya estan abiertas.
   const puertasAuto = [];
@@ -2307,7 +2311,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -2777,6 +2781,15 @@ export function createWorld(scene) {
     canadiense: { choque: "full", medio: 0.35, alto: 2.5, centro: 0, cruza: true },
     barril_sirope: { choque: "low", medio: 0.5, alto: 0.95, mueve: 5, rueda: true },
     pancarta_canada: { choque: "high", medio: 0.3, alto: 2.2 },
+    // 08/11: Chicago (blender/chicago.py): el paraguas dado la vuelta que
+    // cruza volando y dando vueltas, los periodicos que vuelan (agacharse),
+    // la papelera que viene rodando, el carrito de perritos y la pila de cajas
+    // de pizza (saltar).
+    paraguas_volando: { choque: "full", medio: 0.5, alto: 2.0, centro: 0, cruza: true },
+    periodicos: { choque: "high", medio: 0.4, alto: 2.3, flota: true },
+    papelera: { choque: "low", medio: 0.45, alto: 0.85, mueve: 5, rueda: true },
+    carrito_perritos: { choque: "full", medio: 0.6, alto: 2.4, centro: 0 },
+    cajas_pizza: { choque: "low", medio: 0.45, alto: 1.0 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2875,7 +2888,7 @@ export function createWorld(scene) {
     // 08/11 (2): el barril del Robot Burrito tiene el eje a 0,42 m del suelo y
     // giraba alrededor de la base: medio barril se metia en el suelo. Ahora
     // gira sobre su eje (EJE_ALTO: lo que hay que bajarlo dentro del giro).
-    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42 };
+    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42, papelera: 0.42 };
     const EJE_ALTO = { barril: 0.42 };
     if (EJE_RUEDA[nombre] && g) {
       const r = new THREE.Group();
@@ -2883,6 +2896,13 @@ export function createWorld(scene) {
       r.position.y = EJE_RUEDA[nombre];
       g.add(r);
       g.userData.rueda = r;
+    }
+    // 08/11: el paraguas de Chicago da vueltas sobre su palo mientras cruza.
+    if (nombre === "paraguas_volando" && g) {
+      const r = new THREE.Group();
+      while (g.children.length) r.add(g.children[0]);
+      g.add(r);
+      g.userData.remolino = r;
     }
     ponerPatas(g, nombre);
     const m = medidas("obstaculos/" + nombre);
@@ -3306,6 +3326,7 @@ export function createWorld(scene) {
       m.userData.brazo.rotation.z = suave(k) * 1.35;
       o.abierta = suave(k) > 0.6;
     }
+    if (m.userData.remolino) m.userData.remolino.rotation.y += dt * 4;
     if (o.bota) {
       m.position.y = Math.abs(Math.sin(animClock * 4.2 + o.phase)) * 0.7;
       if (o.mueve) m.rotation.x += dt * 4;
@@ -3656,6 +3677,8 @@ export function createWorld(scene) {
     // 22/10 (2): rayo congelador, cohete y el chile para darle al jefe.
     freeze: makePool(() => { const g = modeloConContorno("obstaculos/rayo") || buildPowerupIcon("shield"); g.scale.setScalar(1.3); return g; }),
     rocket: makePool(() => { const g = modeloConContorno("obstaculos/cohete") || buildPowerupIcon("boost"); g.scale.setScalar(0.42); return g; }),
+    // 08/11: Chicago: el paraguas abierto que te lleva volando.
+    paraguas: makePool(() => { const g = modeloConContorno("obstaculos/paraguas_vuelo") || buildPowerupIcon("boost"); g.scale.setScalar(1.1); return g; }),
     // 25/10: microfono dorado, la carga para lanzar una frase.
     micro: makePool(() => {
       // 08/11 (2): Isidro: «los micrófono se ven muy claros hazlos mas
@@ -3717,7 +3740,7 @@ export function createWorld(scene) {
     const mesh = powerupPools[kind].acquire();
     mesh.visible = true;
     mesh.rotation.y = 0;
-    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.09 : kind === "caja" ? 0.35 : 1.0, z);
+    mesh.position.set(LANE_X[lane], kind === "boost" ? 0.09 : kind === "caja" ? 0.35 : kind === "paraguas" ? 0.3 : 1.0, z);
     if (!mesh.parent) group.add(mesh);
     powerups.push({ mesh, lane, z, kind, collected: false });
   }
@@ -4877,6 +4900,39 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: Chicago, la ciudad del viento (momento estrella) ----
+    // El viento del lago: paraguas dados la vuelta que cruzan volando,
+    // periodicos a la altura de la cabeza (agacharse), papeleras que vienen
+    // rodando, cajas de pizza y carritos de perritos. A mitad, un paraguas
+    // abierto en un carril libre: si lo coges, el viento te lleva por el aire
+    // (vuela como el cohete). Siempre un carril libre con tacos.
+    viento(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const kp = 2 * Math.round(n / 4);
+      if (k === kp && powerupPools.paraguas) {
+        const l = libres.includes(1) ? 1 : elegirDe(libres);
+        spawnPowerup(l, z, "paraguas");
+        for (let i = 1; i < 5; i++) spawnTaco(l, z + i * 1.5, 0.9);
+        return;
+      }
+      if (k % 6 === 4 && obstaclePools.papelera) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "papelera");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["cajas_pizza", "conos"], high: ["periodicos"], full: ["paraguas_volando", "paraguas_volando", "carrito_perritos"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["full", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
+    },
     // ---- 08/11: Detroit, el puente Ambassador a Canada (momento estrella) ----
     // En el puente, los canadienses enfadados (no quieren ser el estado 51)
     // salen de las aceras a cortar el paso, con sus alces; pancartas que se
@@ -5454,6 +5510,49 @@ export function createWorld(scene) {
     if (p.pieza === "fuentes") mesh.userData.chorros = chorrosFuente(mesh);
     // 08/11: el tornado de Wichita gira sobre si mismo, despacio.
     if (p.pieza === "tornado_embudo") mesh.userData.gira = true;
+    // 08/11: Chicago: el barco de turistas cruza el rio por debajo del puente
+    // (despacio, de izquierda a derecha), y la Alubia es un espejo.
+    if (p.pieza === "puente_dusable" && hayModelo("chicago/barco")) {
+      const b = modelo("chicago/barco");
+      b.position.set(-70, -7.05, -12);
+      mesh.add(b);
+      mesh.userData.barco = b;
+    }
+    if (p.pieza === "cloud_gate" && hayModelo("chicago/alubia")) {
+      const a = modelo("chicago/alubia");
+      a.position.set(0, 0.3, -18);
+      a.traverse((o) => { if (o.isMesh) o.material = matEspejo(); });
+      mesh.add(a);
+    }
+  }
+  // 08/11: el espejo de la Alubia de Chicago. Refleja un cielo, una ciudad y
+  // una plaza pintados (no la escena de verdad: basta y no cuesta nada).
+  let espejoMat = null;
+  function matEspejo() {
+    if (espejoMat) return espejoMat;
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 512;
+    const x = c.getContext("2d");
+    const col = (h) => "#" + new THREE.Color(h).getHexString();
+    const cielo = x.createLinearGradient(0, 0, 0, 256);
+    cielo.addColorStop(0, col(BIOME_COLORS.city.skyTop)); cielo.addColorStop(1, col(BIOME_COLORS.city.sky));
+    x.fillStyle = cielo; x.fillRect(0, 0, 1024, 256);
+    x.fillStyle = "rgba(255,255,255,0.85)";
+    for (let i = 0; i < 14; i++) { x.beginPath(); x.ellipse((i * 173) % 1024, 60 + (i * 37) % 110, 40 + (i % 3) * 18, 14, 0, 0, Math.PI * 2); x.fill(); }
+    let bx = 0, k = 0;
+    while (bx < 1024) {
+      const w = 18 + (k * 37) % 40, h = 30 + (k * 53) % 110;
+      x.fillStyle = ["#5a6678", "#7a8698", "#4a5262", "#8e98a8"][k % 4]; x.fillRect(bx, 256 - h, w, h);
+      bx += w + 2; k++;
+    }
+    const suelo = x.createLinearGradient(0, 256, 0, 512);
+    suelo.addColorStop(0, "#b8b2a6"); suelo.addColorStop(1, "#d8d2c6");
+    x.fillStyle = suelo; x.fillRect(0, 256, 1024, 256);
+    for (let i = 0; i < 120; i++) { x.fillStyle = ["#d52b1e", "#2a5aa8", "#f2c230", "#2fa84f", "#ffffff", "#3a3a3a"][i % 6]; x.fillRect((i * 97) % 1024, 262 + (i * 29) % 40, 4, 9); }
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    espejoMat = new THREE.MeshBasicMaterial({ color: 0xffffff, envMap: tex, reflectivity: 1 });
+    return espejoMat;
   }
   // Las 17 boquillas de blender/vegas.py (fuentes): los chorros suben y bajan
   // en ola, como el espectaculo de agua, cada uno con su altura.
@@ -5717,6 +5816,7 @@ export function createWorld(scene) {
       const u = p.mesh.userData;
       if (u.rueda) u.rueda.rotation.z += dt * 0.12;
       if (u.gira) p.mesh.rotation.y += dt * 0.9;
+      if (u.barco) { u.barco.position.x += dt * 3.2; if (u.barco.position.x > 170) u.barco.position.x -= 340; }
       if (u.chorros) moverChorros(u.chorros);
     }
     // gente andando (solo en los niveles: en el sin fin las fachadas van mas cerca)
@@ -6048,7 +6148,8 @@ export function createWorld(scene) {
     }
     actualizarCameo(dt);
     moverAvion(dt);
-    if (horizonte) horizonte.animar(dt);
+    // (08/11: en Chicago las nubes corren mas: es la ciudad del viento.)
+    if (horizonte) horizonte.animar(dt * (nivel && nivel.horizonte === "chicago" ? 4 : 1));
     for (let i = powerups.length - 1; i >= 0; i--) {
       const p = powerups[i];
       p.z += dz; p.mesh.position.z = p.z;

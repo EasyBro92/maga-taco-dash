@@ -1693,3 +1693,43 @@ Se aplicó lo recomendado sin preguntar:
   - Omaha, Wichita, San Luis, Indianápolis y Detroit tienen su estilo de
     edificios: colores, plantas, cornisas, depósitos y tiendas propias.
   - En las aceras hay bancos, buzones, bocas de riego y farolas con bandera.
+
+## Nivel 11: Chicago, Illinois (08/11/2026)
+
+Isidro: «Sigue con Chicago». Se aplicó lo recomendado sin preguntar: final
+delante de la Alubia (Cloud Gate, en Millennium Park) y mañana de otoño con
+viento.
+
+- **Historia:** «La ciudad del viento: el viento le levanta el tupé».
+- **Escenario (`blender/chicago.py`), bajando por Michigan Avenue:**
+  - a la izquierda, el John Hancock (la torre negra con las cruces) y la
+    Tribune Tower (la torre gótica);
+  - a la derecha, la Water Tower (el castillo de piedra en su parque), la torre
+    Trump con su nombre en letras de acero y el Wrigley Building (blanco, con
+    el reloj);
+  - el puente DuSable sobre el río teñido de verde: casetas de piedra en las
+    esquinas, banderas de EE. UU. y de Chicago tiesas por el viento, Marina
+    City al fondo y un barco de turistas que pasa por debajo;
+  - al fondo, Millennium Park y la Alubia, que es un espejo de verdad (refleja
+    cielo, ciudad y plaza).
+  - El horizonte: el lago Michigan con veleros a la izquierda y la Willis
+    Tower delante; las nubes corren más deprisa (hay viento).
+- **Obstáculos nuevos:**
+  - el paraguas dado la vuelta que cruza volando y dando vueltas;
+  - los periódicos que vuelan a la altura de la cabeza (agacharse);
+  - la papelera que viene rodando (saltar);
+  - el carrito de perritos de Chicago, con el perrito gigante encima;
+  - la pila de cajas de pizza de molde hondo (saltar).
+- **Momento estrella, la ciudad del viento (1450–1880):**
+  - al entrar se le levanta el tupé (un mechón que sube y baja despacio) y
+    dice «¡Mi tupé!»;
+  - paraguas, periódicos, papeleras, cajas de pizza y carritos, siempre con un
+    carril libre;
+  - a mitad, un paraguas abierto con los colores de Chicago: si lo coges, el
+    viento te lleva por el aire (como el cohete), colgado del paraguas con el
+    brazo levantado.
+- **Lo demás:**
+  - el objeto son los botes de laca (para el tupé);
+  - la música es blues de Chicago;
+  - los edificios del kit son de la escuela de Chicago (miradores, terracota
+    blanca, caliza) con tiendas de pizza, perritos, blues y jazz.

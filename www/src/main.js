@@ -236,6 +236,21 @@ if (monturaCohete) {
   monturaCohete.visible = false;
   character.object3D.add(monturaCohete);
 }
+// 08/11: Chicago: el paraguas que te lleva volando (vuela como el cohete,
+// colgado del paraguas, con el tupe al viento).
+const monturaParaguas = modelo("obstaculos/paraguas_vuelo");
+let enParaguas = false;
+const _mano = new THREE.Vector3();
+if (monturaParaguas) {
+  monturaParaguas.scale.setScalar(1.25);
+  monturaParaguas.position.set(0.35, 2.0, 0);
+  monturaParaguas.visible = false;
+  character.object3D.add(monturaParaguas);
+}
+function quitarParaguas() {
+  enParaguas = false;
+  if (monturaParaguas) monturaParaguas.visible = false;
+}
 
 // ---- Misiones: lista en el menu y al acabar, y aviso al cumplir una ----
 // La pegatina del taco, para la interfaz (en vez del emoji).
@@ -378,6 +393,10 @@ function aplicarLuzNivel(luz) {
     // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
     sun.color.set(0xfff4e8); sun.intensity = 1.15; sun.position.set(6, 6, -7);
     hemi.color.set(0xe2ecff); hemi.groundColor.set(0xb4bfcc);
+  } else if (luz === "otono") {
+    // 08/11: Chicago, mañana de otoño: sol claro y bajo por el este (a la izquierda).
+    sun.color.set(0xfff0d8); sun.intensity = 1.2; sun.position.set(-6, 8, -5);
+    hemi.color.set(0xe0ecff); hemi.groundColor.set(0x857c6c);
   } else if (luz === "atardecer") {
     sun.color.set(0xffc690); sun.intensity = 1.25; sun.position.set(-7, 5, 2);
     hemi.color.set(0xffe2c4); hemi.groundColor.set(0x7a6656);
@@ -608,7 +627,9 @@ const NOMBRE_HITO = {
     soldiers_monument: "El Monumento a los Soldados y Marineros", statehouse_in: "El Capitolio de Indiana",
     lucas_oil: "El estadio de los Colts", jw_marriott: "El hotel de cristal azul",
     spirit_detroit: "El Espíritu de Detroit", fox_theatre: "El teatro Fox",
-    puno_joe_louis: "El puño de Joe Louis", guardian_building: "El Guardian Building" },
+    puno_joe_louis: "El puño de Joe Louis", guardian_building: "El Guardian Building",
+    hancock: "El John Hancock", water_tower: "La Water Tower, la que aguantó el gran incendio",
+    tribune_tower: "La Tribune Tower", wrigley_building: "El Wrigley Building", trump_chicago: "La torre Trump" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -624,7 +645,9 @@ const NOMBRE_HITO = {
     soldiers_monument: "The Soldiers' and Sailors' Monument", statehouse_in: "The Indiana Statehouse",
     lucas_oil: "The Colts' stadium", jw_marriott: "The blue glass hotel",
     spirit_detroit: "The Spirit of Detroit", fox_theatre: "The Fox Theatre",
-    puno_joe_louis: "The Joe Louis Fist", guardian_building: "The Guardian Building" },
+    puno_joe_louis: "The Joe Louis Fist", guardian_building: "The Guardian Building",
+    hancock: "The John Hancock Center", water_tower: "The Water Tower, which survived the Great Fire",
+    tribune_tower: "The Tribune Tower", wrigley_building: "The Wrigley Building", trump_chicago: "Trump Tower" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -676,6 +699,7 @@ function iniciarFinal() {
   isSliding = false; character.setSlidePose(false);
   rocketTimeLeft = 0; freezeTimeLeft = 0; megaTimeLeft = 0; character.setMega(1);
   if (monturaCohete) monturaCohete.visible = false;
+  quitarParaguas(); if (character.setViento) character.setViento(0);
   world.setCielo(false);
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("powerupBadge").classList.add("hidden");
@@ -1134,6 +1158,7 @@ function resetRun(desde = 0) {
   freezeTimeLeft = 0; rocketTimeLeft = 0; nextJefeAt = JEFE_PRIMERO; misionesReloj = 0;
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   if (monturaCohete) monturaCohete.visible = false;
+  quitarParaguas(); if (character.setViento) character.setViento(0);
   world.setCielo(false);
   document.getElementById("bossBar").classList.add("hidden");
   if (!desde) misiones.empezarPartida();
@@ -1298,7 +1323,7 @@ let badgePintado = "";
 function updatePowerupBadge() {
   const badge = document.getElementById("powerupBadge");
   let p = null;
-  if (rocketTimeLeft > 0) p = ["cohete", rocketTimeLeft / ROCKET_DURATION, t("powerupRocket")];
+  if (rocketTimeLeft > 0) p = enParaguas ? ["paraguas", rocketTimeLeft / ROCKET_DURATION, t("powerupParaguas")] : ["cohete", rocketTimeLeft / ROCKET_DURATION, t("powerupRocket")];
   else if (megaTimeLeft > 0) p = ["gorra", megaTimeLeft / MEGA_DURATION, t("powerupMega")];
   else if (dobleLeft > 0) p = ["gorra", dobleLeft / DOBLE_DURATION, t("dobleTacos")];
   else if (freezeTimeLeft > 0) p = ["hielo", freezeTimeLeft / FREEZE_DURATION, t("powerupFreeze")];
@@ -1701,6 +1726,15 @@ function checkPowerups() {
       triggerCameraShake(0.05);
       vibrate([30, 30, 60]);
       avisarMisiones(misiones.evento("cohete"));
+    } else if (p.kind === "paraguas") {
+      // 08/11: Chicago: el viento te levanta colgado del paraguas.
+      rocketTimeLeft = ROCKET_DURATION; enParaguas = true;
+      if (monturaParaguas) monturaParaguas.visible = true;
+      world.setCielo(true, speed * (boostTimeLeft > 0 ? BOOST_MULT : 1), ROCKET_DURATION);
+      isSliding = false; character.setSlidePose(false);
+      showBubble(t("paraguasVuela"), 1800);
+      flashExpression("happy", 1.5);
+      vibrate([30, 30, 60]);
     } else if (p.kind === "micro" && nivelActual && nivelActual.debate && world.jefeActivo()) {
       // El debate (Las Vegas): el microfono no se guarda, la frase sale ya.
       const lista = (FRASES[getLang()] || FRASES.es).debate;
@@ -2109,7 +2143,9 @@ function frame(dtFijo) {
       // Las ultimas filas antes de aterrizar salen vacias: se aterriza limpio.
       if (rocketTimeLeft < 1.6) world.setCielo(false);
       if (monturaCohete) monturaCohete.rotation.z = Math.sin(elapsed * 9) * 0.05;
-      if (rocketTimeLeft === 0) { if (monturaCohete) monturaCohete.visible = false; world.quitarCielo(); }
+      // (El paraguas se mece despacio con el viento.)
+      if (enParaguas && monturaParaguas) monturaParaguas.rotation.z = Math.sin(elapsed * 1.8) * 0.08;
+      if (rocketTimeLeft === 0) { if (monturaCohete) monturaCohete.visible = false; quitarParaguas(); world.quitarCielo(); }
       updatePowerupBadge();
     }
 
@@ -2124,6 +2160,9 @@ function frame(dtFijo) {
       tramoMostrado = tramo;
       terminarMomento(antes);
       empezarMomento(tramo);
+      // 08/11: Chicago: en la ciudad del viento se le levanta el tupe.
+      if (character.setViento) character.setViento(tramo.tipo === "viento" ? 1 : 0);
+      if (tramo.tipo === "viento") setTimeout(() => { if (gameState === "playing") showBubble(t("tupeViento"), 1600); }, 1300);
       // (El del primer tramo no: saldria encima del cartel del nivel.)
       const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
@@ -2322,6 +2361,8 @@ function frame(dtFijo) {
     updateDust(dt);
   }
 
+  // 08/11: Chicago: colgado del paraguas, el mango en la mano levantada.
+  if (enParaguas && monturaParaguas && character.brazoArriba && character.brazoArriba(_mano)) monturaParaguas.position.set(_mano.x - 0.08, _mano.y - 0.05, _mano.z);
   if (!(PRUEBA && window.__juego && window.__juego.sinDibujar)) renderer.render(scene, camera);
   if (firstFrame) {
     firstFrame = false;

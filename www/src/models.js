@@ -62,7 +62,9 @@ const LISTA = {
     // 08/11: Indianápolis (blender/indy.py)
     "indycar", "pila_neumaticos", "pit_crew", "bandera_cuadros", "coche_seguridad",
     // 08/11: Detroit (blender/detroit.py)
-    "coche_arancel", "alce", "canadiense", "barril_sirope", "pancarta_canada"],
+    "coche_arancel", "alce", "canadiense", "barril_sirope", "pancarta_canada",
+    // 08/11: Chicago (blender/chicago.py)
+    "paraguas_volando", "periodicos", "papelera", "carrito_perritos", "cajas_pizza", "paraguas_vuelo", "tupe_viento"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

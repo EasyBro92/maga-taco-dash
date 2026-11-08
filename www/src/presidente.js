@@ -1,4 +1,5 @@
 import * as THREE from "../vendor/three.module.min.js";
+import { modelo as modeloDe } from "./models.js";
 
 // El presidente de Meshy (24/10/2026): caricatura de Donald Trump estilo Pixar
 // con esqueleto y animaciones de andar y correr (Isidro eligio la malla tras
@@ -64,6 +65,8 @@ export function crearPresidente(gltf) {
   // mueva con ella al correr. El sombrero viene mirando a +z y con la base en
   // y = 0; aqui se gira para que mire adonde mira el presidente.
   let marcoCabeza = null, sombreroPuesto = null;
+  let tupe = null, viento = 0, vientoT0 = 0;
+  const TUPE_Y = 0.0, TUPE_Z = -0.08;
   if (huesos.Head) {
     root.updateMatrixWorld(true);
     const h = huesos.Head;
@@ -280,6 +283,48 @@ export function crearPresidente(gltf) {
       apuntar("LeftLeg", "LeftFoot", -0.15, 0.7, -0.8, kk);
     },
 
+    // 08/11: Chicago: colgado del paraguas, con el brazo derecho arriba.
+    // Deja en `destino` donde queda la mano (en el espacio del personaje),
+    // para poner alli el mango.
+    brazoArriba(destino) {
+      root.updateMatrixWorld(true);
+      apuntar("RightArm", "RightForeArm", 0.3, 1, 0.05, 1);
+      apuntar("RightForeArm", "RightHand", 0.1, 1, 0, 1);
+      if (destino && huesos.RightHand) { huesos.RightHand.getWorldPosition(destino); root.worldToLocal(destino); }
+      return destino;
+    },
+    // 08/11: Chicago: el viento le levanta el tupe. Un mechon de pelo encima
+    // del suyo, con la bisagra atras, que sube y baja despacio (nada tiembla).
+    setViento(k) {
+      viento = k;
+      if (k > 0 && !tupe && marcoCabeza && huesos.Head) {
+        const m = modeloDe("obstaculos/tupe_viento");
+        if (m) {
+          const pivote = new THREE.Group();
+          pivote.position.copy(marcoCabeza.punta).multiplyScalar(0.74);
+          pivote.quaternion.copy(marcoCabeza.quat);
+          pivote.scale.setScalar(marcoCabeza.escala * 1.4);
+          const bisagra = new THREE.Group();
+          bisagra.position.set(0, TUPE_Y, TUPE_Z);
+          bisagra.add(m);
+          pivote.add(bisagra);
+          huesos.Head.add(pivote);
+          m.traverse((o) => {
+            if (!o.isMesh) return;
+            o.onBeforeRender = () => {
+              const s = performance.now() / 1000;
+              const entra = Math.min(1, (s - vientoT0) / 0.4);
+              bisagra.rotation.x = -viento * entra * (0.85 + 0.25 * Math.sin(s * 5.5));
+            };
+          });
+          tupe = pivote;
+        }
+      }
+      if (tupe) {
+        if (k > 0 && !tupe.visible) vientoT0 = performance.now() / 1000;
+        tupe.visible = k > 0;
+      }
+    },
     ponerSombrero(obj) {
       if (sombreroPuesto && sombreroPuesto.parent) sombreroPuesto.parent.remove(sombreroPuesto);
       sombreroPuesto = null;

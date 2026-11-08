@@ -705,6 +705,73 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/buzon", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/hidrante"],
   },
   {
+    // 08/11/2026: nivel 11: Chicago (blender/chicago.py). Se aplico lo
+    // recomendado: final delante de la Alubia (Cloud Gate, en Millennium
+    // Park) y mañana de otoño con viento. Historia: «La ciudad del viento: el
+    // viento le levanta el tupe». Momento estrella: la ciudad del viento
+    // (paraguas que cruzan volando, periodicos, papeleras rodando, el tupe
+    // levantado y un paraguas que te lleva por el aire).
+    id: "chicago", nombre: "Michigan Avenue", lugar: "Chicago, Illinois", listo: true,
+    zona: "city", carpeta: "chicago", luz: "otono", semilla: 1801,
+    largo: 3000, linea: 11.5, velMax: 24,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 5, maxPlantas: 16, estilo: "chicago" },
+    horizonte: "chicago",
+    obstaculos: { low: ["cajas_pizza", "conos", "basura"], high: ["periodicos", "andamio", "semaforo"],
+      full: ["carrito_perritos", "taxi", "furgoneta", "contenedor"] },
+    publico: { personas: ["ejecutivo", "fan", "turista", "senora", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "chicago" }],
+      [70, 280, "vallas", { low: ["cajas_pizza", "conos"], high: ["periodicos"], titulo: "milla" }],
+      [280, 430, "rampa", { titulo: "rampa" }],
+      [430, 600, "slalom", { full: ["carrito_perritos", "taxi", "carrito_perritos"], titulo: "perritos" }],
+      [600, 690, "calma"],
+      // El puente DuSable sobre el rio verde (pieza de `fondo` e `interior`).
+      [690, 800, "mixto", { densidad: 0.35, titulo: "rio_verde" }],
+      [800, 870, "calma"],
+      [870, 1030, "premios", { titulo: "premios" }],
+      [1030, 1190, "desfile_cruza", { cruzan: ["segway"], titulo: "cruzan_segways" }],
+      [1190, 1380, "vallas", { low: ["cajas_pizza", "conos"], high: ["periodicos"], momento: "gorras", titulo: "gorras" }],
+      [1380, 1450, "calma"],
+      // El momento estrella: la ciudad del viento.
+      [1450, 1880, "viento", { titulo: "viento" }],
+      [1880, 1950, "calma"],
+      [1950, 2110, "jefe_paso", { titulo: "jefe_paso" }],
+      [2110, 2270, "convoy", { titulo: "convoy" }],
+      [2270, 2430, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "limusina", titulo: "sube_limusina" }],
+      [2430, 2610, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2610, 2760, "alfombra", { titulo: "alfombra" }],
+      [2760, 2850, "mixto", { densidad: 0.55, titulo: "" }],
+      [2850, 2990, "sprint", { titulo: "sprint_alubia" }],
+    ],
+    control: 1400, caja: 900,
+    // El puente DuSable: se quita la calle y el suelo (abajo, el rio).
+    interior: { rango: [700, 760], tipo: "puente", aire: true, sinEdificios: [696, 764] },
+    sinEdificios: [2900, 3800],
+    chapas: [[950, "arco"], [1250, "carril"], [2500, "bus"]],
+    hitos: ["hancock", "water_tower", "trump_chicago", "tribune_tower", "wrigley_building"],
+    meta: "cloud_gate", metaNombre: { es: "la Alubia", en: "the Bean" },
+    extras: ["barco", "alubia"],
+    // Bajando por Michigan Avenue hacia el sur: el este (el lago) a la izquierda.
+    // La Tribune Tower y el Wrigley Building, uno enfrente del otro, justo
+    // antes del rio; y la torre Trump, junto al Wrigley (con su nombre).
+    izquierda: [
+      40, ["kit", 2], 14, ["hancock", 1], ["kit", 2], 14, ...cuadras(4), ["kit", 1], ["tribune_tower", 1], 88,
+      ...cuadras(19),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ["water_tower", 1], ["kit", 2], 14, ...cuadras(3), ["kit", 1], ["trump_chicago", 1], ["wrigley_building", 1], 78,
+      ...cuadras(19),
+    ],
+    // El puente (de 700 a 760) y la meta al fondo.
+    fondo: [{ pieza: "cloud_gate", d: 3050, centro: true },
+      { pieza: "puente_dusable", d: 700, cruza: true }],
+    final: "parada", parada: 14,
+    // Se para al pie de la plaza: el delante saludando y la Alubia detras.
+    camaraFinal: { pos: [3.5, 2.6, 10], mira: [0, 4.5, -30] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/buzon", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -805,14 +872,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -856,6 +923,8 @@ export const ANCHO = {
   // 08/11: Detroit
   spirit_detroit: 30, guardian_building: 30, fox_theatre: 30, puno_joe_louis: 20, ren_cen: 100, torre_ambassador: 4,
   puente_amb_0: 30, puente_amb_1: 30, puente_amb_2: 30, puente_amb_3: 30, puente_amb_4: 30, puente_amb_5: 30,
+  // 08/11: Chicago
+  hancock: 40, water_tower: 30, tribune_tower: 30, wrigley_building: 30, trump_chicago: 40, puente_dusable: 60, cloud_gate: 100,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
@@ -1063,7 +1132,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

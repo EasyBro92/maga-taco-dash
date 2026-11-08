@@ -250,6 +250,8 @@ const POSTS = {
     en: "The greatest witch hunt in history and I still win Arizona. Nobody runs like me!" },
   vegas: { es: "He ganado el debate. Todo el mundo lo dice. El Burrito-Bot sigue echando chispas. ¡Hecho en China, roto en América!",
     en: "I won the debate. Everybody says so. Burrito-Bot is still sparking. Made in China, broken in America!" },
+  chicago: { es: "¡Illinois vota ROJO! El viento de Chicago no ha podido con mi pelo. Bueno, un poco. ¡Nadie vuela como yo!",
+    en: "Illinois votes RED! The Chicago wind couldn't beat my hair. Well, a little. Nobody flies like me!" },
   detroit: { es: "¡Míchigan vota ROJO! Los coches, hechos en América. Y a los canadienses les mando un alce de regalo. ¡Tremendo!",
     en: "Michigan votes RED! Cars made in America. And I'm sending the Canadians a moose as a gift. TREMENDOUS!" },
   indianapolis: { es: "¡Indiana vota ROJO! He ganado la carrera más rápida del mundo, y sin coche. ¡Nadie corre como yo!",
