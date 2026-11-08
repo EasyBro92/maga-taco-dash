@@ -1807,7 +1807,7 @@ export function createWorld(scene) {
       }
       // 07/11: donde hay un interior que pide la calle vacia (la rotonda del
       // Capitolio es mas ancha que la calle), los edificios no se ponen.
-      const r = nivel.interior && nivel.interior.sinEdificios && nivel.interior.rango;
+      const r = (nivel.interior && nivel.interior.sinEdificios && nivel.interior.rango) || nivel.sinEdificios;
       if (r && !p.cruza && !p.centro && p.d < r[1] && p.d + (p.ancho || 20) > r[0]) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
@@ -2466,6 +2466,8 @@ export function createWorld(scene) {
     carroza_desfile: { choque: "bus", techo: 1.4, rampa: 2.4, largo: 9.5 },
     // 07/11: Washington, el cordon de terciopelo del Capitolio (se salta).
     cordon: { choque: "low", medio: 0.4, alto: 1.0 },
+    // 08/11: Des Moines, la vaca de mantequilla de la feria en su vitrina.
+    vaca_mantequilla: { choque: "full", medio: 1.3, alto: 2.5, centro: -1.3 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4404,6 +4406,28 @@ export function createWorld(scene) {
       bloq.forEach((l) => { const ty = elegirDe(["low", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 8 === 2 && i === 4);
+    },
+    // ---- 08/11: Des Moines, la Feria del Estado de Iowa (momento estrella) ----
+    // El arco de la entrada, los puestos de comida en las aceras, las guirnaldas
+    // de bombillas y la noria al fondo (piezas de `fondo`). Por la calle: pacas
+    // de paja, sacos de soja, guirnaldas que se pasan agachado, cerdos premiados,
+    // carritos de perritos y la gente; de vez en cuando, la vaca de mantequilla
+    // en su vitrina en el carril del centro, con tacos a los lados.
+    feria(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 8 === 4 && obstaclePools.vaca_mantequilla && libres.length === 3) {
+        spawnObstacle(1, "full", z, "vaca_mantequilla");
+        for (const l of [0, 2]) for (let i = 0; i < 4; i++) spawnTaco(l, z - 0.5 - i * 1.4, 0.9, i === 3 && l === 0);
+        return;
+      }
+      const L = { low: ["paca", "sacos_soja"], high: ["guirnalda"], full: ["cerdo", "perritos", "votantes"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
     jefe_paso(z, d, t, k) {

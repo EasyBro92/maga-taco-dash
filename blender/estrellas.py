@@ -415,6 +415,145 @@ def cordon():
     rama(rojo_t, (0, 0.3, 0.63), (0.85, 0.3, 0.85), 0.05, 0.05, 6)
 
 
+# ================================================================ Des Moines
+def nieve_f():   return mat('nieve_feria', 0xf4f7fb, 0.8)
+def bombilla_f(): return luz('bombilla_feria', 0xffe6a8, 1.3)
+
+def toldo_rayas(nombre, c1, c2, x, y, z, w, d, lado):
+    """Toldo de rayas inclinado hacia la calle (lado: hacia donde cae)."""
+    o = caja(mat_franjas(nombre, c1, c2, 10, eje='Y', z0=y - d / 2, alto=d), x, y, z, w, d, 0.08)
+    o.rotation_euler = (0, lado * 0.25, 0)
+    caja(nieve_f(), x, y, z + 0.08, w * 0.95, d * 0.95, 0.06).rotation_euler = (0, lado * 0.25, 0)
+    return o
+
+def puesto(x, y, lado, letrero, color, c2):
+    """Un puesto de comida de la feria en la acera, mirando a la calle (lado:
+    -1 si está a la derecha y mira a -x)."""
+    madera = mat('madera_puesto', 0xc98e52, 0.6)
+    caja(mat('puesto_%x' % color, color, 0.5), x, y, 0, 2.6, 3.6, 2.3)
+    caja(madera, x + lado * 1.35, y, 0.9, 0.3, 3.6, 0.15)            # el mostrador
+    caja(mat('hueco_puesto', 0x3a2a20, 0.8), x + lado * 1.31, y, 1.05, 0.02, 3.0, 1.0)
+    toldo_rayas('toldo_%x' % color, color, 0xfbf9f3, x + lado * 1.2, y, 2.2, 1.6, 3.8, lado)
+    caja(mat('letrero_puesto', 0xfbf3d8, 0.5), x, y, 2.5, 2.4, 0.15, 0.7).rotation_euler = (0, 0, math.pi / 2)
+    o = texto(mat('letra_%x' % c2, c2, 0.4), letrero, 0, 0, 0, tam=0.36, prof=0.02)
+    o.rotation_euler = (math.pi / 2, 0, lado * math.pi / 2)
+    o.location = (x + lado * 0.09, y, 2.85)
+
+def guirnalda_luces(y, z=9.8):
+    """Una guirnalda de bombillas de lado a lado de la calle, alta."""
+    caja(mat('cable', 0x2a2c31, 0.5), 0, y, z, 21.0, 0.04, 0.04)
+    for k in range(21):
+        esfera(bombilla_f(), -10 + k, y, z - 0.18 - 0.25 * math.sin(k / 20 * math.pi), 0.09, 1)
+
+def feria_puestos(variante=0):
+    """30 m de la Feria del Estado de Iowa: puestos de comida con toldos de
+    rayas en las dos aceras (corn dogs, chuletas en palo, limonada, buñuelos),
+    pacas de paja, barriles y guirnaldas de bombillas por encima de la calle.
+    Nieve en los toldos: en el juego, Des Moines es en invierno."""
+    nombres = [('CORN DOGS', 0xd8283a, 0x23408f), ('PORK CHOP', 0x2a7a3a, 0xd8283a),
+               ('LEMONADE', 0xf2c230, 0x23408f), ('FUNNEL CAKE', 0x23408f, 0xd8283a)]
+    for k, y in enumerate((-9.0, 4.0)):
+        for s in (-1, 1):
+            letrero, c, c2 = nombres[(k + variante * 2 + (s > 0)) % 4]
+            puesto(s * 7.3, y, -s, letrero, c, c2)
+    paja = mat('paja', 0xd9b45a, 0.9)
+    for s in (-1, 1):
+        for y in (-2.6, 10.5):
+            caja(paja, s * 5.2, y, 0, 1.1, 0.6, 0.5)
+            caja(paja, s * 5.2, y + 0.65, 0, 1.1, 0.6, 0.5)
+            caja(paja, s * 5.2, y + 0.3, 0.5, 1.1, 0.6, 0.5)
+        cil(mat('barril_feria', 0x8a5a34, 0.6), s * 5.0, -13.0, 0, 0.4, 1.0, 12)
+    for y in (-12.0, 0.0, 12.0):
+        guirnalda_luces(y)
+    # Detrás de los puestos de la izquierda, una carpa de rayas (la noria va a la derecha).
+    carpa(-17.5, 0.0 if variante == 0 else 6.0, 5.5 if variante == 0 else 4.5)
+    for s in (-1, 1):
+        for y in (-12.0, 0.0, 12.0):
+            cil(mat('poste_feria', 0x5a4a3a, 0.6), s * 10.4, y, 0, 0.1, 10.0, 8)
+
+def feria_puestos_b(): feria_puestos(1)
+
+def carpa(x, y, r):
+    """Una carpa redonda de rayas rojas y blancas con su bandera."""
+    cil(mat_franjas('carpa_rayas', 0xd8283a, 0xfbf9f3, 16, eje='X', z0=x - r, alto=2 * r), x, y, 0, r, 4.0, 24)
+    cil(mat('techo_carpa', 0xc8283a, 0.5), x, y, 4.0, r + 0.3, 3.6, 24, r2=0.2)
+    cil(nieve_f(), x, y, 4.0, r + 0.32, 0.6, 24, r2=r * 0.8)
+    cil(blanco(), x, y, 7.6, 0.05, 1.6, 6)
+    caja(mat_franjas('bandera_feria', 0xd8283a, 0xfbf9f3, 7, eje='Z', z0=8.4, alto=0.8), x + 0.5, y, 8.4, 1.0, 0.03, 0.8)
+
+def feria_entrada():
+    """El arco de la entrada: dos torres con banderas y, de lado a lado por
+    encima de la calle, «IOWA STATE FAIR» con bombillas. Taquillas en las aceras."""
+    rojo_f = mat('rojo_feria', 0xc8283a, 0.5)
+    for s in (-1, 1):
+        caja(mat('torre_feria', 0xf4ead2, 0.6), s * 9.6, 0, 0, 2.2, 2.2, 12.5)
+        caja(rojo_f, s * 9.6, 0, 12.5, 2.6, 2.6, 0.5)
+        cil(blanco(), s * 9.6, 0, 13.0, 0.06, 3.0, 8)
+        caja(mat_franjas('bandera_feria', 0xd8283a, 0xfbf9f3, 7, eje='Z', z0=15.0, alto=1.0), s * 9.6 + s * 0.75, 0, 15.0, 1.5, 0.04, 1.0)
+        # La taquilla.
+        caja(mat('taquilla', 0x23408f, 0.5), s * 6.6, -1.0, 0, 2.0, 1.8, 2.6)
+        caja(mat('ventana_taquilla', 0xfbf3d8, 0.4), s * 6.6 - s * 1.01, -1.0, 1.1, 0.02, 1.0, 0.8)
+        caja(nieve_f(), s * 6.6, -1.0, 2.6, 2.2, 2.0, 0.15)
+    caja(azul(), 0, 0, 10.8, 18.0, 1.2, 1.8)
+    caja(oro(), 0, -0.62, 10.75, 18.2, 0.06, 0.1)
+    caja(oro(), 0, -0.62, 12.55, 18.2, 0.06, 0.1)
+    texto(mat('letra_feria', 0xf2c230, 0.4), 'IOWA STATE FAIR', 0, -0.62, 11.7, tam=1.1, prof=0.06)
+    for k in range(30):
+        x = -8.7 + k * 0.6
+        esfera(bombilla_f(), x, -0.66, 10.95, 0.08, 1)
+        esfera(bombilla_f(), x, -0.66, 12.45, 0.08, 1)
+    caja(nieve_f(), 0, 0, 12.6, 18.0, 1.2, 0.18)
+
+def feria_noria():
+    """La noria de la feria, grande, detrás de los edificios de la derecha
+    (asoma por encima de los tejados). El origen en el centro de la calle."""
+    X, ZC, R = 19.0, 17.5, 14.0          # (en la feria no hay edificios: se ve entera)
+    hierro = mat('hierro_noria', 0xe8e2d6, 0.5)
+    for s in (-1, 1):
+        rama(hierro, (X - 7, s * 2.4, 0), (X, s * 1.2, ZC), 0.3, 0.22, 8)
+        rama(hierro, (X + 7, s * 2.4, 0), (X, s * 1.2, ZC), 0.3, 0.22, 8)
+    cil(hierro, X, 0, ZC, 0.8, 2.6, 16, eje='Y')
+    n = 16
+    for k in range(n):
+        a = k * 2 * math.pi / n
+        x, z = X + math.cos(a) * R, ZC + math.sin(a) * R
+        for s in (-1, 1):
+            rama(hierro, (X, s * 1.1, ZC), (x, s * 1.1, z), 0.08, 0.08, 6)
+        a2 = (k + 1) * 2 * math.pi / n
+        for s in (-1, 1):
+            rama(hierro, (x, s * 1.1, z), (X + math.cos(a2) * R, s * 1.1, ZC + math.sin(a2) * R), 0.12, 0.12, 6)
+        cabina = mat('cabina_%d' % (k % 4), (0xd8283a, 0x23408f, 0xf2c230, 0x2a7a3a)[k % 4], 0.5)
+        caja(cabina, x, 0, z - 1.6, 1.4, 1.8, 1.2)
+        esfera(bombilla_f(), x, -1.2, z, 0.25, 1)
+
+def vaca_mantequilla():
+    """La vaca de mantequilla de la feria de Iowa (de verdad: tamaño natural,
+    esculpida en mantequilla) en su vitrina refrigerada sobre un remolque.
+    Mira al jugador (la cabeza hacia -y)."""
+    mantequilla = mat('mantequilla', 0xf6dc7a, 0.5)
+    caja(mat('remolque', 0x5a5650, 0.6), 0, 1.3, 0, 1.9, 2.6, 0.45)
+    for x in (-0.85, 0.85):
+        for y in (0.5, 2.1):
+            cil(negro(), x, y, 0.22, 0.22, 0.15, 12, eje='X')
+    # La vaca: cuerpo, cabeza, patas, cuernos y la ubre.
+    esfera(mantequilla, 0, 1.45, 1.35, 0.55, 2, esc=(0.75, 1.5, 0.8))
+    esfera(mantequilla, 0, 0.55, 1.55, 0.27, 2, esc=(0.9, 1.25, 1.0))
+    for x in (-0.22, 0.22):
+        for y in (0.95, 2.0):
+            cil(mantequilla, x, y, 0.45, 0.1, 0.65, 8)
+        rama(mantequilla, (x * 0.6, 0.5, 1.75), (x * 1.3, 0.45, 1.95), 0.04, 0.02, 6)
+    esfera(mat('ubre', 0xf8e49a, 0.5), 0, 1.6, 0.95, 0.18, 1)
+    # La vitrina de cristal con el marco y el cartel.
+    vidrio = mat('vidrio_vitrina', 0xbfe0f0, 0.08)
+    for x in (-0.95, 0.95):
+        caja(vidrio, x, 1.3, 0.45, 0.04, 2.5, 1.9)
+    for y in (0.07, 2.53):
+        caja(vidrio, 0, y, 0.45, 1.9, 0.04, 1.9)
+    caja(mat('marco_vitrina', 0x8a8f96, 0.4), 0, 1.3, 2.35, 2.0, 2.6, 0.12)
+    caja(mat('cartel_vaca', 0x23408f, 0.5), 0, 0.02, 2.0, 1.6, 0.04, 0.42)
+    texto(mat('letra_vaca', 0xf2c230, 0.4), 'BUTTER COW', 0, -0.01, 2.21, tam=0.2, prof=0.01)
+
+
 PIEZAS = {
     'banderas_arco':   (banderas_arco,   'findlay',    dict(lado=1024, bisel=0.0)),
     'carroza_desfile': (carroza_desfile, 'obstaculos', dict(lado=1024)),
@@ -426,6 +565,11 @@ PIEZAS = {
     'capitolio_rotonda': (capitolio_rotonda, 'washington', dict(lado=2048, bisel=0.0, segmentos=2)),
     'capitolio_salida': (capitolio_salida, 'washington', dict(lado=1024, bisel=0.0, segmentos=2)),
     'cordon': (cordon, 'obstaculos', dict(lado=256, bisel=0.0)),
+    'feria_entrada': (feria_entrada, 'des_moines', dict(lado=1024, bisel=0.0)),
+    'feria_puestos': (feria_puestos, 'des_moines', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'feria_puestos_b': (feria_puestos_b, 'des_moines', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'feria_noria': (feria_noria, 'des_moines', dict(lado=1024, bisel=0.0, suelo=False)),
+    'vaca_mantequilla': (vaca_mantequilla, 'obstaculos', dict(lado=512, bisel=0.0)),
 }
 
 correr(PIEZAS)

@@ -338,8 +338,9 @@ const CALLES = [
       // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
       // largo del nivel no cambia.
       [280, 440, "convoy", { titulo: "convoy" }],
-      [440, 620, "cerdos", { titulo: "cerdos" }],
-      [620, 760, "soja", { momento: "vehiculo", vehiculo: "tractor", titulo: "sube_tractor" }],
+      // 08/11: el momento estrella: la Feria del Estado de Iowa (en lugar de los
+      // cerdos y del tractor). La feria, en `fondo`.
+      [440, 760, "feria", { titulo: "feria" }],
       [760, 830, "calma"],
       [830, 1000, "cosechadoras", { momento: "persigue", perseguidor: "cosechadora", titulo: "persigue_cosechadora" }],
       [1000, 1150, "lluvia", { titulo: "lluvia" }],
@@ -353,6 +354,8 @@ const CALLES = [
       [2440, 2570, "sprint", { titulo: "sprint_capitolio" }],
     ],
     control: 1512, caja: 1200,
+    // 08/11: en la feria no hay edificios: los puestos, las carpas y la noria.
+    sinEdificios: [440, 776],
     // (La primera, despues del convoy: dentro chocaba con los camiones.)
     chapas: [[460, "arco"], [1050, "carril"], [2300, "arco"]],
     hitos: ["parque_esculturas", "hotel_fort", "biblioteca_dm", "ruan", "torre_801", "world_food", "rio"],
@@ -378,6 +381,9 @@ const CALLES = [
     // Las pasarelas acristaladas, el puente sobre el rio y el Capitolio al fondo.
     fondo: [
       { pieza: "skywalk", d: 365, cruza: true }, { pieza: "skywalk", d: 640, cruza: true },
+      { pieza: "feria_entrada", d: 440, cruza: true },
+      ...Array.from({ length: 10 }, (_, i) => ({ pieza: i % 2 ? "feria_puestos_b" : "feria_puestos", d: 444 + i * 30, cruza: true })),
+      { pieza: "feria_noria", d: 600, cruza: true },
       { pieza: "skywalk", d: 1180, cruza: true }, { pieza: "skywalk", d: 1420, cruza: true },
       { pieza: "rio", d: 1557, cruza: true },
       { pieza: "capitolio_iowa", d: 2650, centro: true },
@@ -526,6 +532,7 @@ export const ANCHO = {
   metro_boca: 8, metro_tunel: 24, metro_estacion: 30, metro_salida: 8,
   banderas_arco: 2, casino_entrada: 8, casino_sala: 30, casino_salida: 8,
   capitolio_fachada: 10, capitolio_pasillo: 30, capitolio_rotonda: 30, capitolio_salida: 8,
+  feria_entrada: 4, feria_puestos: 30, feria_puestos_b: 30, feria_noria: 2,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

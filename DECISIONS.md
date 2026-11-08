@@ -1397,3 +1397,21 @@ calle entre la entrada y la salida de cada interior (`actualizarCorte`), y
 dentro tampoco se ponen pasos de cebra ni charcos.
 
 Probado con el piloto: Nueva York, Las Vegas y Washington enteros, sin choques.
+
+### Des Moines: la Feria del Estado de Iowa (440–760 m)
+
+Ocupa el sitio de los cerdos y del tractor.
+- **El escenario** (piezas de `fondo`):
+  - el arco «IOWA STATE FAIR» con bombillas y taquillas;
+  - puestos de comida en las dos aceras (corn dogs, chuletas, limonada,
+    buñuelos), con toldos de rayas y nieve;
+  - pacas de paja y guirnaldas de bombillas por encima de la calle;
+  - carpas de rayas a la izquierda y la noria a la derecha.
+- En ese trozo no se ponen edificios (`nivel.sinEdificios`): con ellos, la
+  noria quedaba tapada y no parecía un recinto ferial.
+- **Por la calle:** pacas, sacos de soja, guirnaldas que se pasan agachado,
+  cerdos premiados, carritos de perritos y votantes. Cada 56 m, la vaca de
+  mantequilla en su vitrina, en el carril del centro, con tacos a los lados.
+
+Probado con el piloto: sin choques en la feria, salvo uno en la fila de la
+chapa (tres obstáculos bajos), que el piloto a veces no salta.
