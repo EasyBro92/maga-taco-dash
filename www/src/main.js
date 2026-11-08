@@ -598,7 +598,9 @@ const NOMBRE_HITO = {
     epic_center: "Epic Center, la torre más alta de Kansas", museo_aviacion: "Museo de la aviación", century_ii: "Century II",
     old_courthouse: "El antiguo juzgado", busch_stadium: "El estadio de los Cardinals", union_station_stl: "Union Station",
     soldiers_monument: "El Monumento a los Soldados y Marineros", statehouse_in: "El Capitolio de Indiana",
-    lucas_oil: "El estadio de los Colts", jw_marriott: "El hotel de cristal azul" },
+    lucas_oil: "El estadio de los Colts", jw_marriott: "El hotel de cristal azul",
+    spirit_detroit: "El Espíritu de Detroit", fox_theatre: "El teatro Fox",
+    puno_joe_louis: "El puño de Joe Louis", guardian_building: "El Guardian Building" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -612,7 +614,9 @@ const NOMBRE_HITO = {
     epic_center: "Epic Center, Kansas's tallest tower", museo_aviacion: "Aviation museum", century_ii: "Century II",
     old_courthouse: "The Old Courthouse", busch_stadium: "The Cardinals ballpark", union_station_stl: "Union Station",
     soldiers_monument: "The Soldiers' and Sailors' Monument", statehouse_in: "The Indiana Statehouse",
-    lucas_oil: "The Colts' stadium", jw_marriott: "The blue glass hotel" },
+    lucas_oil: "The Colts' stadium", jw_marriott: "The blue glass hotel",
+    spirit_detroit: "The Spirit of Detroit", fox_theatre: "The Fox Theatre",
+    puno_joe_louis: "The Joe Louis Fist", guardian_building: "The Guardian Building" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];

@@ -1612,3 +1612,33 @@ día de carrera (mediodía).
   - `sinEdificios` puede traer su propio tramo.
 
 Probado con el piloto: 2:21, el nivel se completa y salen todos los obstáculos.
+
+## Nivel 10: Detroit, Míchigan (08/11/2026)
+
+Se aplicó lo recomendado sin preguntar: final delante del Renaissance Center y
+luz de tarde.
+
+- **Historia:** «La ciudad del motor, con coches llenos de aranceles. En el
+  puente, canadienses enfadados: no quieren ser el estado 51».
+- **Escenario (`blender/detroit.py`):** el Spirit of Detroit (la estatua verde
+  con la esfera dorada), el teatro Fox con su letrero, el puño de Joe Louis,
+  el Guardian Building naranja y, al fondo, el Renaissance Center.
+- **Obstáculos nuevos:**
+  - el coche con la etiqueta del arancel («+25%»), que a veces arranca hacia ti;
+  - el alce;
+  - el canadiense enfadado con el palo de hockey y el cartel «NO 51st STATE»,
+    que sale de la acera a cortar el paso;
+  - el barril de sirope de arce, que viene rodando;
+  - la pancarta «NOT FOR SALE» (agacharse).
+- **Momento estrella, el puente Ambassador (705–1065):**
+  - es un puente colgante con dos torres verdes y el cable que baja hasta el
+    centro;
+  - se quita la calle y, muy abajo, se ve el río Detroit;
+  - por el puente vienen canadienses, alces, pancartas y barriles de sirope.
+  - La segunda mitad del puente son los tramos de la primera dados la vuelta
+    (`giro` en `fondo`).
+- **Lo demás:**
+  - el objeto son las botellas de sirope de arce;
+  - la música es soul de la Motown.
+
+Probado con el piloto: 2:26, el nivel se completa y salen todos los obstáculos.

@@ -619,7 +619,7 @@ const CALLES = [
       40, ["kit", 2], 14, ...cuadras(1), ["statehouse_in", 1], ["kit", 2], 14, ...cuadras(6),
       ["jw_marriott", 1], ["kit", 2], 14, ...cuadras(19),
     ],
-    // (Las piezas que cruzan empiezan en \`d\`: las gradas, de 2340 a 2910, justo
+    // (Las piezas que cruzan empiezan en `d`: las gradas, de 2340 a 2910, justo
     // donde se quita la calle y hasta la meta, sin huecos ni suelos encima de otros.)
     fondo: [{ pieza: "meta_indy", d: 2910, centro: true },
       { pieza: "circuito_entrada", d: 2336, cruza: true },
@@ -627,6 +627,68 @@ const CALLES = [
     // Se para encima de la franja de ladrillos, y la camara mira la Pagoda.
     final: "parada", parada: -0.5,
     camaraFinal: { pos: [2.4, 2.8, 10], mira: [-9, 9, -16] },
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
+    // 08/11/2026: nivel 10: Detroit (blender/detroit.py). Se aplico lo
+    // recomendado: final delante del Renaissance Center y luz de tarde.
+    // Historia: «La ciudad del motor, con coches llenos de aranceles. En el
+    // puente, canadienses enfadados: no quieren ser el estado 51». Momento
+    // estrella: el puente Ambassador a Canada, con el rio muy abajo.
+    id: "detroit", nombre: "Woodward Avenue", lugar: "Detroit, Míchigan", listo: true,
+    zona: "city", carpeta: "detroit", luz: "tarde", semilla: 1701,
+    largo: 2950, linea: 11.5, velMax: 24,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 14 },
+    horizonte: "ohio",
+    obstaculos: { low: ["pila_neumaticos", "conos", "basura"], high: ["pancarta_canada", "andamio", "semaforo"],
+      full: ["coche_arancel", "taxi", "furgoneta", "contenedor"] },
+    publico: { personas: ["ejecutivo", "fan", "turista", "senora", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "detroit" }],
+      [70, 300, "vallas", { low: ["pila_neumaticos", "conos"], high: ["andamio"], titulo: "motor" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 620, "slalom", { full: ["coche_arancel", "coche_arancel", "taxi"], titulo: "coches_arancel" }],
+      [620, 700, "calma"],
+      // El momento estrella: el puente Ambassador (tramos y torres, en `fondo`).
+      [700, 1070, "puente_canada", { titulo: "puente_canada" }],
+      [1070, 1140, "calma"],
+      [1140, 1290, "premios", { titulo: "premios" }],
+      [1290, 1440, "lluvia", { titulo: "lluvia" }],
+      [1440, 1640, "vallas", { low: ["pila_neumaticos", "conos"], high: ["pancarta_canada"], momento: "gorras", titulo: "gorras" }],
+      [1640, 1800, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "limusina", titulo: "sube_limusina" }],
+      [1800, 1940, "jefe_paso", { titulo: "jefe_paso" }],
+      [1940, 2100, "convoy", { titulo: "convoy" }],
+      [2100, 2260, "desfile_cruza", { cruzan: ["canadiense", "alce"], titulo: "cruzan_canadienses" }],
+      [2260, 2460, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2460, 2610, "alfombra", { titulo: "alfombra" }],
+      [2610, 2790, "mixto", { densidad: 0.55, titulo: "" }],
+      [2790, 2940, "sprint", { titulo: "sprint_rencen" }],
+    ],
+    control: 1300, caja: 1160,
+    // El puente va al aire libre: se quita la calle (y el suelo: abajo, el rio).
+    interior: { rango: [705, 1065], tipo: "puente", aire: true, sinEdificios: true },
+    sinEdificios: [2860, 3800],
+    chapas: [[1200, "arco"], [1700, "carril"], [2300, "bus"]],
+    hitos: ["spirit_detroit", "fox_theatre", "puno_joe_louis", "guardian_building"],
+    meta: "ren_cen", metaNombre: { es: "el Renaissance Center", en: "the Renaissance Center" },
+    izquierda: [
+      40, ["kit", 3], 14, ["spirit_detroit", 1], ["kit", 2], 14, ...cuadras(10),
+      ["guardian_building", 1], ["kit", 2], 14, ...cuadras(17),
+    ],
+    derecha: [
+      40, ["kit", 2], 14, ["fox_theatre", 1], ["kit", 2], 14, ...cuadras(5),
+      ["puno_joe_louis", 1], ["kit", 2], 14, ...cuadras(24),
+    ],
+    // Las piezas que cruzan empiezan en `d`: 12 tramos de 705 a 1065 (la
+    // segunda mitad, los de la primera dados la vuelta) y una torre en cada punta.
+    fondo: [{ pieza: "ren_cen", d: 3000, centro: true },
+      ...Array.from({ length: 12 }, (_, i) => ({ pieza: "puente_amb_" + (i < 6 ? i : 11 - i), d: 705 + i * 30, cruza: true, giro: i >= 6 })),
+      { pieza: "torre_ambassador", d: 703, cruza: true },
+      { pieza: "torre_ambassador", d: 1063, cruza: true }],
+    // Se para al pie de la escalinata, y la camara mira hacia arriba.
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3.2, 21], mira: [0, 24, -40] },
     acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
@@ -730,14 +792,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -778,6 +840,9 @@ export const ANCHO = {
   old_courthouse: 30, busch_stadium: 40, union_station_stl: 30, arco_gateway: 100, super_entrada: 8, super_pasillo: 30, super_salida: 8,
   // 08/11: Indianápolis
   soldiers_monument: 30, statehouse_in: 40, lucas_oil: 40, jw_marriott: 30, grada: 30, circuito_entrada: 4, meta_indy: 80,
+  // 08/11: Detroit
+  spirit_detroit: 30, guardian_building: 30, fox_theatre: 30, puno_joe_louis: 20, ren_cen: 100, torre_ambassador: 4,
+  puente_amb_0: 30, puente_amb_1: 30, puente_amb_2: 30, puente_amb_3: 30, puente_amb_4: 30, puente_amb_5: 30,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
@@ -844,7 +909,7 @@ export function colocarNivel(nivel, anchoDe) {
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
   recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => salida.push(e));
   // (`cruza`: de lado a lado de la calle, como el puente o las pasarelas de Des Moines)
-  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, x: f.x || 0, ancho: anchoDe(f.pieza) });
+  for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, x: f.x || 0, giro: !!f.giro, ancho: anchoDe(f.pieza) });
   // El arco del punto de control, de lado a lado de la calle.
   if (nivel.control) salida.push({ pieza: "arco_control", d: nivel.control, lado: 0, arco: true, ancho: 2 });
   return salida.sort((a, b) => a.d - b.d);

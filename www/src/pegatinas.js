@@ -225,6 +225,34 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: la botella de sirope de arce de Detroit (los canadienses del puente).
+  sirope(x) {
+    x.save();
+    x.translate(128, 132); x.rotate(0.15);
+    x.lineJoin = "round";
+    const botella = () => {
+      x.beginPath();
+      x.moveTo(-22, -100); x.lineTo(22, -100); x.lineTo(22, -62);
+      x.quadraticCurveTo(70, -40, 70, 10); x.lineTo(70, 80);
+      x.quadraticCurveTo(70, 100, 50, 100); x.lineTo(-50, 100);
+      x.quadraticCurveTo(-70, 100, -70, 80); x.lineTo(-70, 10);
+      x.quadraticCurveTo(-70, -40, -22, -62); x.closePath();
+    };
+    x.lineWidth = 24; x.strokeStyle = "#fff"; botella(); x.stroke();
+    botella(); x.fillStyle = "#c8781e"; x.fill();
+    x.fillStyle = "#e8a040"; x.beginPath(); x.ellipse(-30, 20, 14, 40, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#d8202a"; x.fillRect(-22, -112, 44, 22);
+    x.fillStyle = "#fbf8f2"; x.fillRect(-52, 18, 104, 56);
+    // La hoja de arce, sencilla: un rombo con dos puntas a los lados.
+    x.fillStyle = "#d8202a";
+    x.beginPath();
+    x.moveTo(0, 24); x.lineTo(12, 40); x.lineTo(28, 36); x.lineTo(16, 52); x.lineTo(6, 52); x.lineTo(4, 68);
+    x.lineTo(-4, 68); x.lineTo(-6, 52); x.lineTo(-16, 52); x.lineTo(-28, 36); x.lineTo(-12, 40); x.closePath(); x.fill();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; botella(); x.stroke();
+    x.strokeRect(-22, -112, 44, 22);
+    x.restore();
+  },
+
   // 08/11: la bandera de cuadros de Indianápolis (la meta de las 500 millas).
   cuadros(x) {
     x.save();

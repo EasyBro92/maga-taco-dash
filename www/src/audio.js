@@ -236,6 +236,11 @@ const CANCIONES = {
     melodia: [74, null, 74, 76, 78, null, 76, 74, 72, null, 72, 74, 76, null, null, null,
       74, null, 74, 76, 78, 81, 79, 78, 76, null, 74, 72, 74, null, null, null],
     timbre: "metal" },
+  // Detroit (08/11): soul de la Motown, con swing y bajo que camina.
+  detroit: { bpm: 112, swing: 0.6, acordes: [Am, Dm, G, C], bateria: "swing", bajo: "camina",
+    melodia: [76, null, 74, 72, null, 69, null, 72, 74, null, 72, 69, null, null, null, null,
+      76, null, 79, 77, 76, null, 74, 72, 74, null, 76, 72, 69, null, null, null],
+    timbre: "metal" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

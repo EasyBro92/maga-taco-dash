@@ -1820,8 +1820,9 @@ export function createWorld(scene) {
       // Capitolio es mas ancha que la calle), los edificios no se ponen.
       // (08/11: `sinEdificios` del interior puede traer su propio tramo.)
       const si = nivel.interior && nivel.interior.sinEdificios;
-      const r = (Array.isArray(si) ? si : si && nivel.interior.rango) || nivel.sinEdificios;
-      if (r && !p.cruza && !p.centro && p.d < r[1] && p.d + (p.ancho || 20) > r[0]) continue;
+      // (Y los dos a la vez: el puente de Detroit y su final.)
+      const rs = [Array.isArray(si) ? si : si && nivel.interior.rango, nivel.sinEdificios].filter(Boolean);
+      if (!p.cruza && !p.centro && rs.some((r) => p.d < r[1] && p.d + (p.ancho || 20) > r[0])) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
       const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, { ...nivel.kit, ...p.opciones }) : modelo(clave);
@@ -1831,6 +1832,8 @@ export function createWorld(scene) {
         // De lado a lado de la calle (el puente, las pasarelas de Des Moines):
         // su origen en el centro de la calle, a lo largo de su ancho.
         mesh.position.set(p.x || 0, 0, -(p.d + p.ancho / 2 - totalScrolled));
+        // (08/11: dada la vuelta: la segunda mitad del puente de Detroit.)
+        if (p.giro) mesh.rotation.y = Math.PI;
         // El agua del rio va casi a ras del suelo: que no parpadee con el.
         if (p.pieza === "rio") mesh.traverse((o) => { if (o.material) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = -1; o.material.polygonOffsetUnits = -2; } });
       } else if (p.centro) {
@@ -2524,6 +2527,15 @@ export function createWorld(scene) {
     pit_crew: { choque: "full", medio: 0.35, alto: 1.95, centro: 0, cruza: true },
     bandera_cuadros: { choque: "high", medio: 0.3, alto: 2.2 },
     coche_seguridad: { choque: "full", medio: 2.2, alto: 1.45, centro: -2.2, cambia: 0.6 },
+    // 08/11: Detroit (blender/detroit.py): el coche con la etiqueta del arancel
+    // (a veces arranca hacia ti: CONDUCEN), el alce y el canadiense enfadado
+    // (cruzan), el barril de sirope de arce (viene rodando) y la pancarta
+    // «NOT FOR SALE» (agacharse).
+    coche_arancel: { choque: "full", medio: 2.4, alto: 1.6, centro: -2.4 },
+    alce: { choque: "full", medio: 0.5, alto: 2.6, centro: 0, cruza: true },
+    canadiense: { choque: "full", medio: 0.35, alto: 2.5, centro: 0, cruza: true },
+    barril_sirope: { choque: "low", medio: 0.5, alto: 0.95, mueve: 5, rueda: true },
+    pancarta_canada: { choque: "high", medio: 0.3, alto: 2.2 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2558,10 +2570,12 @@ export function createWorld(scene) {
     const g = modeloConContorno("obstaculos/" + nombre);
     // 08/11: el rollo de heno esta hecho alrededor de su eje: gira solo el rollo
     // (no la sombra), un poco por encima del suelo.
-    if (nombre === "rodillo_heno" && g) {
+    // (Y el barril de sirope de Detroit.)
+    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45 };
+    if (EJE_RUEDA[nombre] && g) {
       const r = new THREE.Group();
       while (g.children.length) r.add(g.children[0]);
-      r.position.y = 0.6;
+      r.position.y = EJE_RUEDA[nombre];
       g.add(r);
       g.userData.rueda = r;
     }
@@ -3894,7 +3908,7 @@ export function createWorld(scene) {
   // imposible (cocheCabe, lo mismo que mira el coche patrulla).
   // 06/11 (2): solo los que miran hacia ti (o no tienen delante ni detras). El
   // taxi, la camioneta y la limusina se ven por detras: venian marcha atras.
-  const CONDUCEN = new Set(["furgoneta", "tractor", "quitanieves", "carroza", "perritos"]);
+  const CONDUCEN = new Set(["furgoneta", "tractor", "quitanieves", "carroza", "perritos", "coche_arancel"]);
   function quizaArranca(o, z) {
     if (!CONDUCEN.has(o.pool) || o.mueve || Math.random() > 0.35) return;
     if (cocheCabe(o.lane, z, 4)) o.mueve = 4;
@@ -4526,6 +4540,31 @@ export function createWorld(scene) {
       bloq.forEach((l) => { const ty = elegirDe(["low", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
+    // ---- 08/11: Detroit, el puente Ambassador a Canada (momento estrella) ----
+    // En el puente, los canadienses enfadados (no quieren ser el estado 51)
+    // salen de las aceras a cortar el paso, con sus alces; pancartas que se
+    // pasan agachado y barriles de sirope de arce que vienen rodando. Siempre
+    // un carril libre con tacos.
+    puente_canada(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 6 === 4 && obstaclePools.barril_sirope) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "barril_sirope");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["conos"], high: ["pancarta_canada"], full: ["canadiense", "canadiense", "alce"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["full", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
     },
     // ---- 08/11: Indianápolis, la recta de las 500 millas (momento estrella) ----
     // La calle es la recta del circuito, entre gradas (piezas de `fondo`). Los
