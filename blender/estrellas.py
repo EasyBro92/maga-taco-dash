@@ -554,6 +554,39 @@ def vaca_mantequilla():
     texto(mat('letra_vaca', 0xf2c230, 0.4), 'BUTTER COW', 0, -0.01, 2.21, tam=0.2, prof=0.01)
 
 
+# ================================================================ Los jefes (08/11)
+# Isidro: «me gustaría que el dragón rojo lance aranceles y en vez de chili
+# yo debería lanzar más aranceles».
+def arancel():
+    """El sello de los aranceles que lanza el jugador al jefe (en lugar del
+    chile): mango de madera, cuerpo dorado y la goma roja, con «TARIFF 145%»
+    en la cara que mira al jugador."""
+    madera = mat('mango_sello', 0x8a5a34, 0.5)
+    esfera(madera, 0, 0, 0.78, 0.13, 2)
+    cil(madera, 0, 0, 0.5, 0.06, 0.3, 10)
+    caja(oro(), 0, 0, 0.3, 0.46, 0.34, 0.2)
+    caja(mat('goma_sello', 0xc8102e, 0.6), 0, 0, 0.18, 0.5, 0.38, 0.12)
+    caja(blanco(), 0, -0.175, 0.3, 0.42, 0.01, 0.18)
+    texto(mat('tinta_sello', 0xc8102e, 0.5), 'TARIFF', 0, -0.18, 0.4, tam=0.08, prof=0.008)
+    texto(mat('tinta_sello', 0xc8102e, 0.5), '145%', 0, -0.18, 0.33, tam=0.07, prof=0.008)
+
+def caja_arancel():
+    """La caja de aranceles que lanza el dragón de China: madera con flejes
+    rojos, «TARIFF» y «125%» pintados (lo que China puso de vuelta). Va
+    centrada en el origen: rueda de arista en arista, como el dado."""
+    madera = mat_bloques('madera_caja_ar', 0xc89a5e, 0xa87a44, ancho=0.9, alto=0.18, grosor=0.012, variacion=1.05)
+    caja(madera, 0, 0, -0.45, 0.9, 0.9, 0.9)
+    rojo_c = mat('fleje_rojo', 0xc8102e, 0.5)
+    for z in (-0.33, 0.27):
+        caja(rojo_c, 0, 0, z, 0.92, 0.92, 0.07)
+    for x in (-0.3, 0.3):
+        caja(rojo_c, x, 0, -0.45, 0.07, 0.92, 0.92)
+    caja(mat('cartel_caja_ar', 0xf6e9c8, 0.6), 0, -0.46, -0.15, 0.5, 0.02, 0.36)
+    texto(rojo_c, 'TARIFF', 0, -0.48, 0.1, tam=0.1, prof=0.01)
+    texto(rojo_c, '125%', 0, -0.48, -0.05, tam=0.13, prof=0.01)
+    estrella(mat('estrella_china', 0xf2c230, 0.4), 0.33, -0.462, 0.35, 0.06, 0.01)
+
+
 PIEZAS = {
     'banderas_arco':   (banderas_arco,   'findlay',    dict(lado=1024, bisel=0.0)),
     'carroza_desfile': (carroza_desfile, 'obstaculos', dict(lado=1024)),
@@ -570,6 +603,8 @@ PIEZAS = {
     'feria_puestos_b': (feria_puestos_b, 'des_moines', dict(lado=1024, bisel=0.0, segmentos=2)),
     'feria_noria': (feria_noria, 'des_moines', dict(lado=1024, bisel=0.0, suelo=False)),
     'vaca_mantequilla': (vaca_mantequilla, 'obstaculos', dict(lado=512, bisel=0.0)),
+    'arancel': (arancel, 'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'caja_arancel': (caja_arancel, 'obstaculos', dict(lado=256, bisel=0.0)),
 }
 
 correr(PIEZAS)

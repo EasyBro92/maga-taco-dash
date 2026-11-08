@@ -886,10 +886,10 @@ function pintarBarraJefe(vida) {
   barra.classList.toggle("debate", debate);
   if (!debate) {
     barra.querySelector(".bossName").textContent = world.tipoJefe() === "dragon" ? t("dragonNombre") : "BURRITO-BOT";
-    document.getElementById("bossFill").style.width = `${(vida / 5) * 100}%`;
+    document.getElementById("bossFill").style.width = `${(vida / world.vidaJefe()) * 100}%`;
     return;
   }
-  const yo = 50 + (5 - vida) * 10;
+  const yo = Math.round(50 + ((world.vidaJefe() - vida) / world.vidaJefe()) * 50);
   barra.querySelector(".bossName").innerHTML = `<span class="yo">${t("encuestaYo")} ${yo} %</span> ${t("encuesta")} <span class="el">${100 - yo} % BOT</span>`;
   document.getElementById("bossFill").style.width = `${yo}%`;
 }
@@ -1648,7 +1648,7 @@ function checkPowerups() {
       dobleLeft = DOBLE_DURATION;
       showBubble(t("dobleTacos"), 1100, 0);
       vibrate(20);
-    } else if (p.kind === "chile") {
+    } else if (p.kind === "chile" || p.kind === "arancel") {
       // Chile picante: sale disparado hacia el Burrito-Bot.
       world.dispararJefe(playerX, py + 1.2);
       vibrate(15);

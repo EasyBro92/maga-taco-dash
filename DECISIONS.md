@@ -1415,3 +1415,28 @@ Ocupa el sitio de los cerdos y del tractor.
 
 Probado con el piloto: sin choques en la feria, salvo uno en la fila de la
 chapa (tres obstáculos bajos), que el piloto a veces no salta.
+
+## Jefes más largos, con más ataques y aranceles (2026-11-08)
+
+Isidro: «Los jefes de los niveles duran muy poco además no lanzan ataques
+algunos, me gustaría que el dragón rojo lance aranceles y en vez de chili yo
+debería lanzar más aranceles». Antes caían en unos 8 s: bastaban 5 golpes y
+salían chiles en más de la mitad de las filas. Ahora:
+- **12 golpes** en lugar de 5, y el arma sale en el 27 % de las filas (antes
+  el 55 %). Pueden quedarse hasta 75 s; si se acaba su tramo, se van.
+- **Ataques que van rotando:**
+  - **uno**: algo que rueda por tu carril.
+  - **dos**: dos a la vez, en tu carril y en uno de al lado; el tercero queda
+    libre.
+  - **fuego** (el dragón): una bola de fuego a la altura de la cabeza, que se
+    pasa agachado.
+- **El dragón lanza cajas de aranceles** («TARIFF 125%», ruedan como los
+  dados). El robot sigue con sus barriles.
+- **Tú lanzas aranceles en lugar de chiles:** un sello rojo y dorado con
+  «TARIFF 145%». En el debate de Las Vegas siguen los micrófonos.
+- La barra del jefe va con los 12 golpes. En el debate, la encuesta sube
+  hasta el 100 %.
+
+Medido con un jugador que va a por los aranceles, cogiendo unos 14-17 de
+23-26: los jefes duran de 22 a 30 s y lanzan de 15 a 21 ataques. El piloto no
+choca con ninguno.

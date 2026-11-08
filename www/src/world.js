@@ -2468,6 +2468,8 @@ export function createWorld(scene) {
     cordon: { choque: "low", medio: 0.4, alto: 1.0 },
     // 08/11: Des Moines, la vaca de mantequilla de la feria en su vitrina.
     vaca_mantequilla: { choque: "full", medio: 1.3, alto: 2.5, centro: -1.3 },
+    // 08/11: la caja de aranceles que lanza el dragon (rueda como los dados; se salta).
+    caja_arancel: { choque: "low", medio: 0.5, alto: 0.95, mueve: 4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3281,6 +3283,8 @@ export function createWorld(scene) {
       return g;
     }),
     chile: makePool(() => { const g = modeloConContorno("obstaculos/chile") || buildPowerupIcon("shield"); g.scale.setScalar(1.4); g.position.y = -0.4; return g; }),
+    // 08/11: el sello de los aranceles, lo que se le lanza al jefe en lugar del chile.
+    arancel: makePool(() => { const g = new THREE.Group(); const m = modeloConContorno("obstaculos/arancel") || buildPowerupIcon("shield"); m.scale.setScalar(1.7); m.position.y = -0.75; g.add(m); return g; }),
     // 28/10: botas de vaquero (saltos altos) y caja sorpresa.
     botas: makePool(() => { const g = modeloConContorno("obstaculos/botas") || buildPowerupIcon("shield"); g.scale.setScalar(1.45); return g; }),
     caja: makePool(() => { const g = modeloConContorno("obstaculos/caja_sorpresa") || buildPowerupIcon("shield"); g.scale.setScalar(1.25); return g; }),
@@ -3413,7 +3417,10 @@ export function createWorld(scene) {
   // Como los jefes de Minion Rush: flota delante, lanza barriles de salsa al
   // carril donde estas y se le vence recogiendo chiles, que salen disparados
   // hacia el. Cinco golpes. Si tarda demasiado, se va sin premio.
-  const JEFE_VIDA = 5, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 40;
+  // 08/11: Isidro: «los jefes de los niveles duran muy poco además no lanzan
+  // ataques algunos». Caian en unos 8 s (5 golpes y muchos chiles). Ahora 12
+  // golpes, menos armas por la pista (ver PATRONES.jefe) y ataques variados.
+  const JEFE_VIDA = 12, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 75;
   const jefe = { activo: false, mesh: null, vida: 0, carril: 1, x: 0, z: -90, tiro: 0, tiempo: 0,
     golpe: 0, saliendo: false, derrotado: false, tipo: "robot", robot: null };
   const disparos = [];
@@ -3622,7 +3629,7 @@ export function createWorld(scene) {
   let jefeAcabado = false;
   function jefeSeVa() {
     jefeAcabado = true;
-    for (const p of powerups) if (p.kind === "chile" && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
+    for (const p of powerups) if ((p.kind === "chile" || p.kind === "arancel") && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
   }
   // 06/11 (3): `paso`: el «jefe de paso» de los niveles sin jefe: tira tres
   // barriles y se va (sin barra, sin chiles).
@@ -3656,11 +3663,11 @@ export function createWorld(scene) {
       tiro: paso ? 2.0 : 5.5 });
     return true;
   }
-  const chileGeo = () => modelo("obstaculos/chile");
+  const chileGeo = () => modelo(hayModelo("obstaculos/arancel") ? "obstaculos/arancel" : "obstaculos/chile");
   function dispararJefe(x, y) {
     if (!jefeActivo()) return;
     const m = chileGeo();
-    m.scale.setScalar(1.6);
+    m.scale.setScalar(hayModelo("obstaculos/arancel") ? 1.9 : 1.6);
     m.position.set(x, y, 0);
     group.add(m);
     disparos.push({ mesh: m, t: 0, x0: x, y0: y });
@@ -3698,16 +3705,35 @@ export function createWorld(scene) {
       jefe.golpe = Math.max(0, jefe.golpe - dt * 2.5);
       m.scale.setScalar((esDragon ? DRAGON_ESCALA : 1) * (1 + jefe.golpe * 0.25));
     }
-    // Lanza un barril (el dragon, una bola de fuego) al carril donde esta (casi
-    // siempre el tuyo) y cambia de carril.
+    // 08/11: los ataques van rotando. «uno»: algo que rueda por tu carril (el
+    // robot, un barril; el dragon, una caja de aranceles); «dos»: dos a la vez,
+    // en tu carril y en uno de al lado (el tercero queda libre); «fuego» (el
+    // dragon): una bola de fuego a la altura de la cabeza, que se pasa agachado.
     jefe.tiro -= dt;
     if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6) {
-      const o = spawnObstacle(jefe.carril, "low", jefe.z + (esDragon ? 2.2 : 1.5), esDragon ? "bola_fuego" : "barril");
-      o.cae = { vy: esDragon ? 1 : 2 };
-      o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : JEFE_Y;
+      const ataques = jefe.paso ? ["uno"] : esDragon ? ["uno", "fuego", "uno", "dos", "fuego", "uno"] : ["uno", "uno", "dos", "uno", "dos"];
+      const ataque = ataques[(jefe.ataques = (jefe.ataques || 0) + 1) % ataques.length];
+      const bajo = esDragon ? (obstaclePools.caja_arancel ? "caja_arancel" : "bola_fuego") : "barril";
+      const lanzar = (l, que) => {
+        if (que === "fuego") {
+          // A la altura de la cabeza y sin caer: se pasa agachado.
+          const o = spawnObstacle(l, "high", jefe.z + 2.2, "bola_fuego");
+          o.type = "high"; o.alto = undefined; o.mueve = 9;
+          o.mesh.position.y = 1.55;
+          return;
+        }
+        const o = spawnObstacle(l, "low", jefe.z + (esDragon ? 2.2 : 1.5), que);
+        o.cae = { vy: esDragon ? 1 : 2 };
+        o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : JEFE_Y;
+      };
+      if (ataque === "dos") {
+        const otro = jugadorCarril === 1 ? (Math.random() < 0.5 ? 0 : 2) : 1;
+        lanzar(jugadorCarril, bajo); lanzar(otro, bajo);
+      } else if (ataque === "fuego") lanzar(jugadorCarril, "fuego");
+      else lanzar(jefe.carril, bajo);
       if (esDragon) dragon.boca = 1;
       jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
-      jefe.tiro = jefe.paso ? 1.4 : 1.6;
+      jefe.tiro = jefe.paso ? 1.4 : ataque === "dos" ? 1.9 : 1.5;
       if (jefe.paso && ++jefe.tirados >= 3) {
         jefe.saliendo = true;
         jefeSeVa();
@@ -4166,8 +4192,9 @@ export function createWorld(scene) {
       if (nivel && jefeAcabado) { PATRONES.mixto(z, d, { densidad: 0.5 }, k); return; }
       const lane = Math.floor(Math.random() * 3);
       tacosEn(lane, z, 4);
-      const arma = nivel && nivel.debate ? "micro" : "chile";
-      if (EXTRAS && Math.random() < 0.55) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
+      // 08/11: aranceles en lugar de chiles, y menos (antes el 55 % de las filas).
+      const arma = nivel && nivel.debate ? "micro" : powerupPools.arancel && hayModelo("obstaculos/arancel") ? "arancel" : "chile";
+      if (EXTRAS && Math.random() < 0.27) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
 
     // ---- 06/11 (3): los momentos (ver «Los momentos», mas abajo) ----
@@ -5304,6 +5331,10 @@ export function createWorld(scene) {
         } else if (VIDA[o.pool]) vida(o, dt);
         moverNuevo(o, dt);
       }
+      if (o.pool === "caja_arancel" && !o.smashed && !o.cae) {
+        const a = (o.mesh.rotation.x += dt * 5);
+        o.mesh.position.y = 0.45 * (Math.abs(Math.cos(a)) + Math.abs(Math.sin(a)));
+      }
       if (o.pool === "dado" && !o.smashed) {
         // Rueda de arista en arista: el centro sube y baja para no hundirse.
         const a = (o.mesh.rotation.x += dt * 5);
@@ -5502,5 +5533,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior };
+    perseguir, moverPerseguidor, setVelEn, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
 }
