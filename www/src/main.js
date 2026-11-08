@@ -596,7 +596,9 @@ const NOMBRE_HITO = {
     first_national: "First National, la torre más alta de Nebraska", woodmen: "La torre Woodmen", old_market: "El Old Market",
     orpheum: "El teatro Orpheum",
     epic_center: "Epic Center, la torre más alta de Kansas", museo_aviacion: "Museo de la aviación", century_ii: "Century II",
-    old_courthouse: "El antiguo juzgado", busch_stadium: "El estadio de los Cardinals", union_station_stl: "Union Station" },
+    old_courthouse: "El antiguo juzgado", busch_stadium: "El estadio de los Cardinals", union_station_stl: "Union Station",
+    soldiers_monument: "El Monumento a los Soldados y Marineros", statehouse_in: "El Capitolio de Indiana",
+    lucas_oil: "El estadio de los Colts", jw_marriott: "El hotel de cristal azul" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -608,7 +610,9 @@ const NOMBRE_HITO = {
     first_national: "First National, Nebraska's tallest tower", woodmen: "Woodmen Tower", old_market: "The Old Market",
     orpheum: "The Orpheum Theater",
     epic_center: "Epic Center, Kansas's tallest tower", museo_aviacion: "Aviation museum", century_ii: "Century II",
-    old_courthouse: "The Old Courthouse", busch_stadium: "The Cardinals ballpark", union_station_stl: "Union Station" },
+    old_courthouse: "The Old Courthouse", busch_stadium: "The Cardinals ballpark", union_station_stl: "Union Station",
+    soldiers_monument: "The Soldiers' and Sailors' Monument", statehouse_in: "The Indiana Statehouse",
+    lucas_oil: "The Colts' stadium", jw_marriott: "The blue glass hotel" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];

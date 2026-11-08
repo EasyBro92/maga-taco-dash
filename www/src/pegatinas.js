@@ -225,6 +225,36 @@ const DIBUJOS = {
     x.beginPath(); x.moveTo(cx - 60, cy - 20); x.lineTo(cx - 34, cy - 58); x.stroke();
   },
 
+  // 08/11: la bandera de cuadros de Indianápolis (la meta de las 500 millas).
+  cuadros(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(-0.18);
+    x.lineCap = "round"; x.lineJoin = "round";
+    const mastil = () => { x.beginPath(); x.moveTo(-82, -92); x.lineTo(-82, 104); };
+    x.lineWidth = 30; x.strokeStyle = "#fff"; mastil(); x.stroke();
+    x.lineWidth = 15; x.strokeStyle = CONTORNO; mastil(); x.stroke();
+    x.lineWidth = 7; x.strokeStyle = "#d9d2c4"; mastil(); x.stroke();
+    const tela = () => {
+      x.beginPath();
+      x.moveTo(-82, -92);
+      x.bezierCurveTo(-25, -122, 30, -58, 98, -86);
+      x.lineTo(98, 14);
+      x.bezierCurveTo(30, 42, -25, -22, -82, 8);
+      x.closePath();
+    };
+    x.lineWidth = 24; x.strokeStyle = "#fff"; tela(); x.stroke();
+    tela(); x.fillStyle = "#fbf8f2"; x.fill();
+    x.save(); tela(); x.clip();
+    x.fillStyle = "#1d1f25";
+    for (let i = 0; i < 6; i++) {
+      const off = -14 * Math.sin(((i + 0.5) / 6) * Math.PI * 1.7);
+      for (let j = 0; j < 7; j++) if ((i + j) % 2 === 0) x.fillRect(-82 + i * 30, -118 + off + j * 22, 30.5, 22.5);
+    }
+    x.restore();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; tela(); x.stroke();
+    x.restore();
+  },
+
   // 08/11: la etiqueta de precio de San Luis (los aranceles: «$$$»).
   etiqueta(x) {
     x.save();

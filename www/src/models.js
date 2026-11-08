@@ -56,7 +56,9 @@ const LISTA = {
     // 08/11: Wichita (blender/wichita.py)
     "valla_volando", "vaca_volando", "tejado_volando", "espantapajaros", "bruja_bici",
     // 08/11: San Luis (blender/sanluis.py)
-    "etiqueta_precio", "carrito_compra", "caja_precio", "carro_clydesdale", "fan_cardinals"],
+    "etiqueta_precio", "carrito_compra", "caja_precio", "carro_clydesdale", "fan_cardinals",
+    // 08/11: Indianápolis (blender/indy.py)
+    "indycar", "pila_neumaticos", "pit_crew", "bandera_cuadros", "coche_seguridad"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

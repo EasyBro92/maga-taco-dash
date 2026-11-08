@@ -570,6 +570,64 @@ const CALLES = [
     acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 08/11/2026: nivel 9: Indianápolis (blender/indy.py). Isidro: «Aplica todas
+    // las preguntas que digas recomendados»: final en la meta del circuito y luz
+    // de dia de carrera. Historia: «Los coches de carreras no esperan a nadie».
+    // Momento estrella: la recta de las 500 millas, entre gradas, adelantando a
+    // los coches de carreras, hasta la franja de ladrillos de la meta.
+    id: "indianapolis", nombre: "Meridian Street", lugar: "Indianápolis, Indiana", listo: true,
+    zona: "city", carpeta: "indianapolis", luz: "mediodia", semilla: 1911,
+    largo: 2900, linea: 11.5, velMax: 24,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 14 },
+    horizonte: "ohio",
+    obstaculos: { low: ["pila_neumaticos", "conos", "basura"], high: ["bandera_cuadros", "andamio", "semaforo"],
+      full: ["coche_seguridad", "taxi", "furgoneta", "contenedor"] },
+    publico: { personas: ["fan", "turista", "ejecutivo", "senora", "chico", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "indianapolis" }],
+      [70, 300, "vallas", { low: ["pila_neumaticos", "conos"], high: ["bandera_cuadros"], titulo: "boxes" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 610, "desfile_cruza", { cruzan: ["pit_crew"], titulo: "cruzan_mecanicos" }],
+      [610, 680, "calma"],
+      [680, 830, "premios", { titulo: "premios" }],
+      [830, 1010, "slalom", { full: ["coche_seguridad", "coche_seguridad", "taxi"], titulo: "pace_car" }],
+      [1010, 1160, "lluvia", { titulo: "lluvia" }],
+      [1160, 1360, "vallas", { low: ["pila_neumaticos", "conos"], high: ["bandera_cuadros"], momento: "gorras", titulo: "gorras" }],
+      [1360, 1520, "mixto", { densidad: 0.55, momento: "vehiculo", vehiculo: "descapotable", titulo: "sube_descapotable" }],
+      [1520, 1660, "jefe_paso", { titulo: "jefe_paso" }],
+      [1660, 1820, "convoy", { titulo: "convoy" }],
+      [1820, 2020, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2020, 2170, "alfombra", { titulo: "alfombra" }],
+      [2170, 2330, "mixto", { densidad: 0.55, titulo: "" }],
+      // El momento estrella: la recta del circuito (las gradas, en `fondo`).
+      [2330, 2730, "circuito", { titulo: "circuito" }],
+      [2730, 2880, "sprint", { titulo: "sprint_meta" }],
+    ],
+    control: 1290, caja: 1100,
+    // Al aire libre: se ve el horizonte y la luz es la de fuera (solo se quita
+    // la calle, la acera y los edificios).
+    interior: { rango: [2340, 2990], tipo: "circuito", aire: true, sinEdificios: [2320, 3800] },
+    chapas: [[640, "arco"], [1250, "carril"], [2250, "bus"]],
+    hitos: ["soldiers_monument", "statehouse_in", "lucas_oil", "jw_marriott"],
+    meta: "meta_indy", metaNombre: { es: "la meta de las 500 millas", en: "the Indy 500 finish line" },
+    izquierda: [
+      40, ["kit", 3], 14, ["soldiers_monument", 1], ["kit", 2], 14, ...cuadras(9),
+      ["lucas_oil", 1], ["kit", 2], 14, ...cuadras(16),
+    ],
+    derecha: [
+      40, ["kit", 2], 14, ...cuadras(1), ["statehouse_in", 1], ["kit", 2], 14, ...cuadras(6),
+      ["jw_marriott", 1], ["kit", 2], 14, ...cuadras(19),
+    ],
+    fondo: [{ pieza: "meta_indy", d: 2915, centro: true },
+      { pieza: "circuito_entrada", d: 2343, cruza: true },
+      ...Array.from({ length: 19 }, (_, i) => ({ pieza: "grada", d: 2360 + i * 30, cruza: true }))],
+    // Se para encima de la franja de ladrillos, y la camara mira la Pagoda.
+    final: "parada", parada: -0.5,
+    camaraFinal: { pos: [2.4, 2.8, 10], mira: [-9, 9, -16] },
+    acera: ["ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -670,14 +728,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -716,6 +774,8 @@ export const ANCHO = {
   epic_center: 30, century_ii: 40, museo_aviacion: 30, guardian_llanuras: 90, tornado_embudo: 2,
   // 08/11: San Luis
   old_courthouse: 30, busch_stadium: 40, union_station_stl: 30, arco_gateway: 100, super_entrada: 8, super_pasillo: 30, super_salida: 8,
+  // 08/11: Indianápolis
+  soldiers_monument: 30, statehouse_in: 40, lucas_oil: 40, jw_marriott: 30, grada: 30, circuito_entrada: 4, meta_indy: 80,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

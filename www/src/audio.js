@@ -231,6 +231,11 @@ const CANCIONES = {
     melodia: [72, null, 75, 76, null, 72, 70, null, 67, null, 70, 72, null, null, null, null,
       72, null, 75, 76, null, 79, 77, 75, 72, null, 70, 67, 72, null, null, null],
     timbre: "metal" },
+  // Indianápolis (08/11): rock de carreras, rapido, con metales.
+  indianapolis: { bpm: 146, swing: 0.5, acordes: [D, C, G, D], bateria: "pop", bajo: "octavas",
+    melodia: [74, null, 74, 76, 78, null, 76, 74, 72, null, 72, 74, 76, null, null, null,
+      74, null, 74, 76, 78, 81, 79, 78, 76, null, 74, 72, 74, null, null, null],
+    timbre: "metal" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

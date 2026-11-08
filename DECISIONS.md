@@ -1579,3 +1579,36 @@ recomendado: final bajo el arco Gateway y mañana soleada.
   San Luis con swing.
 
 Probado con el piloto: 2:25, el nivel se completa y salen todos los obstáculos.
+
+## Nivel 9: Indianápolis, Indiana (08/11/2026)
+
+Se aplicó lo recomendado sin preguntar: final en la meta del circuito y luz de
+día de carrera (mediodía).
+
+- **Historia:** «Los coches de carreras no esperan a nadie».
+- **Escenario (`blender/indy.py`):** el Monumento a los Soldados y Marineros,
+  el Capitolio de Indiana con su cúpula de cobre, el estadio de los Colts y
+  el hotel de cristal azul.
+- **Obstáculos nuevos:**
+  - la pila de neumáticos (se salta);
+  - la pancarta de cuadros (agacharse);
+  - el mecánico con la rueda, que cruza;
+  - el coche de seguridad, que cambia de carril;
+  - el coche de carreras (solo en el circuito).
+- **Momento estrella, la recta de las 500 millas (2340 hasta la meta):**
+  - se entra por la puerta del circuito y la calle pasa a ser la pista,
+    entre gradas llenas de público;
+  - los coches de carreras van más despacio que el jugador y hay que
+    adelantarlos. Cada coche se guarda su carril hasta que lo alcanzas, para
+    no atravesar nada, y nunca hay más de dos a la vez.
+- **Final:** el jugador se para encima de la franja de ladrillos de la meta;
+  la cámara mira la torre Pagoda y la torre de posiciones.
+- **Lo demás:**
+  - el objeto son las banderas de cuadros;
+  - la música es rock de carreras.
+- **Para el juego en general:**
+  - un interior puede ser «al aire libre» (`aire`): se quita la calle, pero
+    no la luz de fuera ni el horizonte;
+  - `sinEdificios` puede traer su propio tramo.
+
+Probado con el piloto: 2:21, el nivel se completa y salen todos los obstáculos.

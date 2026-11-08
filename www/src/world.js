@@ -1818,7 +1818,9 @@ export function createWorld(scene) {
       }
       // 07/11: donde hay un interior que pide la calle vacia (la rotonda del
       // Capitolio es mas ancha que la calle), los edificios no se ponen.
-      const r = (nivel.interior && nivel.interior.sinEdificios && nivel.interior.rango) || nivel.sinEdificios;
+      // (08/11: `sinEdificios` del interior puede traer su propio tramo.)
+      const si = nivel.interior && nivel.interior.sinEdificios;
+      const r = (Array.isArray(si) ? si : si && nivel.interior.rango) || nivel.sinEdificios;
       if (r && !p.cruza && !p.centro && p.d < r[1] && p.d + (p.ancho || 20) > r[0]) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
@@ -2513,6 +2515,15 @@ export function createWorld(scene) {
     caja_precio: { choque: "low", medio: 0.45, alto: 0.85 },
     carro_clydesdale: { choque: "full", medio: 3.2, alto: 2.3, centro: -3.2, cambia: 0.7 },
     fan_cardinals: { choque: "full", medio: 0.35, alto: 2.4, centro: 0, cruza: true },
+    // 08/11: Indianápolis (blender/indy.py): el coche de carreras (va por la
+    // pista mas despacio que el jugador, `mueve` negativo: hay que adelantarlo),
+    // la pila de neumaticos, el mecanico con la rueda (cruza), la pancarta de
+    // cuadros (agacharse) y el coche de seguridad (cambia de carril).
+    indycar: { choque: "full", medio: 2.55, alto: 1.1, centro: -2.55, mueve: -9 },
+    pila_neumaticos: { choque: "low", medio: 0.45, alto: 0.95 },
+    pit_crew: { choque: "full", medio: 0.35, alto: 1.95, centro: 0, cruza: true },
+    bandera_cuadros: { choque: "high", medio: 0.3, alto: 2.2 },
+    coche_seguridad: { choque: "full", medio: 2.2, alto: 1.45, centro: -2.2, cambia: 0.6 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4516,6 +4527,35 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: Indianápolis, la recta de las 500 millas (momento estrella) ----
+    // La calle es la recta del circuito, entre gradas (piezas de `fondo`). Los
+    // coches de carreras van por la pista mas despacio que el jugador (hay que
+    // adelantarlos): cada uno se guarda su carril los metros que corre hasta que
+    // el jugador lo alcanza, para no atravesar nada. Nunca mas de dos a la vez:
+    // siempre queda un carril sin coche. Entre medias, pilas de neumaticos y
+    // pancartas de cuadros.
+    circuito(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { t._coche = [0, 0, 0]; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const ch = t._coche || (t._coche = [0, 0, 0]);
+      const libres = LANES.filter((l) => l !== carrilOcupado && d >= ch[l]);
+      const L = { low: ["pila_neumaticos"], high: ["bandera_cuadros"] };
+      if (k % 4 === 2 && k < n - 14 && libres.length >= 2 && obstaclePools.indycar) {
+        const l = elegirDe(libres);
+        spawnObstacle(l, "full", z, "indycar");
+        const mv = -TIPOS.indycar.mueve;
+        ch[l] = d + Math.min(240, ((mv * Math.abs(z)) / Math.max(4, ritmo - mv)) * 1.3 + 12);
+        const otro = elegirDe(libres.filter((x) => x !== l));
+        if (Math.random() < 0.45) { const ty = Math.random() < 0.5 ? "low" : "high"; obst(otro, ty, z, d, L[ty]); }
+        else for (let i = 0; i < 5; i++) spawnTaco(otro, z - i * 1.4, 0.9);
+        return;
+      }
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, libres.length === 3 && Math.random() < 0.5 ? 2 : 1);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "high"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
+    },
     // ---- 08/11: San Luis, el súper de los aranceles (momento estrella) ----
     // El pasillo central es la calle: estanterias a los lados (piezas de
     // `fondo`). Por el: etiquetas de precio que crecen (agacharse), carritos que
@@ -5416,8 +5456,10 @@ export function createWorld(scene) {
     const fm = factorMetro(), ni = NIEBLA_INTERIOR[tipoInterior()];
     if (fm > 0 && ni) scene.fog.color.lerp(ni.color, fm);
     scene.fog.near = 130 + ((ni ? ni.near : 130) - 130) * fm; scene.fog.far = 285 + ((ni ? ni.far : 285) - 285) * fm;
-    if (haloMat) haloMat.uniforms.fuerza.value = Math.max(fuerzaHalos(), fm);
-    if (horizonte) horizonte.mostrar(fm < 0.5);
+    // (08/11: el circuito de Indianápolis es al aire libre: ni halos ni se quita el horizonte.)
+    const aire = nivel && nivel.interior && nivel.interior.aire;
+    if (haloMat) haloMat.uniforms.fuerza.value = Math.max(fuerzaHalos(), aire ? 0 : fm);
+    if (horizonte) horizonte.mostrar(aire || fm < 0.5);
     scene.background.copy(scene.fog.color);
     const zoneNow = currentZoneName(totalScrolled);
     if (zoneNow !== lastZoneName) {
