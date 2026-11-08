@@ -415,8 +415,11 @@ const CALLES = [
     // Un momento cada 20 s más o menos (ver «Los momentos» en world.js); el
     // largo del nivel no cambia.
     tramos: [
-      [0, 90, "calma", { titulo: "pennsylvania" }],
-      [90, 330, "comitiva", { titulo: "comitiva" }],
+      [0, 40, "calma", { titulo: "pennsylvania" }],
+      // 07/11: el momento estrella: dentro del Capitolio (donde se jura el
+      // cargo) y de ahi, por Pennsylvania Avenue, la comitiva. Las piezas, en `fondo`.
+      [40, 208, "capitolio", { titulo: "capitolio" }],
+      [208, 330, "comitiva", { titulo: "comitiva" }],
       [330, 480, "mixto", { densidad: 0.5, momento: "gorras", titulo: "gorras" }],
       [480, 640, "rampa", { titulo: "rampa" }],
       [640, 800, "alfombra", { titulo: "alfombra" }],
@@ -435,6 +438,8 @@ const CALLES = [
       [3070, 3270, "sprint", { titulo: "sprint_dc" }],
     ],
     control: 1612, caja: 1150,
+    // 07/11: el Capitolio por dentro (la rotonda es mas ancha que la calle: sin edificios).
+    interior: { rango: [40, 208], tipo: "capitolio", sinEdificios: true },
     // (La primera, despues de la rampa: en la alfombra la cortaba.)
     chapas: [[610, "arco"], [1100, "bus"], [2751, "carril"]],
     hitos: ["archivos_portico", "fbi", "irs", "correos_torre", "willard", "tesoro"],
@@ -469,6 +474,11 @@ const CALLES = [
     // Al final de la avenida: el Tesoro a la izquierda y la Casa Blanca al fondo.
     fondo: [
       { pieza: "tesoro", d: 3110, lado: -1 },
+      { pieza: "capitolio_fachada", d: 40, cruza: true },
+      ...[50, 80].map((d) => ({ pieza: "capitolio_pasillo", d, cruza: true })),
+      { pieza: "capitolio_rotonda", d: 110, cruza: true },
+      ...[140, 170].map((d) => ({ pieza: "capitolio_pasillo", d, cruza: true })),
+      { pieza: "capitolio_salida", d: 200, cruza: true },
       { pieza: "casa_blanca_final", d: 3340, centro: true },
     ],
     // Mobiliario de la acera (este si se repite: farolas y arboles, como en la calle de verdad).
@@ -515,6 +525,7 @@ export const ANCHO = {
   // 07/11: el metro de Nueva York
   metro_boca: 8, metro_tunel: 24, metro_estacion: 30, metro_salida: 8,
   banderas_arco: 2, casino_entrada: 8, casino_sala: 30, casino_salida: 8,
+  capitolio_fachada: 10, capitolio_pasillo: 30, capitolio_rotonda: 30, capitolio_salida: 8,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

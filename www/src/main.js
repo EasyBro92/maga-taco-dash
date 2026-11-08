@@ -105,6 +105,7 @@ const canvas = document.getElementById("game");
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: quality.antialias });
+  renderer.localClippingEnabled = true;   // 08/11: el corte de la calle en los interiores (world.js)
 } catch (e) {
   reportError("No se pudo crear el WebGLRenderer", { stack: e.stack });
   showWebglError();

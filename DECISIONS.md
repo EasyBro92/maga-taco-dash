@@ -1363,3 +1363,37 @@ oscura, el casino va más claro que la calle de noche: brillo 61-67 dentro,
 78-94 fuera.
 
 Probado con el piloto: sin choques, la luz cambia del todo y caen 44 fichas.
+
+### Washington: dentro del Capitolio (40–208 m)
+
+Ocupa el principio del nivel, antes de la comitiva: la investidura es en el
+Capitolio y de ahí se baja por Pennsylvania Avenue.
+- **La fachada este (40):** de lado a lado de la calle, con las columnas a los
+  lados de la puerta, el frontón y «UNITED STATES CAPITOL».
+- **Por dentro:**
+  - El Salón de las Estatuas: suelo de mármol, la alfombra roja por el
+    centro, estatuas de bronce y de mármol, cuadros y lámparas de araña.
+  - La gran rotonda (110–140): sala redonda más alta, con cuadros enormes,
+    estatuas alrededor y el medallón dorado en el suelo.
+  - Otro tramo de pasillo.
+  - La salida oeste a la avenida (200).
+- **Por la alfombra:**
+  - cordones de terciopelo que se saltan (a veces de lado a lado, con el arco
+    de tacos);
+  - guardias;
+  - la prensa;
+  - el dron de la tele;
+  - turistas en Segway que cruzan.
+- La rotonda es más ancha que la calle: en ese trozo no se ponen los
+  edificios (`interior.sinEdificios`).
+- La cúpula no está: con la cámara del juego quedaba siempre por encima de lo
+  que se ve, y pesaba mucho para el móvil.
+
+**El asfalto que se transparentaba (para todos los interiores).** El asfalto,
+las aceras y las rayas llevan un ajuste para verse siempre bien
+(polygonOffset). Por eso asomaban por debajo del suelo del metro, del casino y
+del Capitolio, como una franja oscura. Ahora dos planos de corte quitan la
+calle entre la entrada y la salida de cada interior (`actualizarCorte`), y
+dentro tampoco se ponen pasos de cebra ni charcos.
+
+Probado con el piloto: Nueva York, Las Vegas y Washington enteros, sin choques.

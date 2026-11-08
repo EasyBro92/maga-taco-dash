@@ -257,12 +257,175 @@ def casino_salida():
     texto(oro_v(), 'THANK YOU', 0, D / 2 - 0.75, TECHO_V - 0.5, tam=0.6, prof=0.03)
 
 
+# ================================================================ Washington
+PARED_C = 8.3
+TECHO_C = 11.0
+def marmol_c():   return mat_bloques('marmol_capitolio', 0xf1ece0, 0xe2dccd, ancho=1.8, alto=1.8, grosor=0.012, variacion=1.02)
+def suelo_c():    return mat_bloques('suelo_capitolio', 0xe9e1cf, 0xcfc4ad, ancho=1.5, alto=1.5, grosor=0.02, variacion=1.03)
+def crema():      return mat('crema_capitolio', 0xf3ead6, 0.5)
+def piedra_c():   return mat_bloques('piedra_capitolio', 0xf2efe8, 0xe0dcd2, ancho=1.6, alto=0.6, grosor=0.012, variacion=1.02)
+def bronce_c():   return mat('bronce_capitolio', 0x6a4a2a, 0.35)
+def alfombra_c(): return mat('alfombra_capitolio', 0xa8182c, 0.6)
+def lampara_c():  return luz('lampara_capitolio', 0xfff0d0, 1.5)
+
+def estatua(x, y, s=1.0, bronce=True, mira=0.0):
+    """Una estatua en su pedestal (de bronce o de mármol)."""
+    m = bronce_c() if bronce else mat('marmol_estatua', 0xf6f3ec, 0.4)
+    caja(mat('pedestal', 0xd8d0c0, 0.5), x, y, 0, 1.1 * s, 1.1 * s, 1.3 * s)
+    cil(m, x, y, 1.3 * s, 0.32 * s, 1.5 * s, 10, r2=0.26 * s)
+    esfera(m, x, y, 3.0 * s, 0.22 * s, 2)
+    caja(m, x, y, 2.45 * s, 0.9 * s, 0.3 * s, 0.25 * s, giro=mira)
+
+def cuadro(x, y, z, w, h, color, lado):
+    """Un cuadro enorme con marco dorado en una pared lateral (lado: hacia donde mira)."""
+    caja(oro(), x, y, z - 0.15, 0.08, w + 0.3, h + 0.3)
+    caja(mat('lienzo_%x' % color, color, 0.7), x + lado * 0.05, y, z, 0.04, w, h)
+
+def arana(x, y, z, techo=TECHO_C):
+    cil(oro(), x, y, z + 0.6, 0.03, techo - z - 0.6, 6)
+    cil(oro(), x, y, z + 0.4, 0.7, 0.06, 16)
+    for k in range(8):
+        a = k * math.pi / 4
+        esfera(lampara_c(), x + math.cos(a) * 0.62, y + math.sin(a) * 0.62, z + 0.52, 0.08, 1)
+    esfera(mat('cristal_arana', 0xf4f0ff, 0.1), x, y, z + 0.2, 0.3, 2, esc=(1, 1, 1.3))
+
+def capitolio_pasillo():
+    """Un trozo de 30 m del Capitolio por dentro (el Salón de las Estatuas):
+    suelo de mármol, la alfombra roja por el centro, paredes crema con
+    pilastras, estatuas de bronce y de mármol, cuadros y lámparas."""
+    L = 30.0
+    W = PARED_C
+    caja(suelo_c(), 0, 0, 0, W * 2, L, 0.09)
+    caja(alfombra_c(), 0, 0, 0.09, 2.6, L, 0.01)
+    for s in (-1, 1):
+        caja(marmol_c(), s * (W + 0.1), 0, 0, 0.2, L, TECHO_C)
+        for y in (-11.25, -3.75, 3.75, 11.25):
+            caja(crema(), s * (W - 0.2), y, 0, 0.4, 0.8, TECHO_C)
+            caja(oro(), s * (W - 0.35), y, TECHO_C - 0.9, 0.1, 0.9, 0.4)
+        for y, c in ((-7.5, 0x4a6a8a), (7.5, 0x8a5a3a)):
+            cuadro(s * (W - 0.1), y, 3.2, 5.0, 3.4, c, -s)
+        for y in (-11.25, 0.0, 11.25):
+            estatua(s * 6.6, y, 1.0, bronce=(y != 0.0))
+        caja(oro(), s * (W - 0.05), 0, 7.6, 0.1, L, 0.2)
+    caja(crema(), 0, 0, TECHO_C, W * 2 + 0.4, L, 0.4)
+    for y in (-11.25, -3.75, 3.75, 11.25):
+        caja(oro(), 0, y, TECHO_C - 0.3, W * 2, 0.4, 0.3)
+    for y in (-7.5, 7.5):
+        arana(0, y, 8.6)
+
+def capitolio_rotonda():
+    """La gran rotonda: una sala redonda (radio 13), más alta que los
+    pasillos, con cuadros enormes, estatuas alrededor y una estrella dorada en
+    el suelo."""
+    L, R = 30.0, 13.0
+    W = PARED_C
+    caja(suelo_c(), 0, 0, 0, 2 * R + 1, L, 0.09)
+    caja(alfombra_c(), 0, 0, 0.09, 2.6, L, 0.01)
+    # El medallón del centro: aros de mármol dorado y crema (la estrella plana salía oscura).
+    cil(mat('medallon_oro', 0xd8b868, 0.4), 0, 0, 0.09, 5.2, 0.012, 32)
+    cil(mat('medallon_crema', 0xf2e8d2, 0.5), 0, 0, 0.1, 4.4, 0.012, 32)
+    cil(mat('medallon_oro', 0xd8b868, 0.4), 0, 0, 0.11, 1.6, 0.012, 24)
+    # El muro redondo (sin los huecos de los pasillos) y los pasillos hasta él.
+    n = 48
+    for i in range(n):
+        a = (i + 0.5) * 2 * math.pi / n
+        x, y = math.sin(a) * R, math.cos(a) * R
+        if abs(x) < W + 0.5 and abs(y) > 8:
+            continue
+        caja(marmol_c(), x, y, 0, 2 * math.pi * R / n + 0.05, 0.4, 14.0, giro=-a)
+    y0 = math.sqrt(R * R - W * W)
+    for s in (-1, 1):
+        for sy in (-1, 1):
+            caja(marmol_c(), s * (W + 0.1), sy * (y0 + (L / 2 - y0) / 2), 0, 0.2, L / 2 - y0 + 0.4, TECHO_C)
+        caja(crema(), s * (W + (R - W) / 2), 0, TECHO_C, R - W + 1, L, 0.3)
+    # Cuadros enormes y estatuas alrededor.
+    for k, c in enumerate((0x6a5a3a, 0x4a5a7a, 0x7a4a3a, 0x5a6a4a)):
+        a = math.pi / 2 + (k - 1.5) * 0.42
+        for s in (-1, 1):
+            x, y = s * math.sin(a) * (R - 0.3), math.cos(a) * (R - 0.3)
+            caja(oro(), x, y, 2.5, 3.6, 0.08, 2.6, giro=-s * a)
+            caja(mat('lienzo_r%d' % k, c, 0.7), x * 0.99, y * 0.99, 2.65, 3.3, 0.04, 2.3, giro=-s * a)
+    for k in range(6):
+        a = math.pi / 2 + (k - 2.5) * 0.36
+        for s in (-1, 1):
+            estatua(s * math.sin(a) * (R - 2.2), math.cos(a) * (R - 2.2), 1.05, bronce=(k % 2 == 0))
+    # El techo de la rotonda y las lámparas. (La cúpula no: con la cámara del
+    # juego queda siempre por encima de lo que se ve, y pesa mucho para el móvil.)
+    caja(crema(), 0, 0, 14.0, 2 * R + 1, L, 0.4)
+    for k in range(8):
+        a = k * math.pi / 4
+        esfera(lampara_c(), math.sin(a) * (R - 0.8), math.cos(a) * (R - 0.8), 12.5, 0.15, 1)
+    for x in (-2.2, 2.2):
+        arana(x, 0, 9.2, techo=14.0)
+
+def capitolio_fachada():
+    """La fachada este del Capitolio de lado a lado de la calle: mármol
+    blanco, columnas a los lados de la puerta, el frontón encima y las
+    grandes puertas de bronce abiertas. Por dentro, 10 m de vestíbulo."""
+    D = 10.0
+    y0 = -D / 2
+    W = 11.75
+    piedra = piedra_c()
+    for s in (-1, 1):
+        caja(piedra, s * (4.6 + (W - 4.6) / 2), y0 + 0.8, 0, W - 4.6, 1.6, 18)
+    caja(piedra, 0, y0 + 0.8, TECHO_C, 9.2, 1.6, 7)
+    # Las columnas delante (fuera de los carriles), el entablamento y el frontón.
+    for x in (5.3, 7.1, 8.9, 10.7):
+        for s in (-1, 1):
+            cil(blanco(), s * x, y0 - 1.6, 0.6, 0.42, 11.6, 16)
+            caja(blanco(), s * x, y0 - 1.6, 0, 1.1, 1.1, 0.6)
+            caja(blanco(), s * x, y0 - 1.6, 12.2, 1.0, 1.0, 0.5)
+    caja(blanco(), 0, y0 - 1.0, 12.7, W * 2, 2.6, 1.4)
+    fronton(blanco(), 0, y0 - 2.2, 14.1, W * 2 - 1, 4.2, 2.4)
+    # Las puertas de bronce, abiertas hacia dentro.
+    for s in (-1, 1):
+        caja(bronce_c(), s * 4.3, y0 + 2.6, 0, 0.15, 4.4, 9.5, giro=s * 0.15)
+    caja(oro(), 0, y0 - 0.05, TECHO_C - 0.6, 9.4, 0.2, 0.6)
+    texto(oro(), 'UNITED STATES CAPITOL', 0, y0 - 2.3, 13.4, tam=0.75, prof=0.04)
+    # Por dentro: el vestíbulo.
+    caja(suelo_c(), 0, 1.0, 0, 9.2, D - 2.0, 0.09)
+    caja(alfombra_c(), 0, 1.0, 0.09, 2.6, D - 2.0, 0.01)
+    for s in (-1, 1):
+        caja(marmol_c(), s * 4.75, 1.0, 0, 0.3, D - 2.0, TECHO_C)
+    caja(crema(), 0, 1.0, TECHO_C, 9.8, D - 2.0, 0.4)
+    arana(0, 1.5, 8.6)
+
+def capitolio_salida():
+    """La salida oeste: el marco de mármol por dentro, con la luz de fuera."""
+    D = 8.0
+    caja(suelo_c(), 0, 0, 0, 9.2, D, 0.09)
+    caja(alfombra_c(), 0, 0, 0.09, 2.6, D, 0.01)
+    for s in (-1, 1):
+        caja(marmol_c(), s * 4.75, 0, 0, 0.3, D, TECHO_C)
+        caja(blanco(), s * 4.3, D / 2 - 0.4, 0, 0.6, 0.6, TECHO_C)
+        caja(marmol_c(), s * 6.5, -D / 2 + 0.15, 0, 3.6, 0.3, TECHO_C)
+    caja(crema(), 0, 0, TECHO_C, 9.8, D, 0.4)
+    caja(blanco(), 0, D / 2 - 0.4, TECHO_C - 1.0, 9.2, 0.6, 1.0)
+
+def cordon():
+    """Cordón de terciopelo rojo entre dos postes de latón (como en los
+    museos): se salta."""
+    laton = mat('laton', 0xd8b050, 0.25)
+    rojo_t = mat('terciopelo', 0xa01828, 0.6)
+    for x in (-0.85, 0.85):
+        caja(laton, x, 0.3, 0, 0.36, 0.36, 0.05)
+        cil(laton, x, 0.3, 0.05, 0.05, 0.85, 10)
+        esfera(laton, x, 0.3, 0.95, 0.08, 1)
+    rama(rojo_t, (-0.85, 0.3, 0.85), (0, 0.3, 0.63), 0.05, 0.05, 6)
+    rama(rojo_t, (0, 0.3, 0.63), (0.85, 0.3, 0.85), 0.05, 0.05, 6)
+
+
 PIEZAS = {
     'banderas_arco':   (banderas_arco,   'findlay',    dict(lado=1024, bisel=0.0)),
     'carroza_desfile': (carroza_desfile, 'obstaculos', dict(lado=1024)),
     'casino_entrada':  (casino_entrada,  'vegas',      dict(lado=1024, bisel=0.0)),
     'casino_sala':     (casino_sala,     'vegas',      dict(lado=2048, bisel=0.0, segmentos=2)),
     'casino_salida':   (casino_salida,   'vegas',      dict(lado=512, bisel=0.0)),
+    'capitolio_fachada': (capitolio_fachada, 'washington', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'capitolio_pasillo': (capitolio_pasillo, 'washington', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'capitolio_rotonda': (capitolio_rotonda, 'washington', dict(lado=2048, bisel=0.0, segmentos=2)),
+    'capitolio_salida': (capitolio_salida, 'washington', dict(lado=1024, bisel=0.0, segmentos=2)),
+    'cordon': (cordon, 'obstaculos', dict(lado=256, bisel=0.0)),
 }
 
 correr(PIEZAS)

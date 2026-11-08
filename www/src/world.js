@@ -466,7 +466,21 @@ export function createWorld(scene) {
   // Lineas amarillas discontinuas de carretera, a ambos lados de la
   // alfombra roja, sobre el asfalto (pool reciclado igual que las franjas).
   const roadLines = [];
-  const roadLineMat = toon(GOLD);
+  // 08/11: dentro de un interior (el metro, el casino, el Capitolio) la calle
+  // no se dibuja: con su ajuste para verse siempre (polygonOffset), el asfalto
+  // y las rayas se transparentaban por debajo del suelo de dentro (una franja
+  // oscura). Dos planos de corte quitan lo que queda entre la entrada y la salida.
+  const corteA = new THREE.Plane(new THREE.Vector3(0, 0, 1), 1e6), corteB = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e6);
+  const CORTE = [corteA, corteB];
+  function cortable(mat) { mat.clippingPlanes = CORTE; mat.clipIntersection = true; return mat; }
+  function actualizarCorte() {
+    const r = nivel && nivel.interior && nivel.interior.rango;
+    if (!r) { corteA.constant = 1e6; corteB.constant = 1e6; return; }
+    // Se quita z entre zB (la salida) y zA (la entrada): z = totalScrolled - d.
+    corteA.constant = -(totalScrolled - r[0]);
+    corteB.constant = totalScrolled - r[1];
+  }
+  const roadLineMat = cortable(toon(GOLD));
   // 23/10: tramos de 3 seguidos (la misma separacion con que se ponen):
   // linea continua. Discontinua, a 25 u/s, parpadeaba unas 8 veces por
   // segundo y era una de las cosas que mareaban.
@@ -485,12 +499,12 @@ export function createWorld(scene) {
   // Acera de hormigon a ambos lados, entre la calzada y donde estan los
   // props (antes el suelo era una sola superficie sin ninguna referencia).
   const concreteTex = makeSidewalkTexture() || makeConcreteTexture();
-  const sidewalkMat = toon(BIOME_COLORS.city.sidewalk, concreteTex ? { map: concreteTex, shininess: 12 } : null);
+  const sidewalkMat = cortable(toon(BIOME_COLORS.city.sidewalk, concreteTex ? { map: concreteTex, shininess: 12 } : null));
   const texturasSuelo = [asphaltTex, dirtTex, pavingTex, grassTex, concreteTex];
   sidewalkMat.polygonOffset = true;
   sidewalkMat.polygonOffsetFactor = -1;
   sidewalkMat.polygonOffsetUnits = -2;
-  const curbMat = toon(0xfff6e0);
+  const curbMat = cortable(toon(0xfff6e0));
   for (const side of [-1, 1]) {
     const sidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 400), sidewalkMat);
     sidewalk.rotation.x = -Math.PI / 2;
@@ -513,7 +527,7 @@ export function createWorld(scene) {
   // -- parpadeaban entre si (z-fighting), que en pantalla se ve como si el
   // suelo fuera medio transparente y marea. El offset las ordena en el
   // rasterizador sin depender de la distancia.
-  const carpetMat = toon(BIOME_COLORS.city.road, asphaltTex ? { map: asphaltTex, shininess: 20 } : null);
+  const carpetMat = cortable(toon(BIOME_COLORS.city.road, asphaltTex ? { map: asphaltTex, shininess: 20 } : null));
   carpetMat.polygonOffset = true;
   carpetMat.polygonOffsetFactor = -2;
   carpetMat.polygonOffsetUnits = -4;
@@ -529,7 +543,7 @@ export function createWorld(scene) {
   // (alfombra roja), no tienen sentido sobre una pista de tierra, y eran la
   // "linea" que seguia viendose ahi aunque ya se ocultaran las rayas de
   // carril y las lineas de autopista.
-  const goldMat = toon(GOLD);
+  const goldMat = cortable(toon(GOLD));
   const goldTrims = [];
   for (const side of [-1, 1]) {
     const trim = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 400), goldMat);
@@ -543,7 +557,7 @@ export function createWorld(scene) {
   // borde, la pista y la arena se funden y se pierde la nocion de carril.
   const dirtBerms = [];
   for (const side of [-1, 1]) {
-    const berm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 400), toon(0x7d5433));
+    const berm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 400), cortable(toon(0x7d5433)));
     berm.position.set(side * (LANE_WIDTH * 1.5 + 0.22), 0.05, -150);
     berm.visible = false;
     group.add(berm);
@@ -575,7 +589,7 @@ export function createWorld(scene) {
   // Rayas de carril continuas y de un blanco suave (23/10): las amarillas
   // discontinuas pasaban a 10 por segundo como una luz estroboscopica.
   const stripeGeo = new THREE.BoxGeometry(0.1, 0.02, 3.02);
-  const stripeMat = sobreCalzada(toon(0xeae6dc));
+  const stripeMat = cortable(sobreCalzada(toon(0xeae6dc)));
   // 27/10: dos rayas largas en vez de ~190 trocitos de 3 (eran casi 200
   // llamadas de dibujo). Como son continuas, no hace falta moverlas: solo se
   // recortan donde acaba la calle del nivel.
@@ -1773,6 +1787,9 @@ export function createWorld(scene) {
       const p = calle[siguientePieza++];
       if (p.tipo) {
         // Del suelo: paso de cebra, tapa de alcantarilla, parche, mancha o charco (no son modelos).
+        // (08/11: dentro de un interior, no: tambien se transparentaban.)
+        const ri = nivel.interior && nivel.interior.rango;
+        if (ri && p.d > ri[0] - 6 && p.d < ri[1] + 6) continue;
         const m = p.tipo === "cebra" ? hacerCebra() : p.tipo === "tapa" ? hacerTapa() : hacerMarca(p);
         m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
         if (p.tipo === "cebra") apuntarCruce(m);
@@ -1788,6 +1805,10 @@ export function createWorld(scene) {
         calleViva.push({ mesh: a, fin: 20 });
         continue;
       }
+      // 07/11: donde hay un interior que pide la calle vacia (la rotonda del
+      // Capitolio es mas ancha que la calle), los edificios no se ponen.
+      const r = nivel.interior && nivel.interior.sinEdificios && nivel.interior.rango;
+      if (r && !p.cruza && !p.centro && p.d < r[1] && p.d + (p.ancho || 20) > r[0]) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
       const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, { ...nivel.kit, ...p.opciones }) : modelo(clave);
@@ -2443,6 +2464,8 @@ export function createWorld(scene) {
     cartel_metro: { choque: "high", medio: 0.3, alto: 2.2 },
     // 07/11: Findlay, la carroza del desfile del tunel de banderas (blender/estrellas.py).
     carroza_desfile: { choque: "bus", techo: 1.4, rampa: 2.4, largo: 9.5 },
+    // 07/11: Washington, el cordon de terciopelo del Capitolio (se salta).
+    cordon: { choque: "low", medio: 0.4, alto: 1.0 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4361,6 +4384,27 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 8 === 2 && i === 4);
     },
+    // ---- 07/11: Washington, dentro del Capitolio (momento estrella) ----
+    // El vestibulo, el Salon de las Estatuas, la rotonda bajo la cupula y la
+    // salida (piezas de `fondo`). Por la alfombra roja: cordones de terciopelo
+    // que se saltan (a veces de lado a lado, con el arco de tacos), guardias,
+    // la prensa, el dron de la tele y turistas en Segway que cruzan.
+    capitolio(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 6 === 4 && libres.length === 3 && obstaclePools.cordon) {
+        for (const l of LANES) obst(l, "low", z, d, ["cordon"]);
+        arcoDeTacos(1, z);
+        return;
+      }
+      const L = { low: ["cordon", "microfonos"], high: ["dron_tele"], full: ["guardaespaldas", "agentes", "segway"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "full", "high", "low"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 8 === 2 && i === 4);
+    },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
     jefe_paso(z, d, t, k) {
       if (k % 2 === 1) return;
@@ -5085,6 +5129,7 @@ export function createWorld(scene) {
     animarCalle(dt, dz);
 
     totalScrolled += dz;
+    actualizarCorte();
     // El suelo avanza de verdad: calzada, aceras y suelo eran laminas quietas
     // y solo pasaban las rayas. Cada textura se desplaza lo mismo que la pista
     // (el plano mide 400 y la textura se repite repeat.y veces en el).
