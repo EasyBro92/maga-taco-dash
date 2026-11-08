@@ -480,6 +480,9 @@ export function createWorld(scene) {
     corteA.constant = -(totalScrolled - r[0]);
     corteB.constant = totalScrolled - r[1];
   }
+  // (08/11: tambien el suelo de alrededor: en el cañon de Phoenix, bajo el
+  // puente tiene que verse el precipicio. Los interiores ponen su propio suelo.)
+  cortable(groundMat);
   const roadLineMat = cortable(toon(GOLD));
   // 23/10: tramos de 3 seguidos (la misma separacion con que se ponen):
   // linea continua. Discontinua, a 25 u/s, parpadeaba unas 8 veces por
@@ -2470,6 +2473,10 @@ export function createWorld(scene) {
     vaca_mantequilla: { choque: "full", medio: 1.3, alto: 2.5, centro: -1.3 },
     // 08/11: la caja de aranceles que lanza el dragon (rueda como los dados; se salta).
     caja_arancel: { choque: "low", medio: 0.5, alto: 0.95, mueve: 4 },
+    // 08/11: Phoenix, el puente del cañon: el agujero de tablones rotos (se
+    // salta) y la vagoneta de mano que viene por la via.
+    tablones_rotos: { choque: "low", medio: 0.9, alto: 0.3, centro: -0.9 },
+    vagoneta: { choque: "full", medio: 1.2, alto: 1.6, centro: -1.2, mueve: 6 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4456,6 +4463,31 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 08/11: Phoenix, el puente sobre el cañon (momento estrella) ----
+    // Se sale de la ciudad entre paredes de roca roja, se cruza el puente de
+    // madera del tren (con el precipicio a los lados) y se vuelve. En el puente:
+    // tablones rotos que se saltan, rodadoras, carteles y la vagoneta de mano que
+    // viene de frente por la via del centro; entre las rocas, cactus y vaqueros.
+    canon(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const enPuente = t.puente && d > t.puente[0] + 4 && d < t.puente[1] - 4;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (enPuente && (k / 2) % 5 === 3 && obstaclePools.vagoneta && libres.length === 3 && cocheCabe(1, z, TIPOS.vagoneta.mueve)) {
+        spawnObstacle(1, "full", z, "vagoneta");
+        busCarril = 1; busFilas = 1;
+        for (const l of [0, 2]) for (let i = 0; i < 3; i++) spawnTaco(l, z - 1 - i * 1.4, 0.9);
+        return;
+      }
+      const L = enPuente
+        ? { low: ["tablones_rotos", "tablones_rotos", "rodadora"], high: ["cartel_ruta"], full: ["vaquero"] }
+        : { low: ["calavera", "serpiente"], high: ["cartel_ruta"], full: ["saguaro", "vaquero"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["low", "low", "full", "high"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
+    },
     // El jefe de paso: solo tacos en culebra; los barriles los tira el (main.js lo llama).
     jefe_paso(z, d, t, k) {
       if (k % 2 === 1) return;
@@ -4486,6 +4518,8 @@ export function createWorld(scene) {
     metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
     casino: { color: new THREE.Color(0x6a3a58), near: 60, far: 210 },
     capitolio: { color: new THREE.Color(0xd9cdb6), near: 60, far: 210 },
+    // (El cañon de Phoenix: polvo anaranjado y lejos, para que se vea lo hondo que es.)
+    canon: { color: new THREE.Color(0xc98a5e), near: 150, far: 310 },
   };
   function tipoInterior() { return (nivel && nivel.interior && nivel.interior.tipo) || null; }
   function metroEn(dist) { const m = nivel && nivel.interior && nivel.interior.rango; return !!m && dist > m[0] - 2 && dist < m[1] + 2; }

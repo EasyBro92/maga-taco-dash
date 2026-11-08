@@ -209,8 +209,10 @@ const CALLES = [
       [440, 520, "festin", { potenciador: "boost", titulo: "festin" }],
       [520, 720, "autobuses", { titulo: "autobuses" }],
       [720, 860, "jefe_paso", { titulo: "jefe_paso" }],
-      [860, 1060, "vallas", { high: ["arco_neon", "pinata"], titulo: "neones" }],
-      [1060, 1220, "suave", { densidad: 0.55, momento: "vehiculo", vehiculo: "carrito_golf", titulo: "sube_golf" }],
+      // 08/11: el momento estrella: el puente sobre el cañon (en lugar de los
+      // neones). El cañon, en `fondo`; la calle se corta (`interior`).
+      [860, 1130, "canon", { puente: [920, 1070], titulo: "canon" }],
+      [1130, 1220, "suave", { densidad: 0.55, momento: "vehiculo", vehiculo: "carrito_golf", titulo: "sube_golf" }],
       [1220, 1400, "desfile_cruza", { cruzan: ["vaquero"], titulo: "cruzan_vaqueros" }],
       [1400, 1830, "persecucion", { titulo: "caza_brujas" }],
       [1830, 1970, "sprint", { titulo: "sprint_diner" }],
@@ -231,7 +233,13 @@ const CALLES = [
       ...cuadras(4), ["museo_heard", 1], ["kit", 2], 14,
       ...cuadras(2), ["kit", 2],
     ],
-    fondo: [{ pieza: "diner_final", d: 2045, centro: true }],
+    fondo: [{ pieza: "diner_final", d: 2045, centro: true },
+      ...[860, 890].map((d) => ({ pieza: "canon_corte", d, cruza: true })),
+      ...[920, 950, 980, 1010, 1040].map((d) => ({ pieza: "canon_puente", d, cruza: true })),
+      ...[1070, 1100].map((d) => ({ pieza: "canon_corte", d, cruza: true }))],
+    // 08/11: el cañon: sin calle, sin edificios y sin lo de las aceras (como los
+    // interiores, pero sin cambiar la luz).
+    interior: { rango: [860, 1130], tipo: "canon", sinEdificios: true },
     final: "parada", parada: 3.2,
     acera: ["phoenix/palmera", "phoenix/saguaro_maceta"],
   },
@@ -533,6 +541,7 @@ export const ANCHO = {
   banderas_arco: 2, casino_entrada: 8, casino_sala: 30, casino_salida: 8,
   capitolio_fachada: 10, capitolio_pasillo: 30, capitolio_rotonda: 30, capitolio_salida: 8,
   feria_entrada: 4, feria_puestos: 30, feria_puestos_b: 30, feria_noria: 2,
+  canon_corte: 30, canon_puente: 30,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,

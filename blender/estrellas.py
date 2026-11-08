@@ -587,6 +587,108 @@ def caja_arancel():
     estrella(mat('estrella_china', 0xf2c230, 0.4), 0.33, -0.462, 0.35, 0.06, 0.01)
 
 
+# ================================================================ Phoenix
+def arenisca():  return mat_franjas('arenisca', 0xb8542e, 0xa4482a, 7, eje='Z', z0=-50, alto=80)
+def tierra_c():  return mat('tierra_canon', 0xc89a6a, 0.9)
+def madera_p():  return mat('madera_puente', 0x8a6a48, 0.8)
+def viga_p():    return mat('viga_puente', 0x6a5038, 0.8)
+def acero_p():   return mat('rail_puente', 0xa8adb3, 0.3)
+
+def peñasco(x, y, z, sx, sy, sz):
+    esfera(mat('roca_suelta', 0xa65232, 0.9), x, y, z, 1.0, 1, esc=(sx, sy, sz))
+
+def pared_roca(s, L, x0, alto0, z0=0.0):
+    """Una pared de roca roja a un lado (s), de x0 hacia fuera, en trozos de
+    distinta altura (los estratos van en el material, en bandas anchas)."""
+    for k, (dy, h, dx) in enumerate(((-L / 3, alto0, 0.0), (0.0, alto0 + 7, 0.8), (L / 3, alto0 - 4, -0.6))):
+        caja(arenisca(), s * (x0 + dx + 9), dy, z0, 18, L / 3 + 0.2, h - z0)
+        caja(mat('roca_cima', 0xc8683a, 0.9), s * (x0 + dx + 9.5), dy, h, 17, L / 3 - 0.4, 0.8)
+
+def canon_corte():
+    """30 m de la salida de la ciudad: el camino de tierra entre paredes de
+    roca roja altas, con piedras sueltas y algún cactus."""
+    L = 30.0
+    caja(tierra_c(), 0, 0, 0, 9.4, L, 0.06)
+    # La pared de la otra orilla, bajando hasta el río: al llegar al final del
+    # puente, se ve el borde del cañón (sin ella, por debajo se veía el cielo).
+    # (En los trozos de antes del puente queda escondida bajo el camino.)
+    caja(arenisca(), 0, -L / 2 + 1.0, -46.5, 62.0, 2.0, 46.5)
+    caja(mat('suelo_roca', 0xb27048, 0.9), 0, 0, -0.6, 62.0, L, 0.6)
+    for s in (-1, 1):
+        caja(mat('suelo_roca', 0xb27048, 0.9), s * 7.6, 0, 0, 6.0, L, 0.05)
+        pared_roca(s, L, 10.5, 26)
+        peñasco(s * 8.2, -9.0, 0.3, 1.6, 1.2, 0.9)
+        peñasco(s * 9.0, 7.0, 0.4, 1.2, 1.8, 1.1)
+        # Un saguaro.
+        verde_c = mat('cactus_c', 0x4f7a3a, 0.7)
+        cil(verde_c, s * 7.0, 2.0 * s, 0, 0.32, 4.2, 10)
+        rama(verde_c, (s * 7.0, 2.0 * s, 2.0), (s * 7.9, 2.0 * s, 2.6), 0.2, 0.2, 8)
+        cil(verde_c, s * 7.9, 2.0 * s, 2.5, 0.2, 1.3, 8)
+
+def canon_puente():
+    """30 m del puente de madera del tren sobre el cañón: tablones (a lo
+    largo: las rayas cruzadas parpadean), la vía en el carril del centro,
+    barandillas bajas, la estructura de caballete hasta el fondo y, a los
+    lados, el precipicio con las paredes del cañón y el río abajo."""
+    L = 30.0
+    FONDO = -46.0
+    caja(madera_p(), 0, 0, -0.32, 7.6, L, 0.36)
+    for x in (-3.0, -1.5, 1.5, 3.0):
+        caja(mat('junta_tablon', 0x76583c, 0.8), x, 0, 0.035, 0.05, L, 0.01)
+    for x in (-0.72, 0.72):
+        caja(acero_p(), x, 0, 0.04, 0.08, L, 0.1)
+    for s in (-1, 1):
+        caja(viga_p(), s * 3.85, 0, -0.5, 0.25, L, 0.6)
+        for k in range(10):
+            caja(viga_p(), s * 3.75, -L / 2 + 1.5 + k * 3, 0, 0.14, 0.14, 1.0)
+        caja(viga_p(), s * 3.75, 0, 0.95, 0.12, L, 0.12)
+    # El caballete: pilares hasta el fondo y cruces.
+    for yb in (-12.0, -6.0, 0.0, 6.0, 12.0):
+        for x in (-3.4, -1.2, 1.2, 3.4):
+            caja(viga_p(), x, yb, FONDO, 0.35, 0.35, -FONDO - 0.6)
+        caja(viga_p(), 0, yb, -1.0, 8.4, 0.3, 0.35)
+        for zc in (-10.0, -22.0, -34.0):
+            rama(viga_p(), (-3.6, yb, zc), (3.6, yb, zc - 8), 0.1, 0.1, 6)
+            rama(viga_p(), (3.6, yb, zc), (-3.6, yb, zc - 8), 0.1, 0.1, 6)
+            caja(viga_p(), 0, yb, zc, 7.6, 0.25, 0.25)
+    # El fondo del cañón: el río y las orillas de piedra.
+    caja(mat('rio_canon', 0x3a8a86, 0.2), 0, 0, FONDO - 0.2, 18.0, L, 0.2)
+    for s in (-1, 1):
+        caja(mat('orilla_canon', 0x9a5a3a, 0.9), s * 19.0, 0, FONDO - 0.6, 20.0, L, 1.2)
+        # Las paredes del cañón, desde el fondo hasta más arriba del puente.
+        # (Hasta la altura del puente: por encima se ve el otro lado y la caída.)
+        pared_roca(s, L, 30.0, -1.0, z0=FONDO)
+        # Una meseta de roca a lo lejos.
+        caja(arenisca(), s * 62.0, -4.0 * s, FONDO, 18.0, 14.0, 70.0)
+        caja(mat('roca_cima', 0xc8683a, 0.9), s * 62.0, -4.0 * s, FONDO + 70.0, 17.0, 13.0, 0.8)
+        peñasco(s * 12.0, -6.0, FONDO + 1.0, 3.0, 2.4, 1.6)
+
+def tablones_rotos():
+    """Un agujero en el puente: tablones rotos y astillados alrededor de un
+    hueco oscuro. Se salta."""
+    caja(mat('hueco_puente', 0x1c120c, 0.95), 0, 0.9, 0.0, 1.9, 1.6, 0.06)
+    astilla = mat('astilla', 0x9a7a52, 0.8)
+    for x, y, g in ((-0.7, 0.1, 0.3), (0.5, 0.15, -0.2), (-0.2, 1.7, 0.4), (0.75, 1.65, -0.3)):
+        caja(astilla, x, y, 0.06, 0.5, 0.18, 0.05, giro=g, inclina=0.25)
+    for x in (-0.95, 0.95):
+        caja(astilla, x, 0.9, 0.0, 0.12, 1.7, 0.1)
+
+def vagoneta():
+    """La vagoneta de mano de la vía: plataforma sobre ruedas y la palanca de
+    balancín. Viene de frente por el carril del centro."""
+    madera = mat('madera_vagoneta', 0x7a5034, 0.7)
+    hierro = mat('hierro_vagoneta', 0x3a3c42, 0.5)
+    caja(madera, 0, 1.2, 0.35, 1.7, 2.4, 0.18)
+    for x in (-0.72, 0.72):
+        for y in (0.4, 2.0):
+            cil(hierro, x, y, 0.25, 0.25, 0.08, 14, eje='X')
+    caja(hierro, 0, 1.2, 0.53, 0.3, 0.3, 0.9)
+    caja(madera, 0, 1.2, 1.4, 0.2, 2.2, 0.12, inclina=0.18)
+    for y in (0.15, 2.25):
+        caja(madera, 0, y, 1.35, 1.2, 0.12, 0.1)
+    caja(mat('farol_vagoneta', 0xffd890, 0.3), 0, -0.02, 0.6, 0.25, 0.04, 0.25)
+
+
 PIEZAS = {
     'banderas_arco':   (banderas_arco,   'findlay',    dict(lado=1024, bisel=0.0)),
     'carroza_desfile': (carroza_desfile, 'obstaculos', dict(lado=1024)),
@@ -605,6 +707,10 @@ PIEZAS = {
     'vaca_mantequilla': (vaca_mantequilla, 'obstaculos', dict(lado=512, bisel=0.0)),
     'arancel': (arancel, 'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
     'caja_arancel': (caja_arancel, 'obstaculos', dict(lado=256, bisel=0.0)),
+    'canon_corte': (canon_corte, 'phoenix', dict(lado=1024, bisel=0.0)),
+    'canon_puente': (canon_puente, 'phoenix', dict(lado=1024, bisel=0.0, suelo=False)),
+    'tablones_rotos': (tablones_rotos, 'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
+    'vagoneta': (vagoneta, 'obstaculos', dict(lado=256, bisel=0.0)),
 }
 
 correr(PIEZAS)

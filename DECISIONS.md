@@ -1440,3 +1440,33 @@ salían chiles en más de la mitad de las filas. Ahora:
 Medido con un jugador que va a por los aranceles, cogiendo unos 14-17 de
 23-26: los jefes duran de 22 a 30 s y lanzan de 15 a 21 ataques. El piloto no
 choca con ninguno.
+
+### Phoenix: el puente sobre el cañón (860–1130 m)
+
+Ocupa el sitio de los neones.
+- **El recorrido:**
+  - se sale de la ciudad por un camino de tierra entre paredes de roca roja,
+    con cactus, calaveras y piedras sueltas;
+  - se cruza un puente de madera del tren de 150 m (920–1070), con la vía en
+    el carril del centro, barandillas bajas y el caballete de madera hasta el
+    río, 46 m más abajo;
+  - a los lados quedan el cañón y unas mesetas de roca a lo lejos;
+  - se vuelve por otro tramo de roca.
+- **En el puente:**
+  - agujeros de tablones rotos que se saltan;
+  - rodadoras;
+  - carteles;
+  - vaqueros;
+  - la vagoneta de mano que viene de frente por la vía.
+- **Por dentro funciona como los interiores**, pero sin cambiar la luz
+  (`interior.tipo = "canon"`):
+  - no hay calle, edificios ni lo de las aceras;
+  - el suelo de alrededor también se corta: bajo el puente se ve el precipicio;
+  - la niebla es de polvo anaranjado y lejana.
+- **La pared de la otra orilla:** el camino después del puente tiene una
+  pared de roca que baja hasta el río. Sin ella, por debajo del borde se veía
+  el cielo.
+
+Con esto están los seis momentos estrella. Probado con el piloto en los seis
+niveles: se completan todos. Los choques que quedan son los de siempre: el
+desfile de vaqueros, la fila de la chapa de Findlay y la cosechadora.
