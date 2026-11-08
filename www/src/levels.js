@@ -619,9 +619,11 @@ const CALLES = [
       40, ["kit", 2], 14, ...cuadras(1), ["statehouse_in", 1], ["kit", 2], 14, ...cuadras(6),
       ["jw_marriott", 1], ["kit", 2], 14, ...cuadras(19),
     ],
-    fondo: [{ pieza: "meta_indy", d: 2915, centro: true },
-      { pieza: "circuito_entrada", d: 2343, cruza: true },
-      ...Array.from({ length: 19 }, (_, i) => ({ pieza: "grada", d: 2360 + i * 30, cruza: true }))],
+    // (Las piezas que cruzan empiezan en \`d\`: las gradas, de 2340 a 2910, justo
+    // donde se quita la calle y hasta la meta, sin huecos ni suelos encima de otros.)
+    fondo: [{ pieza: "meta_indy", d: 2910, centro: true },
+      { pieza: "circuito_entrada", d: 2336, cruza: true },
+      ...Array.from({ length: 19 }, (_, i) => ({ pieza: "grada", d: 2340 + i * 30, cruza: true }))],
     // Se para encima de la franja de ladrillos, y la camara mira la Pagoda.
     final: "parada", parada: -0.5,
     camaraFinal: { pos: [2.4, 2.8, 10], mira: [-9, 9, -16] },
