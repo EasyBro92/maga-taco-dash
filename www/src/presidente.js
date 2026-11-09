@@ -121,6 +121,94 @@ export function crearPresidente(gltf) {
     return tex;
   }
 
+  // ---- 09/11: el chaleco de Milwaukee ----
+  // Se pinta en la textura: los pixeles del traje (azul marino) de la parte
+  // del cuerpo que mueven los huesos de la espalda (el tronco: ni brazos ni
+  // piernas) pasan a naranja reflectante, con dos bandas plateadas a lo
+  // ancho. La camisa y la corbata se quedan como estan (asi parece abierto).
+  let sinChaleco = null, mascaraChaleco = null;
+  // De la cintura a los hombros, en las medidas de la malla de Meshy (1,9 de alto).
+  const Y_CINTURA = 0.86, Y_HOMBRO = 1.39;
+  function hacerMascaraChaleco(W, H) {
+    const geo = malla.geometry, pos = geo.attributes.position, uv = geo.attributes.uv;
+    const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight, bones = malla.skeleton && malla.skeleton.bones;
+    if (!uv || !si || !sw || !bones) return null;
+    const n = pos.count, tronco = new Uint8Array(n);
+    let y0 = Infinity, y1 = -Infinity;
+    for (let i = 0; i < n; i++) {
+      let mj = 0, mw = -1;
+      for (let j = 0; j < 4; j++) { const w = sw.getComponent(i, j); if (w > mw) { mw = w; mj = si.getComponent(i, j); } }
+      // (Los huesos de Meshy no sirven para esto: la tripa va con los
+      // muslos. El tronco se busca por donde esta: de la cintura a los
+      // hombros y sin salirse a los lados, menos manos, antebrazos y cabeza.)
+      const b = bones[mj], y = pos.getY(i);
+      if (b && !/hand|forearm|head|neck|foot|toe/i.test(b.name) && y > Y_CINTURA && y < Y_HOMBRO && Math.abs(pos.getX(i)) < 0.27) tronco[i] = 1;
+    }
+    y0 = Y_CINTURA; y1 = Y_HOMBRO;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const x = c.getContext("2d");
+    const idx = geo.index, tris = idx ? idx.count / 3 : n / 3;
+    const flip = mapaOriginal.flipY;
+    x.lineWidth = 2; x.lineJoin = "round";
+    for (let tr = 0; tr < tris; tr++) {
+      const a = idx ? idx.getX(tr * 3) : tr * 3, b = idx ? idx.getX(tr * 3 + 1) : tr * 3 + 1, cc = idx ? idx.getX(tr * 3 + 2) : tr * 3 + 2;
+      if (!tronco[a] || !tronco[b] || !tronco[cc]) continue;
+      // La altura va en el rojo, como un degradado dentro de cada triangulo
+      // (asi las bandas plateadas salen rectas y no a dientes).
+      const P = [a, b, cc].map((v) => [uv.getX(v) * W, (flip ? 1 - uv.getY(v) : uv.getY(v)) * H, (pos.getY(v) - y0) / (y1 - y0)]);
+      const [[xa, ya, ha], [xb, yb, hb], [xc, yc, hc]] = P;
+      const det = (xb - xa) * (yc - ya) - (yb - ya) * (xc - xa);
+      const al = det ? ((hb - ha) * (yc - ya) - (yb - ya) * (hc - ha)) / det : 0;
+      const be = det ? ((xb - xa) * (hc - ha) - (hb - ha) * (xc - xa)) / det : 0;
+      const g2 = al * al + be * be;
+      if (g2 > 1e-12) {
+        const p0 = [xa - ha * al / g2, ya - ha * be / g2], p1 = [xa + (1 - ha) * al / g2, ya + (1 - ha) * be / g2];
+        const gr = x.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+        gr.addColorStop(0, "rgb(0,255,0)"); gr.addColorStop(1, "rgb(255,255,0)");
+        x.fillStyle = x.strokeStyle = gr;
+      } else {
+        const r = Math.round(Math.min(1, Math.max(0, (ha + hb + hc) / 3)) * 255);
+        x.fillStyle = x.strokeStyle = `rgb(${r},255,0)`;
+      }
+      x.beginPath();
+      for (const [px, py] of P) x.lineTo(px, py);
+      x.closePath(); x.fill(); x.stroke();
+    }
+    return x.getImageData(0, 0, W, H).data;
+  }
+  function texturaChaleco(base) {
+    const im = mapaOriginal.image, W = im.width, H = im.height;
+    if (!mascaraChaleco) mascaraChaleco = hacerMascaraChaleco(W, H);
+    if (!mascaraChaleco) return null;
+    const o = document.createElement("canvas"); o.width = W; o.height = H;
+    const ox = o.getContext("2d");
+    ox.drawImage(im, 0, 0);
+    const orig = ox.getImageData(0, 0, W, H).data;
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const x = c.getContext("2d");
+    x.drawImage(base.image, 0, 0);
+    const datos = x.getImageData(0, 0, W, H);
+    const d = datos.data, m = mascaraChaleco;
+    for (let i = 0; i < d.length; i += 4) {
+      if (m[i + 3] < 128 || m[i + 1] < 128) continue;
+      const r = orig[i], g = orig[i + 1], b = orig[i + 2];
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      // (el azul marino del traje, como en texturaTraje)
+      if (!(b === max && b - r > 18 && b - g > 6 && max < 170 && (max - min) / (max || 1) > 0.18)) continue;
+      const l = Math.min(1.5, (r * 0.3 + g * 0.5 + b * 0.2) / 70);
+      const f = m[i] / 255;
+      if ((f > 0.2 && f < 0.27) || (f > 0.5 && f < 0.57)) { const k = 150 + 80 * Math.min(1, l); d[i] = d[i + 1] = k; d[i + 2] = Math.min(255, k + 12); }
+      else { const k = 0.6 + 0.4 * l; d[i] = Math.min(255, 255 * k); d[i + 1] = Math.min(255, 118 * k); d[i + 2] = Math.min(255, 22 * k); }
+    }
+    x.putImageData(datos, 0, 0);
+    const tex = new THREE.CanvasTexture(c);
+    tex.flipY = mapaOriginal.flipY;
+    tex.colorSpace = mapaOriginal.colorSpace;
+    tex.wrapS = mapaOriginal.wrapS; tex.wrapT = mapaOriginal.wrapT;
+    tex.anisotropy = 4;
+    return tex;
+  }
+
   // Escudo (Orden Ejecutiva)
   const shield = new THREE.Mesh(
     new THREE.SphereGeometry(0.95, 16, 12),
@@ -339,7 +427,23 @@ export function crearPresidente(gltf) {
     },
     teñirTraje(color) {
       if (!mapaOriginal || !mapaOriginal.image) return;
+      sinChaleco = null;
       malla.material.map = color === null || color === undefined ? mapaOriginal : texturaTraje(color);
+      malla.material.needsUpdate = true;
+    },
+    // 09/11: Milwaukee: el chaleco reflectante naranja (con sus dos bandas
+    // plateadas) encima de la chaqueta, como el del camion de la basura.
+    setChaleco(on) {
+      if (!mapaOriginal || !mapaOriginal.image) return;
+      if (!on) {
+        if (sinChaleco) { malla.material.map = sinChaleco; malla.material.needsUpdate = true; sinChaleco = null; }
+        return;
+      }
+      if (sinChaleco) return;
+      const tex = texturaChaleco(malla.material.map);
+      if (!tex) return;
+      sinChaleco = malla.material.map;
+      malla.material.map = tex;
       malla.material.needsUpdate = true;
     },
 

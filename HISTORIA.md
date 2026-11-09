@@ -57,7 +57,7 @@ Jefe: **el Rey Pingüino**.
 | 9 | Indianápolis, Indiana | +11 | El circuito de las 500 millas: coches de carreras. *(hecho)* |
 | 10 | Detroit, Míchigan | +15 | Coches con aranceles. En el puente a Canadá, canadienses enfadados porque quiere hacerlos el estado 51: alces y sirope de arce. *(hecho)* |
 | 11 | Chicago, Illinois | +19 | La ciudad del viento: el viento le levanta el tupé. *(hecho)* |
-| 12 | Milwaukee, Wisconsin | +10 | Se sube a un camión de la basura con chaleco, como hizo de verdad. Quesos. |
+| 12 | Milwaukee, Wisconsin | +10 | Se sube a un camión de la basura con chaleco, como hizo de verdad. Quesos. *(hecho)* |
 | 13 | Minneapolis, Minnesota | +10 | Lagos helados y pistas de hockey de los canadienses. |
 | 14 | Monte Rushmore, Dakota del Sur | +3 | Quiere su cara en la montaña con los cuatro presidentes. El escultor dice que no… de momento. |
 | 15 | Fargo, Dakota del Norte | +3 | **Jefe.** El Rey Pingüino y su ejército vienen a cobrarle el arancel en plena nevada. Él gana poniéndole un arancel al hielo. |

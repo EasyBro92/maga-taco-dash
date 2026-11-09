@@ -246,6 +246,11 @@ const CANCIONES = {
     melodia: [67, null, 70, 72, null, 75, 72, 70, 67, null, null, 70, 72, null, null, null,
       72, null, 75, 77, null, 79, 77, 75, 72, null, 70, 67, 70, null, 67, null],
     timbre: "pluck" },
+  // Milwaukee (09/11): polka de Wisconsin, con acordeon y el bajo de umpa.
+  milwaukee: { bpm: 132, swing: 0.5, acordes: [C, G7, F, C], bateria: "country", bajo: "alterna",
+    melodia: [72, 71, 72, 76, 79, null, 76, null, 77, 76, 74, 71, 74, null, null, null,
+      72, 74, 76, 77, 79, null, 81, 79, 77, null, 76, 74, 72, null, null, null],
+    timbre: "acordeon" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,
@@ -357,6 +362,9 @@ function scheduleStep(t) {
   // Acordes de acompañamiento
   if (c.timbre === "banjo") {
     if (enCompas % 2 === 1) acorde.forEach((n, i) => nota(N(n), t + i * 0.012, 0.18, { tipo: "triangle", vol: 0.05 }));
+  } else if (c.timbre === "acordeon") {
+    // 09/11: el umpa de la polka: el acorde en cada contratiempo.
+    if (enCompas % 2 === 1) acorde.forEach((n) => nota(N(n), t, corchea * 0.7, { tipo: "sawtooth", vol: 0.02, filtro: 1600, ataque: 0.01 }));
   } else if (c.timbre === "metal") {
     if (enCompas === 0 || enCompas === 3 || enCompas === 6) acorde.forEach((n) => nota(N(n - 12), t, corchea * 1.4, { tipo: "sawtooth", vol: 0.025, filtro: 1400, ataque: 0.03 }));
   } else if (enCompas % 2 === 1) acorde.forEach((n) => nota(N(n - 12), t, corchea * 0.9, { tipo: "square", vol: 0.018, filtro: 2200 }));
@@ -367,6 +375,7 @@ function scheduleStep(t) {
     const largo = c.melodia[(paso + 1) % 32] === null ? corchea * 1.8 : corchea * 0.95;
     if (c.timbre === "metal") nota(N(m), t, largo, { tipo: "sawtooth", vol: 0.06, filtro: 2400, ataque: 0.025, vibrato: 0.006 });
     else if (c.timbre === "banjo") { nota(N(m), t, 0.25, { tipo: "triangle", vol: 0.1 }); nota(N(m + 12), t, 0.1, { tipo: "square", vol: 0.02, filtro: 3000 }); }
+    else if (c.timbre === "acordeon") { nota(N(m), t, largo, { tipo: "sawtooth", vol: 0.04, filtro: 2200, vibrato: 0.008 }); nota(N(m - 12), t, largo, { tipo: "square", vol: 0.015, filtro: 1800 }); }
     else nota(N(m), t, largo, { tipo: "square", vol: 0.04, filtro: 3200 });
   }
   stepIndex++;

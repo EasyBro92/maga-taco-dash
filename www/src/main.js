@@ -395,6 +395,11 @@ function aplicarLuzNivel(luz) {
     // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
     sun.color.set(0xfff4e8); sun.intensity = 1.15; sun.position.set(6, 6, -7);
     hemi.color.set(0xe2ecff); hemi.groundColor.set(0xb4bfcc);
+  } else if (luz === "dorada") {
+    // 09/11: Milwaukee, tarde dorada: el sol bajo por detras y a la derecha
+    // (el oeste), que pinta de oro las fachadas y el museo del fondo.
+    sun.color.set(0xffd9a0); sun.intensity = 1.25; sun.position.set(5, 6, 7);
+    hemi.color.set(0xffe8cc); hemi.groundColor.set(0x86705a);
   } else if (luz === "otono") {
     // 08/11: Chicago, mañana de otoño: sol claro y bajo por el este (a la izquierda).
     sun.color.set(0xfff0d8); sun.intensity = 1.2; sun.position.set(-6, 8, -5);
@@ -631,7 +636,9 @@ const NOMBRE_HITO = {
     spirit_detroit: "El Espíritu de Detroit", fox_theatre: "El teatro Fox",
     puno_joe_louis: "El puño de Joe Louis", guardian_building: "El Guardian Building",
     hancock: "El John Hancock", water_tower: "La Water Tower, la que aguantó el gran incendio",
-    tribune_tower: "La Tribune Tower", wrigley_building: "El Wrigley Building", trump_chicago: "La torre Trump" },
+    tribune_tower: "La Tribune Tower", wrigley_building: "El Wrigley Building", trump_chicago: "La torre Trump",
+    gesu_church: "La iglesia del Gesu", germania: "El Germania, el de los cascos de cobre",
+    pfister_hotel: "El hotel Pfister", city_hall_mke: "El Ayuntamiento de Milwaukee", us_bank_center: "El U.S. Bank Center, el más alto de Wisconsin" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -649,7 +656,9 @@ const NOMBRE_HITO = {
     spirit_detroit: "The Spirit of Detroit", fox_theatre: "The Fox Theatre",
     puno_joe_louis: "The Joe Louis Fist", guardian_building: "The Guardian Building",
     hancock: "The John Hancock Center", water_tower: "The Water Tower, which survived the Great Fire",
-    tribune_tower: "The Tribune Tower", wrigley_building: "The Wrigley Building", trump_chicago: "Trump Tower" },
+    tribune_tower: "The Tribune Tower", wrigley_building: "The Wrigley Building", trump_chicago: "Trump Tower",
+    gesu_church: "Gesu Church", germania: "The Germania Building, with its copper helmets",
+    pfister_hotel: "The Pfister Hotel", city_hall_mke: "Milwaukee City Hall", us_bank_center: "The U.S. Bank Center, the tallest in Wisconsin" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1161,6 +1170,7 @@ function resetRun(desde = 0) {
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   if (monturaCohete) monturaCohete.visible = false;
   quitarParaguas(); if (character.setViento) character.setViento(0);
+  if (character.setChaleco) character.setChaleco(false);
   world.setCielo(false);
   document.getElementById("bossBar").classList.add("hidden");
   if (!desde) misiones.empezarPartida();
@@ -2165,6 +2175,12 @@ function frame(dtFijo) {
       // 08/11: Chicago: en la ciudad del viento se le levanta el tupe.
       if (character.setViento) character.setViento(tramo.tipo === "viento" ? 1 : 0);
       if (tramo.tipo === "viento") setTimeout(() => { if (gameState === "playing") showBubble(t("tupeViento"), 1600); }, 1300);
+      // 09/11: Milwaukee: al subir al camion de la basura se pone el chaleco
+      // reflectante (y ya no se lo quita hasta la meta).
+      if (tramo.tipo === "basura" && character.setChaleco) {
+        character.setChaleco(true);
+        setTimeout(() => { if (gameState === "playing") showBubble(t("chalecoAviso"), 1800); }, 1500);
+      }
       // (El del primer tramo no: saldria encima del cartel del nivel.)
       const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");

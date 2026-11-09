@@ -1814,6 +1814,10 @@ export function createWorld(scene) {
       // blanquecina, el suelo y las aceras con nieve y el asfalto mojado.
       Object.assign(BIOME_COLORS.city, { sky: 0xe4eef8, skyTop: 0x6f9fd8, fog: 0xe6edf4, horizon: 0x9fb0c4, ground: 0xf0f4f8, sidewalk: 0xdde3ea, road: 0x50545e });
     }
+    if (luz === "dorada") {
+      // 09/11: Milwaukee, tarde dorada de otoño junto al lago.
+      Object.assign(BIOME_COLORS.city, { sky: 0xf0cfa0, skyTop: 0x3f78c8, fog: 0xecd0aa, horizon: 0xb09a80 });
+    }
     if (luz === "otono") {
       // 08/11: Chicago, mañana de otoño con viento: cielo azul limpio y frio.
       Object.assign(BIOME_COLORS.city, { sky: 0xcfe4f6, skyTop: 0x3a78d0, fog: 0xd4e3f0, horizon: 0x8a9cb4 });
@@ -2359,7 +2363,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -2838,6 +2842,18 @@ export function createWorld(scene) {
     papelera: { choque: "low", medio: 0.45, alto: 0.85, mueve: 5, rueda: true },
     carrito_perritos: { choque: "full", medio: 0.6, alto: 2.4, centro: 0 },
     cajas_pizza: { choque: "low", medio: 0.45, alto: 1.0 },
+    // 09/11: Milwaukee (blender/milwaukee.py): la rueda de queso que viene
+    // rodando, las cuñas de queso, el cubo y las bolsas de basura (saltar), el
+    // cartel de queso colgado (agacharse), el aficionado con el sombrero de
+    // queso que cruza, la moto que cambia de carril y el camion de la basura.
+    rueda_queso: { choque: "low", medio: 0.5, alto: 1.0, mueve: 5, rueda: true },
+    cuna_queso: { choque: "low", medio: 0.5, alto: 1.0 },
+    cubo_basura: { choque: "low", medio: 0.4, alto: 1.05 },
+    bolsas_basura: { choque: "low", medio: 0.4, alto: 0.9 },
+    cartel_queso: { choque: "high", medio: 0.3, alto: 2.4 },
+    fan_queso: { choque: "full", medio: 0.35, alto: 2.4, centro: 0, cruza: true },
+    moto_harley: { choque: "full", medio: 1.1, alto: 1.9, centro: -1.1, cambia: 0.72, intX: 0.14, intZ: 0.04 },
+    camion_basura: { choque: "full", medio: 4.3, alto: 3.7, centro: -4.3 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -2936,7 +2952,7 @@ export function createWorld(scene) {
     // 08/11 (2): el barril del Robot Burrito tiene el eje a 0,42 m del suelo y
     // giraba alrededor de la base: medio barril se metia en el suelo. Ahora
     // gira sobre su eje (EJE_ALTO: lo que hay que bajarlo dentro del giro).
-    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42, papelera: 0.42 };
+    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42, papelera: 0.42, rueda_queso: 0.5 };
     const EJE_ALTO = { barril: 0.42 };
     if (EJE_RUEDA[nombre] && g) {
       const r = new THREE.Group();
@@ -4948,6 +4964,22 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 09/11: Milwaukee, el camion de la basura (momento estrella) ----
+    // Se pone el chaleco y va de pie encima del camion de la basura (como
+    // aquella vez en Wisconsin): la calle esta llena de cubos y bolsas de
+    // basura y cada uno que arrolla da tacos. (Si no se sube, porque iba en el
+    // cohete, son cosas bajas que se saltan.) Siempre un carril libre con tacos.
+    basura(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const L = { low: ["cubo_basura", "cubo_basura", "bolsas_basura"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.6 ? 2 : 1);
+      bloq.forEach((l) => obst(l, "low", z, d, L.low));
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
+    },
     // ---- 08/11: Chicago, la ciudad del viento (momento estrella) ----
     // El viento del lago: paraguas dados la vuelta que cruzan volando,
     // periodicos a la altura de la cabeza (agacharse), papeleras que vienen
@@ -5309,6 +5341,8 @@ export function createWorld(scene) {
     taxi: { alto: 1.45, z: 1.6 }, limusina: { alto: 1.45, z: 2.4 }, descapotable: { alto: 0.75, z: 0.6 },
     carroza: { alto: 0.95, z: 1.0, gira: true }, tractor: { alto: 2.2, z: 1.4, gira: true }, carrito_golf: { alto: 0.37, z: 0.25 },
     carruaje: { alto: 1.05, z: 0.9 }, carro_clydesdale: { alto: 1.5, z: 0.3 },
+    // 09/11: Milwaukee: de pie encima de la cabina, agarrado a la baranda.
+    camion_basura: { alto: 2.78, z: 7.3 },
   };
   const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0 };
   function montarVehiculo(nombre, x) {
@@ -5571,6 +5605,27 @@ export function createWorld(scene) {
       a.position.set(0, 0.3, -18);
       a.traverse((o) => { if (o.isMesh) o.material = matEspejo(); });
       mesh.add(a);
+    }
+    // 09/11: Milwaukee: las alas del museo de Calatrava (la Burke Brise
+    // Soleil) van cerradas y se abren despacio al acercarse a la meta; luego
+    // se mecen muy poco, como un pajaro que respira (nada rapido).
+    if (p.pieza === "museo_calatrava" && hayModelo("milwaukee/ala_museo")) {
+      const museo = mesh, _w = new THREE.Vector3();
+      for (const s of [1, -1]) {
+        const ala = modelo("milwaukee/ala_museo");
+        ala.position.set(0, 25.0, -80);
+        if (s < 0) ala.rotation.y = Math.PI;
+        mesh.add(ala);
+        ala.traverse((o) => {
+          if (!o.isMesh) return;
+          o.onBeforeRender = () => {
+            museo.getWorldPosition(_w);
+            const k = 1 - THREE.MathUtils.smoothstep(-_w.z, 160, 600);
+            const t = performance.now() / 1000;
+            ala.rotation.z = -0.8 + 1.15 * k + Math.sin(t * 0.6) * 0.05 * k;
+          };
+        });
+      }
     }
   }
   // 08/11: el espejo de la Alubia de Chicago. Refleja un cielo, una ciudad y

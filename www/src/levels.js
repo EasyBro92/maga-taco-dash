@@ -772,6 +772,74 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/buzon", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco"],
   },
   {
+    // 09/11/2026: nivel 12: Milwaukee (blender/milwaukee.py). Isidro: «sigue
+    // creando mas estados, aplica tus propias recomendaciones». Se aplico lo
+    // recomendado: final delante del museo de arte de Calatrava (las alas
+    // blancas junto al lago, que se abren al llegar) y tarde dorada de otoño.
+    // Historia: «Se sube a un camion de la basura con chaleco, como hizo de
+    // verdad. Quesos». Momento estrella: el camion de la basura (se pone el
+    // chaleco y va de pie encima, arrollando cubos y bolsas).
+    id: "milwaukee", nombre: "Wisconsin Avenue", lugar: "Milwaukee, Wisconsin", listo: true,
+    zona: "city", carpeta: "milwaukee", luz: "dorada", semilla: 1846,
+    largo: 3050, linea: 11.5, velMax: 24.5,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 12, estilo: "milwaukee" },
+    horizonte: "milwaukee",
+    obstaculos: { low: ["cuna_queso", "bolsas_basura", "conos", "cubo_basura"], high: ["cartel_queso", "andamio", "semaforo"],
+      full: ["moto_harley", "taxi", "furgoneta", "camion_basura"] },
+    publico: { personas: ["fan", "turista", "ejecutivo", "senora", "granjero", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "milwaukee" }],
+      [70, 280, "vallas", { low: ["cuna_queso", "bolsas_basura"], high: ["cartel_queso"], titulo: "quesos" }],
+      [280, 430, "rampa", { titulo: "rampa" }],
+      [430, 600, "slalom", { full: ["moto_harley", "moto_harley", "taxi"], titulo: "motos" }],
+      [600, 740, "calma"],
+      // El puente sobre el rio Milwaukee (pieza de `fondo` e `interior`).
+      [740, 830, "mixto", { densidad: 0.35, titulo: "rio_mke" }],
+      [830, 900, "calma"],
+      [900, 1060, "premios", { titulo: "premios" }],
+      [1060, 1220, "desfile_cruza", { cruzan: ["fan_queso"], titulo: "cheeseheads" }],
+      [1220, 1420, "vallas", { low: ["rueda_queso", "cuna_queso"], high: ["cartel_queso"], momento: "gorras", titulo: "gorras" }],
+      [1420, 1490, "calma"],
+      // El momento estrella: el camion de la basura.
+      [1490, 1920, "basura", { momento: "vehiculo", vehiculo: "camion_basura", titulo: "basura" }],
+      [1920, 1990, "calma"],
+      [1990, 2150, "jefe_paso", { titulo: "jefe_paso" }],
+      [2150, 2310, "convoy", { titulo: "convoy" }],
+      [2310, 2470, "vallas", { low: ["rueda_queso", "cubo_basura"], high: ["cartel_queso"], titulo: "quesos_ruedan" }],
+      [2470, 2650, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2650, 2800, "alfombra", { titulo: "alfombra" }],
+      [2800, 2890, "mixto", { densidad: 0.55, titulo: "" }],
+      [2890, 3040, "sprint", { titulo: "sprint_museo" }],
+    ],
+    control: 1450, caja: 950,
+    // El puente sobre el rio: se quita la calle y el suelo (abajo, el rio).
+    interior: { rango: [760, 810], tipo: "puente", aire: true, sinEdificios: [756, 814] },
+    sinEdificios: [3065, 3900],
+    chapas: [[1000, "arco"], [1300, "carril"], [2550, "bus"]],
+    hitos: ["gesu_church", "germania", "pfister_hotel", "city_hall_mke", "us_bank_center"],
+    meta: "museo_calatrava", metaNombre: { es: "el museo de las alas", en: "the winged museum" },
+    extras: ["ala_museo"],
+    // Por Wisconsin Avenue hacia el este (el lago al fondo): el norte a la
+    // izquierda. El Gesu junto a Marquette, el Germania antes del rio; pasado
+    // el rio, el Ayuntamiento, el Pfister y, ya cerca del lago, el U.S. Bank.
+    izquierda: [
+      40, ["kit", 2], 14, ["gesu_church", 1], ["kit", 2], 14, ...cuadras(3), ["kit", 1], ["germania", 1], 14,
+      ["kit", 3], 14, ...cuadras(2), ["city_hall_mke", 1], 14, ...cuadras(20),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(4), ["kit", 2], 14, ["kit", 3], 14, ...cuadras(1), ["kit", 2], ["pfister_hotel", 1], 14,
+      ...cuadras(13), ["us_bank_center", 1], 14, ...cuadras(5),
+    ],
+    // El puente (de 760 a 810) y la meta al fondo.
+    fondo: [{ pieza: "museo_calatrava", d: 3100, centro: true },
+      { pieza: "puente_mke", d: 760, cruza: true }],
+    final: "parada", parada: 14,
+    // Se para al pie de la plaza: el delante saludando y las alas detras.
+    camaraFinal: { pos: [4, 3.2, 10], mira: [0, 12, -90] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/hidrante"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -872,14 +940,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -925,6 +993,8 @@ export const ANCHO = {
   puente_amb_0: 30, puente_amb_1: 30, puente_amb_2: 30, puente_amb_3: 30, puente_amb_4: 30, puente_amb_5: 30,
   // 08/11: Chicago
   hancock: 40, water_tower: 30, tribune_tower: 30, wrigley_building: 30, trump_chicago: 40, puente_dusable: 60, cloud_gate: 100,
+  // 09/11: Milwaukee
+  gesu_church: 30, germania: 42, city_hall_mke: 42, pfister_hotel: 32, us_bank_center: 40, puente_mke: 50, museo_calatrava: 100,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
@@ -1132,7 +1202,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

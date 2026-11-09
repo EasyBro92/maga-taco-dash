@@ -256,6 +256,28 @@ const DIBUJOS = {
     x.restore();
   },
 
+  // 09/11: la cuña de queso de Milwaukee (Wisconsin, el estado del queso).
+  queso(x) {
+    x.save();
+    x.translate(128, 150); x.rotate(-0.08);
+    x.lineJoin = "round";
+    const cuna = () => {
+      x.beginPath();
+      x.moveTo(-96, 50); x.lineTo(96, 50); x.lineTo(96, -20); x.lineTo(-96, -60); x.closePath();
+    };
+    const tapa = () => { x.beginPath(); x.moveTo(-96, -60); x.lineTo(96, -20); x.lineTo(60, -62); x.closePath(); };
+    x.lineWidth = 24; x.strokeStyle = "#fff"; cuna(); x.stroke(); tapa(); x.stroke();
+    cuna(); x.fillStyle = "#f2b632"; x.fill();
+    tapa(); x.fillStyle = "#f8d468"; x.fill();
+    // Los agujeros.
+    x.fillStyle = "#c8901e";
+    for (const [px, py, rr] of [[-50, 0, 14], [10, 20, 18], [55, -2, 10], [-10, -22, 9], [70, 30, 8], [-70, 30, 9]]) { x.beginPath(); x.arc(px, py, rr, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "#e09a22";
+    for (const [px, py, rr] of [[20, -42, 7], [50, -40, 5]]) { x.beginPath(); x.ellipse(px, py, rr * 1.4, rr * 0.6, 0, 0, Math.PI * 2); x.fill(); }
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; cuna(); x.stroke(); tapa(); x.stroke();
+    x.restore();
+  },
+
   // 08/11: la botella de sirope de arce de Detroit (los canadienses del puente).
   sirope(x) {
     x.save();

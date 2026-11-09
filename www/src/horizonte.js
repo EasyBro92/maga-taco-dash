@@ -216,6 +216,40 @@ const SITIOS = {
     x.fillRect(wx + 24, SUELO - 345, 24, 40);
     x.fillRect(wx + 30, SUELO - 400, 4, 58); x.fillRect(wx + 40, SUELO - 390, 4, 48);
   },
+  // 09/11: Milwaukee: al fondo de Wisconsin Avenue, el lago Michigan (liso
+  // hasta el horizonte, con veleros); a la derecha el puente Hoan (el arco
+  // sobre la bocana del puerto) y, a la izquierda, el faro de North Point.
+  milwaukee(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 5, ANCHO, 7);
+    for (let i = 0; i < 14; i++) {
+      const bx = 60 + i * 290 + r() * 120;
+      x.fillStyle = c.vela;
+      x.beginPath(); x.moveTo(bx, SUELO - 5); x.lineTo(bx, SUELO - 20); x.lineTo(bx + 9, SUELO - 5); x.fill();
+    }
+    // El puente Hoan: el tablero largo y el arco atirantado de en medio.
+    x.fillStyle = c.puente;
+    x.fillRect(2200, SUELO - 40, 520, 5);
+    for (let k = 0; k <= 10; k++) x.fillRect(2200 + k * 52, SUELO - 40, 4, 40);
+    x.lineWidth = 5; x.strokeStyle = c.puente;
+    x.beginPath(); x.moveTo(2380, SUELO - 38); x.quadraticCurveTo(2460, SUELO - 120, 2540, SUELO - 38); x.stroke();
+    x.lineWidth = 1.5;
+    for (let k = 1; k < 8; k++) { const px = 2380 + k * 20; x.beginPath(); x.moveTo(px, SUELO - 40); x.lineTo(px, SUELO - 38 - 82 * Math.sin(Math.PI * k / 8)); x.stroke(); }
+    // El faro de North Point, blanco con la linterna.
+    x.fillStyle = c.vela;
+    x.fillRect(1500, SUELO - 70, 10, 66);
+    x.fillStyle = c.puente;
+    x.fillRect(1497, SUELO - 80, 16, 10);
+    // Algunas torres de la ciudad, a los lados.
+    for (const [x0, x1] of [[3000, 3500], [600, 900]]) {
+      let cx = x0;
+      while (cx < x1) {
+        const w = 22 + r() * 40, h = 30 + r() * 90;
+        torre(x, [cx, 0], w, h, c.lejos, r, r() < 0.2 ? "antena" : null);
+        cx += w * 0.9;
+      }
+    }
+  },
   // 08/11: Kansas (Wichita): la llanura de trigo hasta el horizonte, elevadores
   // de grano y, a lo lejos, el embudo del tornado bajo la nube (quieto: el que
   // gira es el de cerca, en la calle).
@@ -304,7 +338,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -318,6 +352,7 @@ function colores(sitio, cielo, niebla) {
     lago: mezcla(0x2f6fa8, cielo, 0.35),
     vela: mezcla(0xffffff, cielo, 0.2),
     willis: mezcla(0x2a2e36, cielo, 0.3),
+    puente: mezcla(0xa8b4bc, cielo, 0.4),
   };
 }
 

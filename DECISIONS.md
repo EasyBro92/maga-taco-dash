@@ -1789,3 +1789,27 @@ las personas en general?».
     despacio, ondear su bandera o cartel, o seguirle con la mirada;
   - los que pasean andan de verdad, con las piernas y el brazo contrario;
   - nadie de pie en medio de una calle lateral.
+
+## Nivel 12: Milwaukee (09/11/2026)
+
+Isidro: «sigue creando más estados, aplica tus propias recomendaciones sin
+preguntas». Se aplicó lo recomendado: final delante del museo de arte de
+Calatrava, junto al lago, y tarde dorada de otoño (luz `dorada`).
+
+- `blender/milwaukee.py`. Wisconsin Avenue hacia el lago (3.050 m):
+  - la iglesia del Gesu, el Germania (los cascos de cobre), el Ayuntamiento
+    (la torre del reloj), el hotel Pfister y el U.S. Bank Center;
+  - el puente sobre el río Milwaukee con almacenes de ladrillo, una barca y
+    la estatua del Fonz en el paseo del río;
+  - la meta: el puente blanco con el mástil inclinado y el museo; sus alas
+    (`ala_museo`, dos piezas) van cerradas y se abren despacio al llegar.
+- Obstáculos nuevos: rueda de queso que rueda, cuñas de queso, cubo y bolsas
+  de basura, cartel de queso colgado, aficionado con sombrero de queso que
+  cruza, moto que cambia de carril y el camión de la basura.
+- Momento estrella «basura»: se pone el chaleco reflectante (naranja con dos
+  bandas plateadas, pintado en la textura del personaje: `setChaleco` en
+  presidente.js; la tripa se busca por la altura porque el esqueleto de Meshy
+  la pega a los muslos) y va de pie encima del camión arrollando cubos.
+  El chaleco se queda hasta la meta.
+- Ciudad «crema» (ladrillo color crema), polka con acordeón, horizonte del
+  lago con el puente Hoan y el faro, objeto: cuñas de queso.

@@ -77,6 +77,12 @@ const ESTILOS = {
     ladrillos: [0x9a4a36, 0x7a3a2e, 0xb8704f], piedras: [0xe6dcc6, 0xd8ccb0, 0xefe6d2, 0xf4f0e6, 0xc9b896], cristal: [0x9fb4c4, 0xb8c8d4, 0x8aa0b4],
     cornisas: ["cornisa_clasica", "cornisa_deco", "cornisa_simple"], remate: ["remate_antena", 0.15], toldos: [0x1f3a6a, 0xc8202e, 0x2d5a3a, 0x1d1f25],
     rotulos: ["DEEP DISH", "HOT DOGS", "BLUES", "JAZZ CLUB", "POPCORN", "STEAKHOUSE", "THEATRE", "RECORDS", "PIZZA", "BOOKS"] },
+  // Milwaukee, «la ciudad crema»: el ladrillo color crema de su arcilla, algo
+  // de ladrillo rojo, piedra y las tabernas y queserias de toda la vida.
+  milwaukee: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_frontones", "planta_miradores", "planta_lisa", "planta_cristal"],
+    ladrillos: [0xe2cfa4, 0xd8c294, 0xcdb688, 0xa8523a], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x9fb4c4, 0xb8c8d4],
+    cornisas: ["cornisa_clasica", "cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.1], toldos: [0x203a30, 0xffb612, 0xc8202e, 0x1f3a6a],
+    rotulos: ["CHEESE", "BRATWURST", "CUSTARD", "TAVERN", "POLKA HALL", "FISH FRY", "BREWERY", "SAUSAGE", "SUPPER CLUB", "BOWLING"] },
 };
 
 // Rotulo pintado: letras de color sobre fondo oscuro o claro.
