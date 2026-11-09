@@ -1813,3 +1813,17 @@ Calatrava, junto al lago, y tarde dorada de otoño (luz `dorada`).
   El chaleco se queda hasta la meta.
 - Ciudad «crema» (ladrillo color crema), polka con acordeón, horizonte del
   lago con el puente Hoan y el faro, objeto: cuñas de queso.
+
+## Los vehículos esperan aparcados (09/11/2026)
+
+Isidro: «a veces de golpe el personaje se sube a un coche, tractor o limusina,
+pero lo hace sin activar nada, ¿no sería mejor que fuera un elemento que
+encuentre en la partida y que ya está ahí, como esperando?». Hecho así:
+
+- Al principio de cada tramo de vehículo, el vehículo está aparcado en el
+  carril del medio, con una flecha amarilla que bota encima y una fila de
+  tacos que lleva hasta él.
+- Solo se sube quien pasa por su carril (también si se cambia a él cuando lo
+  tiene al lado): salta por encima de la parte de atrás y cae donde se pisa.
+- Quien va por otro carril pasa de largo y sigue el tramo a pie.
+- El chaleco de Milwaukee se pone al subir al camión, no al empezar el tramo.

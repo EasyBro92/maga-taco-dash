@@ -3407,7 +3407,7 @@ export function createWorld(scene) {
   // Altura del suelo bajo el jugador en un carril: la rampa y el techo del
   // autobus. `d` es cuanto se ha metido el jugador desde el pie de la rampa.
   function surfaceAt(x) {
-    let h = vehiculo.fase === 2 ? vehiculo.alto : 0;   // 06/11 (3): de pie en el vehiculo
+    let h = vehiculo.fase === 2 || vehiculo.fase === 1 ? vehiculo.alto : 0;   // 06/11 (3): de pie en el vehiculo
     for (const o of obstacles) {
       if ((o.type !== "bus" && o.type !== "rampa") || o.smashed) continue;
       if (Math.abs(x - LANE_X[o.lane]) > (o.type === "rampa" ? 1.1 : 0.85)) continue;
@@ -5344,10 +5344,52 @@ export function createWorld(scene) {
     // 09/11: Milwaukee: de pie encima de la cabina, agarrado a la baranda.
     camion_basura: { alto: 2.78, z: 7.3 },
   };
-  const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0 };
-  function montarVehiculo(nombre, x) {
+  // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
+  // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
+  // como esperando?». Antes llegaba por detras y le subia solo al empezar el
+  // tramo. Ahora espera aparcado al principio del tramo, en el carril del
+  // medio, con una flecha que bota encima y tacos que llevan a el: solo se
+  // sube quien pasa por su carril (fase 5: aparcado; 1: subiendo; 2: encima;
+  // 3: se va). Quien no pasa por el sigue a pie, como un tramo normal.
+  const vehiculo = { mesh: null, nombre: "", fase: 0, z: 14, x: 0, t: 0, alto: 0, meta: 0, vz: 0, d: 0, lane: 1, largo: 0, tope: 0, z0: 0, flecha: null };
+  function hacerFlecha() {
+    const g = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffd23a });
+    const punta = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.8, 20), mat);
+    punta.rotation.x = Math.PI; punta.position.y = 0.4;
+    const palo = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.7, 14), mat);
+    palo.position.y = 1.15;
+    const borde = new THREE.Mesh(new THREE.ConeGeometry(0.68, 0.98, 20), new THREE.MeshBasicMaterial({ color: 0x3a2a08, side: THREE.BackSide }));
+    borde.rotation.x = Math.PI; borde.position.y = 0.4;
+    g.add(punta, palo, borde);
+    g.scale.setScalar(1.3);
+    return g;
+  }
+  function aparcarVehiculo(nombre, lane, z) {
     const v = VEHICULOS[nombre];
     if (!v || !hayModelo("obstaculos/" + nombre)) return 0;
+    prepararVehiculo(nombre);
+    const caja = medidas("obstaculos/" + nombre).geometry.boundingBox;
+    Object.assign(vehiculo, { fase: 5, t: 0, d: totalScrolled - z, lane, x: LANE_X[lane], z, alto: v.alto, meta: v.z, vz: 0,
+      largo: caja.max.z - caja.min.z, tope: caja.max.y });
+    if (!vehiculo.flecha) vehiculo.flecha = hacerFlecha();
+    vehiculo.mesh.add(vehiculo.flecha);
+    vehiculo.flecha.position.set(0, vehiculo.tope + 0.9, -Math.min(vehiculo.largo / 2, Math.max(1, vehiculo.meta)));
+    vehiculo.flecha.visible = true;
+    vehiculo.mesh.visible = true;
+    vehiculo.mesh.position.set(vehiculo.x, 0, z);
+    return vehiculo.largo;
+  }
+  // El que espera aparcado (para que main.js mire si el jugador va a su carril).
+  function vehiculoEsperando() { return vehiculo.fase === 5 ? vehiculo : null; }
+  function subirVehiculo() {
+    if (vehiculo.fase !== 5) return 0;
+    Object.assign(vehiculo, { fase: 1, t: 0, z0: vehiculo.z });
+    if (vehiculo.flecha) vehiculo.flecha.visible = false;
+    return vehiculo.tope;
+  }
+  function prepararVehiculo(nombre) {
+    const v = VEHICULOS[nombre];
     if (vehiculo.nombre !== nombre) {
       if (vehiculo.mesh) group.remove(vehiculo.mesh);
       const m = modeloConContorno("obstaculos/" + nombre);
@@ -5361,18 +5403,25 @@ export function createWorld(scene) {
       vehiculo.mesh = g; vehiculo.nombre = nombre;
       group.add(g);
     }
-    Object.assign(vehiculo, { fase: 1, t: 0, z: 12, x, alto: v.alto, meta: v.z, vz: 0 });
-    vehiculo.mesh.visible = true;
-    return v.alto;
   }
   function bajarVehiculo() { if (vehiculo.fase) { vehiculo.fase = 3; vehiculo.vz = 0; } }
   function moverVehiculo(dt, x) {
     if (!vehiculo.fase || !vehiculo.mesh) return;
     vehiculo.t += dt;
+    if (vehiculo.fase === 5) {
+      // Aparcado: va con la calle. La flecha bota despacio encima.
+      vehiculo.z = totalScrolled - vehiculo.d;
+      if (vehiculo.flecha) vehiculo.flecha.position.y = vehiculo.tope + 0.9 + Math.sin(vehiculo.t * 4) * 0.25;
+      vehiculo.mesh.position.set(vehiculo.x, 0, vehiculo.z);
+      if (vehiculo.z - vehiculo.largo > 30) { vehiculo.fase = 0; vehiculo.mesh.visible = false; }
+      return;
+    }
     if (vehiculo.fase === 1) {
-      // Llega por detras mientras el salta, y se le mete debajo.
-      vehiculo.z += (vehiculo.meta - vehiculo.z) * Math.min(1, dt * 9);
-      if (vehiculo.t > 0.35) { vehiculo.fase = 2; vehiculo.z = vehiculo.meta; }
+      // Arranca al saltar el encima: primero va con el (despacio) y luego se
+      // le mete debajo hasta su sitio.
+      const s = Math.min(1, vehiculo.t / 0.6);
+      vehiculo.z = vehiculo.z0 + (vehiculo.meta - vehiculo.z0) * s * s * (3 - 2 * s);
+      if (s >= 1) { vehiculo.fase = 2; vehiculo.z = vehiculo.meta; }
     } else if (vehiculo.fase === 3) {
       // Se va calle abajo, cada vez mas rapido.
       vehiculo.vz += dt * 40;
@@ -5493,7 +5542,8 @@ export function createWorld(scene) {
   }
 
   // Una fila de la pista a la distancia `d` de la partida.
-  const SALIDA_LIMPIA_Z = -52;      // las primeras filas de cada salida, sin obstaculos
+  const SALIDA_LIMPIA_Z = -52;
+  let filasVehiculo = 0;      // las primeras filas de cada salida, sin obstaculos
   function generarFila(z) {
     const d = totalScrolled - z;
     if (nivel && d > nivel.largo - 30) return;
@@ -5518,8 +5568,18 @@ export function createWorld(scene) {
       const k = Math.round((d - t.desde) / ROW_SPACING);
       filaD = d; tacosFila = 0; maxFila = t.tipo === "festin" ? 2 : 1; carrilTacos = -1;
       respiro = d > ultimaCerrada && d - ultimaCerrada <= ROW_SPACING + 0.5;
-      (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
-      if (t.momento === "gorras") lanzarGorra(z, k);
+      // 09/11: las primeras filas del tramo del vehiculo: tacos que llevan a
+      // el, el vehiculo aparcado y su largo libre (nada en ningun carril).
+      let vh = false;
+      if (t.momento === "vehiculo" && USAR_BLENDER && VEHICULOS[t.vehiculo]) {
+        if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.6, 0.9); vh = true; }
+        else if (k === 2) { const L = aparcarVehiculo(t.vehiculo, 1, z); filasVehiculo = L ? Math.ceil((L + 4) / ROW_SPACING) : 0; vh = L > 0; }
+        else if (k <= 2 + filasVehiculo) vh = true;
+        if (vh) carrilOcupado = 1;
+      }
+      if (!vh) (PATRONES[t.tipo] || PATRONES.mixto)(z, d, t, k);
+      if (vh) { /* nada mas en estas filas */ }
+      else if (t.momento === "gorras") lanzarGorra(z, k);
       else if (t.momento === "reto") tacosReto(z);
       if (nivel && nivel.objeto && USAR_BLENDER) {
         const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && Math.abs(sd - d) <= ROW_SPACING / 2);
@@ -6375,5 +6435,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, montarVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
+    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
 }

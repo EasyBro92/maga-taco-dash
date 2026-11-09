@@ -1828,14 +1828,27 @@ function empezarMomento(tr) {
     persigueMomento = true; persigueLeft = 1e6;
     world.perseguir(true, false, tr.perseguidor || null);
     setTimeout(() => { if (gameState === "playing" && persigueMomento) showBubble(t("persigueAviso"), 1800, 2); }, 900);
-  } else if (tr.momento === "vehiculo" && rocketTimeLeft === 0 && world.montarVehiculo(tr.vehiculo, playerX)) {
-    montado = true;
-    saltar();
-    showBubble(t("subeAviso"), 1600, 2);
   } else if (tr.momento === "reto") {
     reto = { t: RETO_TIEMPO, n: 0, pintado: "" };
     document.getElementById("retoBar").classList.remove("hidden");
     pintarReto();
+  }
+}
+// Salta encima del vehiculo aparcado: lo bastante alto para pasar por encima
+// de la parte de atras (el camion de la basura es alto) y cae donde pisa.
+function subirAlVehiculo() {
+  const tope = world.subirVehiculo();
+  montado = true;
+  if (isSliding) { isSliding = false; character.setSlidePose(false); }
+  vy = Math.sqrt(2 * GRAVEDAD * Math.max(JUMP_HEIGHT, tope - py + 1.0));
+  enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0; gestoGuardado = null; gestoReloj = 0;
+  sndJump(); vibrate([20, 30, 40]); flashExpression("happy", 2);
+  showBubble(t("subeAviso"), 1600, 2);
+  // (09/11: en el camion de la basura se pone el chaleco al subir, y ya no se
+  // lo quita hasta la meta.)
+  if (tramoMostrado && tramoMostrado.tipo === "basura" && character.setChaleco) {
+    character.setChaleco(true);
+    setTimeout(() => { if (gameState === "playing") showBubble(t("chalecoAviso"), 1800); }, 1700);
   }
 }
 function terminarMomento(tr) {
@@ -2133,6 +2146,9 @@ function frame(dtFijo) {
     character.setLean((playerX - prevX) * 12 + tambaleo);
     if (Math.abs(playerX - targetX) < 0.15) carrilAntes = currentLane;
     world.moverPerseguidor(dt, playerX);
+    // 09/11: el vehiculo espera aparcado: se sube solo quien llega a su carril.
+    const ve = !montado && rocketTimeLeft === 0 && world.vehiculoEsperando();
+    if (ve && ve.z > -5 && ve.z - ve.largo < -0.5 && Math.abs(playerX - LANE_X[ve.lane]) < 0.9) subirAlVehiculo();
     world.moverVehiculo(dt, playerX);
 
     if (megaTimeLeft > 0) {
@@ -2177,10 +2193,6 @@ function frame(dtFijo) {
       if (tramo.tipo === "viento") setTimeout(() => { if (gameState === "playing") showBubble(t("tupeViento"), 1600); }, 1300);
       // 09/11: Milwaukee: al subir al camion de la basura se pone el chaleco
       // reflectante (y ya no se lo quita hasta la meta).
-      if (tramo.tipo === "basura" && character.setChaleco) {
-        character.setChaleco(true);
-        setTimeout(() => { if (gameState === "playing") showBubble(t("chalecoAviso"), 1800); }, 1500);
-      }
       // (El del primer tramo no: saldria encima del cartel del nivel.)
       const titulo = tramo.titulo && tramo.desde > 0 ? t("tr_" + tramo.titulo) : "";
       if (titulo) mostrarTramo(titulo, tramo.tipo === "sprint");
