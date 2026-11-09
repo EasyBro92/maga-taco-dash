@@ -20,6 +20,11 @@ sed "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VERSION\"/; s/andro
 
 cp -r ../www "$B/assets/www"
 rm -f "$B/assets/www/sw.js"          # dentro de la app no hace falta
+# 09/11: dentro solo van los modelos del arranque (con todo pesaba 39 MB y no
+# se podia mandar al movil); los de cada ciudad se bajan al entrar en el nivel.
+for d in "$B/assets/www/models"/*/; do
+  case "$(basename "$d")" in dc|ciudad|personaje|publico|obstaculos|pueblo|kit) ;; *) rm -rf "$d" ;; esac
+done
 # 09/11: las huellas de lo que trae el APK (asi no baja lo que ya tiene).
 node ../herramientas/huellas.mjs "$B/assets/www"
 
