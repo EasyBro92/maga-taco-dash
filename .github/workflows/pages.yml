@@ -25,6 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # 09/11: la lista de huellas, para que la app del movil solo baje lo que ha cambiado.
+      - run: node herramientas/huellas.mjs www
       - uses: actions/upload-pages-artifact@v3
         with:
           path: www

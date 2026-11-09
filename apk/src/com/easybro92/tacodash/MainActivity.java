@@ -9,6 +9,12 @@ package com.easybro92.tacodash;
 // solo si ha cambiado (ETag); lo nuevo se guarda en el movil. Sin internet
 // usa lo ultimo guardado y, si no hay nada, lo que trae el APK de fabrica.
 // El origen sigue siendo https://taco.dash/, asi que la partida se conserva.
+//
+// 09/11/2026: Isidro: «el juego tarda mucho en cargar al inicio». Preguntar
+// por cada archivo (unos 240, uno a uno) tardaba mucho con datos. Ahora, al
+// abrir, se baja una sola lista (huellas.json, la hace GitHub al publicar) y
+// solo se piden los archivos cuya huella no coincide con lo que ya hay en el
+// movil o en el APK. Sin lista (sin internet), como antes.
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -30,7 +36,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
   private static final String ORIGEN = "https://taco.dash/";
@@ -38,6 +46,10 @@ public class MainActivity extends Activity {
   // Si internet falla, se deja de intentar un rato (para no esperar en cada archivo).
   private static volatile long sinRedHasta = 0;
   private WebView web;
+  // Las huellas de GitHub (se piden al cargar index.html) y las que trae el APK.
+  private static final Object candado = new Object();
+  private static volatile Map<String, String> remotas = null;
+  private static Map<String, String> deFabrica = null;
 
   @Override
   protected void onCreate(Bundle guardado) {
@@ -61,6 +73,7 @@ public class MainActivity extends Activity {
         // El service worker de la web no sirve aqui (y romperia la carga).
         if (ruta.equals("/sw.js")) return noExiste();
         try {
+          if (ruta.equals("/index.html")) pedirHuellas();
           InputStream in = abrir(ruta);
           Map<String, String> cab = new HashMap<>();
           cab.put("Access-Control-Allow-Origin", "*");
@@ -87,10 +100,91 @@ public class MainActivity extends Activity {
     return r;
   }
 
+  private static Map<String, String> leerHuellas(InputStream in) throws Exception {
+    java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+    byte[] t = new byte[65536];
+    int n;
+    while ((n = in.read(t)) > 0) b.write(t, 0, n);
+    in.close();
+    JSONObject j = new JSONObject(new String(b.toByteArray(), StandardCharsets.UTF_8));
+    Map<String, String> m = new HashMap<>();
+    for (Iterator<String> k = j.keys(); k.hasNext(); ) { String r = k.next(); m.put(r, j.getString(r)); }
+    return m;
+  }
+
+  // Una sola peticion al abrir el juego: la lista de huellas de lo publicado.
+  private void pedirHuellas() {
+    synchronized (candado) {
+      remotas = null;
+      if (deFabrica == null) {
+        try { deFabrica = leerHuellas(getAssets().open("www/huellas.json")); }
+        catch (Exception e) { deFabrica = new HashMap<>(); }
+      }
+      HttpURLConnection c = null;
+      try {
+        c = (HttpURLConnection) new URL(REMOTO + "/huellas.json?t=" + System.currentTimeMillis()).openConnection();
+        c.setConnectTimeout(4000);
+        c.setReadTimeout(8000);
+        c.setUseCaches(false);
+        if (c.getResponseCode() == 200) { remotas = leerHuellas(c.getInputStream()); sinRedHasta = 0; }
+      } catch (java.io.IOException e) {
+        sinRedHasta = System.currentTimeMillis() + 30000;
+      } catch (Exception e) {
+        // lista rota: se sigue como antes
+      } finally {
+        if (c != null) c.disconnect();
+      }
+    }
+  }
+
+  private static String leerTexto(File f) {
+    try { return new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8).trim(); }
+    catch (Exception e) { return null; }
+  }
+
+  // Baja un archivo de GitHub y lo guarda en el movil.
+  private static boolean bajar(String url, File guardado, HttpURLConnection c) throws Exception {
+    guardado.getParentFile().mkdirs();
+    File temporal = new File(guardado.getPath() + ".tmp");
+    try (InputStream in = c.getInputStream(); OutputStream out = new FileOutputStream(temporal)) {
+      byte[] b = new byte[65536];
+      int n;
+      while ((n = in.read(b)) > 0) out.write(b, 0, n);
+    }
+    if (guardado.exists()) guardado.delete();
+    return temporal.renameTo(guardado);
+  }
+
   // Lo mas nuevo que haya: GitHub (si ha cambiado), lo guardado, o el APK.
   private InputStream abrir(String ruta) throws Exception {
     File guardado = new File(getFilesDir(), "web" + ruta);
     File etiqueta = new File(guardado.getPath() + ".etag");
+    File marca = new File(guardado.getPath() + ".h");
+    Map<String, String> lista = remotas;
+    String huella = lista != null ? lista.get(ruta) : null;
+    if (huella != null) {
+      // Con la lista: lo del movil o lo del APK si es igual; si no, se baja.
+      if (guardado.exists() && huella.equals(leerTexto(marca))) return new FileInputStream(guardado);
+      if (deFabrica != null && huella.equals(deFabrica.get(ruta))) return getAssets().open("www" + ruta);
+      HttpURLConnection c = null;
+      try {
+        c = (HttpURLConnection) new URL(REMOTO + ruta + "?h=" + huella).openConnection();
+        c.setConnectTimeout(4000);
+        c.setReadTimeout(20000);
+        c.setUseCaches(false);
+        if (c.getResponseCode() == 200 && bajar(ruta, guardado, c)) {
+          Files.write(marca.toPath(), huella.getBytes(StandardCharsets.UTF_8));
+          etiqueta.delete();
+          return new FileInputStream(guardado);
+        }
+      } catch (java.io.IOException e) {
+        sinRedHasta = System.currentTimeMillis() + 30000;
+      } finally {
+        if (c != null) c.disconnect();
+      }
+      if (guardado.exists()) return new FileInputStream(guardado);
+      return getAssets().open("www" + ruta);
+    }
     if (System.currentTimeMillis() > sinRedHasta) {
       HttpURLConnection c = null;
       try {
@@ -112,6 +206,7 @@ public class MainActivity extends Activity {
           }
           if (guardado.exists()) guardado.delete();
           if (!temporal.renameTo(guardado)) throw new Exception("no se pudo guardar");
+          marca.delete();
           String et = c.getHeaderField("ETag");
           if (et != null) Files.write(etiqueta.toPath(), et.getBytes(StandardCharsets.UTF_8));
           else etiqueta.delete();

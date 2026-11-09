@@ -1746,3 +1746,22 @@ de ventana, debería seguir para hacerlo más frenético».
 - Mientras le alcanza gira un poco hacia él (como mucho 3,4°) y vuelve sola.
   La cámara gira primero y cabecea después (`rotation.order = "YXZ"`), así que
   el horizonte no se tuerce; sigue sin inclinarse (`rotation.z = 0`).
+
+## Carga más rápida al abrir (09/11/2026)
+
+Isidro: «el juego tarda mucho en cargar al inicio».
+
+- La causa: al abrir, la app del móvil preguntaba a GitHub, archivo por archivo
+  (unos 240, 23 MB de modelos), si había cambiado. La web, igual: lo pedía
+  todo a internet cada vez.
+- Ahora GitHub hace al publicar una lista de huellas (`www/huellas.json`, con
+  `herramientas/huellas.mjs` en `pages.yml`; no va en git). Al abrir se baja
+  solo esa lista y cada archivo sale de lo guardado (o de lo que trae el APK)
+  si su huella coincide; solo se baja lo que ha cambiado.
+- App: `MainActivity.java` (`pedirHuellas`, al pedir index.html). Hace falta
+  instalar el APK nuevo una vez. Sin internet, como antes.
+- Web: `sw.js` guarda cada archivo con su huella (caja `taco-dash-archivos`)
+  y borra las cajas de versiones viejas. En el PC de pruebas (localhost) sigue
+  pidiendo siempre lo último.
+- Medido en el PC: la segunda vez, 0 KB descargados y los modelos listos en
+  0,7 s (antes 12,8 MB y 3,7 s con fibra).
