@@ -17,7 +17,9 @@ const LISTA = {
     "apart_naranja", "arbol_ciudad", "farola_ciudad", "semaforo", "hidrante", "banco", "buzon", "taxi",
     "coche_rojo", "coche_azul"],
   personaje: ["personaje"],
-  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero", "valla_policia", "verja"],
+  publico: ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero", "valla_policia", "verja",
+    // 09/11: rehechos con brazos y piernas que se mueven, y cuatro personas nuevas
+    "ejecutiva", "obrero", "estudiante", "deportista"],
   obstaculos: ["barricada", "conos", "pancarta", "globos", "guardaespaldas", "furgoneta", "patrulla", "autobus", "gorra",
     "rayo", "cohete", "barril", "chile", "jefe",
     // 08/11 (2): las patas de los animales (blender/animales.py) y el microfono

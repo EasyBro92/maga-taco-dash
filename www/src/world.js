@@ -641,25 +641,73 @@ export function createWorld(scene) {
   // Seis personas con cara y el brazo derecho aparte: saludan, botan y se
   // animan mas cuando pasa el jugador. Si no han cargado, el muñeco viejo.
   // (01/11: el granjero de Iowa, con chaqueta de cuadros y gorra con orejeras)
-  const PERSONAS = ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero"];
-  const HOMBROS = { granjero: [0.281, 1.353], ejecutivo: [0.272, 1.368], senora: [0.23, 1.277], chico: [0.158, 0.874],
-    abuelo: [0.262, 1.262], turista: [0.239, 1.322], fan: [0.233, 1.292] };
-  const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_brazo`));
+  // ---- 09/11/2026: personas rehechas (blender/publico.py) ----
+  // Isidro: «la gente mueve el brazo como locas, ¿puedes mejorar la estetica
+  // de las personas en general?». Antes todas agitaban el brazo derecho sin
+  // parar y botaban. Ahora cada persona son cinco piezas (cuerpo, dos brazos y
+  // dos piernas, con su giro en el hombro y la cadera) y cada una hace UNA
+  // cosa tranquila cuando pasa el jugador: aplaudir, saludar despacio, ondear
+  // su bandera o seguirle con la mirada. Los que pasean andan de verdad.
+  const PERSONAS = ["ejecutivo", "senora", "chico", "abuelo", "turista", "fan", "granjero",
+    "ejecutiva", "obrero", "estudiante", "deportista"];
+  // Las de cualquier ciudad: se mezclan con las del nivel para que haya variedad.
+  const PERSONAS_CALLE = ["ejecutiva", "obrero", "estudiante", "deportista", "turista", "ejecutivo"];
+  // [hombro x, hombro y, cadera x, cadera y] (lo imprime blender/publico.py)
+  const ARTIC = {"ejecutivo": [0.213, 1.456, 0.095, 0.967], "senora": [0.184, 1.328, 0.082, 0.882], "chico": [0.117, 0.878, 0.058, 0.603], "abuelo": [0.204, 1.344, 0.091, 0.893], "turista": [0.196, 1.392, 0.088, 0.925], "fan": [0.181, 1.36, 0.081, 0.903], "granjero": [0.223, 1.44, 0.1, 0.957], "ejecutiva": [0.175, 1.36, 0.078, 0.903], "obrero": [0.216, 1.424, 0.097, 0.946], "estudiante": [0.187, 1.376, 0.084, 0.914], "deportista": [0.171, 1.344, 0.077, 0.893]};
+  // Lo que llevan en la mano derecha: con eso no aplauden, lo ondean.
+  const LLEVA = { senora: "bandera", fan: "bandera", abuelo: "cartel" };
+  const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_pierna_i`));
   function personaPixar(lista) {
     const vale = (lista || PERSONAS).filter((x) => PERSONAS.includes(x));
-    const n = vale.length ? vale[Math.floor(Math.random() * vale.length)] : PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
+    const mezcla = !vale.length || Math.random() < 0.35 ? PERSONAS_CALLE : vale;
+    const n = mezcla[Math.floor(Math.random() * mezcla.length)];
+    const A = ARTIC[n];
     const g = new THREE.Group();
-    const c = medidas(`publico/${n}_cuerpo`), b = medidas(`publico/${n}_brazo`);
-    g.add(new THREE.Mesh(c.geometry, c.material));
-    const hombro = new THREE.Group();
-    hombro.position.set(HOMBROS[n][0], HOMBROS[n][1], 0);
-    hombro.add(new THREE.Mesh(b.geometry, b.material));
-    g.add(hombro);
-    g.userData.kind = "person";
-    g.userData.brazo = hombro;
-    g.userData.phase = Math.random() * Math.PI * 2;
-    g.userData.ritmo = 0.8 + Math.random() * 0.5;
+    const pieza = (p, x, y) => {
+      const m = medidas(`publico/${n}_${p}`);
+      const piv = new THREE.Group();
+      piv.position.set(x, y, 0);
+      piv.add(new THREE.Mesh(m.geometry, m.material));
+      g.add(piv);
+      return piv;
+    };
+    pieza("cuerpo", 0, 0);
+    const u = g.userData;
+    u.brazoD = pieza("brazo_d", A[0], A[1]);
+    u.brazoI = pieza("brazo_i", -A[0], A[1]);
+    u.piernaD = pieza("pierna_d", A[2], A[3]);
+    u.piernaI = pieza("pierna_i", -A[2], A[3]);
+    u.kind = "person";
+    u.phase = Math.random() * Math.PI * 2;
+    u.ritmo = 0.85 + Math.random() * 0.3;
+    const r = Math.random();
+    u.rol = LLEVA[n] ? "ondea" : n === "chico" ? (r < 0.5 ? "saluda" : "mira") : r < 0.38 ? "aplaude" : r < 0.66 ? "saluda" : "mira";
     return g;
+  }
+  // Cada fotograma, la del publico: quietos y tranquilos de lejos, y al pasar
+  // el jugador (cerca de 0 a 1) aplauden, saludan o le siguen con la vista.
+  function animarPersona(d, cerca) {
+    const u = d.userData, t = animClock * u.ritmo + u.phase;
+    if (u.giro0 === undefined) u.giro0 = d.rotation.y;
+    // Respira y cambia el peso de pie, muy poco.
+    const calma = Math.sin(t * 0.9) * 0.04;
+    let dz = calma, iz = -calma, dx = 0, ix = 0;
+    if (u.rol === "aplaude") {
+      const c = Math.sin(t * 8.5);
+      dx = ix = -1.05 * cerca;                               // las manos por delante
+      dz = -(0.32 + 0.14 * c) * cerca + calma * (1 - cerca);   // y se juntan
+      iz = (0.32 + 0.14 * c) * cerca - calma * (1 - cerca);
+    } else if (u.rol === "saluda") {
+      dz = cerca * (2.55 + Math.sin(t * 3.6) * 0.22) + calma * (1 - cerca);
+    } else if (u.rol === "ondea") {
+      dz = 0.15 + cerca * (1.9 + Math.sin(t * 2.4) * 0.16);
+      dx = -0.2 * cerca;
+    }
+    u.brazoD.rotation.set(dx, 0, dz);
+    u.brazoI.rotation.set(ix, 0, iz);
+    // Le siguen con la vista al pasar (sin darse la vuelta entera).
+    const haciaJugador = THREE.MathUtils.clamp(Math.atan2(-d.position.x, -d.position.z), -1.3, 1.3);
+    d.rotation.y = u.giro0 + (haciaJugador - u.giro0) * cerca * (u.rol === "mira" ? 0.85 : 0.45);
   }
   function makePerson(lista) {
     if (PUBLICO_PIXAR) return personaPixar(lista);
@@ -5826,10 +5874,15 @@ export function createWorld(scene) {
       for (let i = paseantes.length - 1; i >= 0; i--) {
         const p = paseantes[i], u = p.userData;
         p.position.z += dz + u.dir * u.vel * dt;
-        const paso = animClock * 7 * u.vel + u.phase;
-        p.position.y = Math.abs(Math.sin(paso)) * 0.05;
-        p.rotation.z = Math.sin(paso * 0.5) * 0.03;
-        if (u.brazo) u.brazo.rotation.x = Math.sin(paso) * 0.45;
+        // 09/11: andar de verdad: cada pierna adelante y atras, y el brazo
+        // contrario con ella; el cuerpo sube un pelin en cada paso.
+        const paso = animClock * 4.8 * u.vel + u.phase, ida = Math.sin(paso);
+        p.position.y = Math.abs(Math.cos(paso)) * 0.025;
+        p.rotation.z = 0;
+        u.piernaD.rotation.x = ida * 0.42;
+        u.piernaI.rotation.x = -ida * 0.42;
+        u.brazoD.rotation.set(-ida * 0.32, 0, 0.05);
+        u.brazoI.rotation.set(ida * 0.32, 0, -0.05);
         if (p.position.z > DESPAWN_Z || p.position.z < SPAWN_Z) { group.remove(p); paseantes.splice(i, 1); }
       }
     }
@@ -6002,18 +6055,21 @@ export function createWorld(scene) {
       rl.position.z += dz; if (rl.position.z > 4) rl.position.z -= TRAMOS_RAYA;
       rl.visible = currentZoneName(totalScrolled - rl.position.z) !== "desert" && !(nivel && totalScrolled - rl.position.z > nivel.largo);
     }
+    const csDecor = nivel ? crucesDeNivel(nivel).cruces : null;
     for (const d of decor) {
       d.position.z += dz; if (d.position.z > 6) d.position.z -= Math.abs(SPAWN_Z);
       d.scale.setScalar(Math.max(0.001, edgeFade(d.position.z, 6, 5)));
-      d.visible = !(nivel && totalScrolled - d.position.z > nivel.largo - 10) && !metroEn(totalScrolled - d.position.z);
+      const dd = totalScrolled - d.position.z, lado = Math.sign(d.position.x);
+      d.visible = !(nivel && dd > nivel.largo - 10) && !metroEn(dd) &&
+        // 09/11: nadie de pie en medio de una calle lateral (ni su valla)
+        !(csDecor && csDecor.some((c) => c.lados.includes(lado) && Math.abs(c.d - dd) < 7));
       if (d.userData.kind === "flag") {
         d.userData.flagMesh.rotation.y = Math.sin(animClock * 3 + d.userData.phase) * 0.3;
       } else if (d.userData.kind === "person") {
-        // Se animan al ver pasar al jugador: botan mas y agitan el brazo.
-        const cerca = THREE.MathUtils.clamp(1 - Math.abs(d.position.z) / 18, 0, 1);
-        const r = d.userData.ritmo || 1;
-        d.position.y = Math.max(0, Math.sin(animClock * 2.4 * r + d.userData.phase)) * (0.08 + 0.16 * cerca);
-        if (d.userData.brazo) d.userData.brazo.rotation.z = 1.2 + 1.1 * cerca + Math.sin(animClock * (5 + 4 * cerca) * r + d.userData.phase) * (0.25 + 0.35 * cerca);
+        // 09/11: se animan con calma al ver pasar al jugador (antes botaban y
+        // agitaban el brazo todos a la vez, como locos).
+        const z = d.position.z, cerca = THREE.MathUtils.smoothstep(z > 0 ? 14 - z * 1.75 : 26 + z, 0, 14);
+        if (d.userData.brazoD) animarPersona(d, cerca);
       }
     }
     for (const b of bunting) {

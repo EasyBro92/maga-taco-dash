@@ -1765,3 +1765,27 @@ Isidro: «el juego tarda mucho en cargar al inicio».
   pidiendo siempre lo último.
 - Medido en el PC: la segunda vez, 0 KB descargados y los modelos listos en
   0,7 s (antes 12,8 MB y 3,7 s con fibra).
+
+## La gente de la calle, rehecha (09/11/2026)
+
+Isidro: «la gente mueve el brazo como locas, ¿puedes mejorar la estética de
+las personas en general?».
+
+- Antes: todos agitaban el brazo derecho deprisa y sin parar, y botaban.
+  Eran bolas y palos sueltos con ojos saltones.
+- `blender/publico.py`, rehecho:
+  - cuerpo, brazos y piernas de una pieza suave cada uno (modificador de piel
+    + subdivisión), proporciones de persona;
+  - cara tranquila: ojos pequeños con iris y párpado, cejas, nariz, boca;
+  - pelo con volumen;
+  - cinco piezas por persona (`_cuerpo`, `_brazo_d/i`, `_pierna_d/i`) con el
+    giro en hombro y cadera;
+  - once personas: las siete de antes y cuatro nuevas (ejecutiva, obrero,
+    estudiante, deportista), que salen en todas las ciudades;
+  - unos 4.100 triángulos por persona (antes 2.500, con una pieza menos).
+- En el juego (`world.js`, `personaPixar` y `animarPersona`):
+  - quietos de lejos, respirando;
+  - al pasar el jugador cada uno hace UNA cosa tranquila: aplaudir, saludar
+    despacio, ondear su bandera o cartel, o seguirle con la mirada;
+  - los que pasean andan de verdad, con las piernas y el brazo contrario;
+  - nadie de pie en medio de una calle lateral.
