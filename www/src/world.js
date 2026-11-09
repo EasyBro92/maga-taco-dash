@@ -1814,6 +1814,11 @@ export function createWorld(scene) {
       // blanquecina, el suelo y las aceras con nieve y el asfalto mojado.
       Object.assign(BIOME_COLORS.city, { sky: 0xe4eef8, skyTop: 0x6f9fd8, fog: 0xe6edf4, horizon: 0x9fb0c4, ground: 0xf0f4f8, sidewalk: 0xdde3ea, road: 0x50545e });
     }
+    if (luz === "helada") {
+      // 09/11: Minneapolis, dia de invierno de sol y mucho frio: cielo azul
+      // intenso, todo nevado y el asfalto mojado.
+      Object.assign(BIOME_COLORS.city, { sky: 0xa9d0f4, skyTop: 0x2460c8, fog: 0xc4dcf2, horizon: 0x8eaac8, ground: 0xf2f6fa, sidewalk: 0xe2e8ef, road: 0x4c515c });
+    }
     if (luz === "dorada") {
       // 09/11: Milwaukee, tarde dorada de otoño junto al lago.
       Object.assign(BIOME_COLORS.city, { sky: 0xf0cfa0, skyTop: 0x3f78c8, fog: 0xecd0aa, horizon: 0xb09a80 });
@@ -2363,7 +2368,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1, helada: -1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -2854,6 +2859,16 @@ export function createWorld(scene) {
     fan_queso: { choque: "full", medio: 0.35, alto: 2.4, centro: 0, cruza: true },
     moto_harley: { choque: "full", medio: 1.1, alto: 1.9, centro: -1.1, cambia: 0.72, intX: 0.14, intZ: 0.04 },
     camion_basura: { choque: "full", medio: 4.3, alto: 3.7, centro: -4.3 },
+    // 09/11: Minneapolis (blender/minneapolis.py): el disco de hockey gigante
+    // que viene deslizandose, la porteria (saltar), el jugador canadiense que
+    // cruza patinando, la pancarta «SORRY, NO TARIFFS» (agacharse), la maquina
+    // de pulir el hielo y la caseta de pesca del lago.
+    disco_hockey: { choque: "low", medio: 0.6, alto: 0.5, mueve: 7 },
+    porteria_hockey: { choque: "low", medio: 0.6, alto: 1.25, centro: -0.5 },
+    jugador_hockey: { choque: "full", medio: 0.4, alto: 2.0, centro: 0, cruza: true },
+    pancarta_eh: { choque: "high", medio: 0.3, alto: 2.4 },
+    pulidora_hielo: { choque: "full", medio: 1.7, alto: 3.1, centro: -1.6 },
+    caseta_pesca: { choque: "full", medio: 1.85, alto: 2.6, centro: -0.9 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4980,6 +4995,48 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
     },
+    // ---- 09/11: Minneapolis, el lago helado (momento estrella) ----
+    // Se cruza el lago de Loring Park por el hielo, por tres pistas de hockey:
+    // discos gigantes que vienen deslizandose (saltar), canadienses que cruzan
+    // patinando, porterias, casetas de pesca, la maquina de pulir el hielo y
+    // pancartas. Al final, la porteria grande: se mete gol por el carril libre
+    // (main.js lo celebra al salir del tramo). Siempre un carril libre con tacos.
+    hockey(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || k % 2 === 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const kg = (n - 4) - ((n - 4) % 2);
+      if (k === kg && obstaclePools.porteria_hockey) {
+        const libre = libres.includes(1) ? 1 : libres[0];
+        for (const l of libres) if (l !== libre) spawnObstacle(l, "low", z, "porteria_hockey");
+        for (let i = 0; i < 6; i++) spawnTaco(libre, z + 3 - i * 1.4, 0.9, i === 5);
+        return;
+      }
+      if (k === kg - 2) return;   // (aire antes del gol)
+      if (k % 6 === 4 && obstaclePools.disco_hockey) {
+        const op = libres.filter((l) => !obstacles.some((o) => !o.smashed && o.lane === l && o.z > z && o.z < z + 60) && !premioEn(l, z, z + 60));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "low", z, "disco_hockey");
+          for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - 2 - i * 1.4, 0.9);
+          return;
+        }
+      }
+      if (k % 8 === 2 && k >= 8 && obstaclePools.jugador_hockey) {
+        const libre = [2, 1, 0, 1][Math.floor(k / 8) % 4];
+        if (libres.includes(libre)) {
+          for (const l of libres) if (l !== libre) obst(l, "full", z, d, ["jugador_hockey"]);
+          for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+          return;
+        }
+      }
+      const L = { low: ["porteria_hockey", "monton_nieve"], high: ["pancarta_eh"], full: ["caseta_pesca", "pulidora_hielo", "caseta_pesca"] };
+      const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      bloq.forEach((l) => { const ty = elegirDe(["full", "low", "low", "high"]); obst(l, ty, z, d, L[ty]); });
+      const libre = libres.find((l) => !bloq.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9, k % 10 === 4 && i === 4);
+    },
     // ---- 08/11: Chicago, la ciudad del viento (momento estrella) ----
     // El viento del lago: paraguas dados la vuelta que cruzan volando,
     // periodicos a la altura de la cabeza (agacharse), papeleras que vienen
@@ -5998,6 +6055,8 @@ export function createWorld(scene) {
         u.piernaI.rotation.x = -ida * 0.42;
         u.brazoD.rotation.set(-ida * 0.32, 0, 0.05);
         u.brazoI.rotation.set(ida * 0.32, 0, -0.05);
+        // (09/11: en los interiores no: andaban por el hielo del lago de Minneapolis.)
+        p.visible = !metroEn(totalScrolled - p.position.z);
         if (p.position.z > DESPAWN_Z || p.position.z < SPAWN_Z) { group.remove(p); paseantes.splice(i, 1); }
       }
     }

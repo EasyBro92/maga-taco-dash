@@ -250,6 +250,42 @@ const SITIOS = {
       }
     }
   },
+  // 09/11: Minneapolis en invierno: el suelo nevado hasta lejos, abetos, el
+  // puente de piedra de los arcos sobre el Misisipi (Stone Arch) y el silo
+  // con el letrero de la harina (Gold Medal Flour), y torres a los lados.
+  minneapolis(x, c, r) {
+    x.fillStyle = c.nieve;
+    x.fillRect(0, SUELO - 6, ANCHO, 8);
+    // El puente de los arcos.
+    x.fillStyle = c.puente;
+    x.fillRect(2250, SUELO - 34, 560, 8);
+    for (let k = 0; k < 10; k++) {
+      const ax = 2250 + k * 56;
+      x.fillRect(ax, SUELO - 30, 10, 30);
+      x.beginPath(); x.moveTo(ax + 10, SUELO - 30); x.quadraticCurveTo(ax + 33, SUELO - 4, ax + 56, SUELO - 30); x.lineTo(ax + 56, SUELO - 34); x.lineTo(ax + 10, SUELO - 34); x.fill();
+    }
+    // El silo de la harina con su letrero.
+    x.fillStyle = c.lejos;
+    for (let k = 0; k < 4; k++) x.fillRect(1180 + k * 26, SUELO - 90, 22, 90);
+    x.fillRect(1176, SUELO - 96, 110, 8);
+    x.fillStyle = c.letrero;
+    x.fillRect(1170, SUELO - 120, 122, 18);
+    // Abetos.
+    for (let i = 0; i < 40; i++) {
+      const px = r() * ANCHO, h = 18 + r() * 26;
+      x.fillStyle = c.pino;
+      x.beginPath(); x.moveTo(px, SUELO - 4 - h); x.lineTo(px - h * 0.32, SUELO - 4); x.lineTo(px + h * 0.32, SUELO - 4); x.fill();
+    }
+    // Torres de la ciudad a los lados.
+    for (const [x0, x1] of [[3000, 3550], [500, 950]]) {
+      let cx = x0;
+      while (cx < x1) {
+        const w = 22 + r() * 40, h = 40 + r() * 110;
+        torre(x, [cx, 0], w, h, c.lejos, r, r() < 0.2 ? "antena" : null);
+        cx += w * 0.9;
+      }
+    }
+  },
   // 08/11: Kansas (Wichita): la llanura de trigo hasta el horizonte, elevadores
   // de grano y, a lo lejos, el embudo del tornado bajo la nube (quieto: el que
   // gira es el de cerca, en la calle).
@@ -338,7 +374,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
@@ -353,6 +389,8 @@ function colores(sitio, cielo, niebla) {
     vela: mezcla(0xffffff, cielo, 0.2),
     willis: mezcla(0x2a2e36, cielo, 0.3),
     puente: mezcla(0xa8b4bc, cielo, 0.4),
+    pino: mezcla(0x2a4a34, cielo, 0.45),
+    letrero: mezcla(0xd8b040, cielo, 0.35),
   };
 }
 

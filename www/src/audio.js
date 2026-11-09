@@ -251,6 +251,11 @@ const CANCIONES = {
     melodia: [72, 71, 72, 76, 79, null, 76, null, 77, 76, 74, 71, 74, null, null, null,
       72, 74, 76, 77, 79, null, 81, 79, 77, null, 76, 74, 72, null, null, null],
     timbre: "acordeon" },
+  // Minneapolis (09/11): el organo de los partidos de hockey.
+  minneapolis: { bpm: 138, swing: 0.5, acordes: [C, F, G, C], bateria: "pop", bajo: "octavas",
+    melodia: [67, null, 72, null, 76, null, 79, null, 76, 79, null, null, null, null, null, null,
+      74, null, 77, null, 81, null, 79, 77, 76, null, 74, null, 72, null, null, null],
+    timbre: "organo" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,
@@ -362,6 +367,9 @@ function scheduleStep(t) {
   // Acordes de acompañamiento
   if (c.timbre === "banjo") {
     if (enCompas % 2 === 1) acorde.forEach((n, i) => nota(N(n), t + i * 0.012, 0.18, { tipo: "triangle", vol: 0.05 }));
+  } else if (c.timbre === "organo") {
+    // 09/11: el organo del pabellon: el acorde largo al empezar cada compas.
+    if (enCompas === 0) acorde.forEach((n) => nota(N(n), t, corchea * 7, { tipo: "square", vol: 0.014, filtro: 2400, ataque: 0.02, vibrato: 0.006 }));
   } else if (c.timbre === "acordeon") {
     // 09/11: el umpa de la polka: el acorde en cada contratiempo.
     if (enCompas % 2 === 1) acorde.forEach((n) => nota(N(n), t, corchea * 0.7, { tipo: "sawtooth", vol: 0.02, filtro: 1600, ataque: 0.01 }));
@@ -375,6 +383,7 @@ function scheduleStep(t) {
     const largo = c.melodia[(paso + 1) % 32] === null ? corchea * 1.8 : corchea * 0.95;
     if (c.timbre === "metal") nota(N(m), t, largo, { tipo: "sawtooth", vol: 0.06, filtro: 2400, ataque: 0.025, vibrato: 0.006 });
     else if (c.timbre === "banjo") { nota(N(m), t, 0.25, { tipo: "triangle", vol: 0.1 }); nota(N(m + 12), t, 0.1, { tipo: "square", vol: 0.02, filtro: 3000 }); }
+    else if (c.timbre === "organo") { nota(N(m), t, largo, { tipo: "square", vol: 0.035, filtro: 2800, vibrato: 0.01 }); nota(N(m + 12), t, largo, { tipo: "sine", vol: 0.02 }); }
     else if (c.timbre === "acordeon") { nota(N(m), t, largo, { tipo: "sawtooth", vol: 0.04, filtro: 2200, vibrato: 0.008 }); nota(N(m - 12), t, largo, { tipo: "square", vol: 0.015, filtro: 1800 }); }
     else nota(N(m), t, largo, { tipo: "square", vol: 0.04, filtro: 3200 });
   }

@@ -840,6 +840,71 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/hidrante"],
   },
   {
+    // 09/11/2026: nivel 13: Minneapolis (blender/minneapolis.py). Isidro: «sigue
+    // creando mas estados, aplica tus propias recomendaciones». Se aplico lo
+    // recomendado: final en el jardin de esculturas (la cuchara gigante con la
+    // cereza, nevado) y un dia de invierno de sol y mucho frio (luz `helada`).
+    // Historia: «Lagos helados y pistas de hockey de los canadienses».
+    // Momento estrella: el lago helado de Loring Park con tres pistas de hockey
+    // (discos gigantes, canadienses patinando, casetas de pesca y el gol final).
+    id: "minneapolis", nombre: "Nicollet Mall", lugar: "Minneapolis, Minnesota", listo: true,
+    zona: "city", carpeta: "minneapolis", luz: "helada", semilla: 1867,
+    largo: 3150, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 14, estilo: "minneapolis", nieve: true },
+    horizonte: "minneapolis",
+    obstaculos: { low: ["monton_nieve", "porteria_hockey", "trineo"], high: ["pancarta_eh", "andamio", "semaforo"],
+      full: ["quitanieves", "munieco_nieve", "taxi", "furgoneta", "pulidora_hielo"] },
+    publico: { personas: ["fan", "turista", "ejecutivo", "senora", "abuelo", "chico"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "minneapolis" }],
+      [70, 280, "vallas", { low: ["monton_nieve", "porteria_hockey"], high: ["pancarta_eh"], titulo: "nieve_mpls" }],
+      [280, 430, "rampa", { titulo: "rampa" }],
+      [430, 600, "slalom", { full: ["quitanieves", "quitanieves", "taxi"], titulo: "quitanieves" }],
+      [600, 740, "calma"],
+      [740, 900, "desfile_cruza", { cruzan: ["jugador_hockey"], titulo: "canadienses" }],
+      [900, 1060, "premios", { titulo: "premios" }],
+      [1060, 1220, "vallas", { low: ["monton_nieve", "porteria_hockey"], high: ["pancarta_eh"], momento: "gorras", titulo: "gorras" }],
+      [1220, 1290, "calma"],
+      [1290, 1450, "jefe_paso", { titulo: "jefe_paso" }],
+      [1450, 1610, "convoy", { titulo: "convoy" }],
+      [1610, 1770, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1770, 1880, "calma"],
+      // El momento estrella: el lago helado (pieza de `fondo` e `interior`).
+      [1880, 2320, "hockey", { titulo: "lago_helado" }],
+      [2320, 2400, "calma"],
+      // (Los discos que se deslizan, solo en el lago: en las vallas llegaban a la
+      // vez que una pancarta de agacharse y no habia forma de pasar.)
+      [2400, 2560, "vallas", { low: ["porteria_hockey", "monton_nieve"], high: ["pancarta_eh"], titulo: "porterias" }],
+      [2560, 2710, "alfombra", { titulo: "alfombra" }],
+      [2710, 2990, "mixto", { densidad: 0.55, titulo: "" }],
+      [2990, 3140, "sprint", { titulo: "sprint_cuchara" }],
+    ],
+    control: 1800, caja: 950,
+    // El lago helado: se quita la calle y el suelo (el hielo lo pone la pieza).
+    interior: { rango: [1882, 2318], tipo: "lago", aire: true, sinEdificios: [1868, 2332] },
+    sinEdificios: [3165, 4000],
+    chapas: [[1000, "arco"], [1150, "carril"], [2760, "bus"]],
+    hitos: ["city_hall_mpls", "ids_center", "foshay_tower", "wells_fargo_mpls", "basilica_mary"],
+    meta: "cuchara_cereza", metaNombre: { es: "la cuchara gigante", en: "the giant spoon" },
+    // Por Nicollet Mall hacia el suroeste: el Ayuntamiento y la Foshay a la
+    // izquierda; el IDS, el Wells Fargo y la basilica a la derecha; luego el
+    // lago helado de Loring Park y, al fondo, el jardin de esculturas.
+    izquierda: [
+      40, ["kit", 2], 14, ["city_hall_mpls", 1], 14, ...cuadras(5), ["kit", 2], ["foshay_tower", 1], 14, ...cuadras(30),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(3), ["kit", 2], ["ids_center", 1], 14, ...cuadras(5), ["wells_fargo_mpls", 1], 14,
+      ...cuadras(3), ["kit", 3], ["basilica_mary", 1], 14, ...cuadras(20),
+    ],
+    fondo: [{ pieza: "cuchara_cereza", d: 3200, centro: true },
+      { pieza: "lago_helado", d: 1880, cruza: true }],
+    final: "parada", parada: 14,
+    // Se para al pie del jardin: el delante saludando y la cuchara detras.
+    camaraFinal: { pos: [4, 3.0, 10], mira: [0, 6, -60] },
+    acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad", "des_moines/arbol_nieve", "ciudad/hidrante"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -940,14 +1005,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", washington: "voto" };
+export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -995,6 +1060,8 @@ export const ANCHO = {
   hancock: 40, water_tower: 30, tribune_tower: 30, wrigley_building: 30, trump_chicago: 40, puente_dusable: 60, cloud_gate: 100,
   // 09/11: Milwaukee
   gesu_church: 30, germania: 42, city_hall_mke: 42, pfister_hotel: 32, us_bank_center: 40, puente_mke: 50, museo_calatrava: 100,
+  // 09/11: Minneapolis
+  ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
   saks: 40, biblioteca: 60, empire: 40, madison: 40, flatiron: 32,
@@ -1202,7 +1269,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

@@ -278,6 +278,29 @@ const DIBUJOS = {
     x.restore();
   },
 
+  // 09/11: el patin de hielo de Minneapolis (lagos helados y hockey).
+  patin(x) {
+    x.save();
+    x.translate(128, 132); x.rotate(-0.12);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const bota = () => {
+      x.beginPath();
+      x.moveTo(-60, -80); x.lineTo(10, -80); x.lineTo(14, -10);
+      x.quadraticCurveTo(80, 0, 92, 30); x.lineTo(92, 46); x.lineTo(-64, 46); x.closePath();
+    };
+    const cuchilla = () => { x.beginPath(); x.moveTo(-74, 66); x.lineTo(96, 66); x.quadraticCurveTo(116, 66, 108, 50); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; bota(); x.stroke(); cuchilla(); x.stroke();
+    x.lineWidth = 9; x.strokeStyle = "#c8ced6"; cuchilla(); x.stroke();
+    x.fillStyle = "#9aa2aa";
+    for (const px of [-46, 70]) x.fillRect(px - 5, 46, 10, 20);
+    bota(); x.fillStyle = "#f4f4f2"; x.fill();
+    x.fillStyle = "#d52b1e"; x.fillRect(-60, -80, 70, 16);
+    x.strokeStyle = "#3a3a40"; x.lineWidth = 4;
+    for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(-6, -54 + k * 14); x.lineTo(18, -48 + k * 14); x.stroke(); }
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; bota(); x.stroke();
+    x.restore();
+  },
+
   // 08/11: la botella de sirope de arce de Detroit (los canadienses del puente).
   sirope(x) {
     x.save();

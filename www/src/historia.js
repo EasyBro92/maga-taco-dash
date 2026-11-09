@@ -252,6 +252,8 @@ const POSTS = {
     en: "I won the debate. Everybody says so. Burrito-Bot is still sparking. Made in China, broken in America!" },
   milwaukee: { es: "¡Wisconsin vota ROJO! He llevado el camión de la basura más bonito de la historia. Y olía a queso. ¡Tremendo!",
     en: "Wisconsin votes RED! I rode the most beautiful garbage truck in history. And it smelled like cheese. TREMENDOUS!" },
+  minneapolis: { es: "¡Minnesota vota ROJO! He metido el mejor gol de la historia del hockey. Los canadienses me han pedido perdón. ¡Tremendo!",
+    en: "Minnesota votes RED! I scored the greatest goal in hockey history. The Canadians said sorry. TREMENDOUS!" },
   chicago: { es: "¡Illinois vota ROJO! El viento de Chicago no ha podido con mi pelo. Bueno, un poco. ¡Nadie vuela como yo!",
     en: "Illinois votes RED! The Chicago wind couldn't beat my hair. Well, a little. Nobody flies like me!" },
   detroit: { es: "¡Míchigan vota ROJO! Los coches, hechos en América. Y a los canadienses les mando un alce de regalo. ¡Tremendo!",

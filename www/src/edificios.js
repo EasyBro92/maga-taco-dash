@@ -83,6 +83,12 @@ const ESTILOS = {
     ladrillos: [0xe2cfa4, 0xd8c294, 0xcdb688, 0xa8523a], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x9fb4c4, 0xb8c8d4],
     cornisas: ["cornisa_clasica", "cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.1], toldos: [0x203a30, 0xffb612, 0xc8202e, 0x1f3a6a],
     rotulos: ["CHEESE", "BRATWURST", "CUSTARD", "TAVERN", "POLKA HALL", "FISH FRY", "BREWERY", "SAUSAGE", "SUPPER CLUB", "BOWLING"] },
+  // Minneapolis: ladrillo rojo de los almacenes, cristal de las torres y las
+  // tiendas del frio (patines, cebos, saunas) y la comida de alli.
+  minneapolis: { plantas: ["planta_ladrillo", "planta_cristal", "planta_lisa", "planta_frontones", "planta_cristal", "planta_ladrillo"],
+    ladrillos: [0x9a4a36, 0xa8604a, 0x7a3a2e], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x7f9fb8, 0x9fb4c4, 0x6a8aa8],
+    cornisas: ["cornisa_simple", "cornisa_deco", "cornisa_clasica"], remate: ["remate_antena", 0.15], toldos: [0x4a2a6a, 0x1f3a6a, 0xc8202e, 0x2d5a3a],
+    rotulos: ["HOT DISH", "JUICY LUCY", "SKATES", "HOCKEY", "UFF DA", "BAIT SHOP", "SAUNA", "LEFSE", "BOOKS", "DINER"] },
 };
 
 // Rotulo pintado: letras de color sobre fondo oscuro o claro.

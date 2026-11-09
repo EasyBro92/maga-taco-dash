@@ -1827,3 +1827,32 @@ encuentre en la partida y que ya está ahí, como esperando?». Hecho así:
   tiene al lado): salta por encima de la parte de atrás y cae donde se pisa.
 - Quien va por otro carril pasa de largo y sigue el tramo a pie.
 - El chaleco de Milwaukee se pone al subir al camión, no al empezar el tramo.
+
+## Nivel 13: Minneapolis (09/11/2026)
+
+Isidro: «sigue creando más estados, aplica tus propias recomendaciones sin
+preguntas». Se aplicó lo recomendado: final en el jardín de esculturas (la
+cuchara gigante con la cereza, nevado) y un día de invierno de sol y mucho
+frío (luz `helada`: cielo azul, todo nevado).
+
+- `blender/minneapolis.py`. Nicollet Mall hasta el jardín (3.150 m):
+  - el Ayuntamiento (granito rojo, la torre del reloj), el IDS Center (el
+    cristal azul con las esquinas en escalera), la Foshay Tower (el
+    obelisco con FOSHAY arriba), el Wells Fargo Center y la basílica de
+    Santa María;
+  - el lago helado de Loring Park (pieza `lago_helado`, 440 m, va como
+    interior al aire libre): tres pistas de hockey con vallas y anuncios de
+    los canadienses («SORRY!», «NO TARIFFS», «EH?»), casetas de pesca,
+    patinadores y la casa de calentarse;
+  - la meta: la cuchara-puente con la cereza, el gallo azul y el Walker.
+- Obstáculos nuevos: disco de hockey gigante que viene deslizándose (solo en
+  el lago: en las vallas llegaba a la vez que una pancarta), portería,
+  jugador canadiense que cruza patinando, pancarta «SORRY, NO TARIFFS»,
+  máquina de pulir el hielo y caseta de pesca.
+- Momento estrella «hockey»: cruzar el lago por las pistas; al final, la
+  portería grande y el gol por el carril libre (+50 tacos y confeti).
+- Los paseantes de la acera ya no andan dentro de los interiores (salían
+  por el hielo).
+- Ciudad de ladrillo rojo y cristal con nieve en los tejados, música de
+  órgano de pabellón de hockey, horizonte con el puente de los arcos y el
+  silo de la harina; objeto: patines.

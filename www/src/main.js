@@ -395,6 +395,11 @@ function aplicarLuzNivel(luz) {
     // derecha; la nieve rebota la luz, asi que el relleno de abajo es claro.
     sun.color.set(0xfff4e8); sun.intensity = 1.15; sun.position.set(6, 6, -7);
     hemi.color.set(0xe2ecff); hemi.groundColor.set(0xb4bfcc);
+  } else if (luz === "helada") {
+    // 09/11: Minneapolis, sol de invierno bajo y blanco por la izquierda; la
+    // nieve rebota mucha luz, asi que el relleno de abajo es claro.
+    sun.color.set(0xfff6ec); sun.intensity = 1.3; sun.position.set(-6, 7, 5);
+    hemi.color.set(0xe6f0ff); hemi.groundColor.set(0xc4ccd8);
   } else if (luz === "dorada") {
     // 09/11: Milwaukee, tarde dorada: el sol bajo por detras y a la derecha
     // (el oeste), que pinta de oro las fachadas y el museo del fondo.
@@ -638,7 +643,9 @@ const NOMBRE_HITO = {
     hancock: "El John Hancock", water_tower: "La Water Tower, la que aguantó el gran incendio",
     tribune_tower: "La Tribune Tower", wrigley_building: "El Wrigley Building", trump_chicago: "La torre Trump",
     gesu_church: "La iglesia del Gesu", germania: "El Germania, el de los cascos de cobre",
-    pfister_hotel: "El hotel Pfister", city_hall_mke: "El Ayuntamiento de Milwaukee", us_bank_center: "El U.S. Bank Center, el más alto de Wisconsin" },
+    pfister_hotel: "El hotel Pfister", city_hall_mke: "El Ayuntamiento de Milwaukee", us_bank_center: "El U.S. Bank Center, el más alto de Wisconsin",
+    city_hall_mpls: "El Ayuntamiento de Minneapolis", ids_center: "El IDS Center, el más alto de Minnesota",
+    foshay_tower: "La Foshay Tower, el obelisco", wells_fargo_mpls: "El Wells Fargo Center", basilica_mary: "La basílica de Santa María" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -658,7 +665,9 @@ const NOMBRE_HITO = {
     hancock: "The John Hancock Center", water_tower: "The Water Tower, which survived the Great Fire",
     tribune_tower: "The Tribune Tower", wrigley_building: "The Wrigley Building", trump_chicago: "Trump Tower",
     gesu_church: "Gesu Church", germania: "The Germania Building, with its copper helmets",
-    pfister_hotel: "The Pfister Hotel", city_hall_mke: "Milwaukee City Hall", us_bank_center: "The U.S. Bank Center, the tallest in Wisconsin" },
+    pfister_hotel: "The Pfister Hotel", city_hall_mke: "Milwaukee City Hall", us_bank_center: "The U.S. Bank Center, the tallest in Wisconsin",
+    city_hall_mpls: "Minneapolis City Hall", ids_center: "The IDS Center, the tallest in Minnesota",
+    foshay_tower: "The Foshay Tower, the obelisk", wells_fargo_mpls: "The Wells Fargo Center", basilica_mary: "The Basilica of Saint Mary" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -2191,6 +2200,16 @@ function frame(dtFijo) {
       // 08/11: Chicago: en la ciudad del viento se le levanta el tupe.
       if (character.setViento) character.setViento(tramo.tipo === "viento" ? 1 : 0);
       if (tramo.tipo === "viento") setTimeout(() => { if (gameState === "playing") showBubble(t("tupeViento"), 1600); }, 1300);
+      // 09/11: Minneapolis: el lago helado. Al entrar, el aviso de los discos;
+      // al salir (si se sigue jugando), el gol: tacos y confeti.
+      if (tramo.tipo === "hockey") setTimeout(() => { if (gameState === "playing") showBubble(t("discoAviso"), 1600); }, 1300);
+      if (antes && antes.tipo === "hockey" && gameState === "playing") {
+        tacosThisRun += 50;
+        showBubble(t("golAviso"), 1800, 2);
+        avisoVerde(`+50 ${TACO_IMG()}`);
+        spawnConfetti(30);
+        sndPoint(); vibrate([30, 30, 60]);
+      }
       // 09/11: Milwaukee: al subir al camion de la basura se pone el chaleco
       // reflectante (y ya no se lo quita hasta la meta).
       // (El del primer tramo no: saldria encima del cartel del nivel.)
