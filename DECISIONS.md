@@ -1856,3 +1856,9 @@ frío (luz `helada`: cielo azul, todo nevado).
 - Ciudad de ladrillo rojo y cristal con nieve en los tejados, música de
   órgano de pabellón de hockey, horizonte con el puente de los arcos y el
   silo de la harina; objeto: patines.
+
+## La cámara vuelve a como estaba (09/11/2026, tarde)
+
+Isidro, probando la cámara que seguía entera el cambio de carril y giraba
+hacia el jugador (puesta esta mañana): «no me gusta, déjalo como estaba».
+Vuelve a la del 23/10: acompaña la mitad del cambio, despacio y sin girar.

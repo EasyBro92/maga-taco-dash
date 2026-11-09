@@ -159,8 +159,6 @@ const RACE_CAM = { pos: new THREE.Vector3(0, 7.2, 9.8), look: new THREE.Vector3(
 const MENU_CAM = { pos: new THREE.Vector3(2.3, 1.9, 6.2), look: new THREE.Vector3(0, 0.05, 0) };
 function setCameraMode(mode) {
   const c = mode === "menu" ? MENU_CAM : RACE_CAM;
-  // (Giro y luego cabeceo: asi el giro al cambiar de carril no tuerce el horizonte.)
-  camera.rotation.order = "YXZ";
   camera.position.copy(c.pos);
   camera.lookAt(c.look);
 }
@@ -2352,15 +2350,12 @@ function frame(dtFijo) {
     // (magnitudes deliberadamente sutiles: la primera pasada se sintio muy exagerada)
     // 23/10, contra el mareo: la camara solo acompaña la mitad del cambio de
     // carril (antes se deslizaba entera con cada cambio) y ya no se inclina.
-    // 09/11: Isidro: «al cambiar de carril la camara deberia girar
-    // directamente, deberia seguir para hacerlo mas frenetico». Ahora sigue
-    // el cambio de carril entero y rapido (como Subway Surfers), y mientras
-    // alcanza al jugador gira un poco hacia el (sin inclinar el horizonte).
-    const xJugador = playerX + curveX;
-    camBaseX += (xJugador - camBaseX) * Math.min(1, dt * 12);
+    // 09/11 (tarde): se probo que siguiera el cambio entero, rapido y girando
+    // hacia el jugador; Isidro: «no me gusta, dejalo como estaba». Vuelve a
+    // acompañar la mitad, despacio y sin girar.
+    camBaseX += ((playerX + curveX) * 0.5 - camBaseX) * Math.min(1, dt * 3);
     const targetFov = boostTimeLeft > 0 ? BASE_FOV + 1.2 : BASE_FOV;
     camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 2.5);
-    camera.rotation.y = THREE.MathUtils.clamp(-(xJugador - camBaseX) * 0.07, -0.06, 0.06);
     camera.rotation.z = 0;
     let shakeX = 0, shakeY = 0;
     if (shakeTimeLeft > 0) {
