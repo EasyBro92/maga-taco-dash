@@ -1733,3 +1733,16 @@ viento.
   - la música es blues de Chicago;
   - los edificios del kit son de la escuela de Chicago (miradores, terracota
     blanca, caliza) con tiendas de pizza, perritos, blues y jazz.
+
+## Cámara que sigue el cambio de carril (09/11/2026)
+
+Isidro: «al cambiar de carril la cámara debería girar directamente, sin cambiar
+de ventana, debería seguir para hacerlo más frenético».
+
+- Antes (23/10, contra el mareo) la cámara solo acompañaba la mitad del cambio
+  de carril y despacio: el jugador se iba a un lado de la pantalla.
+- Ahora la sigue entera y rápido (`dt * 12`), como Subway Surfers: el jugador
+  queda siempre en el centro.
+- Mientras le alcanza gira un poco hacia él (como mucho 3,4°) y vuelve sola.
+  La cámara gira primero y cabecea después (`rotation.order = "YXZ"`), así que
+  el horizonte no se tuerce; sigue sin inclinarse (`rotation.z = 0`).
