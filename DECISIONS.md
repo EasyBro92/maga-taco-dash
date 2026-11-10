@@ -1862,3 +1862,13 @@ frío (luz `helada`: cielo azul, todo nevado).
 Isidro, probando la cámara que seguía entera el cambio de carril y giraba
 hacia el jugador (puesta esta mañana): «no me gusta, déjalo como estaba».
 Vuelve a la del 23/10: acompaña la mitad del cambio, despacio y sin girar.
+
+## 10/11/2026 — Jefes de cada acto, revisión con Fable, cuenta e instalar
+
+- Isidro: «revisa el juego… añade más jefes y haz el juego más gamberro… la auditoría con Fable». Revisión en tres partes (jugabilidad, textos y menús, mapas); luego pidió pausarla y hacer la cuenta y el botón de instalar.
+- Jefes nuevos (blender/jefes.py, tabla `JEFES` en world.js): Rey Pingüino (sellos), los Papeles (rotuladores), el Toro (chiles), el Sentido Común (hamburguesas) y el Monstruo del Pantano (desatascadores), que ya es el jefe final de Washington. Cada uno con lo que rueda (se salta), lo que vuela a la cabeza (agacharse) y sus gritos. En el sin fin salen todos por turnos.
+- Más gamberro: excusas al tropezar («¡Eso lo ha puesto Obama!») y títulos al chocar («¡Recuento! Esto no ha pasado»).
+- Arreglos de la revisión de textos: el cartel de Wichita salía con el de Chicago (clave repetida), «Colección: 10 …» en vez de «Las 10 filetes», misión «Derrota a {n} jefes», el cartel del tramo ya no se sale en 360 px, el botón SIGUIENTE con la calle debajo, borrar progreso recarga, frases para los obstáculos que no tenían, inglés corregido.
+- Cuenta (src/cuenta.js): usuario y contraseña, sin correo, en el Firebase de AlienZ (`tacodash/{uid}`); la partida se sube sola y al entrar se juntan sin perder nada. Falta publicar la regla de Firestore (z-resistance/firestore.rules): el permiso lo tiene que dar Isidro.
+- Botón de instalar (src/instalar.js): en Android baja la app (www/descargas/TacoDash.apk), en Chrome del ordenador la ventana de instalar, en iPhone explica Compartir → Añadir a pantalla de inicio. No sale dentro de la app ni si ya está instalada.
+- Pendiente de la revisión (pausada): barra del jefe empieza al 42 %, filas imposibles con el jefe del sin fin, obstáculos que ruedan en tramos de vallas, hitos tapados, y los 37 estados (hay tabla y plantillas de Fable).

@@ -20,6 +20,7 @@ sed "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VERSION\"/; s/andro
 
 cp -r ../www "$B/assets/www"
 rm -f "$B/assets/www/sw.js"          # dentro de la app no hace falta
+rm -rf "$B/assets/www/descargas"    # 10/11: el APK para bajar desde la web (no va dentro de si mismo)
 # 09/11: dentro solo van los modelos del arranque (con todo pesaba 39 MB y no
 # se podia mandar al movil); los de cada ciudad se bajan al entrar en el nivel.
 for d in "$B/assets/www/models"/*/; do

@@ -70,7 +70,11 @@ const LISTA = {
     // 09/11: Milwaukee (blender/milwaukee.py)
     "rueda_queso", "cuna_queso", "cubo_basura", "bolsas_basura", "cartel_queso", "fan_queso", "moto_harley", "camion_basura",
     // 09/11: Minneapolis (blender/minneapolis.py)
-    "disco_hockey", "porteria_hockey", "jugador_hockey", "pancarta_eh", "pulidora_hielo", "caseta_pesca"],
+    "disco_hockey", "porteria_hockey", "jugador_hockey", "pancarta_eh", "pulidora_hielo", "caseta_pesca",
+    // 09/11: los jefes de cada acto y lo que tiran (blender/jefes.py)
+    "jefe_pinguino", "bloque_hielo", "pez_helado", "jefe_papeles", "caja_documentos", "carpeta_vuela", "rotulador",
+    "jefe_toro", "paellera", "capote", "jefe_cerebro", "libro_gordo", "grafico_datos", "jefe_pantano", "bola_barro",
+    "hamburguesa", "desatascador"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

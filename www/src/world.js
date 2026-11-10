@@ -2727,6 +2727,17 @@ export function createWorld(scene) {
     votantes: { choque: "full", medio: 1.2, alto: 2.0, centro: -0.85 },
     // 03/11: la bola de fuego del dragon de China: cae de su boca y rueda hacia ti. Se salta.
     bola_fuego: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
+    // 09/11: lo que tiran los jefes nuevos (blender/jefes.py). Los «altos»
+    // vuelan a la altura de la cabeza (ver lanzar en actualizarJefe).
+    bloque_hielo: { choque: "low", medio: 0.5, alto: 0.85, mueve: 4 },
+    pez_helado: { choque: "low", medio: 0.4, alto: 0.9, mueve: 4 },
+    caja_documentos: { choque: "low", medio: 0.4, alto: 0.8, mueve: 4 },
+    carpeta_vuela: { choque: "low", medio: 0.4, alto: 0.9, mueve: 4 },
+    paellera: { choque: "low", medio: 0.5, alto: 0.95, mueve: 4 },
+    capote: { choque: "low", medio: 0.4, alto: 0.95, mueve: 4 },
+    libro_gordo: { choque: "low", medio: 0.4, alto: 0.8, mueve: 4 },
+    grafico_datos: { choque: "low", medio: 0.4, alto: 0.95, mueve: 4 },
+    bola_barro: { choque: "low", medio: 0.5, alto: 0.9, mueve: 4 },
     // 06/11: cinco nuevos por ciudad, con movimiento (blender/obstaculos3.py).
     //   cambia: altura del intermitente (se pasa al carril de al lado)
     //   cruza: viene de la acera y se para en su carril · barrera: el brazo sube y baja
@@ -3787,6 +3798,10 @@ export function createWorld(scene) {
     chile: makePool(() => { const g = modeloConContorno("obstaculos/chile") || buildPowerupIcon("shield"); g.scale.setScalar(1.4); g.position.y = -0.4; return g; }),
     // 08/11: el sello de los aranceles, lo que se le lanza al jefe en lugar del chile.
     arancel: makePool(() => { const g = new THREE.Group(); const m = modeloConContorno("obstaculos/arancel") || buildPowerupIcon("shield"); m.scale.setScalar(1.7); m.position.y = -0.75; g.add(m); return g; }),
+    // 09/11: lo que se les lanza a los jefes nuevos (blender/jefes.py).
+    rotulador: makePool(() => { const g = modeloConContorno("obstaculos/rotulador") || buildPowerupIcon("shield"); g.scale.setScalar(1.6); g.rotation.z = 0.5; g.position.y = -0.4; return g; }),
+    hamburguesa: makePool(() => { const g = modeloConContorno("obstaculos/hamburguesa") || buildPowerupIcon("shield"); g.scale.setScalar(1.5); g.position.y = -0.4; return g; }),
+    desatascador: makePool(() => { const g = modeloConContorno("obstaculos/desatascador") || buildPowerupIcon("shield"); g.scale.setScalar(1.5); g.rotation.z = 0.4; g.position.y = -0.5; return g; }),
     // 28/10: botas de vaquero (saltos altos) y caja sorpresa.
     botas: makePool(() => { const g = modeloConContorno("obstaculos/botas") || buildPowerupIcon("shield"); g.scale.setScalar(1.45); return g; }),
     caja: makePool(() => { const g = modeloConContorno("obstaculos/caja_sorpresa") || buildPowerupIcon("shield"); g.scale.setScalar(1.25); return g; }),
@@ -3923,6 +3938,7 @@ export function createWorld(scene) {
   // ataques algunos». Caian en unos 8 s (5 golpes y muchos chiles). Ahora 12
   // golpes, menos armas por la pista (ver PATRONES.jefe) y ataques variados.
   const JEFE_VIDA = 12, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 75;
+  const ARMAS_JEFE = ["chile", "arancel", "rotulador", "hamburguesa", "desatascador"];
   const jefe = { activo: false, mesh: null, vida: 0, carril: 1, x: 0, z: -90, tiro: 0, tiempo: 0,
     golpe: 0, saliendo: false, derrotado: false, tipo: "robot", robot: null };
   const disparos = [];
@@ -4120,6 +4136,36 @@ export function createWorld(scene) {
       ax = x; ay = y; az = z;
     });
   }
+  // ---- 09/11/2026: los jefes de cada acto (blender/jefes.py) ----
+  // Isidro: «añade más jefes y haz el juego más gamberro». Uno por acto, como
+  // en HISTORIA.md, y el Monstruo del Pantano en Washington. Todos funcionan
+  // como el Burrito-Bot (flotan delante, cambian de carril, tiran cosas y se
+  // les vence con lo que se recoge por la pista), cada uno con lo suyo:
+  //   y, escala: donde va y su tamaño · bajo: lo que rueda (se salta) ·
+  //   alto: lo que vuela a la altura de la cabeza (se pasa agachado) ·
+  //   arma: lo que se recoge para darle · gira: da vueltas (el remolino) ·
+  //   galope: va por el suelo dando botes (el toro).
+  const JEFES = {
+    pinguino: { mesh: "jefe_pinguino", y: 1.4, escala: 1.5, bajo: "bloque_hielo", alto: "pez_helado", arma: "arancel",
+      ataques: ["uno", "alto", "dos", "uno", "alto", "dos"] },
+    papeles: { mesh: "jefe_papeles", y: 1.2, escala: 1.5, gira: 1.6, bajo: "caja_documentos", alto: "carpeta_vuela", arma: "rotulador",
+      ataques: ["uno", "alto", "uno", "dos", "alto", "alto", "dos"] },
+    toro: { mesh: "jefe_toro", y: 0, escala: 1.5, galope: true, bajo: "paellera", alto: "capote", arma: "chile",
+      ataques: ["uno", "dos", "alto", "uno", "dos", "alto"] },
+    cerebro: { mesh: "jefe_cerebro", y: 1.6, escala: 1.45, bajo: "libro_gordo", alto: "grafico_datos", arma: "hamburguesa",
+      ataques: ["alto", "uno", "dos", "alto", "uno", "dos", "alto"] },
+    pantano: { mesh: "jefe_pantano", y: 0.5, escala: 1.7, bajo: "bola_barro", alto: "carpeta_vuela", arma: "desatascador",
+      ataques: ["uno", "dos", "alto", "dos", "uno", "alto", "dos"] },
+  };
+  const hayJefe = (tipo) => !!JEFES[tipo] && USAR_BLENDER && [JEFES[tipo].mesh, JEFES[tipo].bajo, JEFES[tipo].alto].every((n) => hayModelo("obstaculos/" + n));
+  const jefesMesh = {};
+  // Lo que se le lanza a cada uno (y lo que sale por la pista para cogerlo).
+  function armaJefe(tipo) {
+    if (nivel && nivel.debate) return "micro";
+    if (tipo === "dragon") return powerupPools.arancel && hayModelo("obstaculos/arancel") ? "arancel" : "chile";
+    const a = JEFES[tipo] && JEFES[tipo].arma;
+    return a && powerupPools[a] && hayModelo("obstaculos/" + (a === "arancel" ? "arancel" : a)) ? a : "chile";
+  }
   function tipoJefe() { return jefe.activo ? jefe.tipo : null; }
   function onJefe(fn) { alEventoJefe = fn; }
   function jefeActivo() { return jefe.activo && !jefe.saliendo; }
@@ -4137,20 +4183,23 @@ export function createWorld(scene) {
   let jefeAcabado = false;
   function jefeSeVa() {
     jefeAcabado = true;
-    for (const p of powerups) if ((p.kind === "chile" || p.kind === "arancel") && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
+    for (const p of powerups) if (ARMAS_JEFE.includes(p.kind) && !p.collected && p.z < -6) { p.collected = true; tacosEn(p.lane, p.z, 3); }
   }
   // 06/11 (3): `paso`: el «jefe de paso» de los niveles sin jefe: tira tres
   // barriles y se va (sin barra, sin chiles).
   function iniciarJefe(tipo = "robot", paso = false) {
     if (jefe.activo || !EXTRAS) return false;
     if (tipo === "dragon" && !montarDragon()) tipo = "robot";
+    if (JEFES[tipo] && !hayJefe(tipo)) tipo = "robot";
     if (!jefe.robot) jefe.robot = jefe.mesh || modeloConContorno("obstaculos/jefe");
-    if (jefe.mesh && jefe.mesh !== (tipo === "dragon" ? dragon.cabeza : jefe.robot)) jefe.mesh.visible = false;
+    if (JEFES[tipo] && !jefesMesh[tipo]) jefesMesh[tipo] = modeloConContorno("obstaculos/" + JEFES[tipo].mesh);
+    const nuevo = tipo === "dragon" ? dragon.cabeza : JEFES[tipo] ? jefesMesh[tipo] : jefe.robot;
+    if (jefe.mesh && jefe.mesh !== nuevo) jefe.mesh.visible = false;
     jefe.tipo = tipo;
-    jefe.mesh = tipo === "dragon" ? dragon.cabeza : jefe.robot;
+    jefe.mesh = nuevo;
     jefe.mesh.visible = true;
     jefe.mesh.rotation.set(0, 0, 0);
-    jefe.mesh.scale.setScalar(tipo === "dragon" ? DRAGON_ESCALA : 1);
+    jefe.mesh.scale.setScalar(tipo === "dragon" ? DRAGON_ESCALA : JEFES[tipo] ? JEFES[tipo].escala : 1);
     if (!jefe.mesh.parent) group.add(jefe.mesh);
     if (tipo === "dragon") for (const s of dragon.trozos) { s.x = 0; s.y = DRAGON_Y; }
     // 29/10: en el debate de Las Vegas viene subido a su atril.
@@ -4171,12 +4220,11 @@ export function createWorld(scene) {
       tiro: paso ? 2.0 : 5.5 });
     return true;
   }
-  const conArancel = () => jefe.tipo === "dragon" && hayModelo("obstaculos/arancel");
-  const chileGeo = () => modelo(conArancel() ? "obstaculos/arancel" : "obstaculos/chile");
   function dispararJefe(x, y) {
     if (!jefeActivo()) return;
-    const m = chileGeo();
-    m.scale.setScalar(conArancel() ? 1.9 : 1.6);
+    const arma = armaJefe(jefe.tipo);
+    const m = modelo("obstaculos/" + (arma === "micro" ? "chile" : arma));
+    m.scale.setScalar(arma === "arancel" ? 1.9 : arma === "chile" ? 1.6 : 1.5);
     m.position.set(x, y, 0);
     group.add(m);
     disparos.push({ mesh: m, t: 0, x0: x, y0: y });
@@ -4190,9 +4238,11 @@ export function createWorld(scene) {
   }
   function actualizarJefe(dt) {
     if (!jefe.activo) return;
-    const m = jefe.mesh, esDragon = jefe.tipo === "dragon";
+    const m = jefe.mesh, esDragon = jefe.tipo === "dragon", J = JEFES[jefe.tipo];
     jefe.tiempo += dt;
     if (esDragon) moverDragon(dt);
+    // (El remolino de papeles da vueltas siempre, tambien al irse.)
+    if (J && J.gira) m.rotation.y += dt * J.gira;
     if (jefe.saliendo) {
       // Vencido: sale despedido girando. Si se va por tiempo, se aleja volando.
       // (El dragon da vueltas mas despacio: el cuerpo le sigue.)
@@ -4206,13 +4256,16 @@ export function createWorld(scene) {
     jefe.z += (JEFE_Z - jefe.z) * Math.min(1, dt * 1.2);
     jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * 4);
     const temblor = jefe.golpe > 0 ? Math.sin(jefe.tiempo * 70) * 0.25 * jefe.golpe : 0;
-    m.position.set(jefe.x + temblor, (esDragon ? DRAGON_Y : JEFE_Y) + Math.sin(jefe.tiempo * 2.2) * 0.25, jefe.z);
+    const altura = esDragon ? DRAGON_Y : J ? J.y : JEFE_Y;
+    // (El toro va por el suelo al galope: botes cortos, sin flotar.)
+    const bote = J && J.galope ? Math.abs(Math.sin(jefe.tiempo * 7)) * 0.25 : Math.sin(jefe.tiempo * 2.2) * 0.25;
+    m.position.set(jefe.x + temblor, altura + bote, jefe.z);
     m.rotation.z = Math.sin(jefe.tiempo * 1.7) * 0.06;
     // El dragon gira un poco la cabeza hacia donde va.
     if (esDragon) m.rotation.y = (LANE_X[jefe.carril] - jefe.x) * 0.12;
     if (jefe.golpe > 0) {
       jefe.golpe = Math.max(0, jefe.golpe - dt * 2.5);
-      m.scale.setScalar((esDragon ? DRAGON_ESCALA : 1) * (1 + jefe.golpe * 0.25));
+      m.scale.setScalar((esDragon ? DRAGON_ESCALA : J ? J.escala : 1) * (1 + jefe.golpe * 0.25));
     }
     // 08/11: los ataques van rotando. «uno»: algo que rueda por tu carril (el
     // robot, un barril; el dragon, una caja de aranceles); «dos»: dos a la vez,
@@ -4220,25 +4273,26 @@ export function createWorld(scene) {
     // dragon): una bola de fuego a la altura de la cabeza, que se pasa agachado.
     jefe.tiro -= dt;
     if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6) {
-      const ataques = jefe.paso ? ["uno"] : esDragon ? ["uno", "fuego", "uno", "dos", "fuego", "uno"] : ["uno", "uno", "dos", "uno", "dos"];
+      const ataques = jefe.paso ? ["uno"] : esDragon ? ["uno", "fuego", "uno", "dos", "fuego", "uno"] : J ? J.ataques : ["uno", "uno", "dos", "uno", "dos"];
       const ataque = ataques[(jefe.ataques = (jefe.ataques || 0) + 1) % ataques.length];
-      const bajo = esDragon ? (obstaclePools.caja_arancel ? "caja_arancel" : "bola_fuego") : "barril";
+      const bajo = esDragon ? (obstaclePools.caja_arancel ? "caja_arancel" : "bola_fuego") : J ? J.bajo : "barril";
       const lanzar = (l, que) => {
-        if (que === "fuego") {
+        if (que === "fuego" || que === "alto") {
           // A la altura de la cabeza y sin caer: se pasa agachado.
-          const o = spawnObstacle(l, "high", jefe.z + 2.2, "bola_fuego");
+          const o = spawnObstacle(l, "high", jefe.z + 2.2, que === "alto" ? J.alto : "bola_fuego");
           o.type = "high"; o.alto = undefined; o.mueve = 9;
           o.mesh.position.y = 1.55;
           return;
         }
-        const o = spawnObstacle(l, "low", jefe.z + (esDragon ? 2.2 : 1.5), que);
+        const o = spawnObstacle(l, "low", jefe.z + (esDragon || J ? 2.2 : 1.5), que);
         o.cae = { vy: esDragon ? 1 : 2 };
-        o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : JEFE_Y;
+        o.mesh.position.y = esDragon ? DRAGON_Y - 1.3 : J ? Math.max(1.2, J.y + 1) : JEFE_Y;
       };
       if (ataque === "dos") {
         const otro = jugadorCarril === 1 ? (Math.random() < 0.5 ? 0 : 2) : 1;
         lanzar(jugadorCarril, bajo); lanzar(otro, bajo);
       } else if (ataque === "fuego") lanzar(jugadorCarril, "fuego");
+      else if (ataque === "alto") lanzar(jugadorCarril, "alto");
       else lanzar(jefe.carril, bajo);
       if (esDragon) dragon.boca = 1;
       jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
@@ -4715,8 +4769,7 @@ export function createWorld(scene) {
       tacosEn(lane, z, 4);
       // 08/11: aranceles en lugar de chiles, y menos (antes el 55 % de las filas).
       // 08/11 (2): Isidro: «al Burrito-Bot sí quiero que le tire chiles, al dragón aranceles».
-      const esDragon = (t && t.jefe === "dragon") || (jefe.activo && jefe.tipo === "dragon");
-      const arma = nivel && nivel.debate ? "micro" : esDragon && powerupPools.arancel && hayModelo("obstaculos/arancel") ? "arancel" : "chile";
+      const arma = armaJefe(jefe.activo ? jefe.tipo : (t && t.jefe) || "robot");
       if (EXTRAS && Math.random() < 0.27) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
 
@@ -6273,6 +6326,10 @@ export function createWorld(scene) {
         o.mesh.rotation.y += dt * 2.5;
         if (!o.mesh.userData.halo) { const h = halo(2.4, 0.45, 0xff9a2a); h.position.y = 0.45; o.mesh.add(h); o.mesh.userData.halo = h; }
       }
+      // 09/11: lo de los jefes nuevos: la paellera, el libro y la bola de barro
+      // ruedan; los que vuelan dan vueltas despacio.
+      if ((o.pool === "paellera" || o.pool === "bola_barro" || o.pool === "libro_gordo") && o.mueve) o.mesh.rotation.x -= dt * 7;
+      if ((o.pool === "pez_helado" || o.pool === "carpeta_vuela" || o.pool === "capote" || o.pool === "grafico_datos") && o.mueve) o.mesh.rotation.y += dt * 3;
       if (o.pool === "rodadora") { o.mesh.rotation.x += dt * 7; o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.25; }
       if (!o.smashed) {
         if (o.pool === "elvis") {
@@ -6494,5 +6551,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA };
+    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE };
 }

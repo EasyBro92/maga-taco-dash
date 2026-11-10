@@ -22,6 +22,8 @@ import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models
 import * as misiones from "./missions.js";
 import { FRASES, TRUMP, traduccion } from "./frases.js";
 import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
+import { alCambiarCuenta, arrancarCuenta, entrar as entrarCuenta, crear as crearCuenta, salir as salirCuenta, nubeFalla, cuentaActual } from "./cuenta.js";
+import { modoInstalar, alCambiarInstalar, instalar } from "./instalar.js";
 
 initErrorReporting();
 
@@ -956,7 +958,8 @@ function completarNivel() {
   const bSig = document.getElementById("nivelFinSiguiente");
   bSig.classList.toggle("hidden", !sig);
   document.getElementById("nivelFinMapa").className = sig ? "smallBtn" : "bigBtn";
-  if (sig) bSig.textContent = `${t("siguienteNivel")}: ${sig.nombre}`;
+  // (La calle debajo, en pequeño: en un movil de 360 px partia el boton.)
+  if (sig) { bSig.textContent = t("siguienteNivel"); const sm = document.createElement("small"); sm.textContent = sig.nombre; bSig.appendChild(sm); }
   nivelElegido = sig ? sig.id : null;
   document.getElementById("nivelFin").classList.remove("hidden");
   spawnConfetti(45);
@@ -970,6 +973,9 @@ function completarNivel() {
 function textoJefe(clave) {
   const id = nivelActual && nivelActual.id;
   if (world.tipoJefe() === "dragon") return t(clave + "Dragon");
+  // 09/11: los jefes nuevos (pinguino, papeles, toro, cerebro, pantano).
+  const tj = world.tipoJefe();
+  if (tj && tj !== "robot") return t(clave + "_" + tj);
   return t(id === "washington" ? clave + "Dc" : id === "vegas" ? clave + "Vegas" : clave);
 }
 // La barra del jefe. En el debate es la encuesta: tú en rojo contra el robot
@@ -979,7 +985,8 @@ function pintarBarraJefe(vida) {
   const barra = document.getElementById("bossBar");
   barra.classList.toggle("debate", debate);
   if (!debate) {
-    barra.querySelector(".bossName").textContent = world.tipoJefe() === "dragon" ? t("dragonNombre") : "BURRITO-BOT";
+    const tj = world.tipoJefe();
+    barra.querySelector(".bossName").textContent = tj === "dragon" ? t("dragonNombre") : tj && tj !== "robot" ? t("jefeNombre_" + tj) : "BURRITO-BOT";
     document.getElementById("bossFill").style.width = `${(vida / world.vidaJefe()) * 100}%`;
     return;
   }
@@ -1130,7 +1137,7 @@ function lanzarFrase() {
   const o = world.primerObstaculo(currentLane, 60);
   let texto, objetivo;
   if (o) { texto = f[o.pool] && f[o.pool] !== dichasHace[dichasHace.length - 1] ? f[o.pool] : sinRepetir(f.nada); objetivo = o; }
-  else if (world.jefeActivo()) { texto = world.tipoJefe() === "dragon" ? f.dragon : f.jefe; objetivo = "jefe"; }
+  else if (world.jefeActivo()) { texto = f[world.tipoJefe()] || f.jefe; objetivo = "jefe"; }
   else { texto = sinRepetir(f.nada); objetivo = null; }
   frasesCargas--;
   world.lanzarFrase(currentLane, texto, objetivo);
@@ -1502,7 +1509,8 @@ function tropezar(o) {
   persigueLeft = PERSIGUE;
   world.perseguir(true);
   ponerSirenas();
-  showBubble(t("tePersiguen"), 1600);
+  // 09/11: la mitad de las veces suelta una excusa (Isidro: «más gamberro»).
+  showBubble(Math.random() < 0.5 ? sinRepetir(t("excusas").split("|")) : t("tePersiguen"), 1600);
 }
 // Luces y sirena: en el tramo de persecucion y mientras te sigue el coche.
 function ponerSirenas() {
@@ -1771,7 +1779,7 @@ function checkPowerups() {
       dobleLeft = DOBLE_DURATION;
       showBubble(t("dobleTacos"), 1100, 0);
       vibrate(20);
-    } else if (p.kind === "chile" || p.kind === "arancel") {
+    } else if (world.ARMAS_JEFE.includes(p.kind)) {
       // Chile picante: sale disparado hacia el Burrito-Bot.
       world.dispararJefe(playerX, py + 1.2);
       vibrate(15);
@@ -1936,7 +1944,8 @@ function botonSeguir(id) {
 }
 function mostrarChoqueNivel() {
   const n = nivelActual;
-  document.getElementById("choqueTitulo").textContent = t("chocaste");
+  // 09/11: el titulo, a veces, una excusa suya.
+  document.getElementById("choqueTitulo").textContent = Math.random() < 0.6 ? sinRepetir(t("chocastes").split("|")) : t("chocaste");
   const falta = Math.max(0, Math.round(n.largo - distance));
   document.getElementById("choqueFalta").textContent = t("faltaban")
     .replace("{n}", falta.toLocaleString(getLang() === "en" ? "en" : "es"))
@@ -2245,7 +2254,9 @@ function frame(dtFijo) {
     if (av && mostrarTutorial) mostrarGesto(av.tipo);
     if (!nivelActual && distance >= nextJefeAt && rocketTimeLeft === 0 && !world.jefeActivo() && world.iniciarJefe(jefeSinFin)) {
       nextJefeAt = distance + JEFE_CADA;
-      jefeSinFin = jefeSinFin === "dragon" ? "robot" : "dragon";
+      // 09/11: en el sin fin van saliendo todos los jefes, uno detras de otro.
+      const todos = ["dragon", "robot", "pinguino", "papeles", "toro", "cerebro"].filter((j) => j === "robot" || j === "dragon" || world.hayJefe(j));
+      jefeSinFin = todos[(todos.indexOf(jefeSinFin) + 1) % todos.length];
       gritoChina = 2.6;
       pintarBarraJefe(5);
       document.getElementById("bossBar").classList.remove("hidden");
@@ -2254,11 +2265,14 @@ function frame(dtFijo) {
     }
 
     // El grito: el primero en cuanto se va el aviso de que llega, y luego cada 6 a 9 s.
-    if (world.jefeActivo() && world.tipoJefe() === "dragon") {
+    // 09/11: cada jefe nuevo con su grito (Isidro: «haz el juego más gamberro»).
+    const tjg = world.jefeActivo() && world.tipoJefe();
+    if (tjg && tjg !== "robot") {
       gritoChina -= dt;
       if (gritoChina <= 0) {
         // Si esta hablando de otra cosa, lo vuelve a intentar enseguida.
-        gritoChina = showBubble("CHINA!", 1500, 2) ? 6 + Math.random() * 3 : 1;
+        const g = tjg === "dragon" ? "CHINA!" : sinRepetir(t("grito_" + tjg).split("|"));
+        gritoChina = showBubble(g, 1500, 2) ? 6 + Math.random() * 3 : 1;
         flashExpression("determined", 0.6);
       }
     }
@@ -2562,6 +2576,51 @@ document.getElementById("settingsClose").addEventListener("click", () => {
   document.getElementById("settingsOverlay").classList.add("hidden");
 });
 
+// ---------- 10/11/2026: la cuenta (cuenta.js) y el boton de instalar (instalar.js) ----------
+const $c = (id) => document.getElementById(id);
+function pintarCuenta(u) {
+  $c("cuentaBtn").innerHTML = u ? `👤 ${u.nombre.replace(/[<>&"]/g, "")}` : `👤 ${t("cuentaBoton")}`;
+  $c("cuentaFuera").classList.toggle("hidden", !!u);
+  $c("cuentaDentro").classList.toggle("hidden", !u);
+  if (u) {
+    $c("cuentaHola").textContent = t("cuentaHola").replace("{n}", u.nombre);
+    $c("cuentaEstado").textContent = nubeFalla() ? t("cuentaNubeMal") : t("cuentaGuardando");
+  }
+  $c("cuentaNombre").placeholder = t("cuentaNombre");
+  $c("cuentaClave").placeholder = t("cuentaClave");
+}
+alCambiarCuenta(pintarCuenta);
+$c("cuentaBtn").addEventListener("click", () => { pintarCuenta(cuentaActual()); $c("cuentaError").textContent = ""; $c("cuentaOverlay").classList.remove("hidden"); });
+$c("cuentaCerrar").addEventListener("click", () => $c("cuentaOverlay").classList.add("hidden"));
+async function usarCuenta(fn) {
+  const nombre = $c("cuentaNombre").value.trim(), clave = $c("cuentaClave").value;
+  const err = $c("cuentaError");
+  err.textContent = t("cuentaEspera");
+  for (const b of ["cuentaEntrar", "cuentaCrear"]) $c(b).disabled = true;
+  const r = await fn(nombre, clave);
+  for (const b of ["cuentaEntrar", "cuentaCrear"]) $c(b).disabled = false;
+  if (r.error) { err.textContent = t(r.error); return; }
+  err.textContent = "";
+  $c("cuentaClave").value = "";
+  // Si la partida de la nube traia algo nuevo, se recarga para pintarlo todo.
+  if (r.cambio) { location.reload(); return; }
+  pintarCuenta(cuentaActual());
+}
+$c("cuentaEntrar").addEventListener("click", () => usarCuenta(entrarCuenta));
+$c("cuentaCrear").addEventListener("click", () => usarCuenta(crearCuenta));
+$c("cuentaClave").addEventListener("keydown", (e) => { if (e.key === "Enter") usarCuenta(entrarCuenta); });
+$c("cuentaSalir").addEventListener("click", async () => { await salirCuenta(); });
+arrancarCuenta(() => { if (gameState !== "playing") location.reload(); });
+
+alCambiarInstalar(() => {
+  const m = modoInstalar();
+  const b = $c("instalarBtn");
+  b.classList.toggle("hidden", !m);
+  b.textContent = `📲 ${m === "android" ? t("instalarAndroid") : t("instalar")}`;
+});
+$c("instalarBtn").addEventListener("click", async () => { if (await instalar() === "ios") $c("iosOverlay").classList.remove("hidden"); });
+$c("iosCerrar").addEventListener("click", () => $c("iosOverlay").classList.add("hidden"));
+
 musicVolRange.addEventListener("input", () => {
   const v = musicVolRange.value / 100;
   setMusicVolume(v);
@@ -2614,6 +2673,7 @@ for (const level in qualityBtns) {
 document.getElementById("resetProgressBtn").addEventListener("click", () => {
   if (window.confirm(t("resetConfirm"))) {
     resetProgress();
+    window.location.reload();
   }
 });
 

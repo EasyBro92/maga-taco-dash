@@ -477,7 +477,7 @@ const CALLES = [
     publico: { personas: ["granjero", "abuelo", "senora", "fan", "chico", "granjero"], valla: "banderas", cada: 2 },
     tramos: [
       [0, 70, "calma", { titulo: "wichita" }],
-      [70, 300, "mixto", { densidad: 0.5, titulo: "viento" }],
+      [70, 300, "mixto", { densidad: 0.5, titulo: "viento_ks" }],
       [300, 450, "rampa", { titulo: "rampa" }],
       [450, 620, "baldosas", { titulo: "baldosas" }],
       [620, 700, "calma"],
@@ -946,7 +946,8 @@ const CALLES = [
       [1250, 1450, "vallas", { high: ["protesta", "dron_tele"], titulo: "protesta" }],
       [1450, 1600, "premios", { titulo: "premios" }],
       [1600, 1680, "calma"],
-      [1680, 2400, "jefe", { titulo: "jefe_final" }],
+      // 09/11: el jefe final es el Monstruo del Pantano (todos los jefes juntos).
+      [1680, 2400, "jefe", { jefe: "pantano", titulo: "jefe_final" }],
       [2400, 2550, "festin", { potenciador: "freeze", titulo: "hielo" }],
       [2550, 2750, "slalom", { full: ["agentes", "furgoneta", "furgoneta_fake", "segway"], momento: "vehiculo", vehiculo: "limusina", titulo: "sube_limusina" }],
       [2750, 2860, "desfile_cruza", { cruzan: ["segway"], titulo: "cruzan_segways" }],

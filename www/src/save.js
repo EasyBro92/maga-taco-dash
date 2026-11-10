@@ -31,8 +31,51 @@ function defaults() {
 
 let state = load();
 
+// 10/11/2026: la cuenta (cuenta.js) se entera de cada guardado para subirlo.
+let alGuardar = null;
+export function onGuardar(fn) { alGuardar = fn; }
+
 function persist() {
   localStorage.setItem(KEY, JSON.stringify(state));
+  if (alGuardar) alGuardar();
+}
+
+// La partida para la nube (sin los ajustes: esos son de cada movil).
+export function partidaParaNube() {
+  const { settings, ...resto } = state;
+  return resto;
+}
+// Junta la partida de la nube con la de este movil sin perder nada: lo mejor
+// de cada nivel, todo lo comprado y los tacos y el record mas altos. De lo
+// demas (misiones, cajas...) se queda la partida que tenga mas estrellas.
+export function fundirPartida(n) {
+  if (!n || typeof n !== "object") return false;
+  const a = state;
+  const estrellas = (s) => Object.values(s.niveles || {}).reduce((x, r) => x + (r.estrellas || 0), 0);
+  const antes = JSON.stringify(partidaParaNube());
+  const nubeMejor = estrellas(n) > estrellas(a) || (estrellas(n) === estrellas(a) && (n.totalTacos || 0) > (a.totalTacos || 0));
+  const b = nubeMejor ? { ...defaults(), ...n } : { ...a };
+  b.settings = a.settings;
+  b.totalTacos = Math.max(a.totalTacos || 0, n.totalTacos || 0);
+  b.bestScore = Math.max(a.bestScore || 0, n.bestScore || 0);
+  b.ownedItems = [...new Set([...(a.ownedItems || []), ...(n.ownedItems || [])])];
+  const niveles = {};
+  for (const id of new Set([...Object.keys(a.niveles || {}), ...Object.keys(n.niveles || {})])) {
+    const x = (a.niveles || {})[id], y = (n.niveles || {})[id];
+    if (!x || !y) { niveles[id] = x || y; continue; }
+    const r = { superado: !!(x.superado || y.superado), meta: !!(x.meta || y.meta), sinChocar: !!(x.sinChocar || y.sinChocar),
+      chapas: [0, 1, 2].map((i) => !!((x.chapas || [])[i] || (y.chapas || [])[i])) };
+    r.estrellas = estrellasDe(r);
+    niveles[id] = r;
+  }
+  b.niveles = niveles;
+  if (a.tienda || n.tienda) {
+    const ta = a.tienda || { tengo: [], puesto: {} }, tn = n.tienda || { tengo: [], puesto: {} };
+    b.tienda = { tengo: [...new Set([...(ta.tengo || []), ...(tn.tengo || [])])], puesto: (nubeMejor ? tn : ta).puesto || {} };
+  }
+  state = b;
+  localStorage.setItem(KEY, JSON.stringify(state));
+  return JSON.stringify(partidaParaNube()) !== antes;
 }
 
 // Para modulos que cambian la partida guardada por dentro (misiones).

@@ -145,6 +145,41 @@
         <button id="startLangBtn" class="redondo" aria-label="Idioma" data-icono="idioma"></button>
         <button id="startSettingsBtn" class="redondo" aria-label="Ajustes" data-icono="ajustes"></button>
       </div>
+      <!-- 10/11: la cuenta y el boton de instalar -->
+      <div class="filaInicio filaCuenta">
+        <button id="cuentaBtn" class="smallBtn ancho"></button>
+        <button id="instalarBtn" class="smallBtn instalarBtn hidden"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10/11/2026: la cuenta (usuario y contraseña, sin correo) -->
+  <div id="cuentaOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small" data-i18n="cuentaTitulo">Tu cuenta</div>
+      <div id="cuentaFuera">
+        <p class="cuentaTexto" data-i18n="cuentaExplica">Crea un usuario para guardar tu progreso y seguir en otro móvil.</p>
+        <input id="cuentaNombre" class="cuentaCampo" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" />
+        <input id="cuentaClave" class="cuentaCampo" type="password" autocomplete="current-password" maxlength="64" />
+        <p id="cuentaError" class="cuentaError"></p>
+        <button id="cuentaEntrar" class="bigBtn" data-i18n="cuentaEntrar">ENTRAR</button>
+        <button id="cuentaCrear" class="smallBtn" data-i18n="cuentaCrear">Crear usuario nuevo</button>
+      </div>
+      <div id="cuentaDentro" class="hidden">
+        <p class="cuentaTexto" id="cuentaHola"></p>
+        <p class="cuentaTexto pequeno" id="cuentaEstado"></p>
+        <button id="cuentaSalir" class="smallBtn" data-i18n="cuentaSalir">Cerrar sesión</button>
+      </div>
+      <button id="cuentaCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- 10/11/2026: como instalarlo en el iPhone (Safari no deja hacerlo desde un boton) -->
+  <div id="iosOverlay" class="overlay hidden">
+    <div class="card">
+      <div class="title small" data-i18n="instalarTitulo">Instalar el juego</div>
+      <p class="cuentaTexto" data-i18n="instalarIos">En Safari, toca Compartir (el cuadrado con la flecha) y luego «Añadir a pantalla de inicio».</p>
+      <button id="iosCerrar" class="bigBtn" data-i18n="close">Cerrar</button>
     </div>
   </div>
 

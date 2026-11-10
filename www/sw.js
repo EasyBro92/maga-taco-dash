@@ -7,7 +7,7 @@
 // GitHub al publicar) y cada archivo sale de lo guardado si su huella no ha
 // cambiado; solo se baja lo nuevo. Sin lista (en el PC de pruebas), como antes:
 // primero internet y, sin conexion, lo guardado.
-const CACHE = "taco-dash-v47";
+const CACHE = "taco-dash-v48";
 const ARCHIVOS = "taco-dash-archivos";   // lo que va por huella (no cambia de nombre)
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -72,7 +72,8 @@ self.addEventListener("fetch", (e) => {
   if (!url.pathname.startsWith(BASE) || url.search || EN_PC) return e.respondWith(primeroInternet(req));
   let ruta = "/" + url.pathname.slice(BASE.length);
   if (ruta === "/") ruta = "/index.html";
-  if (ruta === "/huellas.json" || ruta === "/sw.js") return;
+  // (10/11: la app de Android para descargar no se guarda: pesa 14 MB.)
+  if (ruta === "/huellas.json" || ruta === "/sw.js" || ruta.startsWith("/descargas/")) return;
   e.respondWith((async () => {
     // Al abrir el juego (la pagina) se mira la lista nueva; el resto usa esa.
     const lista = req.mode === "navigate" ? await pedirHuellas() : huellas || await (pidiendo || pedirHuellas());

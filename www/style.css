@@ -464,6 +464,16 @@ html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 .card.hoja .bigBtn { margin: 4px 0 12px; }
 .filaInicio { display: flex; gap: 8px; align-items: center; justify-content: center; }
 .filaInicio .ancho { flex: 1; }
+/* 10/11: la cuenta y el boton de instalar */
+.filaCuenta { margin-top: 8px; }
+.instalarBtn { background: linear-gradient(180deg, #4cc46a, #2fa84f); color: #fff; box-shadow: 0 3px 0 #1f7a38, 0 6px 14px rgba(47, 168, 79, 0.3); }
+.cuentaTexto { margin: 4px 0 10px; font-weight: 700; color: var(--tinta); line-height: 1.3; }
+.cuentaTexto.pequeno { font-size: 13px; opacity: 0.8; }
+.cuentaCampo { display: block; width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 12px 14px; font: 700 17px var(--letra);
+  border: 2px solid #d6deeb; border-radius: 14px; color: var(--tinta); background: #fff; }
+.cuentaCampo:focus { outline: none; border-color: var(--azul); }
+.cuentaError { min-height: 18px; margin: 0 0 6px; color: #d23a2a; font-weight: 800; font-size: 14px; }
+#cuentaOverlay .smallBtn, #iosOverlay .smallBtn { display: block; margin: 8px auto 0; }
 
 /* Misiones: tarjetitas claras con barra de colores */
 .misiones { gap: 7px; margin: 0 0 10px; }
@@ -620,12 +630,14 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 /* Cartel de cada tramo */
 #tramoBanner {
   position: absolute; top: 31%; left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none;
-  font-family: var(--letra-titulo); font-weight: 700; font-size: 26px; color: #fff; white-space: nowrap;
+  font-family: var(--letra-titulo); font-weight: 700; font-size: clamp(18px, 6vw, 26px); color: #fff;
+  max-width: 92vw; white-space: normal; text-align: center; line-height: 1.15;
   -webkit-text-stroke: 6px var(--azul); paint-order: stroke fill;
   text-shadow: 0 5px 0 rgba(20, 50, 120, 0.35);
   animation: tramoEntra 2.4s ease forwards;
 }
-#tramoBanner.sprint { -webkit-text-stroke-color: var(--rojo); font-size: 30px; }
+#tramoBanner.sprint { -webkit-text-stroke-color: var(--rojo); font-size: clamp(20px, 7vw, 30px); }
+#nivelFinSiguiente small { display: block; font-size: 0.62em; letter-spacing: 0.5px; opacity: 0.9; }
 @keyframes tramoEntra {
   0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
   12% { opacity: 1; transform: translateX(-50%) scale(1.12); }

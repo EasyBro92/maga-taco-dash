@@ -48,6 +48,12 @@ const DICHOS = {
   barril: "FAKE. PHONY. FAKE!", jefe: "AMERICA FIRST!",
   // 03/11: el dragon de China y sus bolas de fuego
   dragon: "CHINA!", bola_fuego: "CHINA!",
+  // 09/11: los jefes nuevos y lo que tiran
+  pinguino: "BUY AMERICAN AND HIRE AMERICAN!", bloque_hielo: "TREMENDOUS!", pez_helado: "IT'S INCREDIBLE!",
+  papeles: "FAKE. PHONY. FAKE!", caja_documentos: "IT'S A WITCH HUNT AND IT'S A DISGRACE!", carpeta_vuela: "THIS IS FAKE NEWS!",
+  toro: "AMERICA FIRST!", paellera: "WE WILL WIN!", capote: "WINNING LIKE NEVER BEFORE!",
+  cerebro: "THEY'RE VERY DISHONEST PEOPLE.", libro_gordo: "FAKE. PHONY. FAKE!", grafico_datos: "THIS IS FAKE NEWS!",
+  pantano: "THE ENEMY OF THE PEOPLE!", bola_barro: "IT'S A VERY SAD THING.",
   // Nueva York
   taxi: "BUY AMERICAN AND HIRE AMERICAN!", contenedor: "THE ENEMY OF THE PEOPLE!", alcantarilla: "THE ENEMY OF THE PEOPLE!",
   andamio: "WE WILL BRING BACK OUR JOBS!", viga: "WE WILL BRING BACK OUR JOBS!", basura: "THE ENEMY OF THE PEOPLE!",
@@ -69,6 +75,13 @@ const DICHOS = {
   cerdo: "YOU WILL NEVER BE IGNORED AGAIN!", votantes: "YOU WILL NEVER BE IGNORED AGAIN!",
   urna: "WE WILL WIN!", pancarta_caucus: "WE WILL WIN!",
   quitanieves: "TREMENDOUS!", monton_nieve: "TREMENDOUS!", munieco_nieve: "IT'S INCREDIBLE!",
+  // 09/11: los que no tenian frase (salia una cualquiera)
+  etiqueta_precio: "CHINA!", caja_precio: "CHINA!", carrito_compra: "BUY AMERICAN AND HIRE AMERICAN!",
+  rueda_queso: "TREMENDOUS!", cartel_queso: "TREMENDOUS!", cubo_basura: "THE ENEMY OF THE PEOPLE!",
+  jugador_hockey: "THEY'RE VERY DISHONEST PEOPLE.", porteria_hockey: "WE WILL WIN!", periodicos: "THIS IS FAKE NEWS!",
+  moto_harley: "BUY AMERICAN AND HIRE AMERICAN!", coche_seguridad: "BUY AMERICAN AND HIRE AMERICAN!", pit_crew: "WE WILL BRING BACK OUR JOBS!",
+  caja_filetes: "TREMENDOUS!", cartel_steak: "TREMENDOUS!", cajas_pizza: "IT'S INCREDIBLE!", carrito_perritos: "BUY AMERICAN AND HIRE AMERICAN!",
+  carro_clydesdale: "AMERICA FIRST!", bruja_bici: "IT'S A WITCH HUNT AND IT'S A DISGRACE!", segway: "THEY'RE VERY DISHONEST PEOPLE.",
   // El debate de Las Vegas: lo que le suelta al Burrito-Bot con cada micrófono.
   debate: ["RUSSIA IS FAKE NEWS!", "FAKE. PHONY. FAKE!", "THEY'RE VERY DISHONEST PEOPLE.", "THE ENEMY OF THE PEOPLE!", "THIS IS FAKE NEWS!"],
   // Sin nada delante, y cuando sube el multiplicador de tacos.
