@@ -5,7 +5,7 @@ import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
   sndFanfarria, sndChapa, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo,
-  setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted,
+  setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
 import { FORMAS, CENTROS } from "./mapa-eeuu.js";
@@ -18,7 +18,8 @@ import { PIEZAS_KIT } from "./edificios.js";
 import { applyI18n, toggleLang, setLang, t, getLang } from "./i18n.js";
 import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
-import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje } from "./models.js";
+import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje, cargarLider } from "./models.js";
+import { liderPuesto, liderDe, nombreLider, tituloLider } from "./lideres.js";
 import * as misiones from "./missions.js";
 import { FRASES, TRUMP, traduccion } from "./frases.js";
 import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
@@ -215,7 +216,7 @@ scene.add(sunGlare);
 {
   const barra = document.querySelector(".loadingBarFill");
   try {
-    await Promise.all([cargarPersonaje(), loadZoneModels((n, total) => {
+    await Promise.all([cargarPersonaje(), cargarLider(liderPuesto()), loadZoneModels((n, total) => {
       if (barra) barra.style.width = `${Math.round(20 + 80 * n / total)}%`;
     })]);
   } catch (e) {
@@ -224,7 +225,10 @@ scene.add(sunGlare);
 }
 const world = createWorld(scene);
 
-const character = createCharacter(getSave().equipped);
+// 10/11: el lider elegido en la tienda (o el presidente de siempre)
+const lider = liderDe(liderPuesto());
+const character = createCharacter(getSave().equipped, lider);
+setSoloTexto(!!lider);   // los demas no tienen la voz de Trump: solo el globo
 character.object3D.position.set(0, 0, 0);
 scene.add(character.object3D);
 
@@ -611,6 +615,26 @@ function arrancar() {
   for (const id of ["mapaGira", "startScreen", "choqueNivel", "gameOverScreen", "nivelFin", "pausaOverlay"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
   prepararBarra();
+  regaloLider();
+}
+
+// 10/11/2026: cada lider empieza la carrera con su ventaja (lideres.js) y la anuncia.
+function fraseLider() {
+  const f = lider.frases[getLang()] || lider.frases.es;
+  return f[Math.floor(Math.random() * f.length)];
+}
+function regaloLider() {
+  if (!lider) return;
+  const v = lider.ventaja;
+  if (v === "shield") { shieldActive = true; character.setShieldActive(true); }
+  else if (v === "magnet") magnetTimeLeft = MAGNET_DURATION * 2;
+  else if (v === "boost") boostTimeLeft = BOOST_DURATION * 1.5;
+  else if (v === "botas") botasTimeLeft = BOTAS_DURATION * 1.5;
+  else if (v === "doble") dobleLeft = DOBLE_DURATION * 2.5;
+  else if (v === "mega") { megaTimeLeft = MEGA_DURATION * 1.4; character.setMega(MEGA_SCALE); }
+  updatePowerupBadge();
+  avisoVerde(`<b>${nombreLider(lider)}</b> · ${tituloLider(lider)}`);
+  setTimeout(() => { if (gameState === "playing") showBubble(fraseLider(), 2400); }, 1600);
 }
 
 // ---- Barra de progreso del nivel (27/10/2026) ----
@@ -1138,7 +1162,7 @@ function lanzarFrase() {
   let texto, objetivo;
   if (o) { texto = f[o.pool] && f[o.pool] !== dichasHace[dichasHace.length - 1] ? f[o.pool] : sinRepetir(f.nada); objetivo = o; }
   else if (world.jefeActivo()) { texto = f[world.tipoJefe()] || f.jefe; objetivo = "jefe"; }
-  else { texto = sinRepetir(f.nada); objetivo = null; }
+  else { texto = lider && Math.random() < 0.6 ? fraseLider() : sinRepetir(f.nada); objetivo = null; }
   frasesCargas--;
   world.lanzarFrase(currentLane, texto, objetivo);
   hablar(texto);
@@ -1363,7 +1387,7 @@ function updatePowerupBadge() {
     badge.innerHTML = `${icono(tipo)}<span>${nombre}</span><i class="pbBarra"><b></b></i>`;
     badgePintado = tipo + getLang();
   }
-  badge.querySelector(".pbBarra b").style.transform = `scaleX(${quedan.toFixed(3)})`;
+  badge.querySelector(".pbBarra b").style.transform = `scaleX(${Math.min(1, quedan).toFixed(3)})`;
   badge.classList.remove("hidden");
 }
 

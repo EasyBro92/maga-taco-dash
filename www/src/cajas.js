@@ -11,24 +11,23 @@ import { urlPegatina } from "./pegatinas.js";
 import { icono } from "./iconos.js";
 import { t, getLang } from "./i18n.js";
 import { sndTic, sndChapa, sndFanfarria, vibrate } from "./audio.js";
+import { LIDERES, RAREZAS, liderLibre, darLider, ponerLider, nombreLider, tituloLider, fotoLider } from "./lideres.js";
 
-// Premios: [tacos, color de rareza, probabilidad]. El último es una prenda de
-// la tienda que aún no se tenga (si ya se tiene todo, son 1500 tacos).
+// 10/11/2026: Isidro: «los premios se sienten muy sosos y sin ningún
+// significado». Ahora la caja reparte sobre todo LÍDERES (lideres.js): cada
+// uno corre con su cara y empieza las carreras con su ventaja. Los tacos
+// quedan de relleno. Un líder repetido se cambia por tacos (más cuanto más
+// raro). La primera caja de todas trae un líder seguro.
 const PREMIOS = [
-  { tacos: 50,   color: "#b0c3d9", p: 30 },
-  { tacos: 100,  color: "#5e98d9", p: 25 },
-  { tacos: 200,  color: "#4b69ff", p: 18 },
-  { tacos: 400,  color: "#8847ff", p: 12 },
-  { tacos: 800,  color: "#d32ce6", p: 7 },
-  { tacos: 1500, color: "#eb4b4b", p: 3 },
-  { prenda: true, color: "#e4ae39", p: 5 },
+  { tacos: 100, color: "#b0c3d9", p: 28 },
+  { tacos: 250, color: "#5e98d9", p: 20 },
+  { tacos: 600, color: "#8847ff", p: 8 },
+  { lider: "raro", color: RAREZAS.raro.color, p: 26 },
+  { lider: "epico", color: RAREZAS.epico.color, p: 13 },
+  { lider: "legendario", color: RAREZAS.legendario.color, p: 5 },
 ];
-const PRENDAS = [
-  { id: "gorra_roja", es: "Gorra roja", en: "Red cap" },
-  { id: "traje_negro", es: "Traje negro", en: "Black suit" },
-  { id: "vaquero", es: "Sombrero vaquero", en: "Cowboy hat" },
-  { id: "traje_rojo", es: "Traje rojo", en: "Red suit" },
-];
+const REPETIDO = { raro: 800, epico: 1500, legendario: 3000 };
+const unoDe = (rareza) => { const de = LIDERES.filter((x) => x.rareza === rareza); return de[Math.floor(Math.random() * de.length)]; };
 
 export function cajasPendientes() {
   return getSave().cajas || 0;
@@ -45,16 +44,13 @@ function sortear() {
   for (const p of PREMIOS) { if ((r -= p.p) < 0) return p; }
   return PREMIOS[0];
 }
-function prendaLibre() {
-  const tengo = getTienda().tengo;
-  return PRENDAS.find((p) => !tengo.includes(p.id)) || null;
-}
-function carta(p) {
-  const prenda = p.prenda ? prendaLibre() : null;
-  const dentro = prenda
-    ? `${icono("gorra")}<span>${prenda[getLang()] || prenda.es}</span>`
-    : `<img src="${urlPegatina("taco")}" alt=""><span>${(p.prenda ? 1500 : p.tacos).toLocaleString("es")}</span>`;
-  return `<div class="ruletaCarta" style="--c:${p.color}">${dentro}</div>`;
+// Carta de la cinta: con un líder de esa rareza (el ganado, en la del premio).
+function carta(p, l = null) {
+  if (p.lider) {
+    l = l || unoDe(p.lider);
+    return `<div class="ruletaCarta lider" style="--c:${p.color}"><img src="${fotoLider(l.id)}" alt=""><span>${l.corto}</span></div>`;
+  }
+  return `<div class="ruletaCarta" style="--c:${p.color}"><img src="${urlPegatina("taco")}" alt=""><span>${p.tacos.toLocaleString("es")}</span></div>`;
 }
 
 // Abre UNA caja: la ruleta gira, se para en el premio y se cobra.
@@ -63,11 +59,15 @@ export function abrirCaja(alCerrar) {
   const s = getSave();
   if (!s.cajas) { if (alCerrar) alCerrar(); return; }
   s.cajas--;
-  const premio = sortear();
-  const prenda = premio.prenda ? prendaLibre() : null;
+  let premio = sortear();
+  if (!s.primeraCaja) { s.primeraCaja = true; if (liderLibre("raro")) premio = PREMIOS.find((p) => p.lider === "raro"); }
+  const lider = premio.lider ? liderLibre(premio.lider) : null;
+  // Si ya se tienen todos los de esa rareza: uno repetido, y se cambia por tacos.
+  const repe = premio.lider && !lider ? unoDe(premio.lider) : null;
+  const tacos = premio.lider ? (lider ? 0 : REPETIDO[premio.lider]) : premio.tacos;
   // Se cobra ya (si se cierra la app a mitad de la ruleta, no se pierde).
-  if (prenda) getTienda().tengo.push(prenda.id);
-  else addTacos(premio.prenda ? 1500 : premio.tacos);
+  if (lider) darLider(lider.id);
+  if (tacos) addTacos(tacos);
   persistSave();
 
   const ov = document.getElementById("cajaOverlay");
@@ -79,12 +79,14 @@ export function abrirCaja(alCerrar) {
   const GANA = 30;
   const cartas = [];
   for (let i = 0; i < 34; i++) cartas.push(i === GANA ? premio : sortear());
-  cinta.innerHTML = cartas.map(carta).join("");
+  cinta.innerHTML = cartas.map((p, i) => carta(p, i === GANA ? lider || repe : null)).join("");
   cinta.style.transition = "none";
   cinta.style.transform = "translateX(0)";
   texto.textContent = "";
+  const jugar = document.getElementById("cajaJugar");
   vale.classList.add("hidden");
   otra.classList.add("hidden");
+  jugar.classList.add("hidden");
   ov.classList.remove("hidden");
 
   const ANCHO = 92;   // carta (84) + hueco (8)
@@ -108,10 +110,18 @@ export function abrirCaja(alCerrar) {
   }, 25);
 
   function terminar() {
-    const nombre = prenda ? (prenda[getLang()] || prenda.es) : `${(premio.prenda ? 1500 : premio.tacos).toLocaleString("es")} tacos`;
-    texto.innerHTML = `${t("cajaGanas")} <b>${nombre}</b>!`;
+    if (lider) {
+      const r = RAREZAS[lider.rareza];
+      texto.innerHTML = `<span class="rareza" style="background:${r.color}">${r[getLang()] || r.es}</span> ${t("cajaLider")} <b>${nombreLider(lider)}</b>!<small>${tituloLider(lider)}</small>`;
+      jugar.classList.remove("hidden");
+      jugar.onclick = () => { ponerLider(lider.id); location.reload(); };
+    } else if (repe) {
+      texto.innerHTML = `${t("cajaRepetido").replace("{n}", nombreLider(repe))} <b>+${tacos.toLocaleString("es")} tacos</b>`;
+    } else {
+      texto.innerHTML = `${t("cajaGanas")} <b>${tacos.toLocaleString("es")} tacos</b>!`;
+    }
     cinta.children[GANA].classList.add("gana");
-    if (prenda || premio.tacos >= 800) sndFanfarria(true); else sndChapa();
+    if (lider || tacos >= 800) sndFanfarria(true); else sndChapa();
     vibrate([20, 30, 40]);
     vale.classList.remove("hidden");
     if (getSave().cajas > 0) {

@@ -457,8 +457,12 @@ export async function precargarVoces() {
   await vocesListas;
   for (const e of Object.values(indiceVoces || {})) { try { await preparar(e); } catch (er) {} }
 }
+// 10/11: con otro lider no suena la voz de Trump (solo sale el globo).
+let soloTexto = false;
+export function setSoloTexto(on) { soloTexto = !!on; }
 // La voz ya preparada de un texto (o null si no tiene, o aun no esta).
 function vozDe(texto) {
+  if (soloTexto) return null;
   const e = indiceVoces && indiceVoces[limpiar(texto)];
   if (!e) return null;
   const b = preparar(e);

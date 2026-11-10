@@ -780,6 +780,16 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .ruletaMarca::before, .ruletaMarca::after { content: ""; position: absolute; left: -10px; border: 10px solid transparent; filter: drop-shadow(0 0 4px #ffc23c); }
 .ruletaMarca::before { top: 0; border-top-color: #ffc23c; }
 .ruletaMarca::after { bottom: 0; border-bottom-color: #ffc23c; }
+/* 10/11: los lideres (caja y tienda) */
+.ruletaCarta.lider img { width: 64px; height: 64px; margin-top: -6px; }
+.ruletaCarta.lider span { font-size: 12px; }
+.rareza { display: inline-block; padding: 2px 8px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 12px; vertical-align: middle; }
+.cajaPremio small { display: block; margin-top: 4px; font-size: 13px; opacity: 0.85; }
+#cajaJugar { margin-bottom: 8px; }
+.fotoLider { width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(#ffffff, #d6e2f5); }
+.liderItem.bloqueado .fotoLider { filter: grayscale(1) brightness(0.55); }
+.liderItem .ventaja { font-size: 11px; line-height: 1.2; text-align: center; opacity: 0.8; min-height: 26px; }
+.liderAyuda { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--tinta); opacity: 0.8; }
 .ruletaCarta.gana { box-shadow: 0 0 0 3px #ffc23c, 0 0 18px #ffc23c; }
 .cajaPremio { min-height: 1.4em; font-size: 18px; }
 .diarioTexto { margin: 4px 0 10px; color: var(--tinta-suave); text-align: center; }

@@ -233,35 +233,38 @@ def zapato():
     caja(mat('suela', 0x4a3324, 0.8), 0, -0.08, -0.47, 0.17, 0.44, 0.03)
 
 
-PARTES = [
-    ('torso_traje', torso_traje, 512),
-    ('torso_resto', torso_resto, 512),
-    ('corbata', corbata, 256),
-    ('cabeza', cabeza, 1024),
-    ('tupe', tupe, 512),
-    ('brazo_traje', brazo_traje, 256),
-    ('antebrazo_traje', antebrazo_traje, 256),
-    ('mano', mano, 256),
-    ('muslo_traje', muslo_traje, 256),
-    ('espinilla_traje', espinilla_traje, 256),
-    ('zapato', zapato, 256),
-]
+# lideres.py importa este archivo para usar sus piezas: solo se construye
+# el presidente cuando se ejecuta este script.
+if __name__ == '__main__':
+    PARTES = [
+        ('torso_traje', torso_traje, 512),
+        ('torso_resto', torso_resto, 512),
+        ('corbata', corbata, 256),
+        ('cabeza', cabeza, 1024),
+        ('tupe', tupe, 512),
+        ('brazo_traje', brazo_traje, 256),
+        ('antebrazo_traje', antebrazo_traje, 256),
+        ('mano', mano, 256),
+        ('muslo_traje', muslo_traje, 256),
+        ('espinilla_traje', espinilla_traje, 256),
+        ('zapato', zapato, 256),
+    ]
 
-empezar()
-bpy.context.scene.world.light_settings.distance = 0.3   # sombra de rincón corta: es pequeño
-hechas = []
-for nombre, fn, lado in PARTES:
-    fn()
-    hechas.append(terminar(nombre, 'personaje', lado=lado, bisel=0.01, oclusion=0.55,
-                           suelo=False, exportar=False))
-for o in hechas:
-    o.hide_render = False
-bpy.ops.object.select_all(action='DESELECT')
-for o in hechas:
-    o.select_set(True)
-salida = os.path.join(MODELOS, 'personaje')
-os.makedirs(salida, exist_ok=True)
-bpy.ops.export_scene.gltf(filepath=os.path.join(salida, 'personaje.glb'), export_format='GLB',
-                          use_selection=True, export_image_format='JPEG', export_apply=True,
-                          export_animations=False, export_yup=True)
-print('PERSONAJE exportado:', len(hechas), 'partes', flush=True)
+    empezar()
+    bpy.context.scene.world.light_settings.distance = 0.3   # sombra de rincón corta: es pequeño
+    hechas = []
+    for nombre, fn, lado in PARTES:
+        fn()
+        hechas.append(terminar(nombre, 'personaje', lado=lado, bisel=0.01, oclusion=0.55,
+                               suelo=False, exportar=False))
+    for o in hechas:
+        o.hide_render = False
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in hechas:
+        o.select_set(True)
+    salida = os.path.join(MODELOS, 'personaje')
+    os.makedirs(salida, exist_ok=True)
+    bpy.ops.export_scene.gltf(filepath=os.path.join(salida, 'personaje.glb'), export_format='GLB',
+                              use_selection=True, export_image_format='JPEG', export_apply=True,
+                              export_animations=False, export_yup=True)
+    print('PERSONAJE exportado:', len(hechas), 'partes', flush=True)

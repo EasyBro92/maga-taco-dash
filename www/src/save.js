@@ -59,6 +59,7 @@ export function fundirPartida(n) {
   b.totalTacos = Math.max(a.totalTacos || 0, n.totalTacos || 0);
   b.bestScore = Math.max(a.bestScore || 0, n.bestScore || 0);
   b.ownedItems = [...new Set([...(a.ownedItems || []), ...(n.ownedItems || [])])];
+  b.lideres = [...new Set([...(a.lideres || []), ...(n.lideres || [])])];
   const niveles = {};
   for (const id of new Set([...Object.keys(a.niveles || {}), ...Object.keys(n.niveles || {})])) {
     const x = (a.niveles || {})[id], y = (n.niveles || {})[id];

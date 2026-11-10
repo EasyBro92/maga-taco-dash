@@ -1872,3 +1872,25 @@ Vuelve a la del 23/10: acompaña la mitad del cambio, despacio y sin girar.
 - Cuenta (src/cuenta.js): usuario y contraseña, sin correo, en el Firebase de AlienZ (`tacodash/{uid}`); la partida se sube sola y al entrar se juntan sin perder nada. Falta publicar la regla de Firestore (z-resistance/firestore.rules): el permiso lo tiene que dar Isidro.
 - Botón de instalar (src/instalar.js): en Android baja la app (www/descargas/TacoDash.apk), en Chrome del ordenador la ventana de instalar, en iPhone explica Compartir → Añadir a pantalla de inicio. No sale dentro de la app ni si ya está instalada.
 - Pendiente de la revisión (pausada): barra del jefe empieza al 42 %, filas imposibles con el jefe del sin fin, obstáculos que ruedan en tramos de vallas, hitos tapados, y los 37 estados (hay tabla y plantillas de Fable).
+
+## 10/11/2026 (2): los líderes de la caja sorpresa (v49)
+
+Isidro: «los premios se sienten muy sosos y sin ningún significado, cámbialas
+a nuevos personajes como Netanyahu, Vladimir Putin, Kim Jong-un y presidentes
+polémicos del mundo; con Meshy si hace falta, pero si Blender puede, Blender».
+
+- Hechos en Blender (`blender/lideres.py`), no en Meshy: cabeza, pelo y camisa
+  propios sobre el cuerpo del muñeco de piezas, así corren con las mismas
+  animaciones y no se gastan créditos. Cada uno tiene su retrato
+  (`www/models/lideres/<id>.png`), que sale en la ruleta y en la tienda.
+- Ocho: Putin y Kim (legendarios), Netanyahu y Xi (épicos), Milei, Maduro,
+  Bolsonaro y Erdoğan (raros). Milei lleva motosierra y Kim un misil.
+- Cada uno empieza las carreras con su ventaja: imán (Putin, Bolsonaro),
+  gigante (Kim), escudo (Netanyahu, Erdoğan), tacos dobles (Xi), botas (Milei),
+  turbo (Maduro). Sus frases salen en el globo; con ellos no suena la voz de
+  Trump.
+- La caja: tacos de relleno y líderes por rareza; el repetido se cambia por
+  tacos (800 / 1500 / 3000). La primera caja trae un líder seguro. Las gorras y
+  los trajes ya no salen en la caja: siguen en la tienda.
+- Se eligen en Tienda → Líderes (el juego se recarga para montarlo). Los
+  sombreros y trajes de la tienda son solo para Trump.

@@ -5,6 +5,7 @@ import { icono } from "./iconos.js";
 import { urlPegatina } from "./pegatinas.js";
 import { modelo } from "./models.js";
 import { toon } from "./toon.js";
+import { LIDERES, RAREZAS, tengoLider, liderPuesto, ponerLider, nombreLider, tituloLider, fotoLider } from "./lideres.js";
 
 // La tienda (27/10/2026). En la revisión: «los tacos no sirven para nada».
 // Ahora se gastan en gorras y sombreros que se le ponen en la cabeza al
@@ -85,7 +86,9 @@ function pintar() {
   document.getElementById("shopTacoCount").textContent = getSave().totalTacos;
   const pestanas = `<div class="segmentos tiendaPestanas">
       <button class="segmento ${hueco === "gorra" ? "equippedBtn" : ""}" data-hueco="gorra">${t("tiendaGorras")}</button>
-      <button class="segmento ${hueco === "traje" ? "equippedBtn" : ""}" data-hueco="traje">${t("tiendaTrajes")}</button></div>`;
+      <button class="segmento ${hueco === "traje" ? "equippedBtn" : ""}" data-hueco="traje">${t("tiendaTrajes")}</button>
+      <button class="segmento ${hueco === "lider" ? "equippedBtn" : ""}" data-hueco="lider">${t("tiendaLideres")}</button></div>`;
+  if (hueco === "lider") { document.getElementById("shopGrid").innerHTML = pestanas + listaLideres(); return; }
   const lista = ARTICULOS.filter((a) => a.hueco === hueco).map((a) => {
     const tengo = tienda.tengo.includes(a.id);
     const puesto = tienda.puesto[a.hueco] === a.id;
@@ -96,6 +99,24 @@ function pintar() {
     return `<div class="shopItem ${puesto ? "llevo" : ""}" data-probar="${a.id}">${iconoArticulo(a)}<div class="name">${a.nombre[getLang()] || a.nombre.es}</div>${boton}</div>`;
   }).join("");
   document.getElementById("shopGrid").innerHTML = pestanas + `<div class="tiendaLista">${lista}</div>`;
+}
+// 10/11: los líderes de la caja sorpresa. Se eligen aquí (al elegir, el juego
+// se recarga para montar al nuevo). Los que faltan salen con candado.
+function listaLideres() {
+  const puesto = liderPuesto() || "trump";
+  const fila = (id, l) => {
+    const tengo = !l || tengoLider(id);
+    const r = l && RAREZAS[l.rareza];
+    const boton = puesto === id ? `<button class="puesto">${t("liderJugando")}</button>`
+      : tengo ? `<button class="ponerse" data-lider="${id}">${t("liderElegir")}</button>`
+      : `<button class="caro" disabled>${icono("regalo")} ${t("liderCaja")}</button>`;
+    return `<div class="shopItem liderItem ${puesto === id ? "llevo" : ""} ${tengo ? "" : "bloqueado"}">
+      <img class="fotoLider" src="${fotoLider(id)}" alt="">
+      <div class="name">${nombreLider(l)}</div>
+      ${r ? `<span class="rareza" style="background:${r.color}">${r[getLang()] || r.es}</span>` : ""}
+      <small class="ventaja">${l ? tituloLider(l) : t("liderTrump")}</small>${boton}</div>`;
+  };
+  return `<p class="liderAyuda">${t("liderAyuda")}</p><div class="tiendaLista">${fila("trump", null)}${LIDERES.map((l) => fila(l.id, l)).join("")}</div>`;
 }
 function probar(id) {
   const a = ARTICULOS.find((x) => x.id === id);
@@ -118,6 +139,8 @@ document.getElementById("shopClose").addEventListener("click", cerrar);
 document.getElementById("shopGrid").addEventListener("click", (e) => {
   const pest = e.target.closest("[data-hueco]");
   if (pest) { hueco = pest.dataset.hueco; aplicarTienda(personaje); pintar(); return; }
+  const bl = e.target.closest("button[data-lider]");
+  if (bl) { ponerLider(bl.dataset.lider); location.reload(); return; }
   const b = e.target.closest("button[data-id]");
   if (b) {
     const a = ARTICULOS.find((x) => x.id === b.dataset.id);
