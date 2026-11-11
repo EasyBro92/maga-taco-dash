@@ -1894,3 +1894,24 @@ polémicos del mundo; con Meshy si hace falta, pero si Blender puede, Blender».
   los trajes ya no salen en la caja: siguen en la tienda.
 - Se eligen en Tienda → Líderes (el juego se recarga para montarlo). Los
   sombreros y trajes de la tienda son solo para Trump.
+
+## 11/11/2026: los líderes, rehechos (v50)
+
+Isidro: «me gustan los personajes, pero se mueven raro, les falta bastante
+detalle y algo característico de ellos».
+
+- Se mueven como el presidente: van montados en su esqueleto de Meshy y el
+  juego les pone sus animaciones de correr y andar (`crearPresidente` con el
+  líder). Las articulaciones son bolas pegadas a su hueso y los tubos van
+  rígidos, así nada se estira; el tronco se dobla suave.
+- Detalle: ojos con iris, brillo y párpados, cejas con gesto, boca (seria,
+  mueca, sonrisa o gritando), arrugas, mofletes, orejas, manos con dedos,
+  solapas, pañuelo, bolsillos, gemelos, zapatos con suela y cordones.
+- Lo suyo, visible desde detrás: el gorro ruso de Putin (y corre con el brazo
+  derecho quieto), el misil de Kim, el cartel de la bomba de Netanyahu, el
+  tarro de miel y la etiqueta «MADE IN CHINA» de Xi, la motosierra y
+  «¡AFUERA!» de Milei, el chándal «VENEZUELA» y el pajarito de Maduro, la
+  camiseta del 17 con la banda de Bolsonaro y la capa con la media luna y el
+  vaso de té de Erdoğan.
+- Con un líder no hay sombreros ni trajes de la tienda, ni chaleco en
+  Milwaukee, ni tupé al viento en Chicago (son del presidente).

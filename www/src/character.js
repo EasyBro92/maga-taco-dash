@@ -1,6 +1,6 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
-import { medidas, getPersonaje } from "./models.js";
+import { medidas, getPersonaje, getLider } from "./models.js";
 import { crearPresidente } from "./presidente.js";
 
 // Personaje estilo "juguete de vinilo" (referencia visual: Subway
@@ -29,26 +29,38 @@ const COSMETIC_COLORS = {
 };
 
 // Si esta el presidente de Meshy, ese; si no (sin conexion, o ?sinmeshy), el muñeco de piezas.
-// 10/11/2026: o uno de los lideres de la caja sorpresa (lideres.js): el cuerpo
-// del muñeco de piezas con su cabeza, su pelo y su camisa de Blender.
+// 11/11/2026: o uno de los lideres de la caja sorpresa (lideres.js). Van
+// montados en el mismo esqueleto que el presidente de Meshy y usan sus
+// animaciones de correr y andar (blender/lideres.py).
 export function createCharacter(cosmetics, lider = null) {
-  if (lider && medidas(`lideres/${lider.id}_cabeza`) && medidas("personaje/torso_traje")) return crearMuneco(cosmetics, lider);
   const gltf = getPersonaje();
+  const lg = lider && getLider(lider.id);
+  if (gltf && lg) return crearPresidente({ scene: lg.scene, animations: gltf.animations }, lider, altoDe(gltf));
   if (gltf) return crearPresidente(gltf);
   return crearMuneco(cosmetics);
 }
 
-function crearMuneco(cosmetics, lider = null) {
+// Alto de la malla del presidente, en sus medidas: los lideres comparten
+// esqueleto y se escalan igual (lo que llevan en alto no cuenta).
+function altoDe(gltf) {
+  let alto = 0;
+  gltf.scene.traverse((o) => {
+    if (o.isMesh && !alto) { o.geometry.computeBoundingBox(); alto = o.geometry.boundingBox.max.y - o.geometry.boundingBox.min.y; }
+  });
+  return alto || null;
+}
+
+function crearMuneco(cosmetics) {
   cosmetics = cosmetics || { suit: "suit_navy", tie: "tie_red" };
-  const suitColor = lider ? lider.traje : COSMETIC_COLORS[cosmetics.suit] || COSMETIC_COLORS.suit_navy;
-  const tieColor = lider ? lider.corbata || lider.traje : COSMETIC_COLORS[cosmetics.tie] || COSMETIC_COLORS.tie_red;
+  const suitColor = COSMETIC_COLORS[cosmetics.suit] || COSMETIC_COLORS.suit_navy;
+  const tieColor = COSMETIC_COLORS[cosmetics.tie] || COSMETIC_COLORS.tie_red;
 
   // Colores solidos, sin textura: formas grandes y limpias en vez de
   // detalle fino, para acercarse al look "juguete" de la referencia.
   // Caricatura: piel bronceada de tono calido y rubio pajizo/anaranjado en
   // vez del amarillo dibujo animado. Son los dos rasgos que mas se leen a
   // distancia de juego, mucho antes que cualquier detalle de la cara.
-  const skinMat = toon(lider ? lider.piel : 0xf0b183);
+  const skinMat = toon(0xf0b183);
   const hairMat = toon(0xf3dc93);
   const suitMat = toon(suitColor);
   const lapelMat = toon(0x16224a);
@@ -62,7 +74,7 @@ function crearMuneco(cosmetics, lider = null) {
   const mouthMat = toon(0xa33b3b);
   // Cejas rubias claras, a juego con el pelo: en marron oscuro cortaban la
   // cara en dos y era lo unico que no encajaba con el resto de la paleta.
-  const browMat = toon(lider ? lider.ceja : 0xd9be7a);
+  const browMat = toon(0xd9be7a);
   const noseMat = skinMat;
 
   const root = new THREE.Group();
@@ -464,11 +476,6 @@ function crearMuneco(cosmetics, lider = null) {
     "antebrazo_traje", "mano", "muslo_traje", "espinilla_traje", "zapato"];
   const pieza = {};
   for (const n of PARTES) pieza[n] = medidas("personaje/" + n);
-  if (lider) {
-    pieza.cabeza = medidas(`lideres/${lider.id}_cabeza`);
-    pieza.tupe = medidas(`lideres/${lider.id}_pelo`);
-    pieza.torso_resto = medidas(`lideres/${lider.id}_resto`);
-  }
   let tupePivot = null, corbataPivot = null, vientoTupe = 0;
   if (PARTES.every((n) => pieza[n])) {
     const seQueda = new Set([mouth, eyeGroup.left, eyeGroup.right, browL, browR, headGroup,
@@ -487,14 +494,10 @@ function crearMuneco(cosmetics, lider = null) {
       m.shininess = 30;
       return new THREE.Mesh(pieza[n].geometry, m);
     };
-    const torso = [tinte("torso_traje", suitColor), malla("torso_resto")];
-    // Kim, mas redondo
-    if (lider && lider.gordo) for (const m of torso) m.scale.set(lider.gordo, 1, lider.gordo);
-    hips.add(...torso);
+    hips.add(tinte("torso_traje", suitColor), malla("torso_resto"));
     corbataPivot = new THREE.Group();
     corbataPivot.position.set(0, 0.56, 0.267); // el nudo, sobre la camisa
     corbataPivot.add(tinte("corbata", tieColor));
-    if (lider && !lider.corbata) corbataPivot.visible = false;   // Kim y Maduro no llevan
     hips.add(corbataPivot);
     // headGroup esta escalado a 0.78; la cabeza de Blender viene a tamaño real.
     const cabeza = malla("cabeza");
@@ -512,9 +515,6 @@ function crearMuneco(cosmetics, lider = null) {
       rig.pivot.add(tinte("muslo_traje", suitColor));
       rig.knee.add(tinte("espinilla_traje", suitColor), malla("zapato"));
     }
-    // Lo que llevan en la mano (la motosierra de Milei, el misil de Kim)
-    const extra = lider && medidas(`lideres/${lider.id}_extra`);
-    if (extra) rightArmRig.elbow.add(new THREE.Mesh(extra.geometry, extra.material));
   }
 
   // ---- Aura del escudo (Orden Ejecutiva), oculta por defecto ----

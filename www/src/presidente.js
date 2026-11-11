@@ -12,7 +12,11 @@ import { modelo as modeloDe } from "./models.js";
 
 const ALTURA = 2.05;   // en el juego (el muñeco viejo media ~1.9 hasta el tupe)
 
-export function crearPresidente(gltf) {
+// 11/11: tambien los lideres de la caja (lideres.js), con este esqueleto.
+// `lider`: sin tienda, sin chaleco ni tupe al viento (son cosas del
+// presidente); `altoRef`: el alto de la malla del presidente, para que salgan
+// a su escala aunque lleven algo en alto (el misil, la motosierra...).
+export function crearPresidente(gltf, lider = null, altoRef = null) {
   const root = new THREE.Group();
   // Mira a +Z como viene de Meshy; el juego corre hacia -Z: media vuelta.
   const facing = new THREE.Group();
@@ -44,7 +48,7 @@ export function crearPresidente(gltf) {
   // el mundo (que salia cuatro veces mas pequeña y lo dejaba gigante).
   malla.geometry.computeBoundingBox();
   const g = malla.geometry.boundingBox;
-  const esc = ALTURA / Math.max(0.01, g.max.y - g.min.y);
+  const esc = ALTURA / Math.max(0.01, altoRef || g.max.y - g.min.y);
   modelo.scale.setScalar(esc);
   modelo.position.y = -g.min.y * esc;
 
@@ -52,6 +56,8 @@ export function crearPresidente(gltf) {
   const clip = (texto) => gltf.animations.find((a) => a.name.includes(texto));
   const correr = mixer.clipAction(clip("running"));
   const andar = mixer.clipAction(clip("walking"));
+  // Putin corre con el brazo derecho quieto, pegado al cuerpo (su forma de andar).
+  const brazoQuieto = lider && lider.gesto === "pistolero";
   correr.play();
   andar.play();
   andar.weight = 0;
@@ -269,6 +275,11 @@ export function crearPresidente(gltf) {
       pose.position.set(0, 0, 0);   // (27/10: tambien z: tras deslizarse se quedaba medio metro atras)
       root.scale.lerp(NEUTRAL, Math.min(1, dt * 8));
       mixer.update(dt);
+      if (brazoQuieto) {
+        root.updateMatrixWorld(true);
+        apuntar("RightArm", "RightForeArm", 0.12, -1, -0.12, 1);
+        apuntar("RightForeArm", "RightHand", 0.08, -1, -0.35, 1);
+      }
     },
 
     setJumpPose(t) {
@@ -384,6 +395,7 @@ export function crearPresidente(gltf) {
     // 08/11: Chicago: el viento le levanta el tupe. Un mechon de pelo encima
     // del suyo, con la bisagra atras, que sube y baja despacio (nada tiembla).
     setViento(k) {
+      if (lider) return;
       viento = k;
       if (k > 0 && !tupe && marcoCabeza && huesos.Head) {
         const m = modeloDe("obstaculos/tupe_viento");
@@ -414,6 +426,7 @@ export function crearPresidente(gltf) {
       }
     },
     ponerSombrero(obj) {
+      if (lider) return;
       if (sombreroPuesto && sombreroPuesto.parent) sombreroPuesto.parent.remove(sombreroPuesto);
       sombreroPuesto = null;
       if (!obj || !marcoCabeza) return;
@@ -426,6 +439,7 @@ export function crearPresidente(gltf) {
       sombreroPuesto = pivote;
     },
     teñirTraje(color) {
+      if (lider) return;
       if (!mapaOriginal || !mapaOriginal.image) return;
       sinChaleco = null;
       malla.material.map = color === null || color === undefined ? mapaOriginal : texturaTraje(color);
@@ -434,6 +448,7 @@ export function crearPresidente(gltf) {
     // 09/11: Milwaukee: el chaleco reflectante naranja (con sus dos bandas
     // plateadas) encima de la chaqueta, como el del camion de la basura.
     setChaleco(on) {
+      if (lider) return;
       if (!mapaOriginal || !mapaOriginal.image) return;
       if (!on) {
         if (sinChaleco) { malla.material.map = sinChaleco; malla.material.needsUpdate = true; sinChaleco = null; }

@@ -174,20 +174,16 @@ export async function cargarCarpeta(carpeta, nombres, onProgress) {
 }
 
 // 10/11/2026: el lider que corre (lideres.js), solo si se ha elegido uno.
-// Un archivo por lider con varias mallas: `lideres/<id>_cabeza`, `_pelo`...
+// 11/11: es una malla con el esqueleto del presidente (sin animaciones: usa
+// las suyas), asi que se guarda la escena entera, como la del presidente.
+const lideres = {};
 export async function cargarLider(id) {
-  if (!id || plantillas[`lideres/${id}_cabeza`]) return;
-  try {
-    const gltf = await new GLTFLoader().loadAsync(`models/lideres/${id}.glb`);
-    gltf.scene.traverse((o) => {
-      if (!o.isMesh) return;
-      o.material = materialDe(o.material, 18, 0x222222);
-      o.geometry.computeBoundingBox();
-      const caja = o.geometry.boundingBox;
-      plantillas[`lideres/${o.name}`] = { geometry: o.geometry, material: o.material,
-        ancho: caja.max.x - caja.min.x, fondo: caja.max.z - caja.min.z, frente: caja.max.z };
-    });
-  } catch (e) { console.warn("No se pudo cargar el lider", id, e); }
+  if (!id || lideres[id]) return;
+  try { lideres[id] = await new GLTFLoader().loadAsync(`models/lideres/${id}.glb`); }
+  catch (e) { console.warn("No se pudo cargar el lider", id, e); }
+}
+export function getLider(id) {
+  return lideres[id] || null;
 }
 
 export function hayModelo(clave) {

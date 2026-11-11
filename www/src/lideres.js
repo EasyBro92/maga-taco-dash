@@ -19,7 +19,7 @@ export const RAREZAS = {
 // ventaja: el potenciador con el que empieza cada carrera (main.js, regaloLider).
 export const LIDERES = [
   {
-    id: "putin", corto: "Putin", rareza: "legendario", ventaja: "magnet",
+    id: "putin", corto: "Putin", rareza: "legendario", ventaja: "magnet", gesto: "pistolero",
     nombre: { es: "Vladimir Putin", en: "Vladimir Putin" },
     titulo: { es: "Se queda con todo: empieza con imán", en: "Takes it all: starts with a magnet" },
     piel: 0xf3c9ad, ceja: 0xa8916f, traje: 0x2f333b, corbata: 0x55627a, ancho: 0.96,
