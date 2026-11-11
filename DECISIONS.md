@@ -1998,3 +1998,12 @@ Isidro eligió «las recomendadas». Hecho:
   el permiso de Isidro. Sin ellas sale «La nube aún no está lista».
 - Boris: `blender/lideres.py boris`; rubio despeinado, bandera británica en
   alto, «BREXIT» en la espalda; empieza volando en cohete.
+
+## 11/11/2026 (5): reglas de Firestore publicadas
+
+Isidro: «Sí, publícalas». Publicadas en el proyecto de AlienZ
+(`firebase deploy --only firestore:rules`, z-resistance commit fcd2a7e):
+`tacodash/{uid}` (cada jugador solo su partida, menos de 300 KB) y
+`tacodash_top/{uid}` (el ranking: lo lee todo el mundo, cada uno escribe el
+suyo con nombre y metros). Comprobado: el ranking se lee; sin cuenta no se
+puede escribir ni leer la partida de otro. Lo de AlienZ no cambia.
