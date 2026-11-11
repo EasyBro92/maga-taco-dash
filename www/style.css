@@ -859,3 +859,40 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 
 /* 31/10: sus frases de verdad van en inglés; en castellano, la traducción debajo */
 #speechBubble small { display: block; font-size: 12px; font-weight: 700; color: #4a5470; margin-top: 3px; }
+
+/* 11/11: la municion para el jefe (abajo a la derecha) */
+#hudMunicion { position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); z-index: 5; pointer-events: none;
+  display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.92); border-radius: 999px; padding: 6px 14px 6px 8px;
+  box-shadow: 0 4px 14px rgba(28,52,102,0.25); font-family: var(--letra-titulo); color: var(--tinta); }
+#hudMunicion svg.ico { width: 34px; height: 34px; }
+#hudMunicion b { font-size: 26px; line-height: 1; }
+#hudMunicion small { font-size: 15px; opacity: 0.6; }
+#hudMunicion em { position: absolute; bottom: 100%; right: 6px; margin-bottom: 6px; font-style: normal; font-family: var(--letra); font-weight: 800; font-size: 12px;
+  white-space: nowrap; background: var(--tinta); color: #fff; padding: 3px 8px; border-radius: 8px; }
+#hudMunicion.vacia { filter: grayscale(1); opacity: 0.7; }
+#hudMunicion.vacia em { display: none; }
+
+/* 11/11: las mejoras de la tienda */
+.listaMejoras { display: flex; flex-direction: column; gap: 8px; }
+.mejoraItem { display: flex; align-items: center; gap: 10px; background: #f3f6fc; border: 2px solid transparent; border-radius: 18px; padding: 8px 10px; color: var(--tinta); }
+.mejoraItem.oferta { border-color: #e8463c; background: #fff4ef; }
+.mejoraItem.cajaVenta { background: linear-gradient(180deg, #eaf2ff, #dce8fb); }
+.mejoraItem > svg.ico { width: 38px; height: 38px; flex: none; }
+.mejoraTexto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.mejoraTexto > b { font-size: 15px; }
+.mejoraTexto small { font-size: 12px; opacity: 0.85; line-height: 1.2; }
+.mejoraTexto .rareza { font-size: 10px; padding: 1px 6px; }
+.pips { display: flex; gap: 3px; margin-top: 2px; }
+.pips i { width: 16px; height: 6px; border-radius: 3px; background: #d6deeb; }
+.pips i.lleno { background: #52c46a; }
+.mejoraItem button { flex: none; border: none; border-radius: 999px; padding: 8px 12px; font-family: var(--letra); font-weight: 800; font-size: 14px; cursor: pointer; min-width: 92px; }
+.mejoraItem button.comprar { background: linear-gradient(180deg, var(--naranja-1), var(--naranja-2)); color: #fff; }
+.mejoraItem button.caro { background: #dfe6f2; color: #8a94a8; }
+.mejoraItem button.puesto { background: #52c46a; color: #fff; }
+.mejoraItem button .peg { width: 18px; height: 18px; vertical-align: -3px; }
+
+/* 11/11: «¡Por los pelos!» (sube y se desvanece, sin parpadear) */
+.textoFlotante { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); z-index: 6; pointer-events: none; white-space: nowrap;
+  font-family: var(--letra-titulo); font-size: 26px; color: #fff; text-shadow: 0 3px 0 #1f7a38, 0 6px 14px rgba(0,0,0,0.35);
+  animation: flotaArriba 1.1s ease-out forwards; }
+@keyframes flotaArriba { 0% { opacity: 0; transform: translate(-50%, 10px) scale(0.85); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }

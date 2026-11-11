@@ -369,6 +369,8 @@ export function createWorld(scene) {
   // Reloj propio para animaciones (bounce/pulso/oleo de banderas), independiente
   // de dz (que es distancia recorrida, no tiempo real).
   let animClock = 0;
+  let susto = 0;   // 11/11: el publico se asusta si el jugador tropieza o choca
+  function asustarPublico() { susto = 1.6; }
   let lastTime = typeof performance !== "undefined" ? performance.now() : Date.now();
 
   // ---- Curvas organicas: dos ondas de distinta frecuencia combinadas (no
@@ -681,7 +683,13 @@ export function createWorld(scene) {
     u.phase = Math.random() * Math.PI * 2;
     u.ritmo = 0.85 + Math.random() * 0.3;
     const r = Math.random();
-    u.rol = LLEVA[n] ? "ondea" : n === "chico" ? (r < 0.5 ? "saluda" : "mira") : r < 0.38 ? "aplaude" : r < 0.66 ? "saluda" : "mira";
+    // 11/11: mas papeles: unos saltan de alegria, otros te hacen una foto o
+    // te señalan; y mientras esperan, charlan, miran el movil o se cruzan de brazos.
+    u.rol = LLEVA[n] ? "ondea" : n === "chico" ? (r < 0.45 ? "salta" : r < 0.75 ? "saluda" : "señala")
+      : n === "fan" || n === "deportista" ? (r < 0.4 ? "salta" : r < 0.75 ? "aplaude" : "saluda")
+      : r < 0.24 ? "aplaude" : r < 0.44 ? "saluda" : r < 0.62 ? "foto" : r < 0.78 ? "señala" : "mira";
+    const o = Math.random();
+    u.ocio = LLEVA[n] ? "nada" : o < 0.3 ? "charla" : o < 0.55 ? "movil" : o < 0.72 ? "brazos" : "nada";
     return g;
   }
   // Cada fotograma, la del publico: quietos y tranquilos de lejos, y al pasar
@@ -689,10 +697,33 @@ export function createWorld(scene) {
   function animarPersona(d, cerca) {
     const u = d.userData, t = animClock * u.ritmo + u.phase;
     if (u.giro0 === undefined) u.giro0 = d.rotation.y;
+    if (u.y0 === undefined) u.y0 = d.position.y;
     // Respira y cambia el peso de pie, muy poco.
     const calma = Math.sin(t * 0.9) * 0.04;
-    let dz = calma, iz = -calma, dx = 0, ix = 0;
-    if (u.rol === "aplaude") {
+    let dz = calma, iz = -calma, dx = 0, ix = 0, salto = 0, piernas = Math.sin(t * 0.9) * 0.03, sigue = u.rol === "mira" ? 0.85 : 0.45;
+    // Mientras esperan (lejos del jugador), cada uno a lo suyo.
+    const lejos = 1 - cerca;
+    if (u.ocio === "charla") { dz += lejos * (0.3 + Math.sin(t * 2.1) * 0.22); dx -= lejos * (0.45 + Math.sin(t * 1.7) * 0.2); }
+    else if (u.ocio === "movil") { dx -= lejos * 1.7; dz -= lejos * 0.45; }
+    else if (u.ocio === "brazos") { dx -= lejos * 0.95; ix -= lejos * 0.95; dz -= lejos * 0.55; iz += lejos * 0.55; }
+    if (u.rol === "salta") {
+      // Saltan de alegria con los dos brazos arriba (saltitos cortos).
+      const h = Math.abs(Math.sin(t * 4.2));
+      salto = h * 0.13 * cerca;
+      piernas = -0.25 * h * cerca;
+      dz = cerca * (2.6 + Math.sin(t * 4.2) * 0.15) + dz * lejos;
+      iz = -cerca * (2.6 + Math.sin(t * 4.2) * 0.15) + iz * lejos;
+      dx *= lejos; ix *= lejos;
+    } else if (u.rol === "foto") {
+      // El movil delante de la cara, con las dos manos.
+      dx = -1.55 * cerca + dx * lejos; ix = -1.55 * cerca + ix * lejos;
+      dz = -0.42 * cerca + dz * lejos; iz = 0.42 * cerca + iz * lejos;
+      sigue = 0.9;
+    } else if (u.rol === "señala") {
+      // Te señala con el brazo estirado mientras pasas.
+      dx = -1.45 * cerca + dx * lejos; dz = 0.25 * cerca + dz * lejos;
+      sigue = 0.9;
+    } else if (u.rol === "aplaude") {
       const c = Math.sin(t * 8.5);
       dx = ix = -1.05 * cerca;                               // las manos por delante
       dz = -(0.32 + 0.14 * c) * cerca + calma * (1 - cerca);   // y se juntan
@@ -703,11 +734,21 @@ export function createWorld(scene) {
       dz = 0.15 + cerca * (1.9 + Math.sin(t * 2.4) * 0.16);
       dx = -0.2 * cerca;
     }
+    // Si el jugador se cae o tropieza cerca, se llevan las manos a la cabeza.
+    if (susto > 0 && cerca > 0.15) {
+      const k = Math.min(1, susto / 0.35) * cerca;
+      dz = dz * (1 - k) + 2.75 * k; iz = iz * (1 - k) - 2.75 * k;
+      dx = dx * (1 - k) - 0.35 * k; ix = ix * (1 - k) - 0.35 * k;
+      salto = Math.max(salto, 0.05 * k);
+    }
     u.brazoD.rotation.set(dx, 0, dz);
     u.brazoI.rotation.set(ix, 0, iz);
+    u.piernaD.rotation.x = piernas;
+    u.piernaI.rotation.x = salto > 0.01 ? piernas : -piernas;
+    d.position.y = u.y0 + salto;
     // Le siguen con la vista al pasar (sin darse la vuelta entera).
     const haciaJugador = THREE.MathUtils.clamp(Math.atan2(-d.position.x, -d.position.z), -1.3, 1.3);
-    d.rotation.y = u.giro0 + (haciaJugador - u.giro0) * cerca * (u.rol === "mira" ? 0.85 : 0.45);
+    d.rotation.y = u.giro0 + (haciaJugador - u.giro0) * cerca * sigue;
   }
   function makePerson(lista) {
     if (PUBLICO_PIXAR) return personaPixar(lista);
@@ -3190,9 +3231,16 @@ export function createWorld(scene) {
   // 05/11: lo que estaba quieto se mueve un poco, siempre despacio y suave
   // (Isidro se marea con lo que tiembla o parpadea): la gente se balancea al
   // andar, lo que cuelga se mece, las plantas con la brisa y las fichas giran.
+  // 11/11: Isidro: «anima todos los personajes, que tengan mucha mas vida».
+  // Los agentes y guardaespaldas vigilan (miran a los lados y, al acercarte,
+  // se giran hacia ti y se ponen en guardia); la gente de las protestas y los
+  // fans corean dando saltitos; y todos se apartan de un respingo si pasas
+  // rozando por el carril de al lado. Siempre despacio y sin temblores.
   const VIDA = {
-    agentes: "andar", guardaespaldas: "andar", perritos: "andar", turista: "andar",
-    globos: "mecer", guirnalda: "mecer", pancarta: "mecer", pancarta_caucus: "mecer", protesta: "mecer",
+    agentes: "guardia", guardaespaldas: "guardia", perritos: "andar", turista: "andar",
+    paseador: "andar", vaquero: "andar", segway: "andar", espantapajaros: "mecer",
+    pancarta_caucus: "corear", fan_huskers: "corear", bailarinas: "bailar", bruja_bici: "andar",
+    globos: "mecer", guirnalda: "mecer", pancarta: "mecer", protesta: "corear",
     marquesina: "mecer", cartel_ruta: "mecer", andamio: "brisa",
     nopal: "brisa", saguaro: "brisa", munieco_nieve: "brisa", arco_neon: "brisa",
     fichas: "girar", urna: "girar",
@@ -3200,10 +3248,45 @@ export function createWorld(scene) {
     bandera_grande: "brisa", pinata: "brisa", cartel_boda: "brisa", rama_nevada: "brisa", serpiente: "brisa",
     ruleta: "girar", limonada: "brisa",
   };
+  const CON_RESPINGO = new Set(["guardia", "andar", "corear", "bailar"]);
   function vida(o, dt) {
-    const m = o.mesh, t = animClock + o.phase;
-    switch (VIDA[o.pool]) {
-      case "andar": m.rotation.y = Math.sin(t * 2.6) * 0.14; m.position.y = Math.abs(Math.sin(t * 5.2)) * 0.04; break;
+    const m = o.mesh, t = animClock + o.phase, tipo = VIDA[o.pool];
+    // Respingo: si el jugador pasa rozando por el carril de al lado, se aparta.
+    let respingo = 0, lado = 0;
+    if (CON_RESPINGO.has(tipo)) {
+      if (!o.respingo && o.z > -1.2 && o.z < 0.8 && Math.abs(o.lane - jugadorCarril) === 1) o.respingo = 0.55;
+      if (o.respingo > 0) { o.respingo = Math.max(0, o.respingo - dt); respingo = Math.sin(Math.PI * (1 - o.respingo / 0.55)); }
+      lado = o.lane > jugadorCarril ? 1 : -1;
+    }
+    // Lo cerca que esta el jugador (0 lejos, 1 encima).
+    const cerca = THREE.MathUtils.smoothstep(o.z, -22, -4);
+    switch (tipo) {
+      case "andar":
+        m.rotation.y = Math.sin(t * 2.6) * 0.14;
+        m.position.y = Math.abs(Math.sin(t * 5.2)) * 0.05 + respingo * 0.18;
+        m.rotation.z = Math.sin(t * 2.6) * 0.035 - lado * respingo * 0.18;
+        break;
+      case "guardia": {
+        // De lejos miran a un lado y a otro; de cerca, a ti, inclinados en guardia.
+        const vigila = Math.sin(t * 0.7) * 0.5;
+        const hacia = Math.atan2(LANE_X[jugadorCarril] - LANE_X[o.lane], Math.max(1, -o.z)) * 0.8;
+        m.rotation.y = vigila * (1 - cerca) + hacia * cerca;
+        m.rotation.x = 0.1 * cerca;
+        m.position.y = Math.abs(Math.sin(t * 3.4)) * 0.03 * (1 - cerca) + Math.abs(Math.sin(t * 7)) * 0.04 * cerca + respingo * 0.2;
+        m.rotation.z = -lado * respingo * 0.2;
+        break;
+      }
+      case "corear":
+        // Corean: saltitos a compás y el cartel de lado a lado.
+        m.position.y = Math.abs(Math.sin(t * 3.6)) * 0.09 + respingo * 0.15;
+        m.rotation.z = Math.sin(t * 1.8) * 0.06 - lado * respingo * 0.15;
+        m.rotation.y = Math.sin(t * 0.9) * 0.12;
+        break;
+      case "bailar":
+        m.rotation.y = Math.sin(t * 2.2) * 0.6;
+        m.position.y = Math.abs(Math.sin(t * 4.4)) * 0.1 + respingo * 0.15;
+        m.rotation.z = Math.sin(t * 4.4) * 0.05;
+        break;
       case "mecer": m.rotation.z = Math.sin(t * 1.5) * 0.045; break;
       case "brisa": m.rotation.z = Math.sin(t * 1.1) * 0.025; break;
       case "girar": m.rotation.y += dt * 1.1; break;
@@ -3941,7 +4024,7 @@ export function createWorld(scene) {
   // 08/11: Isidro: «los jefes de los niveles duran muy poco además no lanzan
   // ataques algunos». Caian en unos 8 s (5 golpes y muchos chiles). Ahora 12
   // golpes, menos armas por la pista (ver PATRONES.jefe) y ataques variados.
-  const JEFE_VIDA = 12, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 75;
+  const JEFE_VIDA = 10, JEFE_Z = -34, JEFE_Y = 2.6, JEFE_TIEMPO = 75;
   const ARMAS_JEFE = ["chile", "arancel", "rotulador", "hamburguesa", "desatascador"];
   const jefe = { activo: false, mesh: null, vida: 0, carril: 1, x: 0, z: -90, tiro: 0, tiempo: 0,
     golpe: 0, saliendo: false, derrotado: false, tipo: "robot", robot: null };
@@ -4216,10 +4299,14 @@ export function createWorld(scene) {
     }
     if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
     jefeAcabado = false;
+    teñirFuria(false);
     let lejos = 0;
     for (const o of obstacles) if (!o.smashed && -o.z > lejos) lejos = -o.z;
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
       saliendo: false, derrotado: false, paso, tirados: 0, ataques: 0,
+      // 11/11: mas vivo: salta, se balancea, coge impulso, retrocede al
+      // recibir y, a media vida, se enfada (mas rapido y a ratos se cubre).
+      furia: false, escudo: 0, proximoEscudo: 4, salto: 0, proximoSalto: 2.5, empuje: 0, lanzo: 0,
       // (Solo en el sin fin: en los niveles su tramo ya llega vacio.)
       libreEn: paso || nivel ? 0 : totalScrolled + Math.max(0, lejos + JEFE_Z + 6),
       // El primer barril espera a que pase lo que ya estaba en la pista
@@ -4228,6 +4315,43 @@ export function createWorld(scene) {
       tiro: paso ? 2.0 : 5.5 });
     return true;
   }
+  // La furia: el jefe se pone rojo (sin parpadear: un tono fijo).
+  const tintes = new Map();
+  function teñirFuria(on) {
+    const m = jefe.mesh;
+    if (!m) return;
+    m.traverse((o) => {
+      if (!o.isMesh || !o.material || !o.material.emissive) return;
+      if (!tintes.has(o.material)) tintes.set(o.material, o.material.emissive.getHex());
+      o.material.emissive.setHex(on ? 0x6a0d0d : tintes.get(o.material));
+    });
+  }
+  let burbuja = null;
+  function burbujaEscudo() {
+    if (!burbuja) {
+      burbuja = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14),
+        new THREE.MeshBasicMaterial({ color: 0x7fd3ff, transparent: true, opacity: 0.32, depthWrite: false }));
+      group.add(burbuja);
+    }
+    return burbuja;
+  }
+  // ¿El toque (en pixeles de la pantalla) cae encima del jefe? Generoso: con
+  // el dedo en movimiento cuesta acertar.
+  const _pj = new THREE.Vector3(), _pd = new THREE.Vector3();
+  function tocaJefe(cx, cy, cam, ancho, alto) {
+    if (!jefeActivo() || !jefe.mesh) return false;
+    const J = JEFES[jefe.tipo], esc = jefe.tipo === "dragon" ? DRAGON_ESCALA : J ? J.escala : 1;
+    jefe.mesh.getWorldPosition(_pj);
+    _pj.y += (J && J.y === 0 ? 1.3 : 0.9) * esc;
+    _pd.copy(_pj).add(new THREE.Vector3(1.9 * esc, 0, 0));
+    _pj.project(cam); _pd.project(cam);
+    if (_pj.z > 1) return false;
+    const x = (_pj.x + 1) / 2 * ancho, y = (1 - _pj.y) / 2 * alto;
+    const r = Math.abs((_pd.x - _pj.x) / 2 * ancho);
+    return Math.hypot(cx - x, cy - y) <= Math.max(95, r * 1.35);
+  }
+  // (El que solo pasa de largo no se pelea: no hace falta municion.)
+  function armaActual() { return jefeActivo() && !jefe.paso ? armaJefe(jefe.tipo) : null; }
   function dispararJefe(x, y) {
     if (!jefeActivo()) return;
     const arma = armaJefe(jefe.tipo);
@@ -4238,6 +4362,8 @@ export function createWorld(scene) {
     disparos.push({ mesh: m, t: 0, x0: x, y0: y });
   }
   function acabarJefe() {
+    teñirFuria(false);
+    if (burbuja) burbuja.visible = false;
     if (jefe.mesh) jefe.mesh.visible = false;
     for (const s of dragon.trozos) s.mesh.visible = false;
     jefe.activo = false;
@@ -4262,18 +4388,51 @@ export function createWorld(scene) {
       return;
     }
     jefe.z += (JEFE_Z - jefe.z) * Math.min(1, dt * 1.2);
-    jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * 4);
+    jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * (jefe.furia ? 5.5 : 4));
     const temblor = jefe.golpe > 0 ? Math.sin(jefe.tiempo * 70) * 0.25 * jefe.golpe : 0;
     const altura = esDragon ? DRAGON_Y : J ? J.y : JEFE_Y;
     // (El toro va por el suelo al galope: botes cortos, sin flotar.)
     const bote = J && J.galope ? Math.abs(Math.sin(jefe.tiempo * 7)) * 0.25 : Math.sin(jefe.tiempo * 2.2) * 0.25;
-    m.position.set(jefe.x + temblor, altura + bote, jefe.z);
-    m.rotation.z = Math.sin(jefe.tiempo * 1.7) * 0.06;
+    // Se balancea de lado a lado, da saltos de vez en cuando y retrocede al recibir.
+    const vaiven = esDragon ? 0 : Math.sin(jefe.tiempo * 1.3) * 0.35;
+    if (!esDragon && !jefe.paso) {
+      jefe.proximoSalto -= dt;
+      if (jefe.proximoSalto <= 0 && jefe.salto <= 0) { jefe.salto = 0.62; jefe.proximoSalto = (jefe.furia ? 2 : 3) + Math.random() * 2.5; }
+    }
+    let brinco = 0;
+    if (jefe.salto > 0) { jefe.salto = Math.max(0, jefe.salto - dt); brinco = Math.sin(Math.PI * (1 - jefe.salto / 0.62)) * 1.3; }
+    jefe.empuje = Math.max(0, jefe.empuje - dt * 2.2);
+    m.position.set(jefe.x + temblor + vaiven, altura + bote + brinco, jefe.z - jefe.empuje * 3.5);
+    m.rotation.z = Math.sin(jefe.tiempo * 1.7) * 0.06 + (esDragon ? 0 : (LANE_X[jefe.carril] - jefe.x) * -0.08);
+    if (!esDragon) {
+      // Coge impulso hacia atras justo antes de tirar y se echa adelante al lanzar.
+      const carga = !jefe.paso && jefe.tiro < 0.4 && jefe.tiro > 0 ? 1 - jefe.tiro / 0.4 : 0;
+      jefe.lanzo = Math.max(0, jefe.lanzo - dt * 3);
+      m.rotation.x = -0.32 * carga + 0.28 * jefe.lanzo - jefe.empuje * 0.35;
+      // Respira (estira y encoge un poco) y se aplasta al recibir.
+      const base = J ? J.escala : 1, k = 1 + jefe.golpe * 0.25, r = Math.sin(jefe.tiempo * 3.1);
+      m.scale.set(base * k * (1 - 0.03 * r + 0.08 * carga), base * k * (1 + 0.04 * r - 0.1 * carga), base * k * (1 - 0.03 * r + 0.08 * carga));
+    }
+    // El escudo (solo enfadado): se cubre a ratos; lo que llega rebota.
+    if (jefe.furia && !jefe.paso) {
+      jefe.proximoEscudo -= dt;
+      if (jefe.proximoEscudo <= 0 && jefe.escudo <= 0) {
+        jefe.escudo = 1.4; jefe.proximoEscudo = 5 + Math.random() * 3;
+        if (alEventoJefe) alEventoJefe("escudo", jefe.vida);
+      }
+    }
+    if (jefe.escudo > 0) jefe.escudo = Math.max(0, jefe.escudo - dt);
+    if (jefe.escudo > 0 || (burbuja && burbuja.visible)) {
+      const b = burbujaEscudo(), esc = esDragon ? DRAGON_ESCALA : J ? J.escala : 1;
+      b.visible = jefe.escudo > 0;
+      b.position.set(m.position.x, m.position.y + (J && J.y === 0 ? 1.3 : 0.8) * esc, m.position.z);
+      b.scale.setScalar(2.1 * esc * (1 + 0.04 * Math.sin(jefe.tiempo * 4)));
+    }
     // El dragon gira un poco la cabeza hacia donde va.
     if (esDragon) m.rotation.y = (LANE_X[jefe.carril] - jefe.x) * 0.12;
     if (jefe.golpe > 0) {
       jefe.golpe = Math.max(0, jefe.golpe - dt * 2.5);
-      m.scale.setScalar((esDragon ? DRAGON_ESCALA : J ? J.escala : 1) * (1 + jefe.golpe * 0.25));
+      if (esDragon) m.scale.setScalar(DRAGON_ESCALA * (1 + jefe.golpe * 0.25));
     }
     // 08/11: los ataques van rotando. «uno»: algo que rueda por tu carril (el
     // robot, un barril; el dragon, una caja de aranceles); «dos»: dos a la vez,
@@ -4304,7 +4463,8 @@ export function createWorld(scene) {
       else lanzar(jefe.carril, bajo);
       if (esDragon) dragon.boca = 1;
       jefe.carril = Math.random() < 0.6 ? jugadorCarril : Math.floor(Math.random() * 3);
-      jefe.tiro = jefe.paso ? 1.4 : ataque === "dos" ? 1.9 : 1.5;
+      jefe.tiro = (jefe.paso ? 1.4 : ataque === "dos" ? 1.9 : 1.5) * (jefe.furia ? 0.75 : 1);
+      jefe.lanzo = 1;
       if (jefe.paso && ++jefe.tirados >= 3) {
         jefe.saliendo = true;
         jefeSeVa();
@@ -4322,13 +4482,18 @@ export function createWorld(scene) {
       const d = disparos[i];
       d.t += dt / 0.45;
       const t = Math.min(1, d.t);
-      d.mesh.position.set(d.x0 + (jefe.x - d.x0) * t, d.y0 + (alturaJefe() + 1.5 - d.y0) * t + Math.sin(t * Math.PI) * 2,
-        jefe.z * t);
+      const dest = jefe.mesh ? jefe.mesh.position : null;
+      const J = JEFES[jefe.tipo], alto = dest ? dest.y + (J && J.y === 0 ? 1.3 : 0.9) * (J ? J.escala : 1) : alturaJefe() + 1.5;
+      d.mesh.position.set(d.x0 + ((dest ? dest.x : jefe.x) - d.x0) * t, d.y0 + (alto - d.y0) * t + Math.sin(t * Math.PI) * 2,
+        (dest ? dest.z : jefe.z) * t);
       d.mesh.rotation.x += dt * 12;
       if (t >= 1) {
         group.remove(d.mesh);
         disparos.splice(i, 1);
-        golpearJefe();
+        if (jefe.escudo > 0 && jefeActivo()) {
+          burstSparkles(d.mesh.position.x, d.mesh.position.y, d.mesh.position.z);
+          if (alEventoJefe) alEventoJefe("bloquea", jefe.vida);
+        } else golpearJefe();
       }
     }
   }
@@ -4340,7 +4505,14 @@ export function createWorld(scene) {
     if (!jefeActivo()) return;
     jefe.vida--;
     jefe.golpe = 1;
-    for (let k = 0; k < 3; k++) burstSparkles(jefe.x, JEFE_Y + 1.5, jefe.z);
+    jefe.empuje = 1;
+    const pm = jefe.mesh ? jefe.mesh.position : { x: jefe.x, y: JEFE_Y + 1.5, z: jefe.z };
+    for (let k = 0; k < 3; k++) burstSparkles(pm.x, pm.y + 1, pm.z);
+    if (!jefe.furia && jefe.vida > 0 && jefe.vida <= JEFE_VIDA / 2 && !jefe.paso) {
+      jefe.furia = true;
+      teñirFuria(true);
+      if (alEventoJefe) alEventoJefe("furia", jefe.vida);
+    }
     if (jefe.vida <= 0) {
       jefe.saliendo = true; jefe.derrotado = true;
       jefeSeVa();
@@ -4790,7 +4962,8 @@ export function createWorld(scene) {
       // 08/11: aranceles en lugar de chiles, y menos (antes el 55 % de las filas).
       // 08/11 (2): Isidro: «al Burrito-Bot sí quiero que le tire chiles, al dragón aranceles».
       const arma = armaJefe(jefe.activo ? jefe.tipo : (t && t.jefe) || "robot");
-      if (EXTRAS && Math.random() < 0.27) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
+      // 11/11: ahora se guardan y se le lanzan tocandole: salen mas.
+      if (EXTRAS && Math.random() < 0.42) spawnPowerup((lane + 1 + Math.floor(Math.random() * 2)) % 3, z, arma);
     },
 
     // ---- 06/11 (3): los momentos (ver «Los momentos», mas abajo) ----
@@ -6203,6 +6376,7 @@ export function createWorld(scene) {
     const dt = dtFijo !== undefined ? dtFijo : Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
     lastTime = now;
     animClock += dt;
+    if (susto > 0) susto = Math.max(0, susto - dt);
     if (haloMat) haloMat.uniforms.alto.value = altoPantalla();
     animarCalle(dt, dz);
 
@@ -6571,5 +6745,5 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE };
+    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico };
 }

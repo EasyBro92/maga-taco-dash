@@ -20,6 +20,7 @@ import { initErrorReporting, reportError } from "./errors.js";
 import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje, cargarLider } from "./models.js";
 import { liderPuesto, liderDe, nombreLider, tituloLider } from "./lideres.js";
+import { valorMejora } from "./mejoras.js";
 import * as misiones from "./missions.js";
 import { FRASES, TRUMP, traduccion } from "./frases.js";
 import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
@@ -37,8 +38,9 @@ const JUMP_DURATION = 0.62;   // 26/10: mas rato en el aire (habia que estar muy
 const JUMP_HEIGHT = 1.7;
 const SLIDE_DURATION = 0.5;
 const STREAK_RESET_GAP = 4;   // 05/11: antes 2,2 (con menos tacos, entre tira y tira hay mas hueco)
-const MAGNET_DURATION = 6;
-const BOOST_DURATION = 4;
+// (11/11: las duraciones salen de las mejoras de la tienda, ver aplicarMejoras)
+let MAGNET_DURATION = 6;
+let BOOST_DURATION = 4;
 const BOOST_MULT = 1.5;
 // Fisica vertical de verdad (22/10/2026): hace falta para subir por la rampa
 // del autobus, correr por el techo y caer al acabarse. Gravedad y velocidad
@@ -47,11 +49,11 @@ const BOOST_MULT = 1.5;
 const GRAVEDAD = 8 * JUMP_HEIGHT / (JUMP_DURATION * JUMP_DURATION);
 const V_SALTO = 4 * JUMP_HEIGHT / JUMP_DURATION;
 // Modo gigante (gorra roja): el personaje crece y aplasta lo que toca.
-const MEGA_DURATION = 7;
+let MEGA_DURATION = 7;
 const MEGA_SCALE = 1.7;
 // Rayo congelador, cohete y jefe (22/10/2026, mas Minion Rush).
 const FREEZE_DURATION = 6;
-const ROCKET_DURATION = 6.5;
+let ROCKET_DURATION = 6.5;
 const JEFE_PRIMERO = 1200;   // metros hasta el primer Burrito-Bot
 const JEFE_CADA = 2000;      // y luego cada tantos
 // 27/10: en los niveles la velocidad va con lo recorrido, no con el tiempo:
@@ -63,7 +65,7 @@ const PRECIO_SEGUIR = 300;
 const PREMIO_BASE = 500, PREMIO_ESTRELLA = 250;   // 05/11: el premio de cada victoria (750 a 1250 tacos)
 const INVULNERABLE = 2.2;    // segundos de parpadeo al seguir: lo de delante no cuenta
 // ---- 28/10/2026: ideas de Subway Surfers ----
-const BOTAS_DURATION = 10;    // botas de vaquero: saltos altos (las «súper zapatillas»)
+let BOTAS_DURATION = 10;    // botas de vaquero: saltos altos (las «súper zapatillas»)
 const BOTAS_ALTURA = 2.9;     // con ellas se salta por encima de los coches
 const V_SALTO_BOTAS = Math.sqrt(2 * GRAVEDAD * BOTAS_ALTURA);
 const RECUERDA_GESTO = 0.22;  // un salto pulsado justo antes de tocar suelo no se pierde
@@ -933,7 +935,7 @@ function completarNivel() {
   const sinFinAntes = sinFinAbierto(antes);
   const votosAntes = votosGanados(NIVELES, antes);
   const estadoNuevo = !antes[n.id];   // (antes es el mismo objeto que se guarda: mirarlo ya)
-  addTacos(tacos);
+  addTacos(conBonus(tacos));
   const r = guardarNivel(n.id, { sinChocar: !intento.chocado, chapas: intento.chapas });
   misiones.fijarDisponibles(misionPosible);
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
@@ -1059,6 +1061,14 @@ world.onJefe((evento, vida) => {
     vibrate([40, 30, 80]);
     avisarMisiones(misiones.evento("jefe"));
     setTimeout(() => barra.classList.add("hidden"), 1500);
+  } else if (evento === "furia") {
+    showBubble(t("jefeFuria"), 1400, 3);
+    triggerCameraShake(0.03);
+    vibrate([30, 30, 30]);
+  } else if (evento === "escudo") {
+    showBubble(t("jefeEscudo"), 1000, 1);
+  } else if (evento === "bloquea") {
+    showBubble(t("jefeBloquea"), 900, 1);
   } else if (evento === "pasa") {
     showBubble(t("jefePasaVa"), 1300, 2);
   } else if (evento === "escapa") {
@@ -1208,6 +1218,8 @@ function resetRun(desde = 0) {
   megaTimeLeft = 0; character.setMega(1);
   freezeTimeLeft = 0; rocketTimeLeft = 0; nextJefeAt = JEFE_PRIMERO; misionesReloj = 0;
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
+  aplicarMejoras();
+  municion = 0; municionPintada = "";
   if (monturaCohete) monturaCohete.visible = false;
   quitarParaguas(); if (character.setViento) character.setViento(0);
   if (character.setChaleco) character.setChaleco(false);
@@ -1466,12 +1478,13 @@ function spawnConfetti(count) {
 }
 
 // ---------- Controles ----------
-function accionJugador(action) {
+function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
-  if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); }
-  else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); }
-  else if (action === "frase") lanzarFrase();
+  if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
+  else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
+  else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
+  else if (action === "lanzar") { if (!lanzarAlJefe(null, true)) lanzarFrase(); }
   else if (action === "jump") {
     // 28/10: se puede saltar agachado (se levanta saltando), un instante
     // despues de caer de un techo, y si se pulsa en el aire justo antes de
@@ -1517,6 +1530,7 @@ function esDeLado(o, paso) {
 }
 function tropezar(o) {
   o.rozado = true;
+  world.asustarPublico();
   const vuelta = carrilAntes;
   carrilAntes = currentLane;
   currentLane = vuelta;
@@ -1545,6 +1559,36 @@ function ponerSirenas() {
   const on = gameState === "playing" && !pausado && ((tramoMostrado && tramoMostrado.tipo === "persecucion") || (persigueLeft > 0 && policia));
   document.getElementById("sirenas").classList.toggle("hidden", !on);
   sirena(on);
+}
+
+// 11/11: «¡Por los pelos!»: esquivar en el ultimo momento algo que venia
+// por tu carril da tacos (como en Subway Surfers). Medio segundo de margen.
+let pelos = { carril: -1, t: -9, ultimo: -9 };
+function cambioCarril() { pelos.carril = carrilAntes; pelos.t = performance.now() / 1000; }
+function porLosPelos() {
+  const ahora = performance.now() / 1000;
+  if (ahora - pelos.t > 0.5 || ahora - pelos.ultimo < 1.2 || rocketTimeLeft > 0 || montado) return;
+  for (const o of world.obstacles) {
+    if (o.smashed || o.pelos || o.lane !== pelos.carril || o.type === "nada" || o.type === "rampa") continue;
+    const zc = o.z + (o.centro || 0);
+    if (zc < -(o.medio || 0.7) - 0.4 || zc > 0.2) continue;
+    if (o.type === "low" && py > 0.6) continue;
+    o.pelos = true;
+    pelos.ultimo = ahora;
+    const n = 5 * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("porLosPelos")} +${n}`);
+    sndPoint();
+    vibrate(12);
+    return;
+  }
+}
+function textoFlotante(texto) {
+  const el = document.createElement("div");
+  el.className = "textoFlotante";
+  el.textContent = texto;
+  document.getElementById("hud").appendChild(el);
+  setTimeout(() => el.remove(), 1100);
 }
 
 function checkCollisions(paso = 0) {
@@ -1808,8 +1852,10 @@ function checkPowerups() {
       showBubble(t("dobleTacos"), 1100, 0);
       vibrate(20);
     } else if (world.ARMAS_JEFE.includes(p.kind)) {
-      // Chile picante: sale disparado hacia el Burrito-Bot.
-      world.dispararJefe(playerX, py + 1.2);
+      // 11/11: se guarda en el bolsillo; se lanza tocando al jefe. Si va lleno, tacos.
+      if (municion < MAX_MUNICION) municion++;
+      else tacosThisRun += 10;
+      if (ayudaLanzar < 2 && world.jefeActivo()) { ayudaLanzar++; showBubble(t("tocaParaLanzar"), 1600, 2); }
       vibrate(15);
     }
     updatePowerupBadge();
@@ -1826,7 +1872,8 @@ if (PRUEBA) {
     botas: () => { botasTimeLeft = BOTAS_DURATION; },
     perseguido: () => persigueLeft,
     cajas: { abrir: () => abrirCaja(pintarCajaBtn), guardar: guardarCaja, diario: () => premioDiario(pintarCajaBtn), pintar: () => pintarCajaBtn() },
-    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, botasTimeLeft, isSliding, currentLane, playerX, tacos: tacosThisRun, distancia: distance, montado, superSalto, reto: reto && { t: reto.t, n: reto.n }, dobleLeft, persigueLeft, py }),
+    estado: () => ({ fase: fin ? fin.fase : null, nivel: nivelActual ? nivelActual.id : null, gameState, py, vy, enSuelo, megaTimeLeft, freezeTimeLeft, rocketTimeLeft, botasTimeLeft, isSliding, currentLane, playerX, tacos: tacosThisRun, distancia: distance, montado, superSalto, reto: reto && { t: reto.t, n: reto.n }, dobleLeft, persigueLeft, py, municion, MAX_MUNICION }),
+    darMunicion: (n = 3) => { municion = n; },
     carril: (l) => { currentLane = l; },
     saltar: () => { if (enSuelo && !isSliding) { vy = V_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; } },
     gigante: () => { megaTimeLeft = MEGA_DURATION; character.setMega(MEGA_SCALE); },
@@ -1856,7 +1903,8 @@ if (PRUEBA) {
 // Los que van encima de un tramo de la ciudad se arrancan al entrar en el
 // tramo y se acaban al salir: te persiguen, el vehiculo y el reto relampago.
 let montado = false, superSalto = false, persigueMomento = false, dobleLeft = 0, reto = null, confetiReloj = 0;
-const VEHICULO_MULT = 1.2, DOBLE_DURATION = 6, RETO_TIEMPO = 10, RETO_META = 25, RETO_PREMIO = 100;
+let DOBLE_DURATION = 6;
+const VEHICULO_MULT = 1.2, RETO_TIEMPO = 10, RETO_META = 25, RETO_PREMIO = 100;
 function velNivel(d) {
   // 06/11 (2): en los primeros 350 m hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
   const ARRANQUE = 350, L = nivelActual.largo;
@@ -1928,6 +1976,7 @@ function triggerGameOver() {
   quitarReto();
   gameState = "cayendo";
   cayendo = 0;
+  world.asustarPublico();
   if (intento) intento.chocado = true;
   speedLinesEl.style.opacity = "0";
   isSliding = false;
@@ -1999,7 +2048,7 @@ function mostrarFinSinFin() {
 // Cerrar la carrera: se guardan los tacos de esta partida (y el record del sin fin).
 function cerrarCarrera() {
   if (gameState === "cerrada" || gameState === "completado") return;
-  addTacos(Math.floor(tacosThisRun));
+  addTacos(conBonus(tacosThisRun));
   if (!nivelActual) reportRunScore(Math.floor(distance));
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
   gameState = "cerrada";
@@ -2117,11 +2166,62 @@ function tick() {
   frame();
 }
 
+// ---------- 11/11/2026: la municion para el jefe y las mejoras ----------
+// Isidro: «para derrotarlos hay que lanzarle algo pulsandole encima, pero
+// tiene que ser algo que se recoja en el mapa». Lo que suelta cada jefe por
+// la calle (chiles, aranceles, rotuladores...) se guarda y se le lanza
+// tocandole encima (o con la tecla E en el ordenador).
+let municion = 0, municionPintada = "", MAX_MUNICION = 3, bonusTacos = 0, ayudaLanzar = 0;
+const ICONO_ARMA = { chile: "chile", arancel: "arancel", rotulador: "rotulador", hamburguesa: "hamburguesa", desatascador: "desatascador" };
+function aplicarMejoras() {
+  MAGNET_DURATION = valorMejora("iman");
+  BOOST_DURATION = valorMejora("turbo");
+  BOTAS_DURATION = valorMejora("botas");
+  MEGA_DURATION = valorMejora("gigante");
+  ROCKET_DURATION = valorMejora("cohete");
+  DOBLE_DURATION = valorMejora("doble");
+  MAX_MUNICION = valorMejora("bolsillo");
+  bonusTacos = valorMejora("recaudacion") / 100;
+}
+const conBonus = (n) => Math.floor(n * (1 + bonusTacos));
+function pintarMunicion() {
+  const arma = gameState === "playing" ? world.armaActual() : null;
+  const ver = !!arma && arma !== "micro";
+  const clave = ver ? arma + municion + "/" + MAX_MUNICION : "no";
+  if (clave === municionPintada) return;
+  const antes = municionPintada;
+  municionPintada = clave;
+  const el = document.getElementById("hudMunicion");
+  el.classList.toggle("hidden", !ver);
+  if (!ver) return;
+  el.innerHTML = `${icono(ICONO_ARMA[arma] || "chile")}<b>${municion}</b><small>/${MAX_MUNICION}</small><em>${t("tocaJefe")}</em>`;
+  el.classList.toggle("vacia", municion === 0);
+  if (antes !== "no" && antes !== "") pulse(el);
+}
+// Un toque en pantalla: si cae encima del jefe, se le lanza lo que se lleva.
+function lanzarAlJefe(pos, sinApuntar) {
+  const arma = world.armaActual();
+  if (!arma || arma === "micro") return false;
+  if (!sinApuntar && (!pos || !world.tocaJefe(pos.x, pos.y, camera, window.innerWidth, window.innerHeight))) return false;
+  if (municion <= 0) {
+    showBubble(t("sinMunicion"), 1000, 1);
+    vibrate(10);
+    return true;
+  }
+  municion--;
+  world.dispararJefe(playerX, py + 1.2);
+  sndPoint();
+  vibrate(15);
+  flashExpression("determined", 0.4);
+  return true;
+}
+
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
 // paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
 function frame(dtFijo) {
   if (contextLost) return;
   pintarFrases();
+  pintarMunicion();
   // ?prueba: `__juego.pausa = true` congela el juego (sigue dibujando) para mirar una escena.
   if (PRUEBA && window.__juego && window.__juego.pausa && dtFijo === undefined) { renderer.render(scene, camera); return; }
   const dt = dtFijo !== undefined ? dtFijo : Math.min(clock.getDelta(), 0.05);
@@ -2263,6 +2363,7 @@ function frame(dtFijo) {
         pintarBarraJefe(world.vidaJefe());
         document.getElementById("bossBar").classList.remove("hidden");
         showBubble(textoJefe("jefeLlega"), 2200, 3);
+        if (world.armaActual() !== "micro") setTimeout(() => { if (gameState === "playing" && world.jefeActivo()) avisoVerde(`${icono(ICONO_ARMA[world.armaActual()] || "chile")} ${t("recogeLanzar")}`); }, 2600);
         triggerCameraShake(0.04);
       }
     }
@@ -2289,6 +2390,7 @@ function frame(dtFijo) {
       pintarBarraJefe(world.vidaJefe());
       document.getElementById("bossBar").classList.remove("hidden");
       showBubble(textoJefe("jefeLlega"), 1300, 3);
+      setTimeout(() => { if (gameState === "playing" && world.jefeActivo()) avisoVerde(`${icono(ICONO_ARMA[world.armaActual()] || "chile")} ${t("recogeLanzar")}`); }, 1800);
       triggerCameraShake(0.04);
     }
 
@@ -2379,6 +2481,7 @@ function frame(dtFijo) {
       character.object3D.position.y = py;
     }
     checkCollisions(frameSpeed * dt);
+    if (gameState === "playing") porLosPelos();
     checkCollectibles(dt);
     checkChapas();
     checkPowerups();
@@ -2527,6 +2630,7 @@ function volverAlMenu() {
   stopMusic();
 }
 // 28/10: cajas sorpresa sin abrir (se cogen en la calle) y premio del dia.
+window.addEventListener("cajasCambian", () => pintarCajaBtn());
 function pintarCajaBtn() {
   const n = cajasPendientes();
   const b = document.getElementById("cajaBtn");

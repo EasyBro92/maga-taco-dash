@@ -1942,3 +1942,33 @@ Isidro: «cuando acabes continúa con la auditoría». Hecho de lo que quedaba:
   textura del brillo se hace una vez.
 
 Queda de la revisión: los 37 estados que faltan.
+
+## 11/11/2026 (3): jefes que se pelean, tienda con mejoras y más vida (v52)
+
+Isidro: «anima todos los personajes, que tengan mucha más vida; corrige y
+mejora lo visual y la jugabilidad; mejora los enemigos, más dinámicos, que
+para derrotarlos haya que lanzarles algo pulsándoles encima, pero algo que se
+recoja en el mapa; dame más ideas para hacerlo más adictivo; la tienda sigue
+siendo floja».
+
+- **Jefes**: lo que sueltan por la calle (chiles, aranceles, rotuladores,
+  hamburguesas, desatascadores) ya no sale disparado solo: se guarda en el
+  bolsillo (abajo a la derecha, 3 al principio) y se le lanza **tocándole
+  encima** (en el ordenador, clic o la tecla E). Sueltan más (42 % de las
+  filas) y tienen 10 de vida. En el debate de Las Vegas sigue con frases.
+- Los jefes se mueven más: se balancean, dan saltos, cogen impulso antes de
+  tirar, retroceden y se aplastan al recibir, y respiran. A media vida se
+  enfadan (se ponen rojos, tiran más rápido) y a ratos se cubren con un
+  escudo azul: lo que llega entonces rebota.
+- **Tienda**: pestaña nueva «Mejoras» (se abre ahí): imán, bolsillo, botas,
+  turbo, gigante, cohete, tacos dobles y recaudación (+6 % de tacos por
+  nivel), cinco niveles cada una (500 a 9000 tacos). Cada día una sale con
+  un 40 % de descuento. Y la caja sorpresa se puede comprar (2500 tacos).
+  Las mejoras se juntan en la cuenta como lo demás.
+- **Vida**: la gente de la acera salta de alegría, hace fotos, señala,
+  aplaude o saluda al pasar; mientras espera charla, mira el móvil o se cruza
+  de brazos; si tropiezas o chocas, se lleva las manos a la cabeza. Agentes y
+  guardaespaldas vigilan y se giran hacia ti; protestas y fans corean dando
+  saltitos; y todos se apartan de un respingo si pasas rozando.
+- **Jugabilidad**: «¡Por los pelos!»: esquivar algo en el último medio
+  segundo da tacos.

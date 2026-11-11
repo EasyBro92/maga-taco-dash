@@ -42,6 +42,12 @@ const ICONOS = {
   repetir: svg(`<path d="M5 12a7 7 0 1 0 2.1-5" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round"/><path d="M5 3.5v4h4" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`),
   casa: svg(`<path d="M3.5 11L12 4l8.5 7" fill="none" stroke="${T}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9.5h12V10" fill="none" stroke="${T}" stroke-width="2.4" stroke-linejoin="round"/>`),
   paraguas: svg(`<path d="M3 12.5a9 8.5 0 0118 0c-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0-1.5-1.2-3-1.2-4.5 0z" fill="${A}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12.5v6a2 2 0 01-4 0" fill="none" stroke="${T}" stroke-width="2" stroke-linecap="round"/>`),
+  // 11/11: lo que se le lanza a cada jefe
+  arancel: svg(`<rect x="4" y="7" width="16" height="13" rx="1.5" fill="#c8955a" stroke="${T}" stroke-width="1.6"/><path d="M4 11h16" stroke="${T}" stroke-width="1.4"/><text x="8" y="18.5" font-size="7.5" font-weight="900" font-family="sans-serif" fill="${R}">%</text><path d="M9 7l3-3 3 3" fill="none" stroke="${T}" stroke-width="1.6" stroke-linecap="round"/>`),
+  rotulador: svg(`<path d="M6 18l10.5-10.5 2.5 2.5L8.5 20.5H6z" fill="${A}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/><path d="M16.5 7.5l2-2a1.8 1.8 0 012.5 2.5l-2 2" fill="${B}" stroke="${T}" stroke-width="1.6"/><path d="M6 18l-1.5 3.5L8 20" fill="${T}"/>`),
+  hamburguesa: svg(`<path d="M4 11a8 6 0 0116 0z" fill="#e0a24a" stroke="${T}" stroke-width="1.5"/><rect x="3.5" y="12" width="17" height="2.4" rx="1" fill="#3fae3a"/><rect x="3.5" y="14.4" width="17" height="2.6" rx="1.2" fill="#7a3d1d"/><path d="M4 17.5h16a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 17.5z" fill="#e0a24a" stroke="${T}" stroke-width="1.5"/>`),
+  desatascador: svg(`<rect x="10.8" y="2.5" width="2.4" height="11" rx="1.1" fill="#b5813a" stroke="${T}" stroke-width="1.2"/><path d="M5 20.5c0-4 3-7 7-7s7 3 7 7z" fill="${R}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/>`),
+  mejora: svg(`<circle cx="12" cy="12" r="9" fill="#52c46a" stroke="${T}" stroke-width="1.6"/><path d="M12 17V8M8 11.5L12 7.5l4 4" fill="none" stroke="${B}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`),
   avion: svg(`<path d="M21 3.5L3 11l6.5 2.5L12 20l3-6.5z" fill="${B}" stroke="${T}" stroke-width="1.6" stroke-linejoin="round"/>`),
 };
 

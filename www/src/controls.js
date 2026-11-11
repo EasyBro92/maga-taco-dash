@@ -17,7 +17,9 @@ export function setSwipeThreshold(px) {
 export function initControls(target, onAction) {
   let startX = 0, startY = 0, startT = 0, tracking = false, hizoGesto = false;
 
+  let ultimoToque = -1e9;
   target.addEventListener("touchstart", (e) => {
+    ultimoToque = performance.now();
     const t = e.changedTouches[0];
     startX = t.clientX; startY = t.clientY; startT = performance.now();
     tracking = true; hizoGesto = false;
@@ -35,12 +37,19 @@ export function initControls(target, onAction) {
     hizoGesto = true;   // hasta levantar el dedo, nada mas
   }, { passive: true });
 
-  target.addEventListener("touchend", () => {
+  target.addEventListener("touchend", (e) => {
     if (!tracking) return;
     tracking = false;
     // Toque corto sin gesto: lanzar una frase (si dura mucho, se dejo el dedo puesto).
-    if (!hizoGesto && performance.now() - startT < 350) onAction("frase");
+    // 11/11: con donde se toco: si es encima del jefe, se le lanza lo que se lleva.
+    const t = e.changedTouches[0];
+    if (!hizoGesto && performance.now() - startT < 350) onAction("frase", t ? { x: t.clientX, y: t.clientY } : null);
   }, { passive: true });
+  // En el ordenador, un clic con el raton hace lo mismo que un toque.
+  // (El movil tambien manda un clic de raton tras cada toque: ese no cuenta.)
+  target.addEventListener("mousedown", (e) => {
+    if (e.button === 0 && performance.now() - ultimoToque > 800) onAction("frase", { x: e.clientX, y: e.clientY });
+  });
 
   target.addEventListener("touchcancel", () => { tracking = false; }, { passive: true });
 
@@ -51,6 +60,7 @@ export function initControls(target, onAction) {
       case "ArrowUp": case "w": case "W": case " ": onAction("jump"); break;
       case "ArrowDown": case "s": case "S": onAction("slide"); break;
       case "f": case "F": case "Enter": onAction("frase"); break;
+      case "e": case "E": onAction("lanzar"); break;
       case "Escape": case "p": case "P": onAction("pausa"); break;
     }
   });

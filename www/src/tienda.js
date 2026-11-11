@@ -1,5 +1,8 @@
 import * as THREE from "../vendor/three.module.min.js";
-import { getTienda, comprar, ponerse, getSave } from "./save.js";
+import { getTienda, comprar, ponerse, getSave, spendTacos } from "./save.js";
+import { MEJORAS, MAX_NIVEL, PRECIO_CAJA, nivelMejora, valorMejora, precioMejora, subirMejora, ofertaHoy } from "./mejoras.js";
+import { guardarCaja } from "./cajas.js";
+import { sndChapa, vibrate } from "./audio.js";
 import { t, getLang } from "./i18n.js";
 import { icono } from "./iconos.js";
 import { urlPegatina } from "./pegatinas.js";
@@ -72,7 +75,8 @@ export function aplicarTienda(character) {
 }
 
 // ---- El panel ----
-let hueco = "gorra";
+// 11/11: se abre en las mejoras (lo que mas se nota al jugar).
+let hueco = "mejora";
 let personaje = null;
 function iconoArticulo(a) {
   if (a.hueco === "traje") {
@@ -85,10 +89,12 @@ function pintar() {
   const tienda = getTienda();
   document.getElementById("shopTacoCount").textContent = getSave().totalTacos;
   const pestanas = `<div class="segmentos tiendaPestanas">
+      <button class="segmento ${hueco === "mejora" ? "equippedBtn" : ""}" data-hueco="mejora">${t("tiendaMejoras")}</button>
       <button class="segmento ${hueco === "gorra" ? "equippedBtn" : ""}" data-hueco="gorra">${t("tiendaGorras")}</button>
       <button class="segmento ${hueco === "traje" ? "equippedBtn" : ""}" data-hueco="traje">${t("tiendaTrajes")}</button>
       <button class="segmento ${hueco === "lider" ? "equippedBtn" : ""}" data-hueco="lider">${t("tiendaLideres")}</button></div>`;
   if (hueco === "lider") { document.getElementById("shopGrid").innerHTML = pestanas + listaLideres(); return; }
+  if (hueco === "mejora") { document.getElementById("shopGrid").innerHTML = pestanas + listaMejoras(); return; }
   const lista = ARTICULOS.filter((a) => a.hueco === hueco).map((a) => {
     const tengo = tienda.tengo.includes(a.id);
     const puesto = tienda.puesto[a.hueco] === a.id;
@@ -100,6 +106,28 @@ function pintar() {
   }).join("");
   document.getElementById("shopGrid").innerHTML = pestanas + `<div class="tiendaLista">${lista}</div>`;
 }
+// 11/11: las mejoras (mejoras.js): cinco niveles cada una, con lo que vale
+// ahora y lo que valdra; la de hoy, rebajada. Arriba, la caja sorpresa.
+function listaMejoras() {
+  const tacos = getSave().totalTacos, L = getLang(), oferta = ofertaHoy();
+  const peg = `<img class="peg" src="${urlPegatina("taco")}" alt="">`;
+  const fmt = (m, v) => (m.unidad === "%" ? `+${v} %` : m.unidad === "s" ? `${String(v).replace(".", ",")} s` : `${v}`);
+  const caja = `<div class="mejoraItem cajaVenta">${icono("regalo")}
+      <div class="mejoraTexto"><b>${t("comprarCaja")}</b><small>${t("comprarCajaTexto")}</small></div>
+      <button class="${tacos >= PRECIO_CAJA ? "comprar" : "caro"}" data-caja="1" ${tacos >= PRECIO_CAJA ? "" : "disabled"}>${PRECIO_CAJA} ${peg}</button></div>`;
+  const filas = MEJORAS.map((m) => {
+    const n = nivelMejora(m.id), p = precioMejora(m.id);
+    const pips = Array.from({ length: MAX_NIVEL }, (_, i) => `<i class="${i < n ? "lleno" : ""}"></i>`).join("");
+    const ahora = fmt(m, valorMejora(m.id)), luego = n < MAX_NIVEL ? fmt(m, valorMejora(m.id, n + 1)) : null;
+    const boton = p === null ? `<button class="puesto" disabled>${t("mejoraMax")}</button>`
+      : `<button class="${tacos >= p ? "comprar" : "caro"}" data-mejora="${m.id}" ${tacos >= p ? "" : "disabled"}>${p} ${peg}</button>`;
+    return `<div class="mejoraItem ${oferta === m.id ? "oferta" : ""}">${icono(m.icono)}
+      <div class="mejoraTexto"><b>${m.nombre[L] || m.nombre.es}${oferta === m.id ? ` <span class="rareza" style="background:#e8463c">-40 % ${t("ofertaHoy")}</span>` : ""}</b>
+        <small>${m.texto[L] || m.texto.es}: ${ahora}${luego ? ` → <b>${luego}</b>` : ""}</small><span class="pips">${pips}</span></div>${boton}</div>`;
+  }).join("");
+  return `<div class="listaMejoras">${caja}${filas}</div>`;
+}
+
 // 10/11: los líderes de la caja sorpresa. Se eligen aquí (al elegir, el juego
 // se recarga para montar al nuevo). Los que faltan salen con candado.
 function listaLideres() {
@@ -139,6 +167,24 @@ document.getElementById("shopClose").addEventListener("click", cerrar);
 document.getElementById("shopGrid").addEventListener("click", (e) => {
   const pest = e.target.closest("[data-hueco]");
   if (pest) { hueco = pest.dataset.hueco; aplicarTienda(personaje); pintar(); return; }
+  const bm = e.target.closest("button[data-mejora]");
+  if (bm) {
+    if (subirMejora(bm.dataset.mejora)) { sndChapa(); vibrate(20); }
+    pintar();
+    return;
+  }
+  const bc = e.target.closest("button[data-caja]");
+  if (bc) {
+    if (spendTacos(PRECIO_CAJA)) {
+      guardarCaja(); sndChapa(); vibrate([20, 30, 20]);
+      window.dispatchEvent(new Event("cajasCambian"));
+      bc.closest(".mejoraItem").querySelector("small").textContent = t("cajaComprada");
+      document.getElementById("shopTacoCount").textContent = getSave().totalTacos;
+      return;
+    }
+    pintar();
+    return;
+  }
   const bl = e.target.closest("button[data-lider]");
   if (bl) { ponerLider(bl.dataset.lider); location.reload(); return; }
   const b = e.target.closest("button[data-id]");

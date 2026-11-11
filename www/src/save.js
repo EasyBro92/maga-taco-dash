@@ -60,6 +60,8 @@ export function fundirPartida(n) {
   b.bestScore = Math.max(a.bestScore || 0, n.bestScore || 0);
   b.ownedItems = [...new Set([...(a.ownedItems || []), ...(n.ownedItems || [])])];
   b.lideres = [...new Set([...(a.lideres || []), ...(n.lideres || [])])];
+  b.mejoras = { ...(a.mejoras || {}) };
+  for (const [k, v] of Object.entries(n.mejoras || {})) b.mejoras[k] = Math.max(b.mejoras[k] || 0, v);
   const niveles = {};
   for (const id of new Set([...Object.keys(a.niveles || {}), ...Object.keys(n.niveles || {})])) {
     const x = (a.niveles || {})[id], y = (n.niveles || {})[id];
