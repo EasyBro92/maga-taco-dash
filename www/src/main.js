@@ -591,9 +591,8 @@ function mostrarPrologo() {
   ov.classList.remove("hidden");
 }
 document.getElementById("mapaHistoria").addEventListener("click", mostrarPrologo);
-async function empezarNivel(n) {
+async function empezarNivel(n, boton = document.getElementById("mapaJugar")) {
   if (!nivelAbierto(n, getNiveles()) && !PRUEBA) return;
-  const boton = document.getElementById("mapaJugar");
   // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
   const piezas = piezasDeNivel(n);
   await cargarCarpeta(n.carpeta, piezas, (h, total) => { if (boton) boton.textContent = `${Math.round((100 * h) / total)}%`; });
@@ -714,6 +713,8 @@ function prepararBarra() {
   document.getElementById("hudScore").classList.toggle("hidden", !!n);
   document.getElementById("hudChapas").classList.toggle("hidden", !n || !n.chapas);
   if (!n) return;
+  // 12/11: arriba del todo, en que nivel se esta
+  document.querySelector("#hudProgreso .pgNivel").textContent = `${t("nivelN").replace("{n}", n.numero)} · ${n.nombre} · ${n.lugar}`;
   hitosBarra = hitosDeNivel(n);
   hitoAvisado = hitosBarra.filter((h) => h.d < distance).length;
   mitadAvisada = distance > n.largo / 2;
@@ -2688,7 +2689,27 @@ function frame(dtFijo) {
 
 // ---------- UI wiring ----------
 // JUGAR abre el mapa de la gira; «Sin fin» es el modo de siempre.
-document.getElementById("startBtn").addEventListener("click", () => { unlockAudio(); abrirMapa(); });
+// 12/11/2026: Isidro: «nunca sé por qué nivel voy, solo pone jugar». JUGAR
+// dice el nivel que toca y entra directo (la primera vez, al mapa con la
+// historia); el mapa tiene su propio boton para elegir otro.
+function siguienteNivel() { return nivelEnCurso(getNiveles()); }
+function pintarSiguiente() {
+  const n = siguienteNivel(), hechos = getNiveles();
+  const todo = NIVELES.filter((x) => x.listo).every((x) => hechos[x.id]);
+  document.getElementById("siguienteNivel").textContent = todo ? t("todoGanado") : `${t("nivelN").replace("{n}", n.numero)} · ${n.lugar.split(",")[0]} (${n.nombre})`;
+}
+let entrando = false;
+document.getElementById("startBtn").addEventListener("click", async () => {
+  unlockAudio();
+  if (!getSave().prologo || entrando) { if (!entrando) abrirMapa(); return; }
+  const hechos = getNiveles();
+  if (NIVELES.filter((x) => x.listo).every((x) => hechos[x.id])) { abrirMapa(); return; }
+  entrando = true;
+  const texto = document.getElementById("startBtnTexto");
+  try { await empezarNivel(siguienteNivel(), texto); } finally { entrando = false; texto.textContent = t("play"); }
+});
+document.getElementById("mapaBtn").addEventListener("click", () => { unlockAudio(); abrirMapa(); });
+pintarSiguiente();
 // «Sin fin» abre primero la eleccion de zona (25/10: antes estaba en el inicio).
 // Candado (25/10): el Sin fin se abre al superar el nivel 1. Cerrado, avisa de que hace falta.
 function avisoMenu(texto) {
@@ -2744,6 +2765,7 @@ function volverAlMenu() {
   pintarMisiones("misionesMenu");
   pintarSinFin();
   pintarPaseBtn();
+  pintarSiguiente();
   pintarCajaBtn();
   stopMusic();
 }
@@ -2793,6 +2815,7 @@ function cambiarIdioma(lang) {
   pintarMisiones("misionesMenu");
   pintarSinFin();
   pintarPaseBtn();
+  pintarSiguiente();
 }
 document.getElementById("startLangBtn").addEventListener("click", () => cambiarIdioma());
 

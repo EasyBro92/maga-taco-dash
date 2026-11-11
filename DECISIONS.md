@@ -2007,3 +2007,18 @@ Isidro: «Sí, publícalas». Publicadas en el proyecto de AlienZ
 `tacodash_top/{uid}` (el ranking: lo lee todo el mundo, cada uno escribe el
 suyo con nombre y metros). Comprobado: el ranking se lee; sin cuenta no se
 puede escribir ni leer la partida de otro. Lo de AlienZ no cambia.
+
+## 12/11/2026: qué nivel toca, y el inicio que cabe (v54)
+
+Isidro: «cuando juego nunca sé por qué nivel voy, solo pone jugar; has añadido
+ránking y algo más, pero ahora se salen de la pantalla».
+
+- JUGAR lleva debajo el nivel que toca («Nivel 3 · Findlay (Main Street)») y
+  entra directo en él (cargando con el % en el propio botón). La primera vez
+  sigue yendo al mapa con la historia. Si ya está todo ganado, va al mapa.
+- Botón «Mapa» aparte para elegir otro nivel.
+- Durante la carrera, encima de la barra: «Nivel 3 · Main Street · Findlay, Ohio».
+- El inicio cabe: los botones van en una rejilla de cuatro con icono (Mapa,
+  Sin fin, Tienda, Ranking); idioma y ajustes, junto a «Mi cuenta»; instalar,
+  debajo. La hoja se desliza si el móvil es muy bajo. Comprobado a 393 × 760
+  y 360 × 640: nada se sale (tampoco el pase ni la tienda).

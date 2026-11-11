@@ -37,6 +37,7 @@
       <button id="pausaBtn" class="redondo hudRedondo" aria-label="Pausa" data-icono="pausa"></button>
     </div>
     <div id="hudProgreso" class="hidden">
+      <div class="pgNivel"></div>
       <div class="pgCabecera"><span class="pgTexto"></span><span class="pgPorcentaje"></span></div>
       <div class="pgPista"><div class="pgLleno"></div><div class="pgMarcas"></div><div class="pgYo"></div></div>
       <div class="pgHitoNombre hidden"></div>
@@ -141,19 +142,21 @@
       <button id="paseBtn" class="paseBtn"></button>
       <div class="misiones" id="misionesMenu"></div>
       <button id="cajaBtn" class="smallBtn cajaBtn hidden"></button>
-      <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
-      <div class="filaInicio">
-        <button id="sinFinBtn" class="smallBtn ancho">Sin fin</button>
-        <button id="startShopBtn" class="smallBtn"><span data-icono="tienda"></span><span data-i18n="shop">Tienda</span></button>
-        <button id="startRankBtn" class="smallBtn" data-i18n="ranking">Ranking</button>
+      <!-- 12/11: JUGAR dice que nivel toca y entra directo; el mapa, aparte -->
+      <button id="startBtn" class="bigBtn jugarBtn"><span id="startBtnTexto" data-i18n="play">JUGAR</span><small id="siguienteNivel"></small></button>
+      <div class="menuIconos">
+        <button id="mapaBtn" class="iconoBtn"><span data-icono="mapa"></span><span data-i18n="mapaBoton">Mapa</span></button>
+        <button id="sinFinBtn" class="iconoBtn">Sin fin</button>
+        <button id="startShopBtn" class="iconoBtn"><span data-icono="tienda"></span><span data-i18n="shop">Tienda</span></button>
+        <button id="startRankBtn" class="iconoBtn"><span data-icono="trofeo"></span><span data-i18n="ranking">Ranking</span></button>
+      </div>
+      <!-- 10/11: la cuenta, el idioma y los ajustes; el boton de instalar debajo -->
+      <div class="filaInicio filaCuenta">
+        <button id="cuentaBtn" class="smallBtn ancho"></button>
         <button id="startLangBtn" class="redondo" aria-label="Idioma" data-icono="idioma"></button>
         <button id="startSettingsBtn" class="redondo" aria-label="Ajustes" data-icono="ajustes"></button>
       </div>
-      <!-- 10/11: la cuenta y el boton de instalar -->
-      <div class="filaInicio filaCuenta">
-        <button id="cuentaBtn" class="smallBtn ancho"></button>
-        <button id="instalarBtn" class="smallBtn instalarBtn hidden"></button>
-      </div>
+      <button id="instalarBtn" class="smallBtn instalarBtn hidden"></button>
     </div>
   </div>
 

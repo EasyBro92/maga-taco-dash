@@ -931,3 +931,28 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 .paseEsc button { border: none; border-radius: 999px; padding: 3px 8px; font-family: var(--letra); font-weight: 800; font-size: 11px; background: linear-gradient(180deg, var(--naranja-1), var(--naranja-2)); color: #fff; cursor: pointer; }
 #leaderboardOverlay .lbList li { color: var(--tinta); }
 #leaderboardOverlay .lbList li.yo { background: #fff4d6; font-weight: 800; }
+
+/* 12/11: el inicio cabe en cualquier movil (antes la fila de botones se salia
+   por los lados en pantallas de 393 px) y, si es muy bajo, la hoja se desliza */
+#startScreen .card.hoja { width: calc(100% - 28px); max-width: 420px; box-sizing: border-box; max-height: calc(100dvh - 150px); overflow-y: auto; }
+.jugarBtn { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.jugarBtn small { font-family: var(--letra); font-size: 13px; font-weight: 800; letter-spacing: 0; text-transform: none; opacity: 0.95; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.menuIconos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 8px; }
+.iconoBtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; padding: 7px 2px 6px; border: none; border-radius: 14px;
+  background: #f3f6fc; color: var(--tinta); font-family: var(--letra); font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: 0 2px 0 #d6deeb; }
+.iconoBtn svg.ico { width: 26px; height: 26px; }
+.iconoBtn > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.iconoBtn.cerrado { opacity: 0.6; }
+.filaCuenta .smallBtn.ancho { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#startScreen .instalarBtn { display: block; width: 100%; margin-top: 8px; }
+#startScreen .instalarBtn.hidden { display: none; }
+#startScreen .paseBtn { padding: 6px 12px; }
+.pgNivel { font-family: var(--letra-titulo); font-size: 13px; color: var(--azul); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 24px; }
+/* el pase y la tienda en moviles estrechos */
+@media (max-width: 420px) {
+  .paseGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .paseEsc span { font-size: 10px; }
+  .paseEsc.final { grid-column: span 5; }
+  .tiendaPestanas .segmento { padding-left: 4px; padding-right: 4px; font-size: 12px; }
+  .mejoraItem button { min-width: 78px; padding: 7px 8px; font-size: 13px; }
+}
