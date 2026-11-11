@@ -98,7 +98,8 @@ const CALLES = [
     // edificios de los lados, que se metian en ella.)
     interior: { rango: [772, 1082], tipo: "metro", sinEdificios: [760, 1090] },
     // (El helicoptero, fuera del metro.)
-    helicoptero: [420, 1150],
+    // (11/11: una sola vez: a los 1150 coincidia con la furgoneta de la prensa)
+    helicoptero: [420],
     hitos: ["rockefeller", "catedral", "biblioteca", "empire", "madison"],
     meta: "flatiron", metaNombre: { es: "el Flatiron", en: "the Flatiron" },
     // Bajando por la Quinta Avenida desde la calle 56: el este queda a la izquierda.
@@ -232,8 +233,9 @@ const CALLES = [
     ],
     derecha: [
       40, ["kit", 3], 14, ...cuadras(2), ["westward_ho", 1], ["kit", 2], 14,
-      ...cuadras(5), ["museo_arte", 1], ["kit", 2], 14,
-      ...cuadras(4), ["museo_heard", 1], ["kit", 2], 14,
+      // (11/11: el museo, antes del cañón: dentro no hay edificios y no salía)
+      ...cuadras(2), ["museo_arte", 1], ["kit", 2], 14,
+      ...cuadras(7), ["museo_heard", 1], ["kit", 2], 14,
       ...cuadras(2), ["kit", 2],
     ],
     fondo: [{ pieza: "diner_final", d: 2045, centro: true },
@@ -384,9 +386,10 @@ const CALLES = [
       ...cuadrasCon(9, EV),
     ],
     derecha: [
+      // (11/11: el Ruan, antes del tramo sin edificios: no salía)
       40, ["kit", 3], 14, ...cuadras(1), ["hotel_fort", 1], ["kit", 2], 14,
-      ...cuadras(3), ["ruan", 1], ["kit", 2], 14,
-      ...cuadras(6), ["kit", 1], ["world_food", 1], 68,
+      ["ruan", 1], ["kit", 2], 14,
+      ...cuadras(9), ["kit", 1], ["world_food", 1], 68,
       ...cuadrasCon(8, EV), ["kit", 1, EV],
     ],
     // Las pasarelas acristaladas, el puente sobre el rio y el Capitolio al fondo.
@@ -440,7 +443,8 @@ const CALLES = [
     ],
     control: 1312, caja: 1100,
     // En los corrales no hay edificios: las vallas, las vacas y el granero.
-    sinEdificios: [440, 806],
+    // (11/11: y el final despejado, como en los demas niveles con parada)
+    sinEdificios: [[440, 806], [2690, 3800]],
     chapas: [[620, "arco"], [1250, "carril"], [2180, "bus"]],
     hitos: ["first_national", "woodmen", "old_market", "orpheum"],
     meta: "union_station", metaNombre: { es: "Union Station", en: "Union Station" },
@@ -497,7 +501,7 @@ const CALLES = [
     ],
     control: 1412, caja: 1100,
     // En el tornado se sale a la pradera: sin edificios, para que se vea el embudo.
-    sinEdificios: [700, 1010],
+    sinEdificios: [[700, 1010], [2790, 3800]],
     chapas: [[560, "arco"], [1260, "carril"], [2400, "bus"]],
     hitos: ["epic_center", "museo_aviacion", "century_ii"],
     meta: "guardian_llanuras", metaNombre: { es: "el Guardián de las Llanuras", en: "the Keeper of the Plains" },
@@ -689,8 +693,9 @@ const CALLES = [
       ["guardian_building", 1], ["kit", 2], 14, ...cuadras(17),
     ],
     derecha: [
-      40, ["kit", 2], 14, ["fox_theatre", 1], ["kit", 2], 14, ...cuadras(5),
-      ["puno_joe_louis", 1], ["kit", 2], 14, ...cuadras(24),
+      // (11/11: el puño, antes del puente: no salía)
+      40, ["kit", 2], 14, ["fox_theatre", 1], ["kit", 2], 14, ...cuadras(2),
+      ["puno_joe_louis", 1], ["kit", 2], 14, ...cuadras(27),
     ],
     // Las piezas que cruzan empiezan en `d`: 12 tramos de 705 a 1065 (la
     // segunda mitad, los de la primera dados la vuelta) y una torre en cada punta.
@@ -966,10 +971,12 @@ const CALLES = [
     // 26/10: los monumentos de verdad en su sitio, sus fachadas en tramos
     // cortos con patios entre medias, y el resto edificios unicos del kit
     // (FED: piedra clara y frontones, como los ministerios del Triangulo Federal).
+    // (11/11: empiezan al salir del Capitolio; antes las primeras quedaban
+    // dentro de la rotonda, donde no hay edificios, y no se veian.)
     izquierda: [
-      60,
+      212,
       ["galeria_este", 1], 18,
-      ["kit", 8, FED], 18, ["kit", 6, FED], 18,                                 // Galeria Nacional
+      ["kit", 8, FED], 18,                                                      // Galeria Nacional
       ["archivos_ala", 5], ["archivos_portico", 1], ["archivos_ala", 5], 18,     // 7th - 9th
       ["justicia", 8], 10, ["justicia", 8], 18, ["kit", 5, FED], 18,                                // 9th - 10th
       ["irs", 8], ["kit", 4, FED], ["irs", 8], 12,                              // 10th - 12th
@@ -979,9 +986,9 @@ const CALLES = [
       ["kit", 2, FED], ["pershing", 1],
     ],
     derecha: [
-      60,
+      212,
       ["canada", 1], 18, ["cristal", 1], 18,                                    // 4th - 6th
-      ["kit", 6], 18, ["kit", 5], 18, ["navy", 1], ["kit", 5], 18,             // 7th - 9th
+      ["kit", 5], 18, ["navy", 1], ["kit", 5], 18,                             // 7th - 9th
       ["fbi", 8], 10, ["fbi", 8], 18,                                          // 9th - 10th
       ["kit", 6], 18, ["kit", 6], 18, ["kit", 5], 18, ["cristal", 1], ["kit", 5], 18, ["kit", 6], 18,  // 10th - 13th
       ["kit", 6], 18, ["kit", 6], 18, ["kit", 6], 18, ["kit", 5], 18,          // 13th - 14th
@@ -1216,6 +1223,9 @@ export function azarConSemilla(semilla) {
 // edificios del kit que la tapaban. Solo en los cruces de cuatro cruzan coches.
 // Nada de cruces en los interiores, donde no hay edificios, en los arcos y
 // puentes del fondo, ni al salir o al llegar.
+// Los tramos sin edificios de un nivel: uno ([a, b]) o varios ([[a, b], [c, d]]).
+export const rangosSin = (x) => (!x ? [] : Array.isArray(x[0]) ? x : [x]);
+
 export function crucesDeNivel(nivel, anchoDe = (k) => ANCHO[k] || 20) {
   if (nivel._cruces) return nivel._cruces;
   const huecos = { [-1]: [], [1]: [] }, edif = { [-1]: [], [1]: [] };
@@ -1228,7 +1238,7 @@ export function crucesDeNivel(nivel, anchoDe = (k) => ANCHO[k] || 20) {
   if (ri) prohibido.push([ri[0] - 25, ri[1] + 25]);
   const si = nivel.interior && nivel.interior.sinEdificios;
   if (Array.isArray(si)) prohibido.push(si);
-  if (nivel.sinEdificios) prohibido.push(nivel.sinEdificios);
+  for (const r of rangosSin(nivel.sinEdificios)) prohibido.push(r);
   for (const f of nivel.fondo || []) if (f.cruza || f.centro) prohibido.push([f.d - 20, f.d + (anchoDe(f.pieza) || 20) + 20]);
   if (nivel.control) prohibido.push([nivel.control - 12, nivel.control + 12]);
   const libre = (c) => !prohibido.some((r) => c - 7 < r[1] && c + 7 > r[0]);
@@ -1279,7 +1289,8 @@ function aplicarGiros(nivel) {
   for (const [f, pref] of [[0.35, 1], [0.7, -1]]) {
     const objetivo = nivel.largo * f;
     const vale = cruces.filter((c) => {
-      if (Math.abs(c.d - objetivo) > nivel.largo * 0.2 || lejos.some((x) => Math.abs(x - c.d) < 45)) return false;
+      // (11/11: 65 m: con 45 la chapa del carril quedaba justo en la curva)
+      if (Math.abs(c.d - objetivo) > nivel.largo * 0.2 || lejos.some((x) => Math.abs(x - c.d) < 65)) return false;
       if (giros.some((g) => Math.abs(g.d - c.d) < 300)) return false;
       const t = nivel.tramos.find(([a, b]) => c.d >= a && c.d < b);
       // (los momentos pequeños, el reto y las gorras, se acaban en el desvio)

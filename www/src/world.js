@@ -2,7 +2,7 @@ import * as THREE from "../vendor/three.module.min.js";
 import { toon, withOutline } from "./toon.js";
 import { makePool } from "./pool.js";
 import { modelo, hayModelo, medidas, modeloConContorno, capaHielo, lucesDe } from "./models.js";
-import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel, sitiosObjetos, crucesDeNivel } from "./levels.js";
+import { colocarNivel, ANCHO, azarConSemilla, sueloDeNivel, sitiosObjetos, crucesDeNivel, rangosSin } from "./levels.js";
 import { construirEdificio, soltarEdificio } from "./edificios.js";
 import { lienzo as lienzoPegatina } from "./pegatinas.js";
 import { crearHorizonte } from "./horizonte.js";
@@ -1899,7 +1899,8 @@ export function createWorld(scene) {
       // (08/11: `sinEdificios` del interior puede traer su propio tramo.)
       const si = nivel.interior && nivel.interior.sinEdificios;
       // (Y los dos a la vez: el puente de Detroit y su final.)
-      const rs = [Array.isArray(si) ? si : si && nivel.interior.rango, nivel.sinEdificios].filter(Boolean);
+      // (11/11: `sinEdificios` puede ser un tramo o varios: [[a, b], [c, d]].)
+      const rs = [Array.isArray(si) ? si : si && nivel.interior.rango, ...rangosSin(nivel.sinEdificios)].filter(Boolean);
       if (!p.cruza && !p.centro && rs.some((r) => p.d < r[1] && p.d + (p.ancho || 20) > r[0])) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
@@ -2368,7 +2369,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1, helada: -1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1, helada: -1, pradera: -1, tornado: -1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -3500,7 +3501,8 @@ export function createWorld(scene) {
   function primerObstaculo(lane, alcance) {
     let mejor = null;
     for (const o of obstacles) {
-      if (o.smashed || o.lane !== lane || o.type === "bus") continue;
+      if (o.smashed || o.lane !== lane || o.type === "bus" || o.type === "rampa") continue;
+      if (o.pool && (o.pool.startsWith("corte_") || o.pool === "nada")) continue;
       const zc = o.z + (o.centro || 0);
       if (zc > 1 || zc < -alcance) continue;
       if (!mejor || zc > mejor.z + (mejor.centro || 0)) mejor = o;
@@ -3591,14 +3593,16 @@ export function createWorld(scene) {
   const tacoMat = typeof document !== "undefined"
     ? new THREE.SpriteMaterial({ map: texturaTaco(), transparent: true, alphaTest: 0.05, fog: true })
     : new THREE.SpriteMaterial({ color: 0xffc94d });
+  let brilloHecho = null;
   function texturaBrillo() {
+    if (brilloHecho) return brilloHecho;
     const c = document.createElement("canvas");
     c.width = c.height = 64;
     const x = c.getContext("2d");
     const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
     g.addColorStop(0, "rgba(255,240,170,1)"); g.addColorStop(0.5, "rgba(255,226,122,0.6)"); g.addColorStop(1, "rgba(255,226,122,0)");
     x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-    return new THREE.CanvasTexture(c);
+    return (brilloHecho = new THREE.CanvasTexture(c));
   }
   const tacoGlowMat = new THREE.SpriteMaterial({ map: typeof document !== "undefined" ? texturaBrillo() : null, color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false, fog: true });
 
@@ -4212,8 +4216,12 @@ export function createWorld(scene) {
     }
     if (jefe.atril) jefe.atril.visible = !!(nivel && nivel.debate);
     jefeAcabado = false;
+    let lejos = 0;
+    for (const o of obstacles) if (!o.smashed && -o.z > lejos) lejos = -o.z;
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
-      saliendo: false, derrotado: false, paso, tirados: 0,
+      saliendo: false, derrotado: false, paso, tirados: 0, ataques: 0,
+      // (Solo en el sin fin: en los niveles su tramo ya llega vacio.)
+      libreEn: paso || nivel ? 0 : totalScrolled + Math.max(0, lejos + JEFE_Z + 6),
       // El primer barril espera a que pase lo que ya estaba en la pista
       // (hasta 128 por delante): asi nunca coincide con un obstaculo normal.
       // (El de paso llega a un tramo sin obstaculos: puede tirar antes.)
@@ -4272,7 +4280,7 @@ export function createWorld(scene) {
     // en tu carril y en uno de al lado (el tercero queda libre); «fuego» (el
     // dragon): una bola de fuego a la altura de la cabeza, que se pasa agachado.
     jefe.tiro -= dt;
-    if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6) {
+    if (jefe.tiro <= 0 && jefe.z > JEFE_Z - 6 && totalScrolled >= jefe.libreEn) {
       const ataques = jefe.paso ? ["uno"] : esDragon ? ["uno", "fuego", "uno", "dos", "fuego", "uno"] : J ? J.ataques : ["uno", "uno", "dos", "uno", "dos"];
       const ataque = ataques[(jefe.ataques = (jefe.ataques || 0) + 1) % ataques.length];
       const bajo = esDragon ? (obstaclePools.caja_arancel ? "caja_arancel" : "bola_fuego") : J ? J.bajo : "barril";
@@ -4314,7 +4322,7 @@ export function createWorld(scene) {
       const d = disparos[i];
       d.t += dt / 0.45;
       const t = Math.min(1, d.t);
-      d.mesh.position.set(d.x0 + (jefe.x - d.x0) * t, d.y0 + (JEFE_Y + 1.5 - d.y0) * t + Math.sin(t * Math.PI) * 2,
+      d.mesh.position.set(d.x0 + (jefe.x - d.x0) * t, d.y0 + (alturaJefe() + 1.5 - d.y0) * t + Math.sin(t * Math.PI) * 2,
         jefe.z * t);
       d.mesh.rotation.x += dt * 12;
       if (t >= 1) {
@@ -4323,6 +4331,10 @@ export function createWorld(scene) {
         golpearJefe();
       }
     }
+  }
+  function alturaJefe() {
+    const J = JEFES[jefe.tipo];
+    return jefe.tipo === "dragon" ? DRAGON_Y : J ? J.y : JEFE_Y;
   }
   function golpearJefe() {
     if (!jefeActivo()) return;
@@ -4376,6 +4388,12 @@ export function createWorld(scene) {
     const n = b.pop();
     bolsas[clave + "#"] = n;
     return n;
+  }
+  const quieto = (n) => !(TIPOS[n] && (TIPOS[n].mueve || TIPOS[n].cruza || TIPOS[n].bota || TIPOS[n].cambia));
+  function listaQuieta(type, d, lista) {
+    const deNivel = nivel && nivel.obstaculos ? nivel.obstaculos[type] : null;
+    const set = (lista || deNivel || (LOCALES_ZONA[currentZoneName(d)] || DE_TIPO)[type] || DE_TIPO[type]).filter((n) => obstaclePools[n] && quieto(n));
+    return set.length ? set : lista;
   }
   function nombreObstaculo(type, d, lista) {
     const deNivel = nivel && nivel.obstaculos ? nivel.obstaculos[type] : null;
@@ -4539,15 +4557,17 @@ export function createWorld(scene) {
     },
     mixto(z, d, t) { filaMixta(z, d, t.densidad || 0.55); },
     // Filas enteras: o se salta, o se pasa agachado (o se elige carril).
+    // 11/11 (revision): en las filas cerradas solo cosas quietas; una que
+    // rueda o cruza se adelanta a las demas y la fila deja de tener paso.
     vallas(z, d, t, k) {
       if (k % 3 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 3); return; }
       if (k % 3 === 2) return;
       const r = Math.random();
-      if (r < 0.4) { for (const l of LANES) obst(l, "low", z, d, t.low); arcoDeTacos(Math.floor(Math.random() * 3), z); }
-      else if (r < 0.75) { for (const l of LANES) obst(l, "high", z, d, t.high); tacosEn(Math.floor(Math.random() * 3), z - 1.5, 3, 0.6); }
+      if (r < 0.4) { for (const l of LANES) obst(l, "low", z, d, listaQuieta("low", d, t.low)); arcoDeTacos(Math.floor(Math.random() * 3), z); }
+      else if (r < 0.75) { for (const l of LANES) obst(l, "high", z, d, listaQuieta("high", d, t.high)); tacosEn(Math.floor(Math.random() * 3), z - 1.5, 3, 0.6); }
       else {
         const tipos = ["low", "high", Math.random() < 0.5 ? "low" : "high"].sort(() => Math.random() - 0.5);
-        LANES.forEach((l, i) => obst(l, tipos[i], z, d, tipos[i] === "high" ? t.high : t.low));
+        LANES.forEach((l, i) => obst(l, tipos[i], z, d, listaQuieta(tipos[i], d, tipos[i] === "high" ? t.high : t.low)));
       }
     },
     // Dos carriles cerrados; el libre va cambiando de uno en uno.

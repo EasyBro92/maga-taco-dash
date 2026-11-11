@@ -740,6 +740,8 @@ function iniciarFinal() {
   apagarSirenas();
   fin = { fase: 0, t: 0, v: speed, look: new THREE.Vector3(0, 0.4, -18) };
   currentLane = 1;
+  py = 0; vy = 0; enSuelo = true;
+  persigueLeft = 0; world.perseguir(false, true);
   isSliding = false; character.setSlidePose(false);
   rocketTimeLeft = 0; freezeTimeLeft = 0; megaTimeLeft = 0; character.setMega(1);
   if (monturaCohete) monturaCohete.visible = false;
@@ -1322,6 +1324,7 @@ function popupScore(delta) {
 
 let lastTacoShown = 0;
 let hudFaltaPintada = -1;
+let hudTacosPintados = -1;
 function updateHud() {
   const tacoFloor = Math.floor(tacosThisRun);
   if (tacoFloor !== lastTacoShown) {
@@ -1330,7 +1333,7 @@ function updateHud() {
     lastTacoShown = tacoFloor;
     pulse(document.getElementById("hudTacos"));
   }
-  document.getElementById("hudTacoCount").textContent = tacoFloor;
+  if (tacoFloor !== hudTacosPintados) { hudTacosPintados = tacoFloor; document.getElementById("hudTacoCount").textContent = tacoFloor; }
   if (nivelActual) {
     // La barra: por donde vas y cuanto falta para la meta.
     pintarBarra(barras[0], distance);
@@ -1742,6 +1745,7 @@ function checkPowerups() {
   for (const p of world.powerups) {
     if (p.collected || p.lane !== currentLane) continue;
     if (p.z < -0.8 || p.z > 0.8) continue;
+    if (py > p.mesh.position.y + 0.6) continue;
     p.collected = true;
     sndPoint();
     if (p.kind === "shield") { shieldActive = true; character.setShieldActive(true); showBubble(t("powerupShield") + "!"); }
@@ -2256,7 +2260,7 @@ function frame(dtFijo) {
       if (world.iniciarJefe(tramo.jefe)) {
         jefeLanzado = true;
         gritoChina = 2.6;
-        pintarBarraJefe(5);
+        pintarBarraJefe(world.vidaJefe());
         document.getElementById("bossBar").classList.remove("hidden");
         showBubble(textoJefe("jefeLlega"), 2200, 3);
         triggerCameraShake(0.04);
@@ -2282,7 +2286,7 @@ function frame(dtFijo) {
       const todos = ["dragon", "robot", "pinguino", "papeles", "toro", "cerebro"].filter((j) => j === "robot" || j === "dragon" || world.hayJefe(j));
       jefeSinFin = todos[(todos.indexOf(jefeSinFin) + 1) % todos.length];
       gritoChina = 2.6;
-      pintarBarraJefe(5);
+      pintarBarraJefe(world.vidaJefe());
       document.getElementById("bossBar").classList.remove("hidden");
       showBubble(textoJefe("jefeLlega"), 1300, 3);
       triggerCameraShake(0.04);

@@ -1915,3 +1915,30 @@ detalle y algo característico de ellos».
   vaso de té de Erdoğan.
 - Con un líder no hay sombreros ni trajes de la tienda, ni chaleco en
   Milwaukee, ni tupé al viento en Chicago (son del presidente).
+
+## 11/11/2026 (2): arreglos pendientes de la revisión de Fable (v51)
+
+Isidro: «cuando acabes continúa con la auditoría». Hecho de lo que quedaba:
+
+- La barra del jefe empieza llena (antes, al 42 %).
+- Sin fin: el jefe no tira hasta que pasa lo que ya había en la pista (a poca
+  velocidad salían filas sin hueco). Sus ataques empiezan siempre por el
+  primero, y lo que se le tira vuela a la altura de cada jefe (el toro).
+- El final: en el suelo y sin la policía detrás aunque se llegue saltando o
+  perseguido.
+- Los potenciadores no se cogen pasando muy por encima.
+- Las frases no apuntan a rampas ni a cortes de calle.
+- En las filas de vallas solo cosas quietas (una que rueda dejaba la fila
+  sin paso).
+- Edificios famosos que no salían por caer donde no hay edificios: el museo
+  de arte de Phoenix, el Ruan de Des Moines, el puño de Joe Louis de Detroit y
+  las primeras piezas de Washington (empiezan al salir del Capitolio).
+- Omaha y Wichita: el final despejado (`sinEdificios` admite varios tramos)
+  y la sombra de la calle con su luz.
+- Los desvíos quedan a 65 m de las chapas (con 45, la chapa caía en la curva).
+- Nueva York: el helicóptero sale una vez (a los 1150 m coincidía con la
+  furgoneta de la prensa).
+- Menos trabajo por fotograma: el marcador solo se repinta si cambia y la
+  textura del brillo se hace una vez.
+
+Queda de la revisión: los 37 estados que faltan.
