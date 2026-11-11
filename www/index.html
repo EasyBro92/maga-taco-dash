@@ -136,6 +136,9 @@
       <div class="logoTaco">TACO DASH <span class="logoTacoIcono">🌮</span></div>
     </div>
     <div class="card hoja">
+      <!-- 11/11: el fin de semana de tacos dobles y el pase de campaña -->
+      <div id="findeBanner" class="findeBanner hidden"></div>
+      <button id="paseBtn" class="paseBtn"></button>
       <div class="misiones" id="misionesMenu"></div>
       <button id="cajaBtn" class="smallBtn cajaBtn hidden"></button>
       <button id="startBtn" class="bigBtn" data-i18n="play">JUGAR</button>
@@ -289,6 +292,15 @@
       <div class="title small"><span data-i18n="worldRanking">Ranking mundial</span></div>
       <ol id="leaderboardList" class="lbList"><li class="lbEmpty">…</li></ol>
       <button id="leaderboardClose" class="smallBtn" data-i18n="close">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- 11/11/2026: el pase de campaña (pase.js) -->
+  <div id="paseOverlay" class="overlay hidden">
+    <div class="card wide paseCard">
+      <div class="title small"><span data-icono="estrella"></span> <span data-i18n="paseTitulo">Pase de campaña</span></div>
+      <div id="paseCuerpo"></div>
+      <button id="paseCerrar" class="smallBtn" data-i18n="close">Cerrar</button>
     </div>
   </div>
 

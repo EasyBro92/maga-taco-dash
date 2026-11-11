@@ -4303,7 +4303,7 @@ export function createWorld(scene) {
     let lejos = 0;
     for (const o of obstacles) if (!o.smashed && -o.z > lejos) lejos = -o.z;
     Object.assign(jefe, { activo: true, vida: JEFE_VIDA, carril: 1, x: 0, z: -95, tiempo: 0, golpe: 0,
-      saliendo: false, derrotado: false, paso, tirados: 0, ataques: 0,
+      saliendo: false, derrotado: false, paso, tirados: 0, ataques: 0, combo: 0, ultimoGolpe: -9,
       // 11/11: mas vivo: salta, se balancea, coge impulso, retrocede al
       // recibir y, a media vida, se enfada (mas rapido y a ratos se cubre).
       furia: false, escudo: 0, proximoEscudo: 4, salto: 0, proximoSalto: 2.5, empuje: 0, lanzo: 0,
@@ -4492,8 +4492,18 @@ export function createWorld(scene) {
         disparos.splice(i, 1);
         if (jefe.escudo > 0 && jefeActivo()) {
           burstSparkles(d.mesh.position.x, d.mesh.position.y, d.mesh.position.z);
+          jefe.combo = 0;
           if (alEventoJefe) alEventoJefe("bloquea", jefe.vida);
-        } else golpearJefe();
+        } else {
+          // 11/11: el combo: tres aciertos seguidos (sin dejar pasar 4 s ni
+          // rebotar en el escudo) y el tercero quita el doble.
+          jefe.combo = jefe.tiempo - (jefe.ultimoGolpe ?? -9) < 4 ? (jefe.combo || 0) + 1 : 1;
+          jefe.ultimoGolpe = jefe.tiempo;
+          const combo = jefe.combo >= 3;
+          if (combo) jefe.combo = 0;
+          golpearJefe(combo ? 2 : 1);
+          if (combo && jefeActivo() && alEventoJefe) alEventoJefe("combo", jefe.vida);
+        }
       }
     }
   }
@@ -4501,9 +4511,9 @@ export function createWorld(scene) {
     const J = JEFES[jefe.tipo];
     return jefe.tipo === "dragon" ? DRAGON_Y : J ? J.y : JEFE_Y;
   }
-  function golpearJefe() {
+  function golpearJefe(dano = 1) {
     if (!jefeActivo()) return;
-    jefe.vida--;
+    jefe.vida = Math.max(0, jefe.vida - dano);
     jefe.golpe = 1;
     jefe.empuje = 1;
     const pm = jefe.mesh ? jefe.mesh.position : { x: jefe.x, y: JEFE_Y + 1.5, z: jefe.z };

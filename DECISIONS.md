@@ -1972,3 +1972,29 @@ siendo floja».
   saltitos; y todos se apartan de un respingo si pasas rozando.
 - **Jugabilidad**: «¡Por los pelos!»: esquivar algo en el último medio
   segundo da tacos.
+
+## 11/11/2026 (4): las ideas para enganchar (v53)
+
+Isidro eligió «las recomendadas». Hecho:
+
+- **Racha de 7 días**: el premio del día 7 es una caja de líder (un líder
+  seguro que no se tenga; si están todos, 3000 tacos). Saltarse un día vuelve
+  al primero.
+- **Pase de campaña** (`www/src/pase.js`): cada mes, 30 escalones de 250
+  puntos. Cada carrera da puntos (metros, tacos, jefes, nivel ganado). Premios:
+  tacos, cajas (5, 15, 25), cajas de líder (10, 20) y en el 30 **Boris
+  Johnson**, líder exclusivo (no sale en la caja). Botón azul en el inicio
+  con la barra y un aviso rojo si hay algo por cobrar.
+- **Retos de la semana** dentro del pase: tres cada semana (los mismos para
+  todos), +300 puntos cada uno: jefes, tacos, metros, lanzamientos, «por los
+  pelos», niveles, carreras con líder, cajas.
+- **Fin de semana de tacos dobles**: sábados y domingos se cobra el doble
+  (cartel naranja en el inicio).
+- **Combo**: tres aciertos seguidos al jefe (sin rebotar en el escudo ni dejar
+  pasar 4 s) y el tercero quita el doble.
+- **Ranking del sin fin**: el botón «Ranking» ya se ve; con la cuenta se sube
+  el récord. Necesita publicar las reglas de Firestore en el proyecto de
+  AlienZ (z-resistance/firestore.rules, `tacodash` y `tacodash_top`): falta
+  el permiso de Isidro. Sin ellas sale «La nube aún no está lista».
+- Boris: `blender/lideres.py boris`; rubio despeinado, bandera británica en
+  alto, «BREXIT» en la espalda; empieza volando en cohete.

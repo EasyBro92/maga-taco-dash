@@ -21,10 +21,12 @@ import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje, cargarLider } from "./models.js";
 import { liderPuesto, liderDe, nombreLider, tituloLider } from "./lideres.js";
 import { valorMejora } from "./mejoras.js";
+import { estadoPase, sumarPuntos, puntosCarrera, cobrar as cobrarPase, contar as contarReto, retosSemana, premioEscalon, ESCALONES, PUNTOS_ESCALON, PUNTOS_RETO, LIDER_PASE } from "./pase.js";
+import { darLider, tengoLider, fotoLider } from "./lideres.js";
 import * as misiones from "./missions.js";
 import { FRASES, TRUMP, traduccion } from "./frases.js";
 import { abrirCaja, cajasPendientes, guardarCaja, premioDiario } from "./cajas.js";
-import { alCambiarCuenta, arrancarCuenta, entrar as entrarCuenta, crear as crearCuenta, salir as salirCuenta, nubeFalla, cuentaActual } from "./cuenta.js";
+import { alCambiarCuenta, arrancarCuenta, entrar as entrarCuenta, crear as crearCuenta, salir as salirCuenta, nubeFalla, cuentaActual, subirRecord, leerRanking } from "./cuenta.js";
 import { modoInstalar, alCambiarInstalar, instalar } from "./instalar.js";
 
 initErrorReporting();
@@ -625,6 +627,13 @@ function fraseLider() {
   const f = lider.frases[getLang()] || lider.frases.es;
   return f[Math.floor(Math.random() * f.length)];
 }
+function activarCohete() {
+  rocketTimeLeft = ROCKET_DURATION;
+  if (monturaCohete) monturaCohete.visible = true;
+  world.setCielo(true, speed * (boostTimeLeft > 0 ? BOOST_MULT : 1), ROCKET_DURATION);
+  isSliding = false; character.setSlidePose(false);
+  triggerCameraShake(0.04);
+}
 function regaloLider() {
   if (!lider) return;
   const v = lider.ventaja;
@@ -634,6 +643,8 @@ function regaloLider() {
   else if (v === "botas") botasTimeLeft = BOTAS_DURATION * 1.5;
   else if (v === "doble") dobleLeft = DOBLE_DURATION * 2.5;
   else if (v === "mega") { megaTimeLeft = MEGA_DURATION * 1.4; character.setMega(MEGA_SCALE); }
+  // Boris: a los dos segundos y medio, sale volando en cohete.
+  else if (v === "cohete") setTimeout(() => { if (gameState === "playing" && !pausado && rocketTimeLeft === 0 && !world.jefeActivo()) activarCohete(); }, 2500);
   updatePowerupBadge();
   avisoVerde(`<b>${nombreLider(lider)}</b> · ${tituloLider(lider)}`);
   setTimeout(() => { if (gameState === "playing") showBubble(fraseLider(), 2400); }, 1600);
@@ -936,6 +947,7 @@ function completarNivel() {
   const votosAntes = votosGanados(NIVELES, antes);
   const estadoNuevo = !antes[n.id];   // (antes es el mismo objeto que se guarda: mirarlo ya)
   addTacos(conBonus(tacos));
+  finCarreraPase(true);
   const r = guardarNivel(n.id, { sinChocar: !intento.chocado, chapas: intento.chapas });
   misiones.fijarDisponibles(misionPosible);
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
@@ -1060,7 +1072,13 @@ world.onJefe((evento, vida) => {
     triggerCameraShake(0.06);
     vibrate([40, 30, 80]);
     avisarMisiones(misiones.evento("jefe"));
+    jefesCarrera++;
+    avisarRetos(contarReto("jefes"));
     setTimeout(() => barra.classList.add("hidden"), 1500);
+  } else if (evento === "combo") {
+    textoFlotante(t("jefeCombo"));
+    triggerCameraShake(0.03);
+    vibrate([20, 20, 40]);
   } else if (evento === "furia") {
     showBubble(t("jefeFuria"), 1400, 3);
     triggerCameraShake(0.03);
@@ -1220,6 +1238,7 @@ function resetRun(desde = 0) {
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   aplicarMejoras();
   municion = 0; municionPintada = "";
+  jefesCarrera = 0; paseContado = false;
   if (monturaCohete) monturaCohete.visible = false;
   quitarParaguas(); if (character.setViento) character.setViento(0);
   if (character.setChaleco) character.setChaleco(false);
@@ -1578,6 +1597,7 @@ function porLosPelos() {
     const n = 5 * multiplier;
     tacosThisRun += n;
     textoFlotante(`${t("porLosPelos")} +${n}`);
+    avisarRetos(contarReto("pelos"));
     sndPoint();
     vibrate(12);
     return;
@@ -2049,7 +2069,8 @@ function mostrarFinSinFin() {
 function cerrarCarrera() {
   if (gameState === "cerrada" || gameState === "completado") return;
   addTacos(conBonus(tacosThisRun));
-  if (!nivelActual) reportRunScore(Math.floor(distance));
+  finCarreraPase(false);
+  if (!nivelActual) { reportRunScore(Math.floor(distance)); if (cuentaActual()) subirRecord(getSave().bestScore); }
   avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
   gameState = "cerrada";
 }
@@ -2183,7 +2204,9 @@ function aplicarMejoras() {
   MAX_MUNICION = valorMejora("bolsillo");
   bonusTacos = valorMejora("recaudacion") / 100;
 }
-const conBonus = (n) => Math.floor(n * (1 + bonusTacos));
+// 11/11: los sabados y domingos, todo lo recogido vale el doble (al cobrarlo).
+const esFinde = () => [0, 6].includes(new Date().getDay());
+const conBonus = (n) => Math.floor(n * (1 + bonusTacos) * (esFinde() ? 2 : 1));
 function pintarMunicion() {
   const arma = gameState === "playing" ? world.armaActual() : null;
   const ver = !!arma && arma !== "micro";
@@ -2198,6 +2221,99 @@ function pintarMunicion() {
   el.classList.toggle("vacia", municion === 0);
   if (antes !== "no" && antes !== "") pulse(el);
 }
+// ---------- 11/11: el pase de campaña y los retos de la semana (pase.js) ----------
+let jefesCarrera = 0, paseContado = false;
+function avisarRetos(hechos) {
+  for (const r of hechos || []) avisoVerde(`${icono("estrella")} ${t("paseReto").replace("{n}", PUNTOS_RETO)}<br><small>${r.texto}</small>`);
+}
+function finCarreraPase(ganado) {
+  if (paseContado) return;
+  paseContado = true;
+  const antes = estadoPase().escalon;
+  const sube = sumarPuntos(puntosCarrera({ metros: distance, tacos: tacosThisRun, jefes: jefesCarrera, ganado }));
+  avisarRetos(contarReto("metros", Math.floor(distance)));
+  avisarRetos(contarReto("tacos", Math.floor(tacosThisRun)));
+  if (ganado) avisarRetos(contarReto("niveles"));
+  if (lider) avisarRetos(contarReto("lider"));
+  const ahora = estadoPase().escalon;
+  if (sube > 0 || ahora > antes) avisoVerde(`${icono("estrella")} ${t("paseNuevo").replace("{n}", ahora)}`);
+  pintarPaseBtn();
+}
+window.addEventListener("cajaAbierta", () => avisarRetos(contarReto("cajas")));
+function iconoPremio(p) {
+  if (p.tipo === "lider") return `<img class="fotoMini" src="${fotoLider(p.id)}" alt="">`;
+  if (p.tipo === "cajaLider") return icono("estrella");
+  if (p.tipo === "caja") return icono("regalo");
+  return `<img src="${urlPegatina("taco")}" alt="">`;
+}
+function textoPremio(p) {
+  return p.tipo === "tacos" ? `${p.n}` : p.tipo === "caja" ? t("premioCaja") : p.tipo === "cajaLider" ? t("premioCajaLider") : "Boris";
+}
+function pintarPaseBtn() {
+  const e = estadoPase();
+  const b = document.getElementById("paseBtn");
+  const pct = e.escalon >= ESCALONES ? 100 : Math.round((100 * e.resto) / PUNTOS_ESCALON);
+  b.innerHTML = `${icono("estrella")}<span class="paseInfo"><b>${t("paseBoton")}</b><small>${t("paseEscalon").replace("{n}", e.escalon)} / ${ESCALONES}</small>
+    <span class="paseBarra"><i style="width:${pct}%"></i></span></span>${e.porCobrar.length ? `<span class="punto">${e.porCobrar.length}</span>` : ""}`;
+  const f = document.getElementById("findeBanner");
+  f.classList.toggle("hidden", !esFinde());
+  if (esFinde()) f.innerHTML = `${t("findeTitulo")}<small>${t("findeTexto")}</small>`;
+}
+function abrirPase() {
+  const e = estadoPase();
+  const pct = e.escalon >= ESCALONES ? 100 : Math.round((100 * e.resto) / PUNTOS_ESCALON);
+  const retos = retosSemana().map((r) => `<div class="paseReto ${r.cumplido ? "hecho" : ""}">${r.cumplido ? icono("check") : ""} ${r.texto}
+      <span style="float:right">+${PUNTOS_RETO}</span><div class="paseBarra"><i style="width:${Math.round((100 * r.hecho) / r.meta)}%"></i></div></div>`).join("");
+  const celdas = [];
+  for (let n = 1; n <= ESCALONES; n++) {
+    const p = premioEscalon(n), cobrado = e.cobrados.includes(n), listo = n <= e.escalon && !cobrado;
+    const clase = cobrado ? "cobrado" : listo ? "listo" : n > e.escalon ? "bloqueado" : "";
+    const pie = cobrado ? icono("check") : listo ? `<button data-escalon="${n}">${t("paseCobrar")}</button>` : `<span>${textoPremio(p)}</span>`;
+    celdas.push(`<div class="paseEsc ${clase} ${n === ESCALONES ? "final" : ""}"><small>${n}</small>${iconoPremio(p)}${n === ESCALONES ? `<span>Boris Johnson · ${t("paseExclusivo")}</span>` : ""}${pie}</div>`);
+  }
+  document.getElementById("paseCuerpo").innerHTML = `<div class="paseCabeza">${t("paseQuedan").replace("{n}", e.dias).replace("{m}", e.mes)}
+      <div class="paseBarra"><i style="width:${pct}%"></i></div>${t("paseEscalon").replace("{n}", e.escalon)} · ${t("pasePuntos").replace("{n}", e.resto).replace("{t}", PUNTOS_ESCALON)}
+      <br><small>${t("paseExplica")}</small></div>
+    <div class="paseSub">${t("paseRetos")}</div><div class="paseRetos">${retos}</div>
+    <div class="paseGrid">${celdas.join("")}</div>`;
+  document.getElementById("paseOverlay").classList.remove("hidden");
+}
+document.getElementById("paseBtn").addEventListener("click", () => { unlockAudio(); abrirPase(); });
+document.getElementById("paseCerrar").addEventListener("click", () => { document.getElementById("paseOverlay").classList.add("hidden"); pintarPaseBtn(); });
+document.getElementById("paseCuerpo").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-escalon]");
+  if (!b) return;
+  const p = cobrarPase(Number(b.dataset.escalon));
+  if (!p) return;
+  if (p.tipo === "tacos") addTacos(p.n);
+  else if (p.tipo === "caja") guardarCaja();
+  else if (p.tipo === "cajaLider") guardarCaja("lider");
+  else if (p.tipo === "lider") { if (tengoLider(p.id)) addTacos(5000); else darLider(p.id); }
+  sndChapa(); vibrate([20, 30, 20]);
+  if (p.tipo === "lider") { spawnConfetti(40); showBubble(`¡${t("paseExclusivo")}: Boris Johnson!`, 1800, 3); }
+  pintarCajaBtn();
+  abrirPase();
+  pintarPaseBtn();
+});
+pintarPaseBtn();
+
+// ---------- 11/11: el ranking del sin fin (cuenta.js; necesita la regla de Firestore) ----------
+document.getElementById("startRankBtn").addEventListener("click", async () => {
+  const ov = document.getElementById("leaderboardOverlay"), lista = document.getElementById("leaderboardList");
+  ov.querySelector(".title span").textContent = t("rankTitulo");
+  lista.innerHTML = `<li class="lbEmpty">${t("cuentaEspera")}</li>`;
+  ov.classList.remove("hidden");
+  const yo = cuentaActual();
+  try {
+    const filas = await leerRanking(30);
+    const html = filas.map((f, i) => `<li class="${yo && f.uid === yo.uid ? "yo" : ""}"><span>${i + 1}. ${String(f.nombre || "?").replace(/[<>&"]/g, "")}</span><b>${(f.metros || 0).toLocaleString("es")} m</b></li>`).join("");
+    lista.innerHTML = (html || `<li class="lbEmpty">${t("rankVacio")}</li>`) + (yo ? "" : `<li class="lbEmpty">${t("rankEntra")}</li>`);
+  } catch (e) {
+    lista.innerHTML = `<li class="lbEmpty">${t("nubeNoLista")}</li>`;
+  }
+});
+document.getElementById("leaderboardClose").addEventListener("click", () => document.getElementById("leaderboardOverlay").classList.add("hidden"));
+
 // Un toque en pantalla: si cae encima del jefe, se le lanza lo que se lleva.
 function lanzarAlJefe(pos, sinApuntar) {
   const arma = world.armaActual();
@@ -2210,6 +2326,7 @@ function lanzarAlJefe(pos, sinApuntar) {
   }
   municion--;
   world.dispararJefe(playerX, py + 1.2);
+  avisarRetos(contarReto("lanzar"));
   sndPoint();
   vibrate(15);
   flashExpression("determined", 0.4);
@@ -2626,6 +2743,7 @@ function volverAlMenu() {
   document.getElementById("startScreen").classList.remove("hidden");
   pintarMisiones("misionesMenu");
   pintarSinFin();
+  pintarPaseBtn();
   pintarCajaBtn();
   stopMusic();
 }
@@ -2674,13 +2792,13 @@ function cambiarIdioma(lang) {
   marcarIdioma();
   pintarMisiones("misionesMenu");
   pintarSinFin();
+  pintarPaseBtn();
 }
 document.getElementById("startLangBtn").addEventListener("click", () => cambiarIdioma());
 
 // La tienda (27/10/2026): los tacos ya sirven para algo.
 document.getElementById("startShopBtn").addEventListener("click", () => { unlockAudio(); abrirTienda(character); });
-// El ranking mundial necesita un servidor: sigue oculto.
-document.getElementById("startRankBtn").style.display = "none";
+// (11/11: el ranking ya funciona con la cuenta: ver «el ranking del sin fin».)
 
 // ---------- Ajustes ----------
 const settings = getSettings();

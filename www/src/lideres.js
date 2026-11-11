@@ -14,6 +14,8 @@ export const RAREZAS = {
   raro: { color: "#4b69ff", es: "Raro", en: "Rare" },
   epico: { color: "#d32ce6", es: "Épico", en: "Epic" },
   legendario: { color: "#e4ae39", es: "Legendario", en: "Legendary" },
+  // 11/11: solo en el pase de campaña (pase.js), nunca en la caja
+  exclusivo: { color: "#e8463c", es: "Exclusivo", en: "Exclusive" },
 };
 
 // ventaja: el potenciador con el que empieza cada carrera (main.js, regaloLider).
@@ -99,6 +101,16 @@ export const LIDERES = [
     },
   },
 ];
+
+LIDERES.push({
+  id: "boris", corto: "Boris", rareza: "exclusivo", ventaja: "cohete",
+  nombre: { es: "Boris Johnson", en: "Boris Johnson" },
+  titulo: { es: "Brexit exprés: sale volando en cohete", en: "Express Brexit: blasts off on a rocket" },
+  frases: {
+    es: ["¡Hagamos el Brexit!", "¿Una fiesta? Yo no sabía nada.", "¡Me quedé colgado de la tirolina!", "Mi pelo se peina solo.", "¡Por la Reina y por los tacos!"],
+    en: ["Get Brexit done!", "A party? I knew nothing.", "I got stuck on the zip wire!", "My hair combs itself.", "For the Queen and the tacos!"],
+  },
+});
 
 export const liderDe = (id) => LIDERES.find((l) => l.id === id) || null;
 export const nombreLider = (l) => (l ? l.nombre[getLang()] || l.nombre.es : "Donald Trump");

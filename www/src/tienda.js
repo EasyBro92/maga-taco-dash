@@ -137,7 +137,7 @@ function listaLideres() {
     const r = l && RAREZAS[l.rareza];
     const boton = puesto === id ? `<button class="puesto">${t("liderJugando")}</button>`
       : tengo ? `<button class="ponerse" data-lider="${id}">${t("liderElegir")}</button>`
-      : `<button class="caro" disabled>${icono("regalo")} ${t("liderCaja")}</button>`;
+      : `<button class="caro" disabled>${icono(l.rareza === "exclusivo" ? "estrella" : "regalo")} ${t(l.rareza === "exclusivo" ? "paseTitulo" : "liderCaja")}</button>`;
     return `<div class="shopItem liderItem ${puesto === id ? "llevo" : ""} ${tengo ? "" : "bloqueado"}">
       <img class="fotoLider" src="${fotoLider(id)}" alt="">
       <div class="name">${nombreLider(l)}</div>

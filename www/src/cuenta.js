@@ -70,6 +70,21 @@ onGuardar(() => {
 });
 export function nubeFalla() { return nubeRota; }
 
+// ---- 11/11: el ranking del sin fin (tacodash_top/{uid}: nombre y metros) ----
+export async function subirRecord(metros) {
+  if (!usuario || !(metros > 0)) return;
+  try {
+    const { fs, db } = await cargar();
+    await fs.setDoc(fs.doc(db, "tacodash_top", usuario.uid), { nombre: usuario.nombre, metros: Math.floor(metros), fecha: fs.serverTimestamp() });
+  } catch (e) { console.warn("[ranking] no se pudo subir", e && e.code); }
+}
+export async function leerRanking(n = 30) {
+  const { fs, db } = await cargar();
+  const q = fs.query(fs.collection(db, "tacodash_top"), fs.orderBy("metros", "desc"), fs.limit(n));
+  const r = await fs.getDocs(q);
+  return r.docs.map((d) => ({ uid: d.id, ...d.data() }));
+}
+
 // Baja la ficha de la nube y la junta con la de este móvil. Si cambia algo,
 // devuelve true (main.js recarga para que todo lo pinte de nuevo).
 async function bajarYJuntar() {

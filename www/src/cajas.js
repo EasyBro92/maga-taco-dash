@@ -29,13 +29,23 @@ const PREMIOS = [
 const REPETIDO = { raro: 800, epico: 1500, legendario: 3000 };
 const unoDe = (rareza) => { const de = LIDERES.filter((x) => x.rareza === rareza); return de[Math.floor(Math.random() * de.length)]; };
 
+// 11/11: la caja de lider (dia 7 de la racha y algunos escalones del pase):
+// trae seguro un lider que no se tenga (si ya estan todos, 3000 tacos).
 export function cajasPendientes() {
-  return getSave().cajas || 0;
-}
-export function guardarCaja() {
   const s = getSave();
-  s.cajas = (s.cajas || 0) + 1;
+  return (s.cajas || 0) + (s.cajasLider || 0);
+}
+export function guardarCaja(tipo) {
+  const s = getSave();
+  if (tipo === "lider") s.cajasLider = (s.cajasLider || 0) + 1;
+  else s.cajas = (s.cajas || 0) + 1;
   persistSave();
+}
+function liderSeguro() {
+  const r = Math.random();
+  const orden = r < 0.12 ? ["legendario", "epico", "raro"] : r < 0.42 ? ["epico", "raro", "legendario"] : ["raro", "epico", "legendario"];
+  for (const rz of orden) { const l = liderLibre(rz); if (l) return { premio: PREMIOS.find((p) => p.lider === rz), lider: l }; }
+  return null;
 }
 
 function sortear() {
@@ -57,11 +67,17 @@ function carta(p, l = null) {
 // `alCerrar` se llama al darle a «¡Genial!» (si quedan más, se puede abrir otra).
 export function abrirCaja(alCerrar) {
   const s = getSave();
-  if (!s.cajas) { if (alCerrar) alCerrar(); return; }
-  s.cajas--;
+  if (!s.cajas && !s.cajasLider) { if (alCerrar) alCerrar(); return; }
+  const deLider = !!s.cajasLider;
+  if (deLider) s.cajasLider--; else s.cajas--;
   let premio = sortear();
-  if (!s.primeraCaja) { s.primeraCaja = true; if (liderLibre("raro")) premio = PREMIOS.find((p) => p.lider === "raro"); }
-  const lider = premio.lider ? liderLibre(premio.lider) : null;
+  let seguro = deLider ? liderSeguro() : null;
+  if (deLider && !seguro) premio = { tacos: 3000, color: "#e4ae39", p: 0 };
+  if (seguro) premio = seguro.premio;
+  if (!s.primeraCaja) { s.primeraCaja = true; if (!seguro && liderLibre("raro")) premio = PREMIOS.find((p) => p.lider === "raro"); }
+  const lider = seguro ? seguro.lider : premio.lider ? liderLibre(premio.lider) : null;
+  window.dispatchEvent(new Event("cajaAbierta"));
+  document.querySelector("#cajaOverlay .title").textContent = t(deLider ? "cajaLiderTitulo" : "cajaTitulo");
   // Si ya se tienen todos los de esa rareza: uno repetido, y se cambia por tacos.
   const repe = premio.lider && !lider ? unoDe(premio.lider) : null;
   const tacos = premio.lider ? (lider ? 0 : REPETIDO[premio.lider]) : premio.tacos;
@@ -124,8 +140,8 @@ export function abrirCaja(alCerrar) {
     if (lider || tacos >= 800) sndFanfarria(true); else sndChapa();
     vibrate([20, 30, 40]);
     vale.classList.remove("hidden");
-    if (getSave().cajas > 0) {
-      otra.textContent = `${t("cajaOtra")} (${getSave().cajas})`;
+    if (cajasPendientes() > 0) {
+      otra.textContent = `${t("cajaOtra")} (${cajasPendientes()})`;
       otra.classList.remove("hidden");
     }
   }
@@ -134,7 +150,9 @@ export function abrirCaja(alCerrar) {
 }
 
 // ---- Premio del día ----
-const DIARIO = [50, 100, 150, 200, 300, 400, "caja"];
+// 11/11: el dia 7, una caja de lider (un lider seguro). Si se salta un dia,
+// la racha vuelve al primero: por eso engancha.
+const DIARIO = [100, 150, 200, 300, 400, "caja", "lider"];
 function hoy(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -150,20 +168,22 @@ export function premioDiario(alCerrar) {
   cont.innerHTML = DIARIO.map((p, i) => {
     const dia = i + 1;
     const clase = dia < racha ? "hecho" : dia === racha ? "hoy" : "";
-    const dentro = p === "caja" ? `${icono("regalo")}<span>+500</span>` : `<img src="${urlPegatina("taco")}" alt=""><span>${p}</span>`;
-    return `<div class="diarioDia ${clase}"><small>${t("dia")} ${dia}</small>${dentro}${dia < racha ? icono("check") : ""}</div>`;
+    const dentro = p === "lider" ? `${icono("estrella")}<span>${t("liderSeguro")}</span>`
+      : p === "caja" ? `${icono("regalo")}<span>+500</span>` : `<img src="${urlPegatina("taco")}" alt=""><span>${p}</span>`;
+    return `<div class="diarioDia ${clase} ${p === "lider" ? "diaLider" : ""}"><small>${t("dia")} ${dia}</small>${dentro}${dia < racha ? icono("check") : ""}</div>`;
   }).join("");
   const ov = document.getElementById("diarioOverlay");
   ov.classList.remove("hidden");
   document.getElementById("diarioRecoger").onclick = () => {
     const premio = DIARIO[racha - 1];
-    if (premio === "caja") { addTacos(500); guardarCaja(); } else addTacos(premio);
+    if (premio === "lider") guardarCaja("lider");
+    else if (premio === "caja") { addTacos(500); guardarCaja(); } else addTacos(premio);
     s.diario = { dia: hoyStr, racha };
     persistSave();
     sndChapa();
     vibrate(20);
     ov.classList.add("hidden");
-    if (alCerrar) alCerrar(premio === "caja");
+    if (alCerrar) alCerrar(premio === "caja" || premio === "lider");
   };
   return true;
 }

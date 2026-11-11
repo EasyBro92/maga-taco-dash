@@ -66,6 +66,11 @@ LIDERES = {
                       ropa='camiseta', traje=0xffd23c, pantalon=0x2b3346, corbata=None, pin=None,
                       ancho=1.0, mandibula=0.2, nariz=1.05, linea=0.2, gordo=1.02,
                       boca='mueca', parpado=0.2, cejas='arriba', arrugas=2, mofletes=0.1, extra='banda'),
+    # 11/11: el del pase de campaña (solo sale ahi)
+    'boris': dict(piel=0xf6cdb4, pelo=(0xf4e4a2, 0xe2c977), ceja=0xe0cc8a, ojos=0x5a7fa8,
+                  ropa='traje', traje=0x262a35, pantalon=0x262a35, corbata=0xc8102e, pin=(0x1f3f9a, 0xc8102e),
+                  ancho=1.06, mandibula=0.18, nariz=1.0, linea=0.2, gordo=1.08,
+                  boca='sonrisa', parpado=0.25, cejas='arriba', arrugas=1, mofletes=0.4, extra='brexit'),
     'erdogan': dict(piel=0xeab995, pelo=(0xd0cbc3, 0xbab4ab), ceja=0xbab4ab, ojos=0x4a3a24,
                     ropa='traje', traje=0x2a2d35, pantalon=0x2a2d35, corbata=0x7a1f2a, pin=(0xd8322f, 0xffffff),
                     ancho=1.02, mandibula=0.2, nariz=1.1, linea=0.26, gordo=1.03, bigote=0xc9c3ba,
@@ -348,6 +353,8 @@ def tronco(L):
         cinta(L, mat('etiqueta_xi', 0xf6f4ec, 0.6), -0.15, 0.15, 1.1, 1.3, 0.006, 12, 0.008, atras=True)
         letras(L, mat('letras_negras', 0x1a1a1a, 0.5), 'MADE IN', 1.24, 0.065, 0.008, 0.012)
         letras(L, mat('letras_rojas', 0xd8322f, 0.5), 'CHINA', 1.155, 0.085, 0.008, 0.012)
+    if L['extra'] == 'brexit':      # Boris
+        letras(L, mat('letras_blancas', 0xffffff, 0.5), 'BREXIT', 1.12, 0.1, 0.014)
     if L['extra'] == 'motosierra':  # Milei: su grito en la chaqueta
         letras(L, mat('letras_oro', 0xf2c230, 0.4), '¡AFUERA!', 1.12, 0.085, 0.014)
     if L['extra'] == 'te':          # Erdogan: capa de sultan con la media luna
@@ -639,6 +646,18 @@ def pelo_encima(L):
     elif i == 'bolsonaro':
         casquete(L, p, r=0.388, alto=1.05, lado=0.05, frente_=0.23)
         elip(p, -0.09, -0.27, 0.25, 0.09, esc=(2.3, 1.0, 0.55), rot=(0.45, 0, 0.28), sub=3)
+    elif i == 'boris':    # la melena rubia despeinada, con el flequillo encima de los ojos
+        casquete(L, p, r=0.4, alto=1.12, lado=0.0, frente_=0.16)
+        import random
+        rnd = random.Random(7)
+        for k in range(16):
+            ang = k / 16 * math.tau + rnd.uniform(-0.2, 0.2)
+            x, y = math.cos(ang) * 0.27, math.sin(ang) * 0.25 + 0.02
+            elip(p, x, y, 0.25 + rnd.uniform(-0.03, 0.06), 0.1, esc=(1.3, 1.1, 0.7),
+                 rot=(rnd.uniform(-0.6, 0.6), rnd.uniform(-0.6, 0.6), ang), sub=2)
+        for k in range(6):   # el flequillo, cayendo hacia un lado
+            elip(p, -0.17 + 0.065 * k, -0.28, 0.23 + 0.02 * (k % 2), 0.075, esc=(0.9, 0.8, 1.6), rot=(0.7, 0, 0.5 - 0.1 * k), sub=2)
+        elip(p, 0.0, 0.0, 0.37, 0.18, esc=(1.5, 1.4, 0.7), rot=(0.2, 0.1, 0.3), sub=2)
     else:                 # erdogan: con entradas
         casquete(L, p, r=0.383, alto=1.0, lado=0.1, frente_=0.3)
 
@@ -715,6 +734,26 @@ def extra(L):
         for k in range(14):
             q = a + (b - a) * (k / 13)
             bola(cad, q, 0.016, esc=(1.6, 1.6, 0.8), sub=1)
+    elif e == 'brexit':       # Boris: la bandera britanica en alto
+        base = P + ARRIBA * 0.01
+        tubo(mat('palo', 0x9a6a3a, 0.7), base - ARRIBA * 0.02, base + ARRIBA * 0.62, 0.012, 0.012, 8)
+        c = base + ARRIBA * 0.5 + Vector((0.2 if base.x > 0 else -0.2, 0, 0))
+        def banda(m, w, h, giro, grosor):
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(c.x, c.y, c.z))
+            o = bpy.context.object
+            o.scale = (w, grosor, h)
+            o.rotation_euler = (0, giro, 0)
+            return _poner(o, m)
+        azul, blanco_, rojo_ = mat('uk_azul', 0x1f3f9a, 0.5), mat('uk_blanco', 0xffffff, 0.5), mat('uk_rojo', 0xc8102e, 0.5)
+        banda(azul, 0.38, 0.22, 0, 0.006)
+        a = math.atan2(0.22, 0.38)
+        for g in (a, -a):
+            banda(blanco_, 0.44, 0.045, g, 0.009)
+            banda(rojo_, 0.44, 0.016, g, 0.011)
+        banda(blanco_, 0.38, 0.07, 0, 0.012)
+        banda(blanco_, 0.07, 0.22, 0, 0.012)
+        banda(rojo_, 0.38, 0.04, 0, 0.015)
+        banda(rojo_, 0.04, 0.22, 0, 0.015)
     elif e == 'te':           # Erdoğan: el vaso de té turco, con su platito
         c = P + ARRIBA * 0.03
         cil(mat('platito', 0xc8323a, 0.35), c.x, c.y, c.z, 0.065, 0.01, 24)
