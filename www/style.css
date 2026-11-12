@@ -956,3 +956,9 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
   .tiendaPestanas .segmento { padding-left: 4px; padding-right: 4px; font-size: 12px; }
   .mejoraItem button { min-width: 78px; padding: 7px 8px; font-size: 13px; }
 }
+
+/* 12/11: Fargo, el aviso de la rafaga de la ventisca (fijo, sin parpadear) */
+#rafagaAviso { position: absolute; top: 34%; left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; white-space: nowrap;
+  font-family: var(--letra-titulo); font-size: 28px; color: #fff; background: rgba(31, 58, 122, 0.72); padding: 6px 18px; border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+#rafagaAviso b { font-size: 34px; }

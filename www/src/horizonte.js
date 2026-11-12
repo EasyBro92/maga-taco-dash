@@ -286,6 +286,66 @@ const SITIOS = {
       }
     }
   },
+  // 12/11: Monte Rushmore: las Black Hills, colinas oscuras de pinos ("negras"
+  // de lejos), agujas de granito y el pico del monumento.
+  rushmore(x, c, r) {
+    for (let capa = 0; capa < 3; capa++) {
+      x.fillStyle = capa === 0 ? c.lejos : capa === 1 ? c.pino : c.cerca;
+      const base = SUELO - 4, alto = [120, 85, 50][capa];
+      x.beginPath(); x.moveTo(0, base);
+      for (let px = 0; px <= ANCHO; px += 40) {
+        const h = alto * (0.55 + 0.45 * Math.sin(px * 0.004 + capa * 1.7) * Math.sin(px * 0.0013 + capa)) + r() * 10;
+        x.lineTo(px, base - h);
+      }
+      x.lineTo(ANCHO, base); x.closePath(); x.fill();
+    }
+    // Agujas de granito.
+    x.fillStyle = c.monumento;
+    for (let i = 0; i < 14; i++) {
+      const px = r() * ANCHO, h = 40 + r() * 70, w = 8 + r() * 10;
+      x.beginPath(); x.moveTo(px - w, SUELO - 4); x.lineTo(px - w * 0.3, SUELO - 4 - h); x.lineTo(px + w * 0.3, SUELO - 4 - h * 0.92); x.lineTo(px + w, SUELO - 4); x.fill();
+    }
+    // Pinos sueltos delante.
+    for (let i = 0; i < 50; i++) {
+      const px = r() * ANCHO, h = 16 + r() * 22;
+      x.fillStyle = c.pino;
+      x.beginPath(); x.moveTo(px, SUELO - 4 - h); x.lineTo(px - h * 0.28, SUELO - 4); x.lineTo(px + h * 0.28, SUELO - 4); x.fill();
+    }
+  },
+  // 12/11: Fargo: la llanura nevada de Dakota del Norte, elevadores de grano,
+  // el deposito de agua y la ventisca que lo vuelve todo blanco.
+  fargo(x, c, r) {
+    x.fillStyle = c.nieve;
+    x.fillRect(0, SUELO - 6, ANCHO, 8);
+    // Elevadores de grano.
+    for (const ex of [700, 1500, 2900]) {
+      x.fillStyle = c.silo;
+      for (let k = 0; k < 4; k++) x.fillRect(ex + k * 24, SUELO - 70, 20, 70);
+      x.fillRect(ex + 20, SUELO - 96, 30, 26);
+      x.fillStyle = c.granero;
+      x.fillRect(ex - 40, SUELO - 30, 40, 30);
+    }
+    // El deposito de agua.
+    x.fillStyle = c.lejos;
+    x.fillRect(2200, SUELO - 80, 3, 80); x.fillRect(2240, SUELO - 80, 3, 80);
+    x.beginPath(); x.ellipse(2222, SUELO - 92, 30, 16, 0, 0, Math.PI * 2); x.fill();
+    // Algunas casas y arboles pelados.
+    for (let i = 0; i < 26; i++) {
+      const px = r() * ANCHO;
+      x.fillStyle = c.cerca;
+      x.fillRect(px, SUELO - 14, 18 + r() * 14, 14);
+      x.beginPath(); x.moveTo(px - 2, SUELO - 14); x.lineTo(px + 14, SUELO - 24); x.lineTo(px + 32, SUELO - 14); x.fill();
+    }
+    // Torres de la ciudad, a los lados.
+    for (const [x0, x1] of [[3100, 3450], [400, 650]]) {
+      let cx = x0;
+      while (cx < x1) {
+        const w = 22 + r() * 30, h = 30 + r() * 60;
+        torre(x, [cx, 0], w, h, c.lejos, r, null);
+        cx += w * 0.9;
+      }
+    }
+  },
   // 08/11: Kansas (Wichita): la llanura de trigo hasta el horizonte, elevadores
   // de grano y, a lo lejos, el embudo del tornado bajo la nube (quieto: el que
   // gira es el de cerca, en la calle).
@@ -374,7 +434,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

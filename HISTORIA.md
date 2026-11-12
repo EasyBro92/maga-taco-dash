@@ -59,8 +59,8 @@ Jefe: **el Rey Pingüino**.
 | 11 | Chicago, Illinois | +19 | La ciudad del viento: el viento le levanta el tupé. *(hecho)* |
 | 12 | Milwaukee, Wisconsin | +10 | Se sube a un camión de la basura con chaleco, como hizo de verdad. Quesos. *(hecho)* |
 | 13 | Minneapolis, Minnesota | +10 | Lagos helados y pistas de hockey de los canadienses. *(hecho)* |
-| 14 | Monte Rushmore, Dakota del Sur | +3 | Quiere su cara en la montaña con los cuatro presidentes. El escultor dice que no… de momento. |
-| 15 | Fargo, Dakota del Norte | +3 | **Jefe.** El Rey Pingüino y su ejército vienen a cobrarle el arancel en plena nevada. Él gana poniéndole un arancel al hielo. |
+| 14 | Monte Rushmore, Dakota del Sur | +3 | Quiere su cara en la montaña con los cuatro presidentes. El escultor dice que no… de momento. *(hecho)* |
+| 15 | Fargo, Dakota del Norte | +3 | **Jefe.** El Rey Pingüino y su ejército vienen a cobrarle el arancel en plena nevada. Él gana poniéndole un arancel al hielo. *(hecho)* |
 
 ## Acto 3 — La tormenta de papeles (Sur · 12 estados · 326 votos)
 

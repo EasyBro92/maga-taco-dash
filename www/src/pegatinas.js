@@ -278,6 +278,38 @@ const DIBUJOS = {
     x.restore();
   },
 
+  // 12/11: el cincel del escultor del monte Rushmore (mango de madera y punta de acero).
+  cincel(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(-0.75);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const mango = () => { x.beginPath(); x.roundRect(-30, -100, 60, 110, 18); };
+    const hoja = () => { x.beginPath(); x.moveTo(-22, 10); x.lineTo(22, 10); x.lineTo(16, 92); x.lineTo(-16, 92); x.closePath(); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; mango(); x.stroke(); hoja(); x.stroke();
+    hoja(); x.fillStyle = "#b8c0c8"; x.fill();
+    x.fillStyle = "#e6ecf0"; x.fillRect(-10, 16, 8, 70);
+    mango(); x.fillStyle = "#b8743a"; x.fill();
+    x.fillStyle = "#8a5226"; for (let k = 0; k < 3; k++) x.fillRect(-30, -80 + k * 28, 60, 6);
+    x.fillStyle = "#7a7268"; x.fillRect(-26, 0, 52, 14);
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; mango(); x.stroke(); hoja(); x.stroke();
+    x.restore();
+  },
+  // 12/11: el gorro de orejeras de Fargo (el de la pelicula), rojo y con borrego.
+  orejeras(x) {
+    x.save();
+    x.translate(128, 140);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const copa = () => { x.beginPath(); x.moveTo(-80, 0); x.quadraticCurveTo(-82, -96, 0, -100); x.quadraticCurveTo(82, -96, 80, 0); x.closePath(); };
+    const oreja = (s) => { x.beginPath(); x.moveTo(s * 50, -6); x.quadraticCurveTo(s * 98, 0, s * 86, 70); x.quadraticCurveTo(s * 62, 82, s * 50, 40); x.closePath(); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; copa(); x.stroke(); oreja(-1); x.stroke(); oreja(1); x.stroke();
+    for (const s of [-1, 1]) { oreja(s); x.fillStyle = "#f2e8d4"; x.fill(); }
+    copa(); x.fillStyle = "#c8282c"; x.fill();
+    x.fillStyle = "#a81e22"; for (let k = 0; k < 4; k++) x.fillRect(-70 + k * 40, -80, 10, 80);
+    x.fillStyle = "#f2e8d4"; x.beginPath(); x.roundRect(-86, -14, 172, 28, 14); x.fill();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; copa(); x.stroke(); oreja(-1); x.stroke(); oreja(1); x.stroke();
+    x.beginPath(); x.roundRect(-86, -14, 172, 28, 14); x.stroke();
+    x.restore();
+  },
   // 09/11: el patin de hielo de Minneapolis (lagos helados y hockey).
   patin(x) {
     x.save();

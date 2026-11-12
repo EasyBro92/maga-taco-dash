@@ -256,6 +256,16 @@ const CANCIONES = {
     melodia: [67, null, 72, null, 76, null, 79, null, 76, 79, null, null, null, null, null, null,
       74, null, 77, null, 81, null, 79, 77, 76, null, 74, null, 72, null, null, null],
     timbre: "organo" },
+  // 12/11: Monte Rushmore: banjo del Oeste, galopando por las Black Hills.
+  rushmore: { bpm: 144, swing: 0.55, acordes: [G, C, D, G], bateria: "country", bajo: "alterna",
+    melodia: [67, 71, 74, null, 74, 76, 74, 71, 72, null, 76, null, 74, null, null, null,
+      71, 74, 79, null, 78, 76, 74, null, 72, 71, 69, null, 67, null, null, null],
+    timbre: "banjo" },
+  // 12/11: Fargo: acordeon en la nieve, una polka algo triste (por el Rey Pinguino).
+  fargo: { bpm: 126, swing: 0.5, acordes: [Am, Dm, E7, Am], bateria: "marcha", bajo: "alterna",
+    melodia: [69, 72, 76, null, 74, 72, 71, null, 69, 71, 72, 74, 76, null, null, null,
+      77, 76, 74, 72, 71, null, 68, null, 69, null, 72, 71, 69, null, null, null],
+    timbre: "acordeon" },
   // Sin fin y menu: pop electronico con ganas.
   sinfin: { bpm: 140, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 79, null, 76, 74, null, 72, null, 72, 74, 76, null, 72, null,

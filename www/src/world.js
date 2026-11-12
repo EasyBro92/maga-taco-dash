@@ -2007,6 +2007,8 @@ export function createWorld(scene) {
   const acerasNivel = {};
   function aceraNivel(z) {
     if (totalScrolled - z > nivel.largo - 15) return;
+    // 12/11: tramos sin farolas ni arboles de acera (el bosque de Rushmore).
+    if (nivel.sinAcera && nivel.sinAcera.some(([a, b]) => totalScrolled - z > a && totalScrolled - z < b)) return;
     if (!acerasNivel[nivel.id]) {
       acerasNivel[nivel.id] = nivel.acera.map((k) => makePool(() => {
         const m = modelo(k);
@@ -2922,6 +2924,20 @@ export function createWorld(scene) {
     pancarta_eh: { choque: "high", medio: 0.3, alto: 2.4 },
     pulidora_hielo: { choque: "full", medio: 1.7, alto: 3.1, centro: -1.6 },
     caseta_pesca: { choque: "full", medio: 1.85, alto: 2.6, centro: -0.9 },
+    // 12/11: Monte Rushmore (blender/rushmore.py): el bisonte (embiste si te
+    // pones en su carril), el perrito de la pradera (solo choca cuando asoma),
+    // la roca que cae de la montaña (su sombra avisa) y la pancarta de los escultores.
+    bisonte: { choque: "full", medio: 1.6, alto: 2.1, centro: 0 },
+    perrito_pradera: { choque: "low", medio: 0.5, alto: 0.95 },
+    roca_caida: { choque: "low", medio: 0.6, alto: 1.05 },
+    cartel_no_caras: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 12/11: Fargo (blender/fargo.py): el pingüino que cruza deslizándose (se
+    // salta), la moto de nieve que viene hacia ti, la pancarta de los
+    // pingüinos y la placa de hielo del suelo (se pisa: encima se resbala).
+    pinguino_tripa: { choque: "low", medio: 0.9, alto: 0.85, centro: 0, cruza: true },
+    moto_nieve: { choque: "full", medio: 1.4, alto: 2.0, centro: -0.1, mueve: 8 },
+    cartel_pinguino: { choque: "high", medio: 0.3, alto: 2.4 },
+    placa_hielo: { choque: "nada", medio: 3.25, alto: 0 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3014,6 +3030,30 @@ export function createWorld(scene) {
 
   function construirObstaculo(nombre) {
     const g = modeloConContorno("obstaculos/" + nombre);
+    // 12/11: el perrito sube y baja dentro de su madriguera (que no se mueve).
+    if (nombre === "perrito_pradera" && g) {
+      const perro = new THREE.Group();
+      while (g.children.length) perro.add(g.children[0]);
+      g.add(perro);
+      const hoyo = modeloConContorno("obstaculos/madriguera");
+      if (hoyo) g.add(hoyo);
+      g.userData.perro = perro;
+      return g;
+    }
+    // 12/11: la roca cae del cielo; su sombra en el suelo avisa de donde.
+    if (nombre === "roca_caida" && g) {
+      const piedra = new THREE.Group();
+      while (g.children.length) piedra.add(g.children[0]);
+      g.add(piedra);
+      const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.75, 20),
+        new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false }));
+      sombra.rotation.x = -Math.PI / 2;
+      sombra.position.y = 0.04;
+      g.add(sombra);
+      g.userData.piedra = piedra;
+      g.userData.sombra = sombra;
+      return g;
+    }
     // 08/11: el rollo de heno esta hecho alrededor de su eje: gira solo el rollo
     // (no la sombra), un poco por encima del suelo.
     // (Y el barril de sirope de Detroit.)
@@ -3292,6 +3332,58 @@ export function createWorld(scene) {
       case "girar": m.rotation.y += dt * 1.1; break;
     }
   }
+  // ---- 12/11: Monte Rushmore ----
+  // El bisonte pasta tranquilo; si te pones en su carril cuando esta cerca,
+  // agacha la cabeza y embiste hacia ti (hay que cambiarse de carril).
+  let alAvisoMapa = null;
+  function onAvisoMapa(fn) { alAvisoMapa = fn; }
+  function moverBisonte(o, dt) {
+    const m = o.mesh, t = animClock + o.phase;
+    if (!o.carga && o.lane === jugadorCarril && o.z > -30 && o.z < -9) {
+      o.carga = true; o.mueve = 11;
+      if (alAvisoMapa) alAvisoMapa("bisonte");
+    }
+    if (o.carga) { m.rotation.x = 0.16; m.rotation.y = 0; m.position.y = Math.abs(Math.sin(t * 13)) * 0.14; }
+    else { m.rotation.x = 0.05 + Math.sin(t * 0.8) * 0.06; m.rotation.y = Math.sin(t * 0.5) * 0.15; m.position.y = 0; }
+  }
+  // El perrito de la pradera asoma y se esconde (unos 2,2 s cada vez); solo
+  // estorba cuando esta fuera.
+  function asomarPerrito(o) {
+    const u = o.mesh.userData;
+    if (!u.perro) return;
+    const f = ((animClock * 0.9 + o.phase) % 2 + 2) % 2;
+    const a = f < 1 ? Math.min(1, f / 0.18) : Math.max(0, 1 - (f - 1) / 0.18);
+    u.perro.position.y = -1.15 * (1 - a);
+    u.perro.rotation.y = Math.sin(animClock * 2 + o.phase) * 0.4 * a;
+    o.escondido = a < 0.4;
+  }
+  // La roca cae al acercarse (desde 16 m); hasta tocar el suelo no choca.
+  function caerRoca(o, dt) {
+    const u = o.mesh.userData;
+    if (!u.piedra) return;
+    if (!o.caida) { if (u.piedra.position.y !== 0) u.piedra.position.y = 0; u.sombra.visible = false; return; }
+    if (o.z > -42) { o.caida.vy -= 30 * dt; o.caida.y = Math.max(0, o.caida.y + o.caida.vy * dt); }
+    u.piedra.position.y = o.caida.y;
+    u.piedra.rotation.x += dt * 3;
+    const k = 1 - o.caida.y / 16;
+    u.sombra.visible = true;
+    u.sombra.scale.setScalar(0.45 + 0.75 * k);
+    u.sombra.material.opacity = 0.15 + 0.3 * k;
+    if (o.caida.y === 0) {
+      o.caida = null; o.fuera = false; u.sombra.visible = false;
+      if (alAvisoMapa && o.z > -30) alAvisoMapa("roca");
+    }
+  }
+  // ---- 12/11: Fargo ----
+  // ¿Hay hielo bajo el jugador? (las placas de hielo de su carril)
+  function hieloEn(lane) {
+    return obstacles.some((o) => o.pool === "placa_hielo" && !o.smashed && o.lane === lane && Math.abs(o.z) < 3.3);
+  }
+  // ¿Se puede empujar al jugador a ese carril? (nada que esquivar cerca)
+  function carrilDespejado(lane) {
+    return lane >= 0 && lane <= 2 && !obstacles.some((o) => !o.smashed && !o.escondido && o.type !== "nada" && o.lane === lane && o.z > -16 && o.z < 4);
+  }
+
   function moverVaca(o, dt) {
     const m = o.mesh;
     if (o.cruza && o.z < -26) {
@@ -5469,6 +5561,105 @@ export function createWorld(scene) {
       const libre = libres.find((l) => !bloq.includes(l));
       if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
     },
+    // ---- 12/11: Monte Rushmore ----
+    // Los bisontes de las Black Hills: uno cada 42 m, solo, en un carril; las
+    // filas de en medio solo llevan tacos (si embiste, hay sitio para apartarse).
+    bisontes(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 6 === 3 && obstaclePools.bisonte && libres.length) {
+        const l = elegirDe(libres);
+        spawnObstacle(l, "full", z, "bisonte");
+        const otro = elegirDe(libres.filter((x) => x !== l));
+        if (otro !== undefined) for (let i = 0; i < 4; i++) spawnTaco(otro, z - i * 1.4, 0.9);
+        return;
+      }
+      if (k % 6 === 0 && obstaclePools.roca_caida) {
+        const l = elegirDe(libres);
+        const o = spawnObstacle(l, "low", z, "roca_caida");
+        if (o) o.caida = null;
+        arcoDeTacos(l, z);
+      }
+    },
+    // Los perritos de la pradera: filas de madrigueras; el perrito asoma y se
+    // esconde, asi que se pasa saltando o cuando esta dentro.
+    perritos(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 2 === 1 || !obstaclePools.perrito_pradera) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const cuantos = k % 6 === 4 ? libres.length : Math.min(libres.length, 2);
+      const sitio = libres.slice().sort(() => Math.random() - 0.5).slice(0, cuantos);
+      for (const l of sitio) spawnObstacle(l, "low", z, "perrito_pradera");
+      const tl = elegirDe(libres);
+      if (sitio.includes(tl)) arcoDeTacos(tl, z); else for (let i = 0; i < 4; i++) spawnTaco(tl, z - i * 1.4, 0.9);
+    },
+    // Rocas que caen de la montaña: su sombra sale en el suelo antes (donde va
+    // a caer); al tocar el suelo se quedan y se saltan. Y la pancarta de los escultores.
+    rocas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 3 !== 0) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 12 === 6 && obstaclePools.cartel_no_caras) {
+        const l = elegirDe(libres);
+        spawnObstacle(l, "high", z, "cartel_no_caras");
+        for (let i = 0; i < 4; i++) spawnTaco(elegirDe(libres.filter((x) => x !== l)), z - i * 1.4, 0.9);
+        return;
+      }
+      if (!obstaclePools.roca_caida) return;
+      const cuantas = Math.random() < 0.5 ? 1 : 2;
+      const sitio = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(cuantas, libres.length - 1));
+      for (const l of sitio) {
+        const o = spawnObstacle(l, "low", z, "roca_caida");
+        if (o) { o.caida = { y: 16, vy: 0 }; o.fuera = true; }
+      }
+      const libre = libres.find((l) => !sitio.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
+    // ---- 12/11: Fargo ----
+    // Placas de hielo en los tres carriles: encima, el cambio de carril va
+    // resbalando y tarda mas (main.js). Cada 28 m algo en dos carriles, y el
+    // libre va cambiando: hay que adelantarse.
+    hielo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 2) return;
+      if (obstaclePools.placa_hielo) for (const l of LANES) spawnObstacle(l, "nada", z, "placa_hielo");
+      if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k % 4 !== 2) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const libre = [0, 1, 2, 1][Math.floor(k / 4) % 4];
+      const L = { low: ["monton_nieve", "bloque_hielo"], high: ["cartel_pinguino"], full: ["munieco_nieve", "caseta_pesca", "moto_nieve"] };
+      for (const l of libres) {
+        if (l === libre) continue;
+        const ty = elegirDe(["low", "full", "full", "high"]);
+        obst(l, ty, z, d, L[ty].filter((nm) => obstaclePools[nm] && !(TIPOS[nm] && TIPOS[nm].mueve)));
+      }
+      for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
+    // La ventisca: calle con pocas cosas; las rafagas que te empujan de carril
+    // (con aviso) las pone main.js.
+    ventisca(z, d, t, k) {
+      if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k % 2 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 3); return; }
+      filaMixta(z, d, 0.35);
+    },
+    // Los pingüinos de la corte del Rey cruzan deslizandose sobre la tripa
+    // (se saltan); entre medias, sus pancartas.
+    pinguinos(z, d, t, k) {
+      if (k < 1) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 3 === 1 && obstaclePools.pinguino_tripa) {
+        const libre = [2, 1, 0, 1][Math.floor(k / 3) % 4];
+        for (const l of libres) if (l !== libre) obst(l, "low", z, d, ["pinguino_tripa"]);
+        for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+      } else if (k % 6 === 3 && obstaclePools.cartel_pinguino) {
+        const l = elegirDe(libres);
+        spawnObstacle(l, "high", z, "cartel_pinguino");
+      }
+    },
     // ---- 08/11: Phoenix, el puente sobre el cañon (momento estrella) ----
     // Se sale de la ciudad entre paredes de roca roja, se cruza el puente de
     // madera del tren (con el precipicio a los lados) y se vuelve. En el puente:
@@ -6492,6 +6683,8 @@ export function createWorld(scene) {
       d.scale.setScalar(Math.max(0.001, edgeFade(d.position.z, 6, 5)));
       const dd = totalScrolled - d.position.z, lado = Math.sign(d.position.x);
       d.visible = !(nivel && dd > nivel.largo - 10) && !metroEn(dd) &&
+        // 12/11: tramos sin publico (el bosque de Rushmore)
+        !(nivel && nivel.sinPublico && nivel.sinPublico.some(([a, b]) => dd > a && dd < b)) &&
         // 09/11: nadie de pie en medio de una calle lateral (ni su valla)
         !(csDecor && csDecor.some((c) => c.lados.includes(lado) && Math.abs(c.d - dd) < 7));
       if (d.userData.kind === "flag") {
@@ -6545,6 +6738,9 @@ export function createWorld(scene) {
         } else if (o.pool === "bici") {
           o.mesh.position.y = Math.abs(Math.sin(animClock * 9 + o.phase)) * 0.03;
         } else if (o.pool === "vaca" || o.pool === "cerdo") moverVaca(o, dt);
+        else if (o.pool === "bisonte") moverBisonte(o, dt);
+        else if (o.pool === "perrito_pradera") asomarPerrito(o);
+        else if (o.pool === "roca_caida") caerRoca(o, dt);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
@@ -6755,5 +6951,6 @@ export function createWorld(scene) {
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
-    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico };
+    perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
+    onAvisoMapa, hieloEn, carrilDespejado };
 }

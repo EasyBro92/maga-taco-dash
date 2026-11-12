@@ -681,7 +681,11 @@ const NOMBRE_HITO = {
     gesu_church: "La iglesia del Gesu", germania: "El Germania, el de los cascos de cobre",
     pfister_hotel: "El hotel Pfister", city_hall_mke: "El Ayuntamiento de Milwaukee", us_bank_center: "El U.S. Bank Center, el más alto de Wisconsin",
     city_hall_mpls: "El Ayuntamiento de Minneapolis", ids_center: "El IDS Center, el más alto de Minnesota",
-    foshay_tower: "La Foshay Tower, el obelisco", wells_fargo_mpls: "El Wells Fargo Center", basilica_mary: "La basílica de Santa María" },
+    foshay_tower: "La Foshay Tower, el obelisco", wells_fargo_mpls: "El Wells Fargo Center", basilica_mary: "La basílica de Santa María",
+    hotel_alex_johnson: "El hotel Alex Johnson", dino_park: "El dinosaurio del Dinosaur Park", wall_drug: "El cartel de Wall Drug",
+    avenida_banderas: "La Avenida de las Banderas",
+    hotel_donaldson: "El hotel Donaldson", np_depot: "La estación del Northern Pacific", black_building: "El Black Building",
+    radisson_fargo: "La torre Radisson, la más alta de Fargo" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -703,7 +707,11 @@ const NOMBRE_HITO = {
     gesu_church: "Gesu Church", germania: "The Germania Building, with its copper helmets",
     pfister_hotel: "The Pfister Hotel", city_hall_mke: "Milwaukee City Hall", us_bank_center: "The U.S. Bank Center, the tallest in Wisconsin",
     city_hall_mpls: "Minneapolis City Hall", ids_center: "The IDS Center, the tallest in Minnesota",
-    foshay_tower: "The Foshay Tower, the obelisk", wells_fargo_mpls: "The Wells Fargo Center", basilica_mary: "The Basilica of Saint Mary" },
+    foshay_tower: "The Foshay Tower, the obelisk", wells_fargo_mpls: "The Wells Fargo Center", basilica_mary: "The Basilica of Saint Mary",
+    hotel_alex_johnson: "The Hotel Alex Johnson", dino_park: "The Dinosaur Park dinosaur", wall_drug: "The Wall Drug sign",
+    avenida_banderas: "The Avenue of Flags",
+    hotel_donaldson: "The Hotel Donaldson", np_depot: "The Northern Pacific Depot", black_building: "The Black Building",
+    radisson_fargo: "The Radisson tower, the tallest in Fargo" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1239,6 +1247,8 @@ function resetRun(desde = 0) {
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   aplicarMejoras();
   municion = 0; municionPintada = "";
+  avisoHielo = false; rafaga.avisada = false; rafaga.t = 3;
+  document.getElementById("rafagaAviso").classList.add("hidden");
   jefesCarrera = 0; paseContado = false;
   if (monturaCohete) monturaCohete.visible = false;
   quitarParaguas(); if (character.setViento) character.setViento(0);
@@ -1630,7 +1640,7 @@ function checkCollisions(paso = 0) {
     // Usa la posicion X real del personaje, no el carril logico (que cambia
     // instantaneo al pulsar) -- asi solo choca si de verdad esta centrado
     // en ese carril, no si solo lo esta rozando de lado al cambiar.
-    if (o.smashed || o.rozado || o.abierta || o.fuera) continue;   // (abierta: la barrera, con el brazo arriba; fuera: se quedo en la acera)
+    if (o.smashed || o.rozado || o.abierta || o.fuera || o.escondido) continue;   // (abierta: la barrera, con el brazo arriba; fuera: se quedo en la acera; escondido: el perrito de la pradera)
     if (o.type === "nada" || o.type === "rampa") continue;       // la alfombra, los arcos y la rampa se pisan
     if (Math.abs(playerX - LANE_X[o.lane]) > HIT_LANE_TOLERANCE) continue;
     if (o.type === "bus") {
@@ -2334,6 +2344,46 @@ function lanzarAlJefe(pos, sinApuntar) {
   return true;
 }
 
+// ---------- 12/11/2026: Fargo, la ventisca ----------
+// En el tramo «ventisca», cada 3,5-5 s una rafaga te empuja un carril. Antes
+// sale el aviso (la flecha, un segundo) y solo empuja si ese carril esta
+// despejado; si no, pasa de largo.
+let avisoHielo = false;
+const rafaga = { t: 3, dir: 0, avisada: false };
+function rafagas(dt) {
+  const el = document.getElementById("rafagaAviso");
+  const tramo = nivelActual ? world.tramoEn(distance) : null;
+  if (!tramo || tramo.tipo !== "ventisca" || rocketTimeLeft > 0 || montado || gameState !== "playing") {
+    if (rafaga.avisada) { rafaga.avisada = false; el.classList.add("hidden"); }
+    return;
+  }
+  rafaga.t -= dt;
+  if (!rafaga.avisada && rafaga.t <= 1.0) {
+    rafaga.dir = currentLane === 0 ? 1 : currentLane === 2 ? -1 : (Math.random() < 0.5 ? -1 : 1);
+    rafaga.avisada = true;
+    el.innerHTML = rafaga.dir > 0 ? `${t("rafaga")} <b>→</b>` : `<b>←</b> ${t("rafaga")}`;
+    el.classList.toggle("derecha", rafaga.dir > 0);
+    el.classList.remove("hidden");
+  }
+  if (rafaga.t <= 0) {
+    const destino = currentLane + rafaga.dir;
+    if (world.carrilDespejado(destino) && !isSliding) {
+      carrilAntes = currentLane; currentLane = destino;
+      sndLaneSwitch(); vibrate(20);
+    }
+    el.classList.add("hidden");
+    rafaga.avisada = false;
+    rafaga.t = 3.5 + Math.random() * 1.5;
+  }
+}
+// Avisos del mapa: el bisonte que embiste, la roca que cae.
+let avisoMapaT = 0;
+world.onAvisoMapa((que) => {
+  const ahora = performance.now();
+  if (que === "bisonte" && ahora - avisoMapaT > 3500) { avisoMapaT = ahora; showBubble(t("bisonteEmbiste"), 1100, 1); vibrate(25); }
+  else if (que === "roca") vibrate(12);
+});
+
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
 // paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
 function frame(dtFijo) {
@@ -2400,7 +2450,11 @@ function frame(dtFijo) {
 
     const targetX = LANE_X[currentLane];
     const prevX = playerX;
-    playerX += (targetX - playerX) * Math.min(1, dt * 10);
+    // 12/11: Fargo: en las placas de hielo el cambio de carril va resbalando.
+    const enHielo = world.hieloEn(currentLane) || world.hieloEn(carrilAntes);
+    if (enHielo && !avisoHielo) { avisoHielo = true; showBubble(t("hieloAviso"), 1500, 1); }
+    playerX += (targetX - playerX) * Math.min(1, dt * (enHielo ? 2.6 : 10));
+    rafagas(dt);
     character.object3D.position.x = playerX;
     // Tropezon: un tambaleo corto.
     let tambaleo = 0;
@@ -2456,6 +2510,10 @@ function frame(dtFijo) {
       // 09/11: Minneapolis: el lago helado. Al entrar, el aviso de los discos;
       // al salir (si se sigue jugando), el gol: tacos y confeti.
       if (tramo.tipo === "hockey") setTimeout(() => { if (gameState === "playing") showBubble(t("discoAviso"), 1600); }, 1300);
+      // 12/11: Monte Rushmore y Fargo: cada dinamica nueva con su aviso.
+      const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso" };
+      if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
+      if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
         tacosThisRun += 50;
         showBubble(t("golAviso"), 1800, 2);

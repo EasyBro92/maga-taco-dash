@@ -74,7 +74,10 @@ const LISTA = {
     // 09/11: los jefes de cada acto y lo que tiran (blender/jefes.py)
     "jefe_pinguino", "bloque_hielo", "pez_helado", "jefe_papeles", "caja_documentos", "carpeta_vuela", "rotulador",
     "jefe_toro", "paellera", "capote", "jefe_cerebro", "libro_gordo", "grafico_datos", "jefe_pantano", "bola_barro",
-    "hamburguesa", "desatascador"],
+    "hamburguesa", "desatascador",
+    // 12/11: Monte Rushmore y Fargo (blender/rushmore.py, blender/fargo.py)
+    "bisonte", "perrito_pradera", "madriguera", "roca_caida", "cartel_no_caras",
+    "pinguino_tripa", "moto_nieve", "cartel_pinguino", "placa_hielo"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

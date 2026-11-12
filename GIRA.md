@@ -31,8 +31,8 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa |
 | Colorado | Denver | capital y la más famosa |
 | Connecticut | Hartford | capital |
-| Dakota del Norte | Fargo (capital: Bismarck) | la más conocida |
-| Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña |
+| Dakota del Norte | Fargo (capital: Bismarck) | la más conocida (hecho el 12/11: Broadway hasta el teatro, con el Rey Pingüino) |
+| Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
 | Delaware | Wilmington (capital: Dover) | la más grande |
 | Florida | Miami (capital: Tallahassee) | la más famosa |
 | Georgia | Atlanta | capital y la más famosa |

@@ -19,6 +19,14 @@ function cuadras(n) {
   return out;
 }
 
+// 12/11: un trozo de bosque de las Black Hills (Monte Rushmore): pinares y
+// agujas de granito, sin huecos grandes (no son calles).
+function bosque(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(["pinar", 1], 4, ["agujas_granito", 1], 4);
+  return out;
+}
+
 // Edificio del kit con aire oficial (Washington).
 const FED = { federal: true, minPlantas: 5, maxPlantas: 7 };
 // East Village de Des Moines: ladrillo bajo, de una a tres plantas (y nevado).
@@ -910,6 +918,125 @@ const CALLES = [
     acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad", "des_moines/arbol_nieve", "ciudad/hidrante"],
   },
   {
+    // 12/11/2026: nivel 14: Monte Rushmore (blender/rushmore.py). Isidro:
+    // «sigue creando mapas y que se sientan muy diferentes, con dinámicas
+    // diferentes». Se aplicó lo recomendado: luz de mañana (las caras miran al
+    // este) y final en la terraza bajo la montaña. Primero Rapid City, «la
+    // ciudad de los presidentes»; luego las Black Hills por la Iron Mountain
+    // Road (bosque, agujas de granito, túneles) y la Avenida de las Banderas.
+    // Dinámicas propias: los bisontes que embisten si te pones en su carril,
+    // los perritos de la pradera que asoman y se esconden, y el momento
+    // estrella: las rocas que caen de la montaña con su sombra avisando.
+    id: "rushmore", nombre: "Iron Mountain Road", lugar: "Monte Rushmore, Dakota del Sur", listo: true,
+    zona: "town", carpeta: "rushmore", luz: "manana", semilla: 1927,
+    largo: 3200, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "rapid" },
+    horizonte: "rushmore",
+    obstaculos: { low: ["roca_caida", "calavera", "paca"], high: ["cartel_no_caras", "cartel_ruta"],
+      full: ["autocaravana", "moto_harley", "pickup", "vaquero"] },
+    publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
+    // En el bosque, ni publico ni farolas.
+    sinPublico: [[880, 2880]], sinAcera: [[880, 3400]],
+    tramos: [
+      [0, 80, "calma", { titulo: "rushmore" }],
+      [80, 300, "mixto", { densidad: 0.45, titulo: "ciudad_presidentes" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 620, "slalom", { full: ["autocaravana", "moto_harley", "pickup"], titulo: "sturgis" }],
+      [620, 700, "calma"],
+      [700, 880, "premios", { titulo: "premios" }],
+      [880, 960, "calma", { titulo: "black_hills" }],
+      [960, 1300, "bisontes", { titulo: "bisontes" }],
+      [1300, 1370, "calma"],
+      [1370, 1530, "jefe_paso", { titulo: "jefe_paso" }],
+      [1530, 1850, "perritos", { titulo: "perritos" }],
+      [1850, 1920, "calma"],
+      [1920, 2080, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2080, 2160, "calma"],
+      // El momento estrella: la montaña tira rocas (su sombra avisa de donde caen).
+      [2160, 2620, "rocas", { titulo: "rocas" }],
+      [2620, 2700, "calma"],
+      [2700, 2880, "bisontes", { titulo: "bisontes2" }],
+      [2880, 3040, "alfombra", { titulo: "avenida_banderas" }],
+      [3040, 3190, "sprint", { titulo: "sprint_rushmore" }],
+    ],
+    control: 1700, caja: 800,
+    sinEdificios: [3150, 4000],
+    chapas: [[760, "arco"], [1980, "carril"], [2950, "arco"]],
+    hitos: ["hotel_alex_johnson", "dino_park", "wall_drug", "avenida_banderas"],
+    meta: "monte_rushmore", metaNombre: { es: "el monte Rushmore", en: "Mount Rushmore" },
+    // Por Main Street de Rapid City (el hotel y el cartel a la izquierda, el
+    // dinosaurio en su colina a la derecha), luego el bosque y, al final, las
+    // columnas con las banderas de los estados.
+    izquierda: [
+      40, ["kit", 2], 14, ["hotel_alex_johnson", 1], 14, ...cuadras(3), ["wall_drug", 1], 14, ...cuadras(2),
+      ...bosque(31), ["avenida_banderas", 4],
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(1), ["dino_park", 1], 14, ...cuadras(4),
+      ...bosque(31), ["avenida_banderas", 4],
+    ],
+    fondo: [{ pieza: "monte_rushmore", d: 3255, centro: true },
+      ...[1100, 1880, 2740].map((d) => ({ pieza: "tunel_roca", d, cruza: true }))],
+    final: "parada", parada: 22,
+    // Se para en la terraza y la camara mira arriba, a las caras.
+    camaraFinal: { pos: [5, 2.6, 12], mira: [0, 34, -120] },
+    acera: ["rushmore/estatua_bronce", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
+    // 12/11/2026: nivel 15: Fargo (blender/fargo.py). Jefe: el Rey Pingüino
+    // viene a cobrar el arancel de las islas de los pingüinos en plena
+    // nevada. Recomendado: ventisca (luz `invierno`, nieve que cae) y final
+    // ante el teatro de Fargo. Dinámicas propias: las placas de hielo (el
+    // cambio de carril resbala), las rafagas de ventisca que te empujan de
+    // carril (con aviso) y los pingüinos que cruzan deslizandose.
+    id: "fargo", nombre: "Broadway", lugar: "Fargo, Dakota del Norte", listo: true,
+    zona: "city", carpeta: "fargo", luz: "invierno", semilla: 1871,
+    largo: 3250, linea: 11.5, velMax: 24,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 8, estilo: "fargo", nieve: true },
+    horizonte: "fargo",
+    obstaculos: { low: ["monton_nieve", "bloque_hielo", "trineo"], high: ["cartel_pinguino", "andamio"],
+      full: ["quitanieves", "munieco_nieve", "caseta_pesca", "taxi"] },
+    publico: { personas: ["granjero", "abuelo", "fan", "chico", "senora"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "fargo" }],
+      [70, 260, "vallas", { low: ["monton_nieve", "bloque_hielo"], high: ["cartel_pinguino"], titulo: "nieve_fargo" }],
+      [260, 420, "hielo", { titulo: "hielo" }],
+      [420, 500, "calma"],
+      [500, 680, "pinguinos", { titulo: "pinguinos" }],
+      [680, 760, "calma"],
+      [760, 1050, "ventisca", { titulo: "ventisca" }],
+      [1050, 1130, "calma"],
+      [1130, 1290, "premios", { titulo: "premios" }],
+      [1290, 1450, "slalom", { full: ["quitanieves", "quitanieves", "caseta_pesca"], titulo: "quitanieves" }],
+      [1450, 1530, "calma"],
+      [1530, 2150, "jefe", { jefe: "pinguino", titulo: "rey_pinguino" }],
+      [2150, 2230, "calma"],
+      [2230, 2450, "hielo", { titulo: "hielo2" }],
+      [2450, 2700, "ventisca", { titulo: "ventisca2" }],
+      [2700, 2780, "calma"],
+      [2780, 2950, "pinguinos", { titulo: "pinguinos2" }],
+      [2950, 3100, "mixto", { densidad: 0.5, titulo: "" }],
+      [3100, 3240, "sprint", { titulo: "sprint_fargo" }],
+    ],
+    control: 1500, caja: 1200,
+    sinEdificios: [3220, 4000],
+    chapas: [[1200, "arco"], [2960, "carril"], [3060, "arco"]],
+    hitos: ["hotel_donaldson", "np_depot", "black_building", "radisson_fargo"],
+    meta: "fargo_theatre", metaNombre: { es: "el teatro de Fargo", en: "the Fargo Theatre" },
+    izquierda: [
+      40, ["kit", 2], 14, ["hotel_donaldson", 1], 14, ...cuadras(4), ["kit", 2], ["black_building", 1], 14, ...cuadras(23),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["np_depot", 1], 14, ...cuadras(6), ["radisson_fargo", 1], 14, ...cuadras(19),
+    ],
+    fondo: [{ pieza: "fargo_theatre", d: 3290, centro: true }],
+    final: "parada", parada: 10,
+    camaraFinal: { pos: [4, 2.8, 10], mira: [0, 8, -60] },
+    acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1013,7 +1140,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -1069,6 +1196,9 @@ export const ANCHO = {
   // 09/11: Milwaukee
   gesu_church: 30, germania: 42, city_hall_mke: 42, pfister_hotel: 32, us_bank_center: 40, puente_mke: 50, museo_calatrava: 100,
   // 09/11: Minneapolis
+  // 12/11: Monte Rushmore y Fargo
+  hotel_alex_johnson: 32, dino_park: 48, wall_drug: 28, pinar: 30, agujas_granito: 26, tunel_roca: 16, avenida_banderas: 34, monte_rushmore: 120,
+  fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
   // Nueva York
   torre_trump: 30, st_regis: 30, peninsula: 30, santo_tomas: 28, catedral: 60, rockefeller: 60,
@@ -1280,7 +1410,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

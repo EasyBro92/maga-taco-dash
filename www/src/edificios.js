@@ -83,6 +83,17 @@ const ESTILOS = {
     ladrillos: [0xe2cfa4, 0xd8c294, 0xcdb688, 0xa8523a], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x9fb4c4, 0xb8c8d4],
     cornisas: ["cornisa_clasica", "cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.1], toldos: [0x203a30, 0xffb612, 0xc8202e, 0x1f3a6a],
     rotulos: ["CHEESE", "BRATWURST", "CUSTARD", "TAVERN", "POLKA HALL", "FISH FRY", "BREWERY", "SAUSAGE", "SUPPER CLUB", "BOWLING"] },
+  // 12/11: Rapid City: pueblo del Oeste de ladrillo y madera, con las tiendas
+  // de los turistas que van al monte Rushmore.
+  rapid: { plantas: ["planta_ladrillo", "planta_frontones", "planta_lisa", "planta_balcones", "planta_ladrillo"],
+    ladrillos: [0xa8603e, 0x9a5236, 0xc0884e, 0x8a4a30], piedras: [0xd8c8a6, 0xcbb894, 0xe2d4b6], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.05], toldos: [0x8a2a1e, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
+    rotulos: ["SALOON", "GOLD", "JERKY", "BLACK HILLS GOLD", "TRADING POST", "MOTEL", "ROCK SHOP", "BBQ", "BOOTS", "ROCK'N ROLL"] },
+  // 12/11: Fargo: almacenes de ladrillo rojo del ferrocarril y tiendas para el frio.
+  fargo: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_frontones", "planta_lisa", "planta_cristal"],
+    ladrillos: [0x9a4a36, 0x8a3e2e, 0xb06a4a, 0x7a3a2e], piedras: [0xe6dcc6, 0xd8ccb0], cristal: [0x7f9fb8, 0x9fb4c4],
+    cornisas: ["cornisa_simple", "cornisa_clasica", "cornisa_deco"], remate: ["remate_antena", 0.1], toldos: [0x1f3a6a, 0xc8202e, 0x2d5a3a, 0x4a2a6a],
+    rotulos: ["HOTDISH", "SNOW GEAR", "WOODCHIPPER", "YAH SURE", "BISON", "COFFEE", "BOOTS", "LUTEFISK", "PARKAS", "BAR"] },
   // Minneapolis: ladrillo rojo de los almacenes, cristal de las torres y las
   // tiendas del frio (patines, cebos, saunas) y la comida de alli.
   minneapolis: { plantas: ["planta_ladrillo", "planta_cristal", "planta_lisa", "planta_frontones", "planta_cristal", "planta_ladrillo"],

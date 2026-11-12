@@ -2022,3 +2022,31 @@ ránking y algo más, pero ahora se salen de la pantalla».
   Sin fin, Tienda, Ranking); idioma y ajustes, junto a «Mi cuenta»; instalar,
   debajo. La hoja se desliza si el móvil es muy bajo. Comprobado a 393 × 760
   y 360 × 640: nada se sale (tampoco el pase ni la tienda).
+
+## 12/11/2026: niveles 14 y 15, Monte Rushmore y Fargo (v55)
+
+Isidro: «sigue creando mapas y que se sientan muy diferentes, con dinámicas
+diferentes». Cada nivel nuevo trae mecánicas que no existían:
+
+- **Monte Rushmore** (3.200 m; `blender/rushmore.py`; luz de mañana, banjo
+  del Oeste). Rapid City, «la ciudad de los presidentes» (estatuas de bronce
+  en las esquinas, el hotel Alex Johnson, el dinosaurio del Dinosaur Park,
+  el cartel de Wall Drug), luego el bosque de las Black Hills (pinares y
+  agujas de granito, sin público ni farolas: `sinPublico` y `sinAcera`), tres
+  túneles de roca, la Avenida de las Banderas y el monte con las cuatro caras
+  y el andamio con el contorno pintado de la quinta (y su tupé naranja).
+  - Bisontes: pastan; si te pones en su carril cerca, embisten (`moverBisonte`).
+  - Perritos de la pradera: asoman y se esconden de su madriguera; solo
+    chocan cuando están fuera (`o.escondido`).
+  - Momento estrella, las rocas: caen de la montaña; antes sale su sombra en
+    el suelo donde van a caer (`caerRoca`).
+  - Objeto: cinceles.
+- **Fargo** (3.250 m; `blender/fargo.py`; ventisca con nieve, acordeón).
+  Broadway con el hotel Donaldson, el Black Building, la estación del
+  Northern Pacific y la torre Radisson; final ante el teatro de Fargo
+  («TRUMP · TONIGHT»). Jefe: el Rey Pingüino (aranceles para lanzarle).
+  - Placas de hielo: encima, el cambio de carril resbala (3 veces más lento).
+  - Ráfagas de ventisca: flecha de aviso un segundo y te empujan un carril
+    (solo si está despejado).
+  - Pingüinos que cruzan deslizándose sobre la tripa (se saltan); moto de nieve.
+  - Objeto: gorros de orejeras.
