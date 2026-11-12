@@ -2050,3 +2050,30 @@ diferentes». Cada nivel nuevo trae mecánicas que no existían:
     (solo si está despejado).
   - Pingüinos que cruzan deslizándose sobre la tripa (se saltan); moto de nieve.
   - Objeto: gorros de orejeras.
+
+## 12/11/2026 (2): niveles 16 y 17, Houston y Oklahoma City (v56)
+
+Isidro: «sí, sigue». Cada uno con sus mecánicas propias:
+
+- **Houston** (3.300 m; `blender/houston.py`; tarde de Texas, rock espacial).
+  Main Street con el Bank of America, la JPMorgan Chase y el Ayuntamiento;
+  el Saturno V tumbado en el Rocket Park; final en Independence Plaza (el 747
+  de la NASA con el transbordador encima).
+  - Elon te persigue: su nave flota en el cielo y una diana roja en el suelo
+    te sigue de carril; a 38 m se fija y cae un Cybertruck justo ahí
+    (`cazarCybertruck`). Hay que cambiarse después de que se fije.
+  - Momento estrella, el hangar de la Luna (interior `luna`): suelo lunar
+    con cráteres, módulo lunar, estrellas y la Tierra pintadas; gravedad
+    lunar (`LUNA_G`, `LUNA_V`): se salta 3,2 m y 1,5 s, por encima de los
+    vehículos lunares que cierran los tres carriles y de los astronautas.
+  - Objeto: cascos de astronauta.
+- **Oklahoma City** (3.300 m; `blender/oklahoma.py`; luz dorada, country).
+  Bricktown (almacenes y el canal con su barca), la Devon Tower, el Crystal
+  Bridge, el puente Skydance que cruza por encima; final en el Capitolio con
+  su pozo de petróleo.
+  - Momento estrella, los molinos en la calle: la torre ocupa el carril del
+    centro y las aspas (dos obstáculos sin dibujo, `aspa`) solo chocan
+    cuando una pala baja por su carril (`girarMolino`).
+  - Géiseres de petróleo: burbujean (aviso), escupen el chorro (solo choca
+    entonces) y su charco resbala como el hielo.
+  - Objeto: gotas de petróleo.

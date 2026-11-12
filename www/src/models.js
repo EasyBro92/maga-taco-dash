@@ -77,7 +77,10 @@ const LISTA = {
     "hamburguesa", "desatascador",
     // 12/11: Monte Rushmore y Fargo (blender/rushmore.py, blender/fargo.py)
     "bisonte", "perrito_pradera", "madriguera", "roca_caida", "cartel_no_caras",
-    "pinguino_tripa", "moto_nieve", "cartel_pinguino", "placa_hielo"],
+    "pinguino_tripa", "moto_nieve", "cartel_pinguino", "placa_hielo",
+    // 12/11: Houston y Oklahoma City (blender/houston.py, blender/oklahoma.py)
+    "cybertruck", "starship", "rover_lunar", "roca_lunar", "astronauta", "cartel_elon",
+    "molino_torre", "molino_rotor", "geiser", "chorro_petroleo", "cartel_molinos"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };

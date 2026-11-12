@@ -69,8 +69,8 @@ Jefe: **los Papeles de Epstein**, un huracán de carpetas con tachones negros qu
 
 | # | Ciudad | Votos | Qué pasa |
 |---|---|---|---|
-| 16 | Houston, Texas | +40 | La NASA. Su examigo Elon, enfadado tras la pelea, le persigue en cohete. |
-| 17 | Oklahoma City, Oklahoma | +7 | Molinos de viento girando en la pista (él dice que dan cáncer). |
+| 16 | Houston, Texas | +40 | La NASA. Su examigo Elon, enfadado tras la pelea, le persigue en cohete. *(hecho)* |
+| 17 | Oklahoma City, Oklahoma | +7 | Molinos de viento girando en la pista (él dice que dan cáncer). *(hecho)* |
 | 18 | Little Rock, Arkansas | +6 | La mina de diamantes: tacos de oro para su torre. |
 | 19 | Jackson, Misisipi | +6 | Barcos de vapor. Pajitas de papel que se deshacen (él volvió a las de plástico). |
 | 20 | Nueva Orleans, Luisiana | +8 | Carnaval. Ha rebautizado el golfo de México como «golfo de América» y los mapas se vuelven locos. |

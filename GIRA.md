@@ -56,12 +56,12 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Nuevo Hampshire | Manchester (capital: Concord) | las primarias |
 | Nueva Jersey | Atlantic City (capital: Trenton) | los casinos del paseo marítimo |
 | Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos |
-| Oklahoma | Oklahoma City | capital y la más grande |
+| Oklahoma | Oklahoma City | capital y la más grande (hecho el 12/11: Bricktown, molinos en la calle y géiseres de petróleo) |
 | Oregón | Portland (capital: Salem) | la más famosa |
 | Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad |
 | Rhode Island | Providence | capital y la más grande |
 | Tennessee | Nashville | capital y la música country |
-| Texas | Houston (capital: Austin) | la más grande, la NASA |
+| Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |
 | Utah | Salt Lake City | capital y la más famosa |
 | Vermont | Burlington (capital: Montpelier) | la más grande |
 | Virginia | Richmond | capital, la más histórica |

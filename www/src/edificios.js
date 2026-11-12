@@ -89,6 +89,16 @@ const ESTILOS = {
     ladrillos: [0xa8603e, 0x9a5236, 0xc0884e, 0x8a4a30], piedras: [0xd8c8a6, 0xcbb894, 0xe2d4b6], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.05], toldos: [0x8a2a1e, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
     rotulos: ["SALOON", "GOLD", "JERKY", "BLACK HILLS GOLD", "TRADING POST", "MOTEL", "ROCK SHOP", "BBQ", "BOOTS", "ROCK'N ROLL"] },
+  // 12/11: Houston: torres de cristal y oficinas del petroleo, y tiendas tejanas.
+  houston: { plantas: ["planta_cristal", "planta_cristal", "planta_lisa", "planta_ladrillo", "planta_frontones"],
+    ladrillos: [0xb8784a, 0xa8603e, 0xc8a070], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x6f9fc0, 0x8fb4cc, 0x5a7f9a],
+    cornisas: ["cornisa_simple", "cornisa_deco"], remate: ["remate_antena", 0.2], toldos: [0xc8202e, 0x1f3a6a, 0xf2a830, 0x2d5a3a],
+    rotulos: ["BBQ", "TEX-MEX", "OIL & GAS", "RODEO", "BOOTS", "SPACE", "TACOS", "HONKY TONK", "HOUSTON", "STEAKHOUSE"] },
+  // 12/11: Oklahoma City: almacenes de ladrillo de Bricktown y tiendas del Oeste.
+  oklahoma: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_frontones", "planta_lisa", "planta_balcones"],
+    ladrillos: [0x9a4a32, 0xa85a3a, 0x8a3e2a, 0xb87048], piedras: [0xe2d4b6, 0xd8c8a6], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x841617, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
+    rotulos: ["OIL", "STEAKS", "SOONER", "RODEO", "BOOTS", "SADDLES", "BBQ", "CATTLE CO", "DRILL", "SALOON"] },
   // 12/11: Fargo: almacenes de ladrillo rojo del ferrocarril y tiendas para el frio.
   fargo: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_frontones", "planta_lisa", "planta_cristal"],
     ladrillos: [0x9a4a36, 0x8a3e2e, 0xb06a4a, 0x7a3a2e], piedras: [0xe6dcc6, 0xd8ccb0], cristal: [0x7f9fb8, 0x9fb4c4],

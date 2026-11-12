@@ -261,6 +261,16 @@ const CANCIONES = {
     melodia: [67, 71, 74, null, 74, 76, 74, 71, 72, null, 76, null, 74, null, null, null,
       71, 74, 79, null, 78, 76, 74, null, 72, 71, 69, null, 67, null, null, null],
     timbre: "banjo" },
+  // 12/11: Houston: rock espacial (la guitarra de la NASA).
+  houston: { bpm: 132, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
+    melodia: [69, null, 72, 76, null, 76, 74, 72, 71, null, 67, null, 69, null, null, null,
+      76, null, 79, 81, null, 79, 76, 74, 72, null, 74, 76, 69, null, null, null],
+    timbre: "metal" },
+  // 12/11: Oklahoma City: country de la llanura, con banjo.
+  oklahoma: { bpm: 136, swing: 0.55, acordes: [C, F, G7, C], bateria: "country", bajo: "alterna",
+    melodia: [72, 74, 76, null, 79, null, 76, 74, 72, null, 69, null, 72, null, null, null,
+      74, 76, 77, null, 79, 77, 76, null, 74, 72, 71, null, 72, null, null, null],
+    timbre: "banjo" },
   // 12/11: Fargo: acordeon en la nieve, una polka algo triste (por el Rey Pinguino).
   fargo: { bpm: 126, swing: 0.5, acordes: [Am, Dm, E7, Am], bateria: "marcha", bajo: "alterna",
     melodia: [69, 72, 76, null, 74, 72, 71, null, 69, 71, 72, 74, 76, null, null, null,

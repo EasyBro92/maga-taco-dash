@@ -278,6 +278,33 @@ const DIBUJOS = {
     x.restore();
   },
 
+  // 12/11: el casco de astronauta de Houston (blanco, con el visor dorado).
+  casco(x) {
+    x.save();
+    x.translate(128, 132);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const casco = () => { x.beginPath(); x.arc(0, -10, 92, Math.PI * 0.92, Math.PI * 2.08); x.lineTo(80, 70); x.lineTo(-80, 70); x.closePath(); };
+    const visor = () => { x.beginPath(); x.ellipse(0, -6, 62, 50, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; casco(); x.stroke();
+    casco(); x.fillStyle = "#f2f2ee"; x.fill();
+    visor(); x.fillStyle = "#e0b040"; x.fill();
+    x.fillStyle = "rgba(255,255,255,0.55)"; x.beginPath(); x.ellipse(-24, -26, 18, 10, -0.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#1f4fa8"; x.fillRect(-36, 72, 72, 12);
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; casco(); x.stroke(); visor(); x.stroke();
+    x.restore();
+  },
+  // 12/11: la gota de petroleo de Oklahoma (negra y brillante).
+  gota(x) {
+    x.save();
+    x.translate(128, 140);
+    x.lineJoin = "round";
+    const gota = () => { x.beginPath(); x.moveTo(0, -110); x.bezierCurveTo(40, -50, 82, -10, 82, 30); x.arc(0, 30, 82, 0, Math.PI); x.bezierCurveTo(-82, -10, -40, -50, 0, -110); x.closePath(); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; gota(); x.stroke();
+    gota(); x.fillStyle = "#1a1620"; x.fill();
+    x.fillStyle = "rgba(255,255,255,0.5)"; x.beginPath(); x.ellipse(-32, 10, 14, 32, -0.3, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; gota(); x.stroke();
+    x.restore();
+  },
   // 12/11: el cincel del escultor del monte Rushmore (mango de madera y punta de acero).
   cincel(x) {
     x.save();

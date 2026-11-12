@@ -2705,6 +2705,8 @@ export function createWorld(scene) {
   //     respecto al origen (los vehiculos se modelaron hacia atras desde el morro)
   //   alto: por encima de esto se le pasa por encima saltando
   //   mueve: velocidad propia hacia el jugador (el coche patrulla)
+  // 12/11: el molino de Oklahoma City: altura del buje, largo de las palas y giro (rad/s).
+  const MOLINO_H = 7.0, MOLINO_PALA = 7.0, MOLINO_W = 1.4;
   const TIPOS = {
     barricada: { choque: "low", medio: 0.45, alto: 0.95 },
     conos: { choque: "low", medio: 0.45, alto: 0.75 },
@@ -2938,6 +2940,21 @@ export function createWorld(scene) {
     moto_nieve: { choque: "full", medio: 1.4, alto: 2.0, centro: -0.1, mueve: 8 },
     cartel_pinguino: { choque: "high", medio: 0.3, alto: 2.4 },
     placa_hielo: { choque: "nada", medio: 3.25, alto: 0 },
+    // 12/11: Houston (blender/houston.py): el Cybertruck que tira Elon (cae
+    // donde marca la diana), el vehiculo lunar y la roca lunar (en el hangar
+    // de la Luna se saltan), el astronauta que cruza y la pancarta de Elon.
+    cybertruck: { choque: "full", medio: 1.3, alto: 1.9, centro: 0 },
+    rover_lunar: { choque: "full", medio: 1.7, alto: 2.3, centro: 0 },
+    roca_lunar: { choque: "low", medio: 0.6, alto: 1.0 },
+    astronauta: { choque: "full", medio: 0.5, alto: 2.3, centro: 0, cruza: true },
+    cartel_elon: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 12/11: Oklahoma City (blender/oklahoma.py): el molino en medio de la
+    // calle (su torre en el carril del centro; las aspas barren los de los
+    // lados), el geiser de petroleo (solo choca mientras sale el chorro; su
+    // charco resbala) y la pancarta contra los molinos.
+    molino_torre: { choque: "full", medio: 1.0, alto: 9, centro: 0 },
+    geiser: { choque: "full", medio: 0.8, alto: 6, centro: 0 },
+    cartel_molinos: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3038,6 +3055,63 @@ export function createWorld(scene) {
       const hoyo = modeloConContorno("obstaculos/madriguera");
       if (hoyo) g.add(hoyo);
       g.userData.perro = perro;
+      return g;
+    }
+    // 12/11: el molino: la torre (algo mas baja) y las aspas que giran.
+    if (nombre === "molino_torre" && g) {
+      const torre = new THREE.Group();
+      while (g.children.length) torre.add(g.children[0]);
+      torre.scale.set(1, 0.85, 1);
+      g.add(torre);
+      const rotor = new THREE.Group();
+      const palas = modeloConContorno("obstaculos/molino_rotor");
+      if (palas) rotor.add(palas);
+      rotor.position.set(0, MOLINO_H, 1.15);
+      rotor.scale.setScalar(1.04);
+      g.add(rotor);
+      g.userData.rotor = rotor;
+      return g;
+    }
+    // 12/11: el geiser: el pozo, el chorro (sube y baja) y las burbujas de aviso.
+    if (nombre === "geiser" && g) {
+      const chorro = modeloConContorno("obstaculos/chorro_petroleo");
+      if (chorro) { chorro.scale.set(1, 0.001, 1); chorro.visible = false; g.add(chorro); }
+      const burbujas = new THREE.Group();
+      const bm = new THREE.MeshPhongMaterial({ color: 0x16141a, shininess: 80 });
+      for (let k = 0; k < 4; k++) {
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bm);
+        b.position.set(Math.cos(k * 1.6) * 0.45, 0.1, Math.sin(k * 1.6) * 0.45);
+        burbujas.add(b);
+      }
+      burbujas.visible = false;
+      g.add(burbujas);
+      g.userData.chorro = chorro;
+      g.userData.burbujas = burbujas;
+      return g;
+    }
+    // 12/11: el Cybertruck cae del cielo; antes, la diana roja en el suelo.
+    if (nombre === "cybertruck" && g) {
+      const coche = new THREE.Group();
+      while (g.children.length) coche.add(g.children[0]);
+      g.add(coche);
+      const diana = new THREE.Group();
+      const rojo = new THREE.MeshBasicMaterial({ color: 0xe8261e, transparent: true, opacity: 0.55, depthWrite: false });
+      for (const [r0, r1] of [[0.95, 1.2], [0.4, 0.6]]) {
+        const a = new THREE.Mesh(new THREE.RingGeometry(r0, r1, 28), rojo);
+        a.rotation.x = -Math.PI / 2;
+        diana.add(a);
+      }
+      for (const giro of [0, Math.PI / 2]) {
+        const c = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.12), rojo);
+        c.rotation.set(-Math.PI / 2, 0, giro);
+        diana.add(c);
+      }
+      diana.position.y = 0.05;
+      diana.visible = false;
+      g.add(diana);
+      g.userData.coche = coche;
+      g.userData.diana = diana;
+      g.userData.dianaMat = rojo;
       return g;
     }
     // 12/11: la roca cae del cielo; su sombra en el suelo avisa de donde.
@@ -3261,6 +3335,10 @@ export function createWorld(scene) {
     // 06/11 (3): la alfombra roja, un trozo por fila (se pisa: no choca).
     TIPOS.alfombra = { choque: "nada" };
     obstaclePools.alfombra = makePool(crearAlfombra);
+    // 12/11: las aspas del molino: dos obstaculos sin dibujo (carriles de los
+    // lados) que solo chocan cuando una pala pasa por abajo.
+    TIPOS.aspa = { choque: "full", medio: 0.45, alto: 9, centro: 1.15 };
+    obstaclePools.aspa = makePool(() => new THREE.Group());
     // 08/11: el camino de baldosas amarillas de Wichita (de lado a lado de la calle).
     TIPOS.baldosa = { choque: "nada" };
     obstaclePools.baldosa = makePool(crearBaldosa);
@@ -3374,10 +3452,96 @@ export function createWorld(scene) {
       if (alAvisoMapa && o.z > -30) alAvisoMapa("roca");
     }
   }
+  // ---- 12/11: Houston ----
+  // Elon persigue desde su nave: una diana roja en el suelo te sigue de carril
+  // en carril; a 38 m se fija (se pone roja del todo) y cae un Cybertruck
+  // justo ahi. Hay que cambiarse de carril despues de que se fije.
+  function cazarCybertruck(o, dt) {
+    const u = o.mesh.userData;
+    if (!u.coche) return;
+    if (!o.caza) { u.diana.visible = false; if (u.coche.position.y !== 0) u.coche.position.y = 0; u.coche.visible = true; return; }
+    const c = o.caza;
+    if (!c.fijado) {
+      u.coche.visible = false;
+      u.diana.visible = o.z > -95;
+      u.dianaMat.opacity = 0.4;
+      const x = o.mesh.position.x + (LANE_X[jugadorCarril] - o.mesh.position.x) * Math.min(1, dt * 3);
+      o.mesh.position.x = x;
+      let mejor = 0;
+      for (const l of LANES) if (Math.abs(LANE_X[l] - x) < Math.abs(LANE_X[mejor] - x)) mejor = l;
+      o.lane = mejor;
+      if (o.z > -38) {
+        c.fijado = true;
+        o.mesh.position.x = LANE_X[o.lane];
+        u.dianaMat.opacity = 0.85;
+        o.caida = { y: 16, vy: 0 };
+        if (alAvisoMapa) alAvisoMapa("diana");
+        if (nave) nave.userData.objetivo = LANE_X[o.lane];
+      }
+      return;
+    }
+    if (o.caida) {
+      u.coche.visible = true;
+      o.caida.vy -= 30 * dt;
+      o.caida.y = Math.max(0, o.caida.y + o.caida.vy * dt);
+      u.coche.position.y = o.caida.y;
+      if (o.caida.y === 0) { o.caida = null; o.fuera = false; u.diana.visible = false; if (alAvisoMapa) alAvisoMapa("cybertruck"); }
+    }
+  }
+  // La nave de Elon, en el cielo mientras dura su tramo.
+  const nave = modelo("obstaculos/starship");
+  if (nave) { nave.visible = false; nave.scale.setScalar(1.6); nave.userData.objetivo = 0; group.add(nave); }
+  function moverNave() {
+    if (!nave) return;
+    const t = nivel ? tramoEn(totalScrolled) : null;
+    nave.visible = !!t && t.tipo === "elon";
+    if (!nave.visible) return;
+    nave.position.x += (nave.userData.objetivo + Math.sin(animClock * 0.6) * 1.5 - nave.position.x) * 0.03;
+    nave.position.y = 19 + Math.sin(animClock * 1.1) * 0.8;
+    nave.position.z = -52;
+    nave.rotation.z = Math.sin(animClock * 0.7) * 0.12;
+  }
+  // ---- 12/11: Oklahoma City ----
+  // El molino gira; sus aspas (dos obstaculos sin dibujo, uno por carril de los
+  // lados) chocan solo cuando una pala pasa por abajo, a la altura del jugador.
+  function girarMolino(o, dt) {
+    const u = o.mesh.userData;
+    if (!u.rotor) return;
+    o.angulo = (o.angulo ?? o.phase) + dt * MOLINO_W;
+    u.rotor.rotation.z = o.angulo;
+    for (const a of o.aspas || []) {
+      const xl = LANE_X[a.lane];
+      let tapa = false;
+      for (let k = 0; k < 3 && !tapa; k++) {
+        const th = Math.PI / 2 + k * Math.PI * 2 / 3 + o.angulo;
+        for (let i = 3; i <= 10 && !tapa; i++) {
+          const r = MOLINO_PALA * i / 10, x = Math.cos(th) * r, y = MOLINO_H + Math.sin(th) * r;
+          if (y < 2.1 && Math.abs(x - xl) < 0.95) tapa = true;
+        }
+      }
+      a.escondido = !tapa;
+      a.z = o.z;
+    }
+  }
+  // El geiser: unos segundos tranquilo, burbujea (aviso) y escupe el chorro.
+  function brotarGeiser(o, dt) {
+    const u = o.mesh.userData;
+    if (!u.chorro) { o.escondido = false; return; }
+    o.reloj = (o.reloj ?? o.phase * 0.5) + dt;
+    const f = o.reloj % 3.4;
+    const sale = f > 2.2, avisa = f > 1.4 && !sale;
+    u.burbujas.visible = avisa;
+    if (avisa) u.burbujas.children.forEach((b, i) => { b.position.y = 0.1 + Math.abs(Math.sin(animClock * 6 + i)) * 0.25; });
+    u.chorro.visible = sale;
+    if (sale) u.chorro.scale.set(1, Math.min(1, (f - 2.2) / 0.15), 1);
+    o.escondido = f < 2.25;
+  }
   // ---- 12/11: Fargo ----
-  // ¿Hay hielo bajo el jugador? (las placas de hielo de su carril)
+  // ¿Hay hielo bajo el jugador? (las placas de hielo de su carril; y en
+  // Oklahoma City, el charco de petroleo de los geiseres)
   function hieloEn(lane) {
-    return obstacles.some((o) => o.pool === "placa_hielo" && !o.smashed && o.lane === lane && Math.abs(o.z) < 3.3);
+    return obstacles.some((o) => !o.smashed && o.lane === lane &&
+      ((o.pool === "placa_hielo" && Math.abs(o.z) < 3.3) || (o.pool === "geiser" && Math.abs(o.z) < 1.3)));
   }
   // ¿Se puede empujar al jugador a ese carril? (nada que esquivar cerca)
   function carrilDespejado(lane) {
@@ -5660,6 +5824,82 @@ export function createWorld(scene) {
         spawnObstacle(l, "high", z, "cartel_pinguino");
       }
     },
+    // ---- 12/11: Houston ----
+    // Elon te persigue: cada 35 m un Cybertruck con su diana que te sigue de
+    // carril (main.js avisa al fijarse). Entre medias solo tacos y alguna
+    // cosa baja (se salta sin cambiar de carril).
+    elon(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 5 === 2 && obstaclePools.cybertruck) {
+        const o = spawnObstacle(1, "full", z, "cybertruck");
+        if (o) { o.caza = { fijado: false }; o.fuera = true; }
+        return;
+      }
+      if (k % 5 === 4) { tacosEn(elegirDe(libres), z, 4); return; }
+      if (k % 10 === 0) {
+        const l = elegirDe(libres);
+        obst(l, Math.random() < 0.5 ? "low" : "high", z, d, Math.random() < 0.5 ? ["cartel_elon"] : ["paca", "roca_lunar"]);
+        arcoDeTacos(l, z);
+      }
+    },
+    // El hangar de la Luna (momento estrella): gravedad lunar (main.js): se
+    // salta muchisimo mas alto y despacio, por encima de vehiculos lunares y
+    // rocas que cierran los tres carriles, con tacos en lo alto.
+    luna(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 6 === 3) {
+        const roca = Math.floor(Math.random() * 3);
+        for (const l of LANES) {
+          if (l === roca && obstaclePools.roca_lunar) spawnObstacle(l, "low", z, "roca_lunar");
+          else if (obstaclePools.rover_lunar) spawnObstacle(l, "full", z, "rover_lunar");
+        }
+        const l = elegirDe(LANES);
+        for (let i = 0; i < 7; i++) spawnTaco(l, z + 9 - i * 3, 1.2 + 2.6 * Math.sin(Math.PI * i / 6), i === 3);
+        return;
+      }
+      if (k % 6 === 0 && obstaclePools.astronauta) {
+        const libre = [2, 1, 0, 1][Math.floor(k / 6) % 4];
+        for (const l of LANES) if (l !== libre) obst(l, "full", z, d, ["astronauta"]);
+        for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+      }
+    },
+    // ---- 12/11: Oklahoma City ----
+    // El parque eolico en la calle: cada 35 m un molino (la torre en medio y
+    // las aspas barriendo los carriles de los lados): se pasa por un lado
+    // cuando no baja ninguna pala. Tacos por los dos lados.
+    molinos(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 5 === 2 && obstaclePools.molino_torre && carrilOcupado < 0) {
+        const o = spawnObstacle(1, "full", z, "molino_torre");
+        if (o) o.aspas = [0, 2].map((l) => spawnObstacle(l, "full", z, "aspa"));
+        for (const l of [0, 2]) for (let i = 0; i < 3; i++) spawnTaco(l, z + 2 - i * 1.4, 0.9);
+        return;
+      }
+      if (k % 10 === 7 && obstaclePools.cartel_molinos) {
+        const l = elegirDe([0, 2]);
+        spawnObstacle(l, "high", z, "cartel_molinos");
+        for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
+      }
+    },
+    // Los geiseres de petroleo: uno o dos por fila; burbujean antes de escupir
+    // (solo chocan mientras sale el chorro) y su charco resbala.
+    geiseres(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 3 !== 0 || !obstaclePools.geiser) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const sitio = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(libres.length - 1, Math.random() < 0.5 ? 1 : 2));
+      for (const l of sitio) spawnObstacle(l, "full", z, "geiser");
+      const libre = libres.find((l) => !sitio.includes(l));
+      if (libre !== undefined) for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
     // ---- 08/11: Phoenix, el puente sobre el cañon (momento estrella) ----
     // Se sale de la ciudad entre paredes de roca roja, se cruza el puente de
     // madera del tren (con el precipicio a los lados) y se vuelve. En el puente:
@@ -5712,6 +5952,8 @@ export function createWorld(scene) {
   // (aceras, gente, banderas, arboles, el horizonte...) y la luz y la niebla
   // pasan poco a poco a las de dentro (la luz la pone main.js). --
   const NIEBLA_INTERIOR = {
+    // 12/11: el hangar de la Luna de Houston: de noche, azul muy oscuro.
+    luna: { color: new THREE.Color(0x101830), near: 70, far: 230 },
     metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
     casino: { color: new THREE.Color(0x6a3a58), near: 60, far: 210 },
     capitolio: { color: new THREE.Color(0xd9cdb6), near: 60, far: 210 },
@@ -6706,6 +6948,7 @@ export function createWorld(scene) {
     if (dt > 0) ritmo += (dz / dt - ritmo) * Math.min(1, dt * 2);
     actualizarCalle(dz);
     actualizarJefe(dt);
+    moverNave();
     actualizarDisparos(dt);
     actualizarFrases(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -6741,6 +6984,9 @@ export function createWorld(scene) {
         else if (o.pool === "bisonte") moverBisonte(o, dt);
         else if (o.pool === "perrito_pradera") asomarPerrito(o);
         else if (o.pool === "roca_caida") caerRoca(o, dt);
+        else if (o.pool === "cybertruck") cazarCybertruck(o, dt);
+        else if (o.pool === "molino_torre") girarMolino(o, dt);
+        else if (o.pool === "geiser") brotarGeiser(o, dt);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;

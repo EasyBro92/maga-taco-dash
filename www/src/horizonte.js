@@ -312,6 +312,55 @@ const SITIOS = {
       x.beginPath(); x.moveTo(px, SUELO - 4 - h); x.lineTo(px - h * 0.28, SUELO - 4); x.lineTo(px + h * 0.28, SUELO - 4); x.fill();
     }
   },
+  // 12/11: Houston: torres de cristal del centro, refinerias con chimeneas y
+  // los balancines del petroleo en la llanura.
+  houston(x, c, r) {
+    for (const [x0, x1] of [[1500, 2600]]) {
+      let cx = x0;
+      while (cx < x1) {
+        const w = 26 + r() * 40, h = 80 + r() * 170;
+        torre(x, [cx, 0], w, h, c.lejos, r, r() < 0.3 ? "antena" : null);
+        cx += w * 0.85;
+      }
+    }
+    x.fillStyle = c.cerca;
+    for (const rx of [400, 3100]) {
+      for (let k = 0; k < 6; k++) x.fillRect(rx + k * 30, SUELO - 40 - (k % 3) * 12, 16, 40 + (k % 3) * 12);
+      for (let k = 0; k < 3; k++) x.fillRect(rx + 20 + k * 50, SUELO - 90, 5, 90);
+    }
+    for (let i = 0; i < 14; i++) {
+      const px = r() * ANCHO;
+      x.fillStyle = c.cerca;
+      x.fillRect(px, SUELO - 22, 3, 22);
+      x.beginPath(); x.moveTo(px - 14, SUELO - 24); x.lineTo(px + 14, SUELO - 20); x.lineTo(px + 14, SUELO - 17); x.lineTo(px - 14, SUELO - 21); x.fill();
+    }
+  },
+  // 12/11: Oklahoma City: la llanura con torres de petroleo, el parque eolico
+  // y las torres del centro.
+  oklahoma(x, c, r) {
+    for (let i = 0; i < 18; i++) {
+      const px = r() * ANCHO, h = 50 + r() * 30;
+      x.strokeStyle = c.molino; x.lineWidth = 3;
+      x.beginPath(); x.moveTo(px, SUELO - 4); x.lineTo(px, SUELO - 4 - h); x.stroke();
+      for (let k = 0; k < 3; k++) {
+        const a = k * Math.PI * 2 / 3 + r();
+        x.beginPath(); x.moveTo(px, SUELO - 4 - h); x.lineTo(px + Math.cos(a) * 26, SUELO - 4 - h + Math.sin(a) * 26); x.stroke();
+      }
+    }
+    x.fillStyle = c.cerca;
+    for (let i = 0; i < 10; i++) {
+      const px = r() * ANCHO, h = 40 + r() * 30;
+      x.beginPath(); x.moveTo(px - 12, SUELO - 4); x.lineTo(px, SUELO - 4 - h); x.lineTo(px + 12, SUELO - 4); x.closePath(); x.fill();
+    }
+    for (const [x0, x1] of [[1800, 2300]]) {
+      let cx = x0;
+      while (cx < x1) {
+        const w = 26 + r() * 34, h = 60 + r() * 110;
+        torre(x, [cx, 0], w, h, c.lejos, r, null);
+        cx += w * 0.9;
+      }
+    }
+  },
   // 12/11: Fargo: la llanura nevada de Dakota del Norte, elevadores de grano,
   // el deposito de agua y la ventisca que lo vuelve todo blanco.
   fargo(x, c, r) {
@@ -434,7 +483,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

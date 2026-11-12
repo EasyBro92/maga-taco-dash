@@ -1037,6 +1037,117 @@ const CALLES = [
     acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 12/11/2026: nivel 16: Houston (blender/houston.py). «La NASA. Tu examigo
+    // Elon, enfadado tras la pelea, te persigue en cohete». Recomendado: tarde
+    // de calor de Texas y final en Independence Plaza (el 747 con el
+    // transbordador). Dinamicas propias: la diana de Elon (te sigue de carril y,
+    // al fijarse, cae un Cybertruck) y el momento estrella, el hangar de la Luna
+    // con gravedad lunar (se salta por encima de los vehiculos lunares).
+    id: "houston", nombre: "Main Street", lugar: "Houston, Texas", listo: true,
+    zona: "city", carpeta: "houston", luz: "tarde", semilla: 1961,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "rocket", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 16, estilo: "houston" },
+    horizonte: "houston",
+    obstaculos: { low: ["roca_lunar", "paca", "valla_metal"], high: ["cartel_elon", "andamio"],
+      full: ["pickup", "furgoneta", "autocaravana", "taxi"] },
+    publico: { personas: ["fan", "turista", "ejecutivo", "chico", "senora"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "houston" }],
+      [70, 280, "mixto", { densidad: 0.45, titulo: "main_street_hou" }],
+      [280, 430, "rampa", { titulo: "rampa" }],
+      [430, 600, "slalom", { full: ["pickup", "furgoneta", "autocaravana"], titulo: "texas" }],
+      [600, 680, "calma"],
+      [680, 1120, "elon", { titulo: "elon" }],
+      [1120, 1190, "calma"],
+      [1190, 1350, "premios", { titulo: "premios" }],
+      [1350, 1510, "jefe_paso", { titulo: "jefe_paso" }],
+      [1510, 1680, "vallas", { low: ["roca_lunar", "paca"], high: ["cartel_elon"], titulo: "fans_elon" }],
+      [1680, 1760, "calma"],
+      [1760, 1920, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1920, 2000, "calma", { titulo: "space_center" }],
+      // El momento estrella: el hangar de la Luna (pieza de `fondo` e `interior`).
+      [2000, 2420, "luna", { titulo: "luna" }],
+      [2420, 2500, "calma"],
+      [2500, 2900, "elon", { titulo: "elon2" }],
+      [2900, 3150, "alfombra", { titulo: "rocket_park" }],
+      [3150, 3290, "sprint", { titulo: "sprint_houston" }],
+    ],
+    control: 1800, caja: 1250,
+    interior: { rango: [2002, 2418], tipo: "luna", sinEdificios: [1990, 2430] },
+    sinEdificios: [3200, 4000],
+    chapas: [[1560, "arco"], [1840, "carril"], [3000, "arco"]],
+    hitos: ["bank_of_america_hou", "jpmorgan_hou", "city_hall_hou", "saturno_v"],
+    meta: "independence_plaza", metaNombre: { es: "el transbordador de la NASA", en: "the NASA shuttle" },
+    izquierda: [
+      40, ["kit", 2], 14, ["bank_of_america_hou", 1], 14, ...cuadras(5), ["city_hall_hou", 1], 14, ...cuadras(26),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["jpmorgan_hou", 1], 14, ...cuadras(19), ["saturno_v", 1], 14, ...cuadras(6),
+    ],
+    fondo: [{ pieza: "independence_plaza", d: 3366, centro: true },
+      { pieza: "hangar_luna", d: 2000, cruza: true }],
+    final: "parada", parada: 44,
+    camaraFinal: { pos: [6, 3, 12], mira: [0, 18, -60] },
+    acera: ["phoenix/palmera", "ciudad/farola_ciudad", "ciudad/hidrante", "ciudad/farola_ciudad"],
+  },
+  {
+    // 12/11/2026: nivel 17: Oklahoma City (blender/oklahoma.py). «Molinos de
+    // viento girando en la pista (él dice que dan cáncer)». Recomendado: luz
+    // dorada de la llanura y final ante el Capitolio (con su pozo de
+    // petroleo). Dinamicas propias: los molinos en medio de la calle (la torre
+    // en el centro y las aspas barriendo los lados: hay que pasar cuando no
+    // baja ninguna) y los geiseres de petroleo (burbujean, escupen y su charco
+    // resbala). Por en medio cruza el puente Skydance.
+    id: "oklahoma", nombre: "Bricktown", lugar: "Oklahoma City, Oklahoma", listo: true,
+    zona: "city", carpeta: "oklahoma", luz: "dorada", semilla: 1889,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 10, estilo: "oklahoma" },
+    horizonte: "oklahoma",
+    obstaculos: { low: ["paca", "calavera", "valla_metal"], high: ["cartel_molinos", "cartel_ruta"],
+      full: ["pickup", "tractor", "vaquero", "furgoneta"] },
+    publico: { personas: ["granjero", "fan", "turista", "abuelo", "chico"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "oklahoma" }],
+      [70, 260, "vallas", { low: ["paca", "calavera"], high: ["cartel_molinos"], titulo: "bricktown" }],
+      [260, 420, "geiseres", { titulo: "geiseres" }],
+      [420, 500, "calma"],
+      [500, 660, "slalom", { full: ["pickup", "tractor", "vaquero"], titulo: "rodeo" }],
+      [660, 740, "calma"],
+      // El momento estrella: los molinos en la calle.
+      [740, 1100, "molinos", { titulo: "molinos" }],
+      [1100, 1180, "calma"],
+      [1180, 1340, "premios", { titulo: "premios" }],
+      [1340, 1500, "jefe_paso", { titulo: "jefe_paso" }],
+      [1500, 1820, "geiseres", { titulo: "geiseres2" }],
+      [1820, 1900, "calma"],
+      [1900, 2060, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2060, 2140, "calma"],
+      [2140, 2600, "molinos", { titulo: "parque_eolico" }],
+      [2600, 2680, "calma"],
+      [2680, 2860, "rampa", { titulo: "rampa" }],
+      [2860, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ok" }],
+    ],
+    control: 1900, caja: 1250,
+    sinEdificios: [3260, 4000],
+    chapas: [[600, "carril"], [1980, "carril"], [2950, "arco"]],
+    hitos: ["bricktown", "devon_tower", "cristal_bridge"],
+    meta: "capitolio_ok", metaNombre: { es: "el Capitolio de Oklahoma", en: "the Oklahoma Capitol" },
+    izquierda: [
+      40, ["bricktown", 1], 14, ...cuadras(4), ["devon_tower", 1], 14, ...cuadras(23),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ["bricktown", 1], 14, ...cuadras(6), ["cristal_bridge", 1], 14, ...cuadras(20),
+    ],
+    fondo: [{ pieza: "capitolio_ok", d: 3330, centro: true },
+      { pieza: "skydance", d: 1640, cruza: true }],
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -60] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1140,7 +1251,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -1198,6 +1309,8 @@ export const ANCHO = {
   // 09/11: Minneapolis
   // 12/11: Monte Rushmore y Fargo
   hotel_alex_johnson: 32, dino_park: 48, wall_drug: 28, pinar: 30, agujas_granito: 26, tunel_roca: 16, avenida_banderas: 34, monte_rushmore: 120,
+  bank_of_america_hou: 35, jpmorgan_hou: 36, city_hall_hou: 40, saturno_v: 70, independence_plaza: 80, hangar_luna: 420,
+  devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
   // Nueva York
@@ -1410,7 +1523,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

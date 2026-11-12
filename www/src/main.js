@@ -332,6 +332,8 @@ let luzBase = null, metroAntes = 0;
 // La luz de cada interior: el metro, calida y algo oscura; el casino, dorada y
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
+  // 12/11: el hangar de la Luna: luz blanca y fria de los focos.
+  luna: { hemi: new THREE.Color(0xdfe8ff), suelo: new THREE.Color(0x7a7a78), hemiI: 1.25, fill: new THREE.Color(0xffffff), fillI: 0.9, sunI: 0.5 },
   metro: { hemi: new THREE.Color(0xffd6a0), suelo: new THREE.Color(0x7a5a3c), hemiI: 1.05, fill: new THREE.Color(0xffc890), fillI: 0.7, sunI: 0.2 },
   casino: { hemi: new THREE.Color(0xffd8b8), suelo: new THREE.Color(0xa04060), hemiI: 1.45, fill: new THREE.Color(0xfff0d0), fillI: 1.3, sunI: 0.3 },
   capitolio: { hemi: new THREE.Color(0xfff2dc), suelo: new THREE.Color(0xb39c7a), hemiI: 1.2, fill: new THREE.Color(0xfff4e4), fillI: 0.85, sunI: 0.35 },
@@ -685,7 +687,10 @@ const NOMBRE_HITO = {
     hotel_alex_johnson: "El hotel Alex Johnson", dino_park: "El dinosaurio del Dinosaur Park", wall_drug: "El cartel de Wall Drug",
     avenida_banderas: "La Avenida de las Banderas",
     hotel_donaldson: "El hotel Donaldson", np_depot: "La estación del Northern Pacific", black_building: "El Black Building",
-    radisson_fargo: "La torre Radisson, la más alta de Fargo" },
+    radisson_fargo: "La torre Radisson, la más alta de Fargo",
+    bank_of_america_hou: "El Bank of America Center", jpmorgan_hou: "La JPMorgan Chase Tower, la más alta de Texas",
+    city_hall_hou: "El Ayuntamiento de Houston", saturno_v: "El Saturno V, el cohete de la Luna",
+    bricktown: "Los almacenes de Bricktown", devon_tower: "La Devon Tower, la más alta de Oklahoma", cristal_bridge: "El Crystal Bridge" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -711,7 +716,10 @@ const NOMBRE_HITO = {
     hotel_alex_johnson: "The Hotel Alex Johnson", dino_park: "The Dinosaur Park dinosaur", wall_drug: "The Wall Drug sign",
     avenida_banderas: "The Avenue of Flags",
     hotel_donaldson: "The Hotel Donaldson", np_depot: "The Northern Pacific Depot", black_building: "The Black Building",
-    radisson_fargo: "The Radisson tower, the tallest in Fargo" },
+    radisson_fargo: "The Radisson tower, the tallest in Fargo",
+    bank_of_america_hou: "The Bank of America Center", jpmorgan_hou: "The JPMorgan Chase Tower, the tallest in Texas",
+    city_hall_hou: "Houston City Hall", saturno_v: "The Saturn V, the Moon rocket",
+    bricktown: "The Bricktown warehouses", devon_tower: "The Devon Tower, the tallest in Oklahoma", cristal_bridge: "The Crystal Bridge" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1537,7 +1545,7 @@ function accionJugador(action, pos) {
   }
 }
 function saltar() {
-  vy = botasTimeLeft > 0 ? V_SALTO_BOTAS : V_SALTO;
+  vy = (botasTimeLeft > 0 ? V_SALTO_BOTAS : V_SALTO) * (enLuna ? LUNA_V : 1);
   enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0;
   gestoGuardado = null; gestoReloj = 0;
   if (isSliding) { isSliding = false; character.setSlidePose(false); }
@@ -1672,7 +1680,8 @@ function checkCollisions(paso = 0) {
       }
       if (o.alto !== undefined && py > base + o.alto - 0.1) continue;   // le pasas por encima
       // Con las botas se salta por encima de los coches y de todo lo que se esquiva.
-      if (botasTimeLeft > 0 && o.type === "full" && py > (o.alto !== undefined ? o.alto : 1.8) - 0.1) continue;
+      // (12/11: y con la gravedad de la Luna, en el hangar de Houston.)
+      if ((botasTimeLeft > 0 || enLuna) && o.type === "full" && py > (o.alto !== undefined ? o.alto : 1.8) - 0.1) continue;
     }
     if (invulnerable > 0) {
       // Recien seguido tras chocar: lo que hay delante se aparta.
@@ -2344,6 +2353,12 @@ function lanzarAlJefe(pos, sinApuntar) {
   return true;
 }
 
+// ---------- 12/11/2026: Houston, la gravedad de la Luna ----------
+// En el tramo «luna» (el hangar del Space Center) la gravedad es un tercio:
+// se salta casi el doble de alto y se tarda dos veces y media en caer.
+const LUNA_G = 0.32, LUNA_V = 0.78;
+let enLuna = false;
+
 // ---------- 12/11/2026: Fargo, la ventisca ----------
 // En el tramo «ventisca», cada 3,5-5 s una rafaga te empuja un carril. Antes
 // sale el aviso (la flecha, un segundo) y solo empuja si ese carril esta
@@ -2381,6 +2396,8 @@ let avisoMapaT = 0;
 world.onAvisoMapa((que) => {
   const ahora = performance.now();
   if (que === "bisonte" && ahora - avisoMapaT > 3500) { avisoMapaT = ahora; showBubble(t("bisonteEmbiste"), 1100, 1); vibrate(25); }
+  else if (que === "diana") { if (ahora - avisoMapaT > 3000) { avisoMapaT = ahora; textoFlotante(t("dianaFijada")); } vibrate([15, 30, 15]); sndTropiezo(); }
+  else if (que === "cybertruck") { vibrate(30); triggerCameraShake(0.02); }
   else if (que === "roca") vibrate(12);
 });
 
@@ -2450,6 +2467,7 @@ function frame(dtFijo) {
 
     const targetX = LANE_X[currentLane];
     const prevX = playerX;
+    { const tr = nivelActual ? world.tramoEn(distance) : null; enLuna = !!tr && tr.tipo === "luna"; }
     // 12/11: Fargo: en las placas de hielo el cambio de carril va resbalando.
     const enHielo = world.hieloEn(currentLane) || world.hieloEn(carrilAntes);
     if (enHielo && !avisoHielo) { avisoHielo = true; showBubble(t("hieloAviso"), 1500, 1); }
@@ -2511,7 +2529,8 @@ function frame(dtFijo) {
       // al salir (si se sigue jugando), el gol: tacos y confeti.
       if (tramo.tipo === "hockey") setTimeout(() => { if (gameState === "playing") showBubble(t("discoAviso"), 1600); }, 1300);
       // 12/11: Monte Rushmore y Fargo: cada dinamica nueva con su aviso.
-      const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso" };
+      const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso",
+        elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2611,7 +2630,7 @@ function frame(dtFijo) {
     if (coyote > 0) coyote = Math.max(0, coyote - dt);
     if (gestoReloj > 0) { gestoReloj -= dt; if (gestoReloj <= 0) gestoGuardado = null; }
     if (!enSuelo && rocketTimeLeft === 0) {
-      vy -= (superSalto ? SALTO_G : GRAVEDAD) * dt;
+      vy -= (superSalto ? SALTO_G : GRAVEDAD * (enLuna ? LUNA_G : 1)) * dt;
       py += vy * dt;
       if (py <= suelo && vy <= 0) {
         py = suelo; vy = 0; enSuelo = true; isJumping = false; superSalto = false;
