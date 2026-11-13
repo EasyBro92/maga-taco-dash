@@ -89,6 +89,16 @@ const ESTILOS = {
     ladrillos: [0xa8603e, 0x9a5236, 0xc0884e, 0x8a4a30], piedras: [0xd8c8a6, 0xcbb894, 0xe2d4b6], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.05], toldos: [0x8a2a1e, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
     rotulos: ["SALOON", "GOLD", "JERKY", "BLACK HILLS GOLD", "TRADING POST", "MOTEL", "ROCK SHOP", "BBQ", "BOOTS", "ROCK'N ROLL"] },
+  // 13/11: Little Rock: ladrillo del River Market y tiendas de Arkansas.
+  littlerock: { plantas: ["planta_ladrillo", "planta_frontones", "planta_lisa", "planta_ladrillo", "planta_balcones"],
+    ladrillos: [0x9a4a32, 0xa85a3a, 0x8a3e2a, 0xb06a48], piedras: [0xe2d4b6, 0xd8c8a6], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x9d2235, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
+    rotulos: ["DIAMONDS", "BBQ", "RAZORBACKS", "CATFISH", "PIG SOOIE", "OZARK", "BOOTS", "PIES", "MINING CO", "BLUES"] },
+  // 13/11: Jackson: casas del sur con balcones y porches, y bares de blues.
+  jackson: { plantas: ["planta_balcones", "planta_ladrillo", "planta_miradores", "planta_lisa", "planta_balcones"],
+    ladrillos: [0xc8a070, 0xb88a5a, 0x9a4a32, 0xe0c8a0], piedras: [0xf0e6d0, 0xe2d4b6], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_deco"], remate: ["remate_antena", 0.05], toldos: [0x2f6a8a, 0x8a2a1e, 0x2d5a3a, 0xc89a3a],
+    rotulos: ["BLUES", "CATFISH", "JUKE JOINT", "SOUL FOOD", "COTTON", "GUMBO", "TAMALES", "RECORDS", "MAGNOLIA", "STEAMBOAT"] },
   // 12/11: Houston: torres de cristal y oficinas del petroleo, y tiendas tejanas.
   houston: { plantas: ["planta_cristal", "planta_cristal", "planta_lisa", "planta_ladrillo", "planta_frontones"],
     ladrillos: [0xb8784a, 0xa8603e, 0xc8a070], piedras: [0xe6dcc6, 0xd8ccb0, 0xcfc3aa], cristal: [0x6f9fc0, 0x8fb4cc, 0x5a7f9a],

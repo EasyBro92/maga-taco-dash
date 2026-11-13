@@ -1148,6 +1148,118 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 13/11/2026: nivel 18: Little Rock (blender/littlerock.py). «La mina de
+    // diamantes: tacos de oro para su torre». Recomendado: otoño en las
+    // Ozark (luz `otono`) y final ante el Capitolio de Arkansas. Dinamicas
+    // propias: los jabalies Razorback que vienen zigzagueando entre dos
+    // carriles y el momento estrella, la mina a oscuras (se ve poco) con
+    // brillos que se desentierran deslizandose (+25 tacos).
+    id: "little_rock", nombre: "President Clinton Avenue", lugar: "Little Rock, Arkansas", listo: true,
+    zona: "city", carpeta: "littlerock", luz: "otono", semilla: 1821,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 10, estilo: "littlerock" },
+    horizonte: "littlerock",
+    obstaculos: { low: ["tnt", "paca", "valla_metal"], high: ["cartel_pig", "andamio"],
+      full: ["pickup", "tractor", "furgoneta", "taxi"] },
+    publico: { personas: ["fan", "granjero", "abuelo", "chico", "senora"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "littlerock" }],
+      [70, 280, "mixto", { densidad: 0.45, titulo: "river_market" }],
+      [280, 430, "rampa", { titulo: "rampa" }],
+      [430, 780, "jabalies", { titulo: "razorbacks" }],
+      [780, 860, "calma"],
+      [860, 1020, "premios", { titulo: "premios" }],
+      [1020, 1180, "jefe_paso", { titulo: "jefe_paso" }],
+      [1180, 1260, "calma", { titulo: "bajada_mina" }],
+      // El momento estrella: la mina (pieza de `fondo` e `interior`).
+      [1260, 1680, "mina", { titulo: "mina" }],
+      [1680, 1760, "calma"],
+      [1760, 1920, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1920, 2000, "calma"],
+      [2000, 2400, "jabalies", { titulo: "razorbacks2" }],
+      [2400, 2480, "calma"],
+      [2480, 2640, "vallas", { low: ["tnt", "paca"], high: ["cartel_pig"], titulo: "woo_pig" }],
+      [2640, 2800, "alfombra", { titulo: "alfombra" }],
+      [2800, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ar" }],
+    ],
+    control: 1720, caja: 900,
+    interior: { rango: [1262, 1678], tipo: "mina", sinEdificios: [1250, 1690] },
+    sinEdificios: [3260, 4000],
+    chapas: [[700, "carril"], [1800, "carril"], [2900, "arco"]],
+    hitos: ["river_market", "clinton_library", "old_state_house"],
+    meta: "capitolio_ar", metaNombre: { es: "el Capitolio de Arkansas", en: "the Arkansas Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["river_market", 1], 14, ...cuadras(4), ["old_state_house", 1], 14, ...cuadras(24),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(1), ["clinton_library", 1], 14, ...cuadras(26),
+    ],
+    fondo: [{ pieza: "capitolio_ar", d: 3330, centro: true },
+      { pieza: "mina", d: 1260, cruza: true }],
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -60] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 13/11/2026: nivel 19: Jackson (blender/jackson.py). «Barcos de vapor.
+    // Pajitas de papel que se deshacen (él volvió a las de plástico)».
+    // Recomendado: atardecer del sur y final ante el Capitolio de Misisipi
+    // (el aguila dorada). Dinamicas propias: las pajitas de papel (de lejos
+    // cierran el carril; a 16 m se doblan y se saltan) y el momento estrella,
+    // el barco de vapor: el chorro de vapor cruza la cubierta a ratos a la
+    // altura de la cabeza (hay que deslizarse a tiempo).
+    id: "jackson", nombre: "Capitol Street", lugar: "Jackson, Misisipi", listo: true,
+    zona: "city", carpeta: "jackson", luz: "atardecer", semilla: 1822,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 8, estilo: "jackson" },
+    horizonte: "jackson",
+    obstaculos: { low: ["bala_algodon", "paca", "valla_metal"], high: ["cartel_pajitas", "guirnalda"],
+      full: ["carruaje", "pickup", "tractor", "furgoneta"] },
+    publico: { personas: ["abuelo", "senora", "fan", "chico", "turista"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "jackson" }],
+      [70, 280, "mixto", { densidad: 0.45, titulo: "farish_street" }],
+      [280, 560, "pajitas", { titulo: "pajitas" }],
+      [560, 640, "calma"],
+      [640, 800, "premios", { titulo: "premios" }],
+      [800, 960, "slalom", { full: ["carruaje", "pickup", "tractor"], titulo: "algodonales" }],
+      [960, 1040, "calma", { titulo: "embarque" }],
+      // El momento estrella: el barco de vapor (pieza de `fondo` e `interior`).
+      [1040, 1460, "vapor", { titulo: "barco_vapor" }],
+      [1460, 1540, "calma"],
+      [1540, 1700, "jefe_paso", { titulo: "jefe_paso" }],
+      [1700, 2000, "pajitas", { titulo: "pajitas2" }],
+      [2000, 2080, "calma"],
+      [2080, 2240, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2240, 2400, "vallas", { low: ["bala_algodon", "paca"], high: ["cartel_pajitas"], titulo: "algodon" }],
+      [2400, 2480, "calma"],
+      [2480, 2640, "rampa", { titulo: "rampa" }],
+      [2640, 2800, "alfombra", { titulo: "alfombra" }],
+      [2800, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ms" }],
+    ],
+    control: 1650, caja: 700,
+    interior: { rango: [1042, 1458], tipo: "barco", aire: true, sinEdificios: [1030, 1470] },
+    sinEdificios: [3260, 4000],
+    chapas: [[720, "arco"], [2150, "carril"], [2900, "arco"]],
+    hitos: ["old_capitol_ms", "casa_blues"],
+    meta: "capitolio_ms", metaNombre: { es: "el Capitolio de Misisipi", en: "the Mississippi Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["old_capitol_ms", 1], 14, ...cuadras(26),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["casa_blues", 1], ["kit", 2], 14, ...cuadras(25),
+    ],
+    fondo: [{ pieza: "capitolio_ms", d: 3330, centro: true },
+      { pieza: "barco_vapor", d: 1040, cruza: true }],
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -60] },
+    acera: ["jackson/magnolia", "ciudad/farola_ciudad", "jackson/magnolia", "ciudad/banco"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1251,7 +1363,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -1310,6 +1422,8 @@ export const ANCHO = {
   // 12/11: Monte Rushmore y Fargo
   hotel_alex_johnson: 32, dino_park: 48, wall_drug: 28, pinar: 30, agujas_granito: 26, tunel_roca: 16, avenida_banderas: 34, monte_rushmore: 120,
   bank_of_america_hou: 35, jpmorgan_hou: 36, city_hall_hou: 40, saturno_v: 70, independence_plaza: 80, hangar_luna: 420,
+  capitolio_ar: 78, clinton_library: 54, old_state_house: 40, river_market: 37, mina: 420,
+  capitolio_ms: 82, old_capitol_ms: 35, casa_blues: 21, barco_vapor: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
@@ -1523,7 +1637,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

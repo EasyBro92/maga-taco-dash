@@ -278,6 +278,35 @@ const DIBUJOS = {
     x.restore();
   },
 
+  // 13/11: el diamante de la mina de Little Rock.
+  diamante(x) {
+    x.save();
+    x.translate(128, 132);
+    x.lineJoin = "round";
+    const gema = () => { x.beginPath(); x.moveTo(-90, -30); x.lineTo(-50, -80); x.lineTo(50, -80); x.lineTo(90, -30); x.lineTo(0, 92); x.closePath(); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; gema(); x.stroke();
+    gema(); x.fillStyle = "#9fe6f6"; x.fill();
+    x.fillStyle = "#d8f8ff";
+    x.beginPath(); x.moveTo(-50, -80); x.lineTo(-20, -30); x.lineTo(20, -30); x.lineTo(50, -80); x.closePath(); x.fill();
+    x.fillStyle = "#6fc8e0";
+    x.beginPath(); x.moveTo(-90, -30); x.lineTo(90, -30); x.lineTo(0, 92); x.closePath(); x.globalAlpha = 0.35; x.fill(); x.globalAlpha = 1;
+    x.strokeStyle = "#5aaecc"; x.lineWidth = 4;
+    for (const [a, b] of [[[-20, -30], [0, 92]], [[20, -30], [0, 92]], [[-90, -30], [90, -30]]]) { x.beginPath(); x.moveTo(...a); x.lineTo(...b); x.stroke(); }
+    x.lineWidth = 7; x.strokeStyle = CONTORNO; gema(); x.stroke();
+    x.restore();
+  },
+  // 13/11: la pajita de plástico de Jackson (doblada, roja y blanca).
+  pajita(x) {
+    x.save();
+    x.translate(128, 140); x.rotate(0.2);
+    x.lineCap = "round"; x.lineJoin = "round";
+    const tubo = () => { x.beginPath(); x.moveTo(-20, 100); x.lineTo(-20, -40); x.quadraticCurveTo(-20, -80, 30, -90); x.lineTo(80, -100); };
+    x.lineWidth = 64; x.strokeStyle = "#fff"; tubo(); x.stroke();
+    x.lineWidth = 38; x.strokeStyle = CONTORNO; tubo(); x.stroke();
+    x.lineWidth = 30; x.strokeStyle = "#f6f2e6"; tubo(); x.stroke();
+    x.strokeStyle = "#d8323a"; x.lineWidth = 30; x.setLineDash([16, 16]); tubo(); x.stroke(); x.setLineDash([]);
+    x.restore();
+  },
   // 12/11: el casco de astronauta de Houston (blanco, con el visor dorado).
   casco(x) {
     x.save();

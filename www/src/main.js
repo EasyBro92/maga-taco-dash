@@ -332,6 +332,8 @@ let luzBase = null, metroAntes = 0;
 // La luz de cada interior: el metro, calida y algo oscura; el casino, dorada y
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
+  // 13/11: la mina de Little Rock: la luz calida de los farolillos, poca.
+  mina: { hemi: new THREE.Color(0xffc890), suelo: new THREE.Color(0x5a4030), hemiI: 0.85, fill: new THREE.Color(0xffb070), fillI: 0.75, sunI: 0.12 },
   // 12/11: el hangar de la Luna: luz blanca y fria de los focos.
   luna: { hemi: new THREE.Color(0xdfe8ff), suelo: new THREE.Color(0x7a7a78), hemiI: 1.25, fill: new THREE.Color(0xffffff), fillI: 0.9, sunI: 0.5 },
   metro: { hemi: new THREE.Color(0xffd6a0), suelo: new THREE.Color(0x7a5a3c), hemiI: 1.05, fill: new THREE.Color(0xffc890), fillI: 0.7, sunI: 0.2 },
@@ -690,7 +692,9 @@ const NOMBRE_HITO = {
     radisson_fargo: "La torre Radisson, la más alta de Fargo",
     bank_of_america_hou: "El Bank of America Center", jpmorgan_hou: "La JPMorgan Chase Tower, la más alta de Texas",
     city_hall_hou: "El Ayuntamiento de Houston", saturno_v: "El Saturno V, el cohete de la Luna",
-    bricktown: "Los almacenes de Bricktown", devon_tower: "La Devon Tower, la más alta de Oklahoma", cristal_bridge: "El Crystal Bridge" },
+    bricktown: "Los almacenes de Bricktown", devon_tower: "La Devon Tower, la más alta de Oklahoma", cristal_bridge: "El Crystal Bridge",
+    river_market: "El River Market", clinton_library: "La biblioteca de Clinton", old_state_house: "El viejo Capitolio de Arkansas",
+    old_capitol_ms: "El viejo Capitolio de Misisipi", casa_blues: "Un bar de blues de Farish Street" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -719,7 +723,9 @@ const NOMBRE_HITO = {
     radisson_fargo: "The Radisson tower, the tallest in Fargo",
     bank_of_america_hou: "The Bank of America Center", jpmorgan_hou: "The JPMorgan Chase Tower, the tallest in Texas",
     city_hall_hou: "Houston City Hall", saturno_v: "The Saturn V, the Moon rocket",
-    bricktown: "The Bricktown warehouses", devon_tower: "The Devon Tower, the tallest in Oklahoma", cristal_bridge: "The Crystal Bridge" },
+    bricktown: "The Bricktown warehouses", devon_tower: "The Devon Tower, the tallest in Oklahoma", cristal_bridge: "The Crystal Bridge",
+    river_market: "The River Market", clinton_library: "The Clinton Library", old_state_house: "The Old State House",
+    old_capitol_ms: "The Old Mississippi Capitol", casa_blues: "A Farish Street blues bar" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -2530,7 +2536,8 @@ function frame(dtFijo) {
       if (tramo.tipo === "hockey") setTimeout(() => { if (gameState === "playing") showBubble(t("discoAviso"), 1600); }, 1300);
       // 12/11: Monte Rushmore y Fargo: cada dinamica nueva con su aviso.
       const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso",
-        elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso" };
+        elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso",
+        jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2677,6 +2684,13 @@ function frame(dtFijo) {
     }
     checkCollisions(frameSpeed * dt);
     if (gameState === "playing") porLosPelos();
+    // 13/11: Little Rock: deslizandose sobre un brillo se desentierra un diamante.
+    if (gameState === "playing" && isSliding && world.cavar(currentLane)) {
+      const n = 25 * multiplier;
+      tacosThisRun += n;
+      textoFlotante(`${t("diamante")} +${n}`);
+      sndChapa(); vibrate([15, 20, 15]);
+    }
     checkCollectibles(dt);
     checkChapas();
     checkPowerups();

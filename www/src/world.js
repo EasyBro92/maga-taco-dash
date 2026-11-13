@@ -2955,6 +2955,20 @@ export function createWorld(scene) {
     molino_torre: { choque: "full", medio: 1.0, alto: 9, centro: 0 },
     geiser: { choque: "full", medio: 0.8, alto: 6, centro: 0 },
     cartel_molinos: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 13/11: Little Rock (blender/littlerock.py): el jabali Razorback (viene
+    // zigzagueando entre dos carriles), el brillo del diamante (se pisa;
+    // deslizandose encima se desentierra), la vagoneta, el puntal, la
+    // dinamita y la pancarta de los Razorbacks.
+    jabali: { choque: "full", medio: 0.9, alto: 1.3, centro: 0, mueve: 6 },
+    brillo_diamante: { choque: "nada", medio: 0.6, alto: 0 },
+    vagoneta_mina: { choque: "full", medio: 1.2, alto: 1.8, centro: 0 },
+    puntal: { choque: "high", medio: 0.3, alto: 2.4 },
+    tnt: { choque: "low", medio: 0.5, alto: 1.0 },
+    cartel_pig: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 13/11: Jackson (blender/jackson.py): la bala de algodon y la pancarta de
+    // las pajitas. (La pajita y el vapor son piezas compuestas: ver abajo.)
+    bala_algodon: { choque: "low", medio: 0.55, alto: 0.95 },
+    cartel_pajitas: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3335,6 +3349,38 @@ export function createWorld(scene) {
     // 06/11 (3): la alfombra roja, un trozo por fila (se pisa: no choca).
     TIPOS.alfombra = { choque: "nada" };
     obstaclePools.alfombra = makePool(crearAlfombra);
+    // 13/11: Jackson: la pajita de papel gigante (de lejos cierra el carril; al
+    // acercarte se dobla y cae: entonces se salta) y el chorro de vapor del
+    // barco (cruza los tres carriles a la altura de la cabeza a ratos: el del
+    // centro lleva el dibujo; los de los lados, nada).
+    if (hayModelo("obstaculos/pajita_recta") && hayModelo("obstaculos/pajita_doblada")) {
+      TIPOS.pajita = { choque: "full", medio: 0.5, alto: 4, centro: 0 };
+      obstaclePools.pajita = makePool(() => {
+        const g = new THREE.Group();
+        const recta = modeloConContorno("obstaculos/pajita_recta"), doblada = modeloConContorno("obstaculos/pajita_doblada");
+        const giro = new THREE.Group();
+        giro.add(recta);
+        g.add(giro, doblada);
+        g.userData.recta = giro; g.userData.doblada = doblada;
+        return g;
+      });
+    }
+    if (hayModelo("obstaculos/chorro_vapor")) {
+      TIPOS.vapor = { choque: "high", medio: 0.7, alto: 2.4, centro: 0 };
+      TIPOS.vapor_lado = { choque: "high", medio: 0.7, alto: 2.4, centro: 0 };
+      obstaclePools.vapor = makePool(() => {
+        const g = new THREE.Group();
+        const piv = new THREE.Group();
+        piv.position.x = 4.4;
+        const m = modeloConContorno("obstaculos/chorro_vapor");
+        m.position.x = -4.4;
+        piv.add(m);
+        g.add(piv);
+        g.userData.chorro = piv;
+        return g;
+      });
+      obstaclePools.vapor_lado = makePool(() => new THREE.Group());
+    }
     // 12/11: las aspas del molino: dos obstaculos sin dibujo (carriles de los
     // lados) que solo chocan cuando una pala pasa por abajo.
     TIPOS.aspa = { choque: "full", medio: 0.45, alto: 9, centro: 1.15 };
@@ -3535,6 +3581,64 @@ export function createWorld(scene) {
     u.chorro.visible = sale;
     if (sale) u.chorro.scale.set(1, Math.min(1, (f - 2.2) / 0.15), 1);
     o.escondido = f < 2.25;
+  }
+  // ---- 13/11: Little Rock ----
+  // El jabali viene hacia ti yendo y viniendo entre dos carriles (el tercero
+  // siempre queda libre): hay que leer su vaiven.
+  function zigzagJabali(o, dt) {
+    const m = o.mesh;
+    if (!o.zig) {
+      const b = o.lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : 1;
+      o.zig = { a: o.lane, b, t: o.phase };
+    }
+    const z = o.zig;
+    z.t += dt;
+    const s = (Math.sin(z.t * 2.2) + 1) / 2, k = s * s * (3 - 2 * s);
+    const x = LANE_X[z.a] + (LANE_X[z.b] - LANE_X[z.a]) * k;
+    m.position.x = x;
+    m.rotation.y = Math.cos(z.t * 2.2) * 0.35 * Math.sign(LANE_X[z.b] - LANE_X[z.a]);
+    m.position.y = Math.abs(Math.sin(z.t * 14)) * 0.06;
+    o.lane = Math.abs(x - LANE_X[z.a]) < Math.abs(x - LANE_X[z.b]) ? z.a : z.b;
+  }
+  // Deslizandose sobre un brillo se desentierra un diamante (main.js da los tacos).
+  function cavar(lane) {
+    for (const o of obstacles) {
+      if (o.pool === "brillo_diamante" && !o.cavado && o.lane === lane && Math.abs(o.z) < 1.4) {
+        o.cavado = true; o.mesh.visible = false;
+        burstSparkles(LANE_X[lane], 0.6, o.z);
+        return true;
+      }
+    }
+    return false;
+  }
+  // ---- 13/11: Jackson ----
+  // La pajita de papel: a 16 m se dobla y cae (en un tercio de segundo); desde
+  // entonces es baja y se salta.
+  function deshacerPajita(o, dt) {
+    const u = o.mesh.userData;
+    if (o.doblada === undefined) {
+      o.doblada = 0;
+      u.recta.visible = true; u.recta.rotation.x = 0; u.doblada.visible = false;
+    }
+    if (o.doblada === 0 && o.z > -16) o.doblada = 0.001;
+    if (o.doblada > 0 && o.doblada < 1) {
+      o.doblada = Math.min(1, o.doblada + dt / 0.32);
+      u.recta.rotation.x = (Math.PI / 2) * o.doblada * o.doblada;
+      if (o.doblada >= 0.6 && o.type !== "low") { o.type = "low"; o.alto = 0.9; o.medio = 1.2; }
+      if (o.doblada === 1) { u.recta.visible = false; u.doblada.visible = true; }
+    }
+  }
+  // El vapor: tranquilo, un soplido corto de aviso y el chorro a lo ancho
+  // (los dos de los lados hacen lo mismo que el del centro).
+  function soplarVapor(o, dt) {
+    const u = o.mesh.userData;
+    o.reloj = (o.reloj ?? o.phase * 0.4) + dt;
+    const f = o.reloj % 2.6;
+    const sale = f > 1.6, avisa = f > 1.2 && !sale;
+    u.chorro.visible = sale || avisa;
+    u.chorro.scale.set(avisa ? 0.12 : Math.min(1, (f - 1.6) / 0.12), 1, 1);
+    o.escondido = f < 1.65;
+    for (const l of o.lados || []) { l.escondido = o.escondido; l.z = o.z; }
   }
   // ---- 12/11: Fargo ----
   // ¿Hay hielo bajo el jugador? (las placas de hielo de su carril; y en
@@ -5824,6 +5928,86 @@ export function createWorld(scene) {
         spawnObstacle(l, "high", z, "cartel_pinguino");
       }
     },
+    // ---- 13/11: Little Rock ----
+    // Los Razorbacks: cada 35 m un jabali que viene zigzagueando entre dos
+    // carriles; el tercero, libre y con tacos.
+    jabalies(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 5 === 2 && obstaclePools.jabali && carrilOcupado < 0) {
+        const libre = [0, 2, 1, 2, 0][Math.floor(k / 5) % 5];
+        const otros = LANES.filter((l) => l !== libre);
+        const a = elegirDe(otros), b = otros.find((l) => l !== a);
+        if (Math.abs(a - b) === 1) {
+          const o = spawnObstacle(a, "full", z, "jabali");
+          if (o) o.zig = { a, b, t: Math.random() * 3 };
+          for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+          return;
+        }
+        // (si los dos carriles no son vecinos, el jabali va por el del medio y el libre es otro)
+        const o = spawnObstacle(1, "full", z, "jabali");
+        if (o) o.zig = { a: 1, b: libre === 0 ? 2 : 0, t: Math.random() * 3 };
+        for (let i = 0; i < 5; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+        return;
+      }
+      if (k % 10 === 7) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        obst(l, "low", z, d, ["tnt", "paca"]);
+        arcoDeTacos(l, z);
+      }
+    },
+    // La mina de diamantes (momento estrella): a oscuras (se ve poco, la
+    // niebla del interior), vagonetas, puntales y dinamita; y brillos en el
+    // suelo: deslizandose encima se desentierra un diamante (+25 tacos).
+    mina(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 3; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      if (k % 3 === 0) {
+        const L = { low: ["tnt"], high: ["puntal"], full: ["vagoneta_mina"] };
+        const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+        bloq.forEach((l) => { const ty = elegirDe(["low", "high", "full"]); obst(l, ty, z, d, L[ty]); });
+        return;
+      }
+      if (k % 3 === 1 && obstaclePools.brillo_diamante) {
+        const sitio = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.6 ? 1 : 2);
+        for (const l of sitio) spawnObstacle(l, "nada", z, "brillo_diamante");
+      }
+    },
+    // ---- 13/11: Jackson ----
+    // Las pajitas de papel: de lejos cierran el carril; a 16 m se doblan y se
+    // saltan. A veces cierran los tres (hay que esperar a que se doblen).
+    pajitas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2 || k % 4 !== 2 || !obstaclePools.pajita) return;
+      const libres = LANES.filter((l) => l !== carrilOcupado);
+      const todas = k % 8 === 6;
+      const sitio = todas ? libres : libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+      for (const l of sitio) spawnObstacle(l, "full", z, "pajita");
+      const tl = elegirDe(sitio);
+      arcoDeTacos(tl, z);
+    },
+    // El barco de vapor (momento estrella): el vapor cruza la cubierta a ratos a
+    // la altura de la cabeza (deslizarse); entre medias, balas de algodon.
+    vapor(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 4 === 2 && obstaclePools.vapor) {
+        const o = spawnObstacle(1, "high", z, "vapor");
+        if (o) o.lados = [0, 2].map((l) => spawnObstacle(l, "high", z, "vapor_lado"));
+        for (let i = 0; i < 4; i++) spawnTaco(elegirDe(LANES), z + 1.5 - i * 1.0, 0.5);
+        return;
+      }
+      if (k % 4 === 0) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        obst(l, "low", z, d, ["bala_algodon"]);
+        arcoDeTacos(l, z);
+      }
+    },
     // ---- 12/11: Houston ----
     // Elon te persigue: cada 35 m un Cybertruck con su diana que te sigue de
     // carril (main.js avisa al fijarse). Entre medias solo tacos y alguna
@@ -5952,6 +6136,8 @@ export function createWorld(scene) {
   // (aceras, gente, banderas, arboles, el horizonte...) y la luz y la niebla
   // pasan poco a poco a las de dentro (la luz la pone main.js). --
   const NIEBLA_INTERIOR = {
+    // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
+    mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
     // 12/11: el hangar de la Luna de Houston: de noche, azul muy oscuro.
     luna: { color: new THREE.Color(0x101830), near: 70, far: 230 },
     metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
@@ -6987,6 +7173,10 @@ export function createWorld(scene) {
         else if (o.pool === "cybertruck") cazarCybertruck(o, dt);
         else if (o.pool === "molino_torre") girarMolino(o, dt);
         else if (o.pool === "geiser") brotarGeiser(o, dt);
+        else if (o.pool === "jabali") zigzagJabali(o, dt);
+        else if (o.pool === "pajita") deshacerPajita(o, dt);
+        else if (o.pool === "vapor") soplarVapor(o, dt);
+        else if (o.pool === "brillo_diamante") o.mesh.rotation.y += dt * 0.8;
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
@@ -7198,5 +7388,5 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar };
 }

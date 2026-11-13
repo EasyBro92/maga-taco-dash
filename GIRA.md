@@ -25,7 +25,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 |---|---|---|
 | Alabama | Birmingham (capital: Montgomery) | la más grande |
 | Alaska | Anchorage (capital: Juneau) | la más grande y conocida |
-| Arkansas | Little Rock | capital y la más grande |
+| Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande |
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa |
@@ -49,7 +49,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Massachusetts | Boston | capital y la más famosa |
 | Míchigan | Detroit (capital: Lansing) | la ciudad del motor |
 | Minnesota | Minneapolis (capital: Saint Paul) | la más grande |
-| Misisipi | Jackson | capital y la más grande |
+| Misisipi | Jackson | capital y la más grande (hecho el 13/11: casas del blues, pajitas que se deshacen y el barco de vapor) |
 | Misuri | San Luis (capital: Jefferson City) | el arco Gateway |
 | Montana | Billings (capital: Helena) | la más grande |
 | Nebraska | Omaha (capital: Lincoln) | la más grande |

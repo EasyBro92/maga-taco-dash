@@ -261,6 +261,16 @@ const CANCIONES = {
     melodia: [67, 71, 74, null, 74, 76, 74, 71, 72, null, 76, null, 74, null, null, null,
       71, 74, 79, null, 78, 76, 74, null, 72, 71, 69, null, 67, null, null, null],
     timbre: "banjo" },
+  // 13/11: Little Rock: rock sureño (guitarra eléctrica).
+  little_rock: { bpm: 128, swing: 0.55, acordes: [G, C, G, D], bateria: "country", bajo: "alterna",
+    melodia: [67, 70, 71, null, 74, null, 71, 69, 67, null, 64, 67, 69, null, null, null,
+      74, 76, 74, 71, 69, null, 71, 69, 67, null, 66, null, 67, null, null, null],
+    timbre: "metal" },
+  // 13/11: Jackson: blues de Misisipi, en tres acordes.
+  jackson: { bpm: 112, swing: 0.62, acordes: [C7, F7, C7, G7], bateria: "swing", bajo: "camina",
+    melodia: [72, 75, 76, null, 79, null, 76, 75, 72, null, 70, null, 72, null, null, null,
+      77, 75, 77, 79, 75, null, 72, null, 70, 72, null, 67, 72, null, null, null],
+    timbre: "pluck" },
   // 12/11: Houston: rock espacial (la guitarra de la NASA).
   houston: { bpm: 132, swing: 0.5, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [69, null, 72, 76, null, 76, 74, 72, 71, null, 67, null, 69, null, null, null,

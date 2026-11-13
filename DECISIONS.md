@@ -2077,3 +2077,27 @@ Isidro: «sí, sigue». Cada uno con sus mecánicas propias:
   - Géiseres de petróleo: burbujean (aviso), escupen el chorro (solo choca
     entonces) y su charco resbala como el hielo.
   - Objeto: gotas de petróleo.
+
+## 13/11/2026: niveles 18 y 19, Little Rock y Jackson (v57)
+
+Isidro: «continúa la auditoría, corrige y crea los nuevos niveles». Cada uno
+con sus mecánicas propias:
+
+- **Little Rock** (3.300 m; `blender/littlerock.py`; otoño, metal country).
+  River Market, la biblioteca Clinton y la Old State House; final en el
+  Capitolio de Arkansas.
+  - Jabalíes (Razorbacks) que van en zigzag entre dos carriles
+    (`zigzagJabali`); el carril libre lleva los tacos.
+  - Momento estrella, la mina de diamantes (interior `mina`): vagonetas,
+    puntales y cajas de TNT; los destellos del suelo esconden un diamante:
+    deslizarse encima lo saca (+25, `world.cavar`).
+  - Objeto: diamantes.
+- **Jackson** (3.300 m; `blender/jackson.py`; atardecer, blues).
+  Farish Street con las casas del blues, el Old Capitol y las magnolias en
+  la acera; final en el Capitolio de Misisipi.
+  - Pajitas de papel gigantes: de lejos tapan el carril entero, pero a 16 m
+    se doblan y se quedan bajas (se saltan) (`deshacerPajita`).
+  - Momento estrella, el barco de vapor (interior `barco`): chorros de vapor
+    que cruzan tres carriles; silban antes (aviso) y solo chocan mientras
+    sale el vapor (`soplarVapor`). Balas de algodón entre medias.
+  - Objeto: pajitas de plástico.

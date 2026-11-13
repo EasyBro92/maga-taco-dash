@@ -312,6 +312,44 @@ const SITIOS = {
       x.beginPath(); x.moveTo(px, SUELO - 4 - h); x.lineTo(px - h * 0.28, SUELO - 4); x.lineTo(px + h * 0.28, SUELO - 4); x.fill();
     }
   },
+  // 13/11: Little Rock: las colinas de las Ozark en otoño, el río Arkansas
+  // con el puente de hierro y las torres del centro.
+  littlerock(x, c, r) {
+    for (let capa = 0; capa < 2; capa++) {
+      x.fillStyle = capa === 0 ? c.lejos : c.arbol;
+      x.beginPath(); x.moveTo(0, SUELO - 4);
+      for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - (40 + capa * -14) * (0.6 + 0.4 * Math.sin(px * 0.003 + capa * 2)) - r() * 8);
+      x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    }
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 8, ANCHO, 6);
+    x.fillStyle = c.puente;
+    x.fillRect(2600, SUELO - 22, 420, 5);
+    for (let k = 0; k < 6; k++) x.fillRect(2600 + k * 84, SUELO - 22, 5, 22);
+    for (const [x0, x1] of [[900, 1300]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 30, h = 40 + r() * 80; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+  },
+  // 13/11: Jackson: el río, un barco de vapor a lo lejos, algodonales y robles.
+  jackson(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 7, ANCHO, 6);
+    x.fillStyle = c.vela;
+    x.fillRect(1800, SUELO - 26, 120, 14);
+    x.fillRect(1820, SUELO - 38, 80, 12);
+    x.fillStyle = c.willis;
+    x.fillRect(1840, SUELO - 62, 7, 26); x.fillRect(1872, SUELO - 62, 7, 26);
+    for (let i = 0; i < 60; i++) {
+      const px = r() * ANCHO;
+      x.fillStyle = r() < 0.5 ? c.arbol : c.cerca;
+      x.beginPath(); x.ellipse(px, SUELO - 14, 14 + r() * 10, 10 + r() * 6, 0, 0, Math.PI * 2); x.fill();
+    }
+    for (const [x0, x1] of [[3000, 3300]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 22 + r() * 26, h = 30 + r() * 50; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+  },
   // 12/11: Houston: torres de cristal del centro, refinerias con chimeneas y
   // los balancines del petroleo en la llanura.
   houston(x, c, r) {
@@ -483,7 +521,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

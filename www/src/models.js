@@ -80,7 +80,10 @@ const LISTA = {
     "pinguino_tripa", "moto_nieve", "cartel_pinguino", "placa_hielo",
     // 12/11: Houston y Oklahoma City (blender/houston.py, blender/oklahoma.py)
     "cybertruck", "starship", "rover_lunar", "roca_lunar", "astronauta", "cartel_elon",
-    "molino_torre", "molino_rotor", "geiser", "chorro_petroleo", "cartel_molinos"],
+    "molino_torre", "molino_rotor", "geiser", "chorro_petroleo", "cartel_molinos",
+    // 13/11: Little Rock y Jackson (blender/littlerock.py, blender/jackson.py)
+    "jabali", "brillo_diamante", "vagoneta_mina", "puntal", "tnt", "cartel_pig",
+    "pajita_recta", "pajita_doblada", "chorro_vapor", "bala_algodon", "cartel_pajitas"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
