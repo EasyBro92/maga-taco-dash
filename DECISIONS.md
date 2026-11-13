@@ -2145,3 +2145,15 @@ tienda, pase, cajas, cuenta y ranking. Arreglado:
 - Desvíos nuevos: Houston y Oklahoma (caja a 1200; chapa de Oklahoma a 1930).
 - «¡Por los pelos!» no premia lo escondido (perritos, géiseres dormidos).
 
+## 13/11/2026 (4): el Cybertruck, blanco y como el de verdad (v60)
+
+Isidro: «los coches de Tesla quiero que sean blancos y muy parecidos a los
+reales, que se distingan claramente». El único Tesla del juego es el
+Cybertruck que tira Elon en Houston. Rehecho en `blender/houston.py`:
+proporciones del real (5,2 m de largo; antes 2,5), blanco satinado, morro
+afilado con la barra de luz de lado a lado sobre una franja oscura, el
+parabrisas enorme con su único limpiaparabrisas, el techo en pico y la caída
+larga hasta el portón con la luz roja, ventanillas tintadas con el pilar
+blanco, pasos de rueda trapezoidales negros, tapacubos lisos y retrovisores.
+Sin la «X». Choque: `medio` 2,6 y `alto` 1,7.
+

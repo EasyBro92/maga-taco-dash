@@ -191,25 +191,115 @@ def modulo_lunar(x, y):
     esfera(mat('modulo_gris', 0xc8ccd0, 0.4), x, y, 5.6, 0.6, 2)
 
 # ================================================================ obstáculos
-def cybertruck():
-    """El Cybertruck de Elon (lo tira desde su nave): todo planchas de acero
-    en ángulo, la luz de delante de lado a lado (mira a -y)."""
-    perfil = [(-1.2, 0.35), (1.2, 0.35), (1.25, 0.95), (0.1, 1.85), (-1.25, 1.2), (-1.25, 0.95)]
-    me = bpy.data.meshes.new('cyber')
+def _malla(nombre, verts, caras, mats, idx=None):
+    """Una malla de vertices y caras (n-gonos, se trocean en triangulos)."""
+    me = bpy.data.meshes.new(nombre)
     bm = bmesh.new()
-    a = [bm.verts.new((-0.95, -y, z)) for (y, z) in perfil]
-    b = [bm.verts.new((0.95, -y, z)) for (y, z) in perfil]
-    bm.faces.new(a); bm.faces.new(list(reversed(b)))
-    for i in range(len(perfil)):
-        j = (i + 1) % len(perfil)
-        bm.faces.new((a[i], a[j], b[j], b[i]))
+    vs = [bm.verts.new(v) for v in verts]
+    fs = []
+    for k, c in enumerate(caras):
+        f = bm.faces.new([vs[i] for i in c])
+        f.material_index = idx[k] if idx else 0
+        fs.append(f)
+    bmesh.ops.recalc_face_normals(bm, faces=fs)
+    bmesh.ops.triangulate(bm, faces=fs)
     bm.normal_update(); bm.to_mesh(me); bm.free()
-    o = bpy.data.objects.new('cyber', me); bpy.context.collection.objects.link(o); _poner(o, inox())
-    caja(luz('luz_cyber', 0xf2f6ff, 1.0), 0, -1.27, 0.95, 1.8, 0.04, 0.08)
-    caja(mat('cristal_cyber', 0x2c3440, 0.2), 0, -0.55, 1.42, 1.7, 0.9, 0.06).rotation_euler = (0.68, 0, 0)
-    for (x, y) in ((-0.9, -0.85), (0.9, -0.85), (-0.9, 0.85), (0.9, 0.85)):
-        cil(mat('rueda_cyber', 0x1e1e22, 0.85), x, y, 0.38, 0.38, 0.28, 16, eje='X')
-    texto(negro(), 'X', 0, -1.3, 1.25, tam=0.35, prof=0.02)
+    o = bpy.data.objects.new(nombre, me); bpy.context.collection.objects.link(o)
+    _poner(o, mats[0])
+    for m in mats[1:]:
+        o.data.materials.append(m)
+    return o
+
+def cybertruck():
+    """El Cybertruck de Elon (lo tira desde su nave). 13/11: Isidro lo quiere
+    blanco y muy parecido al de verdad: las proporciones del real (5,7 m de
+    largo, aqui 5,2), el morro afilado con la barra de luz de lado a lado, el
+    parabrisas enorme con su unico limpiaparabrisas, el techo en pico y la
+    caida larga hasta el portón, los pasos de rueda trapezoidales en negro y
+    los tapacubos lisos. Sin la X. Mira a -y."""
+    blanco = mat('blanco_cyber', 0xf1f1ee, 0.32)
+    negro_c = mat('negro_cyber', 0x26282c, 0.75)
+    cristal = mat('cristal_cyber2', 0x141a22, 0.08)
+    W = 0.95
+    # El perfil de abajo (y, z): morro, linea de cintura, porton y los pasos de rueda.
+    P = [(-2.62, 0.95), (-2.02, 1.13), (2.62, 1.20), (2.58, 0.46),
+         (2.36, 0.46), (2.12, 0.92), (1.40, 0.92), (1.16, 0.46),
+         (-1.12, 0.46), (-1.36, 0.92), (-2.08, 0.92), (-2.32, 0.46), (-2.52, 0.42)]
+    n = len(P)
+    verts = [(-W, y, z) for (y, z) in P] + [(W, y, z) for (y, z) in P]
+    caras, idx = [list(reversed(range(n))), list(range(n, 2 * n))], [0, 0]
+    oscuras = {3, 4, 5, 6, 7, 8, 9, 10, 11}   # bajos y dentro de los pasos de rueda
+    for i in range(n):
+        j = (i + 1) % n
+        caras.append([i, j, n + j, n + i]); idx.append(1 if i in oscuras else 0)
+    _malla('cyber_bajo', verts, caras, [blanco, negro_c], idx)
+    # Arriba: el pico del techo, con los costados inclinados hacia dentro.
+    FL, FR, RL, RR = (-W, -2.02, 1.13), (W, -2.02, 1.13), (-W, 2.62, 1.20), (W, 2.62, 1.20)
+    TL, TR = (-0.66, -0.28, 1.65), (0.66, -0.28, 1.65)
+    _malla('cyber_alto', [FL, FR, RL, RR, TL, TR], [[0, 1, 5, 4], [4, 5, 3, 2], [0, 4, 2], [1, 3, 5]], [blanco])
+
+    # Puntos sobre las caras inclinadas (para pegar cristales y tiras encima).
+    pend = (1.65 - 1.13) / (-0.28 + 2.02)          # la del capo y el parabrisas
+    def delante(y, u, sale=0.012):
+        """Punto del plano delantero a la altura y; u de -1 (izq.) a 1 (dcha.)."""
+        t = (y + 2.02) / 1.74
+        hw = W + (0.66 - W) * t
+        z = 1.13 + (y + 2.02) * pend
+        nrm = math.hypot(1, pend)
+        return (u * hw, y - sale * pend / nrm, z + sale / nrm)
+    def costado(s, y, z, sale=0.012):
+        """Punto del costado inclinado (s = -1 izq., 1 dcha.) en (y, z)."""
+        # x = A + B*y + C*z, por los tres vertices de ese costado
+        import numpy as np
+        M = np.array([[1, FL[1], FL[2]], [1, TL[1], TL[2]], [1, RL[1], RL[2]]])
+        A, B, C = np.linalg.solve(M, np.array([W, 0.66, W]))
+        x = A + B * y + C * z
+        return (s * (x + sale), y, z)
+
+    # El parabrisas (casi todo el plano de delante) y el limpiaparabrisas.
+    y0, y1 = -1.62, -0.42
+    _malla('cyber_parabrisas', [delante(y0, -0.86), delante(y0, 0.86), delante(y1, 0.9), delante(y1, -0.9)], [[0, 1, 2, 3]], [cristal])
+    _malla('cyber_limpia', [delante(-1.57, -0.75, 0.03), delante(-1.57, 0.7, 0.03), delante(-1.53, 0.7, 0.03), delante(-1.53, -0.75, 0.03)],
+           [[0, 1, 2, 3]], [negro_c])
+    # Las ventanillas: la de delante en triangulo y la de atras, con el pilar blanco entre medias.
+    for s in (-1, 1):
+        for poli in ([(-1.68, 1.20), (-0.42, 1.56), (-0.42, 1.20)],
+                     [(-0.30, 1.20), (-0.30, 1.60), (0.95, 1.42), (0.95, 1.20)]):
+            pts = [costado(s, y, z) for (y, z) in poli]
+            if s > 0: pts = list(reversed(pts))
+            _malla('cyber_ventana', pts, [list(range(len(pts)))], [cristal])
+        # Retrovisor (camara pequeña negra).
+        caja(negro_c, s * 1.0, -1.66, 1.17, 0.12, 0.16, 0.09)
+        # Tiras negras: las molduras de los pasos de rueda y los bajos.
+        for (a, b) in ((P[4], P[5]), (P[5], P[6]), (P[6], P[7]), (P[8], P[9]), (P[9], P[10]), (P[10], P[11])):
+            (ya, za), (yb, zb) = a, b
+            L = math.hypot(yb - ya, zb - za)
+            ny, nz = -(zb - za) / L * 0.09, (yb - ya) / L * 0.09   # hacia fuera del hueco (hacia la carroceria)
+            x = s * (W + 0.012)
+            pts = [(x, ya, za), (x, yb, zb), (x, yb - ny, zb - nz), (x, ya - ny, za - nz)]
+            if s < 0: pts = list(reversed(pts))
+            _malla('cyber_moldura', pts, [[0, 1, 2, 3]], [negro_c])
+        for (ya, yb) in ((-1.12, 1.16), (-2.52, -2.32), (2.36, 2.58)):
+            x = s * (W + 0.012)
+            pts = [(x, ya, 0.46), (x, yb, 0.46), (x, yb, 0.60), (x, ya, 0.60)]
+            if s < 0: pts = list(reversed(pts))
+            _malla('cyber_bajos', pts, [[0, 1, 2, 3]], [negro_c])
+        # Juntas de las puertas (finas, apenas se ven: como en el de verdad).
+        for yp in (-1.02, -0.36, 0.95):
+            caja(negro_c, s * (W + 0.004), yp, 0.62, 0.01, 0.018, 0.50)
+    # La barra de luz de delante, de lado a lado en la arista del morro, y la roja de atras.
+    caja(negro_c, 0, -2.612, 0.855, 1.90, 0.03, 0.10)          # franja oscura para que la luz destaque
+    caja(luz('luz_cyber2', 0xffffff, 1.6), 0, -2.632, 0.88, 1.86, 0.03, 0.05)
+    caja(luz('roja_cyber', 0xff2a1e, 1.2), 0, 2.625, 1.10, 1.86, 0.03, 0.06)
+    # Paragolpes de delante, oscuro.
+    caja(negro_c, 0, -2.52, 0.40, 1.86, 0.10, 0.16)
+    # Ruedas grandes con el tapacubos liso de seis gajos.
+    gris = mat('tapa_cyber', 0xb9bdc2, 0.4)
+    for y in (-1.72, 1.76):
+        for s in (-1, 1):
+            cil(mat('rueda_cyber', 0x18181b, 0.85), s * 0.80, y, 0.42, 0.42, 0.30, 20, eje='X')
+            cil(gris, s * 0.955, y, 0.42, 0.33, 0.02, 20, eje='X')
+            cil(negro_c, s * 0.968, y, 0.42, 0.09, 0.02, 6, eje='X')
 
 def starship():
     """La nave de Elon (de adorno: flota en el cielo mientras te persigue):
@@ -270,7 +360,7 @@ PIEZAS = {
     'saturno_v':           (saturno_v,           'houston', dict(lado=1024, bisel=0.0)),
     'independence_plaza':  (independence_plaza,  'houston', dict(lado=2048, bisel=0.0)),
     'hangar_luna':         (hangar_luna,         'houston', dict(lado=2048, bisel=0.0, suelo=False)),
-    'cybertruck':          (cybertruck,          'obstaculos', dict(lado=256, bisel=0.0)),
+    'cybertruck':          (cybertruck,          'obstaculos', dict(lado=512, bisel=0.0)),
     'starship':            (starship,            'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
     'rover_lunar':         (rover_lunar,         'obstaculos', dict(lado=256, bisel=0.0)),
     'roca_lunar':          (roca_lunar,          'obstaculos', dict(lado=256, bisel=0.0)),

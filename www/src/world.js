@@ -2943,7 +2943,7 @@ export function createWorld(scene) {
     // 12/11: Houston (blender/houston.py): el Cybertruck que tira Elon (cae
     // donde marca la diana), el vehiculo lunar y la roca lunar (en el hangar
     // de la Luna se saltan), el astronauta que cruza y la pancarta de Elon.
-    cybertruck: { choque: "full", medio: 1.3, alto: 1.9, centro: 0 },
+    cybertruck: { choque: "full", medio: 2.6, alto: 1.7, centro: 0 },   // 13/11: el de verdad, 5,2 m
     rover_lunar: { choque: "full", medio: 1.7, alto: 2.3, centro: 0 },
     roca_lunar: { choque: "low", medio: 0.6, alto: 1.0 },
     astronauta: { choque: "full", medio: 0.5, alto: 2.3, centro: 0, cruza: true },
