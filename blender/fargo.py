@@ -194,7 +194,7 @@ def cartel_pinguino():
 
 def placa_hielo():
     """La placa de hielo del suelo (se pisa: encima se resbala)."""
-    caja(hielo(), 0, 0, 0.0, 2.3, 6.5, 0.04)
+    caja(hielo(), 0, 0, 0.0, 2.2, 7.0, 0.04)   # 13/11: sin rendijas entre filas (parpadeaban)
     claro = mat('hielo_claro_fgo', 0xf2f8fc, 0.1)
     for k in range(7):
         o = caja(claro, -0.6 + (k % 3) * 0.6, 2.4 - k * 0.8, 0.045, 0.8, 0.05, 0.01); o.rotation_euler = (0, 0, 0.4 + k * 0.3)

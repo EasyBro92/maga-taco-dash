@@ -2929,7 +2929,7 @@ export function createWorld(scene) {
     // 12/11: Monte Rushmore (blender/rushmore.py): el bisonte (embiste si te
     // pones en su carril), el perrito de la pradera (solo choca cuando asoma),
     // la roca que cae de la montaña (su sombra avisa) y la pancarta de los escultores.
-    bisonte: { choque: "full", medio: 1.6, alto: 2.1, centro: 0 },
+    bisonte: { choque: "full", medio: 1.6, alto: 2.4, centro: 0 },
     perrito_pradera: { choque: "low", medio: 0.5, alto: 0.95 },
     roca_caida: { choque: "low", medio: 0.6, alto: 1.05 },
     cartel_no_caras: { choque: "high", medio: 0.3, alto: 2.4 },
@@ -2939,7 +2939,7 @@ export function createWorld(scene) {
     pinguino_tripa: { choque: "low", medio: 0.9, alto: 0.85, centro: 0, cruza: true },
     moto_nieve: { choque: "full", medio: 1.4, alto: 2.0, centro: -0.1, mueve: 8 },
     cartel_pinguino: { choque: "high", medio: 0.3, alto: 2.4 },
-    placa_hielo: { choque: "nada", medio: 3.25, alto: 0 },
+    placa_hielo: { choque: "nada", medio: 3.5, alto: 0 },
     // 12/11: Houston (blender/houston.py): el Cybertruck que tira Elon (cae
     // donde marca la diana), el vehiculo lunar y la roca lunar (en el hangar
     // de la Luna se saltan), el astronauta que cruza y la pancarta de Elon.
@@ -3485,8 +3485,10 @@ export function createWorld(scene) {
   function caerRoca(o, dt) {
     const u = o.mesh.userData;
     if (!u.piedra) return;
-    if (!o.caida) { if (u.piedra.position.y !== 0) u.piedra.position.y = 0; u.sombra.visible = false; return; }
+    if (!o.caida) { if (u.piedra.position.y !== 0) u.piedra.position.y = 0; u.piedra.visible = true; u.sombra.visible = false; return; }
     if (o.z > -42) { o.caida.vy -= 30 * dt; o.caida.y = Math.max(0, o.caida.y + o.caida.vy * dt); }
+    // (13/11: arriba, quieta, no se ve; aparece al empezar a caer)
+    u.piedra.visible = o.z > -42 || o.caida.y < 16;
     u.piedra.position.y = o.caida.y;
     u.piedra.rotation.x += dt * 3;
     const k = 1 - o.caida.y / 16;
@@ -3648,8 +3650,17 @@ export function createWorld(scene) {
       ((o.pool === "placa_hielo" && Math.abs(o.z) < 3.3) || (o.pool === "geiser" && Math.abs(o.z) < 1.3)));
   }
   // ¿Se puede empujar al jugador a ese carril? (nada que esquivar cerca)
+  // 13/11 (auditoria): cuenta tambien lo que viene hacia ti (coches que se
+  // mueven), el taxi que se esta cambiando a ese carril y el costado del autobus.
   function carrilDespejado(lane) {
-    return lane >= 0 && lane <= 2 && !obstacles.some((o) => !o.smashed && !o.escondido && o.type !== "nada" && o.lane === lane && o.z > -16 && o.z < 4);
+    if (lane < 0 || lane > 2) return false;
+    return !obstacles.some((o) => {
+      if (o.smashed || o.escondido || o.type === "nada") return false;
+      if (o.lane !== lane && !(o.cambio && o.cambio.t < 1 && o.cambio.a === lane)) return false;
+      if (o.type === "bus") return o.z > -16 && o.z < (o.largo || BUS_LARGO) + 1;
+      const zc = o.z + (o.centro || 0), m = o.medio || 0.7;
+      return zc + m > -16 - (o.mueve || 0) * 1.5 && zc - m < 2;
+    });
   }
 
   function moverVaca(o, dt) {
@@ -3945,7 +3956,7 @@ export function createWorld(scene) {
     let mejor = null;
     for (const o of obstacles) {
       if (o.smashed || o.lane !== lane || o.type === "bus" || o.type === "rampa") continue;
-      if (o.pool && (o.pool.startsWith("corte_") || o.pool === "nada")) continue;
+      if (o.type === "nada" || (o.pool && o.pool.startsWith("corte_"))) continue;
       const zc = o.z + (o.centro || 0);
       if (zc > 1 || zc < -alcance) continue;
       if (!mejor || zc > mejor.z + (mejor.centro || 0)) mejor = o;
@@ -5931,6 +5942,15 @@ export function createWorld(scene) {
     ventisca(z, d, t, k) {
       if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
       if (k % 2 === 1) { tacosEn(Math.floor(Math.random() * 3), z, 3); return; }
+      if (k % 6 === 4 && obstaclePools.moto_nieve && d > 300) {
+        const op = LANES.filter((l) => l !== carrilOcupado && cocheCabe(l, z, TIPOS.moto_nieve.mueve));
+        if (op.length) {
+          const l = elegirDe(op);
+          spawnObstacle(l, "full", z, "moto_nieve");
+          LANES.filter((x) => x !== l).forEach((x) => tacosEn(x, z, 1));
+          return;
+        }
+      }
       filaMixta(z, d, 0.35);
     },
     // Los pingüinos de la corte del Rey cruzan deslizandose sobre la tripa
@@ -6085,7 +6105,7 @@ export function createWorld(scene) {
         for (const l of [0, 2]) for (let i = 0; i < 3; i++) spawnTaco(l, z + 2 - i * 1.4, 0.9);
         return;
       }
-      if (k % 10 === 7 && obstaclePools.cartel_molinos) {
+      if (k % 10 === 5 && obstaclePools.cartel_molinos) {
         const l = elegirDe([0, 2]);
         spawnObstacle(l, "high", z, "cartel_molinos");
         for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
@@ -6449,9 +6469,13 @@ export function createWorld(scene) {
   // Lo pone en la fila que se acaba de generar: en el carril de los tacos, o
   // en uno sin nada delante.
   function ponerObjeto(z, idx) {
-    const libres = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => o.lane === l && Math.abs(o.z + (o.centro || 0) - z) < (o.medio || 0.7) + 2.5));
+    // 13/11 (auditoria): lo que no estorba (placas de hielo, brillos...) no
+    // cuenta; y si no cabe en esta fila, se prueba en las siguientes.
+    const libres = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => o.lane === l && o.type !== "nada" && !o.smashed
+      && Math.abs(o.z + (o.centro || 0) - z) < (o.medio || 0.7) + 2.5));
     const lane = libres.includes(carrilTacos) ? carrilTacos : libres.length ? libres[0] : -1;
     if (lane >= 0) spawnObjeto(lane, z + 2, idx);
+    return lane >= 0;
   }
   const chapaPool = makePool(() => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaChapa(), transparent: true, depthWrite: false }));
@@ -6534,8 +6558,8 @@ export function createWorld(scene) {
       else if (t.momento === "gorras") lanzarGorra(z, k);
       else if (t.momento === "reto") tacosReto(z);
       if (nivel && nivel.objeto && USAR_BLENDER) {
-        const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && Math.abs(sd - d) <= ROW_SPACING / 2);
-        if (i >= 0) { objHechos.add(i); ponerObjeto(z, i); }
+        const i = sitiosObj.findIndex((sd, j) => !objHechos.has(j) && d >= sd - ROW_SPACING / 2 && d <= sd + 4 * ROW_SPACING);
+        if (i >= 0 && ponerObjeto(z, i)) objHechos.add(i);
       }
     } finally {
       carrilOcupado = -1; filaD = null; respiro = false;

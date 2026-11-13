@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo,
+  sndFanfarria, sndChapa, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -1629,7 +1629,7 @@ function porLosPelos() {
   const ahora = performance.now() / 1000;
   if (ahora - pelos.t > 0.5 || ahora - pelos.ultimo < 1.2 || rocketTimeLeft > 0 || montado || pelos.carril === currentLane) return;
   for (const o of world.obstacles) {
-    if (o.smashed || o.pelos || o.lane !== pelos.carril || o.type === "nada" || o.type === "rampa") continue;
+    if (o.smashed || o.pelos || o.lane !== pelos.carril || o.type === "nada" || o.type === "rampa" || o.escondido || o.fuera) continue;
     const zc = o.z + (o.centro || 0);
     if (zc < -(o.medio || 0.7) - 0.4 || zc > 0.2) continue;
     if (o.type === "low" && py > 0.6) continue;
@@ -2052,6 +2052,7 @@ function apagarSirenas() {
 }
 function terminarCaida() {
   apagarSirenas();
+  document.getElementById("rafagaAviso").classList.add("hidden"); rafaga.avisada = false;
   document.getElementById("hud").classList.add("hidden");
   document.getElementById("powerupBadge").classList.add("hidden");
   document.getElementById("bossBar").classList.add("hidden");
@@ -2430,8 +2431,8 @@ let avisoMapaT = 0;
 world.onAvisoMapa((que) => {
   const ahora = performance.now();
   if (que === "bisonte" && ahora - avisoMapaT > 3500) { avisoMapaT = ahora; showBubble(t("bisonteEmbiste"), 1100, 1); vibrate(25); }
-  else if (que === "diana") { if (ahora - avisoMapaT > 3000) { avisoMapaT = ahora; textoFlotante(t("dianaFijada")); } vibrate([15, 30, 15]); sndTropiezo(); }
-  else if (que === "cybertruck") { vibrate(30); triggerCameraShake(0.02); }
+  else if (que === "diana") { if (ahora - avisoMapaT > 3000) { avisoMapaT = ahora; textoFlotante(t("dianaFijada")); } vibrate([15, 30, 15]); sndTic(); }
+  else if (que === "cybertruck") vibrate(30);   // (13/11: sin sacudir la camara, marea)
   else if (que === "roca") vibrate(12);
 });
 
@@ -2872,6 +2873,7 @@ function marcarIdioma() {
 function volverAlMenu() {
   gameState = "menu";
   apagarSirenas();
+  document.getElementById("rafagaAviso").classList.add("hidden"); rafaga.avisada = false;
   pausado = false;
   idlePhase = 0;
   if (mazorca) mazorca.visible = false;

@@ -2125,3 +2125,23 @@ tienda, pase, cajas, cuenta y ranking. Arreglado:
   se dan al cambiar de mes; la oferta del día es una mejora y una subida.
 - El ranking recoge el récord al entrar; textos y números bien en inglés.
 
+## 13/11/2026 (3): revisión con Opus de los niveles 14 a 17 (v59)
+
+- Colección de 10 objetos: en Rushmore, Fargo y Houston faltaban 1 o 2 (caían
+  en filas llenas). Ahora lo que no estorba no cuenta y, si no cabe, el
+  objeto sale en una de las 4 filas siguientes (vale para todos los niveles).
+- Fargo: la caja sorpresa coincidía con una chapa y no salía (caja a 1250);
+  el cartel del hielo decía «¡Rayo congelador!» (`tr_placas_hielo`); la frase
+  se gastaba en una placa de hielo; las placas dejaban rendijas que
+  parpadeaban (ahora 7 m, sin hueco); la moto de nieve sale en la ventisca.
+- Ráfagas: ya no te empujan delante de algo que viene ni contra un autobús;
+  el aviso no se queda en pantalla al chocar.
+- Rushmore: las rocas no flotan quietas antes de caer; la Avenida de las
+  Banderas va en su tramo; sin público ni farolas en todo el bosque;
+  bisonte con la joroba entera; cámara final más atrás, mirando a las caras.
+- Houston: el Cybertruck ya no sacude la cámara (mareo) y la diana suena
+  distinta a un tropezón; el Saturno V en su tramo del Rocket Park.
+- Oklahoma: la pancarta contra los molinos sí sale.
+- Desvíos nuevos: Houston y Oklahoma (caja a 1200; chapa de Oklahoma a 1930).
+- «¡Por los pelos!» no premia lo escondido (perritos, géiseres dormidos).
+

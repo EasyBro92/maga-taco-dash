@@ -937,7 +937,7 @@ const CALLES = [
       full: ["autocaravana", "moto_harley", "pickup", "vaquero"] },
     publico: { personas: ["turista", "fan", "abuelo", "chico", "senora"], valla: "banderas", cada: 3 },
     // En el bosque, ni publico ni farolas.
-    sinPublico: [[880, 2880]], sinAcera: [[880, 3400]],
+    sinPublico: [[700, 2880]], sinAcera: [[700, 3400]],
     tramos: [
       [0, 80, "calma", { titulo: "rushmore" }],
       [80, 300, "mixto", { densidad: 0.45, titulo: "ciudad_presidentes" }],
@@ -970,17 +970,17 @@ const CALLES = [
     // columnas con las banderas de los estados.
     izquierda: [
       40, ["kit", 2], 14, ["hotel_alex_johnson", 1], 14, ...cuadras(3), ["wall_drug", 1], 14, ...cuadras(2),
-      ...bosque(31), ["avenida_banderas", 4],
+      ...bosque(33), ["avenida_banderas", 4],
     ],
     derecha: [
       40, ["kit", 3], 14, ...cuadras(1), ["dino_park", 1], 14, ...cuadras(4),
-      ...bosque(31), ["avenida_banderas", 4],
+      ...bosque(34), ["avenida_banderas", 4],
     ],
     fondo: [{ pieza: "monte_rushmore", d: 3255, centro: true },
       ...[1100, 1880, 2740].map((d) => ({ pieza: "tunel_roca", d, cruza: true }))],
     final: "parada", parada: 22,
     // Se para en la terraza y la camara mira arriba, a las caras.
-    camaraFinal: { pos: [5, 2.6, 12], mira: [0, 34, -120] },
+    camaraFinal: { pos: [-4, 3, 34], mira: [-10, 30, -33] },
     acera: ["rushmore/estatua_bronce", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
@@ -1002,7 +1002,7 @@ const CALLES = [
     tramos: [
       [0, 70, "calma", { titulo: "fargo" }],
       [70, 260, "vallas", { low: ["monton_nieve", "bloque_hielo"], high: ["cartel_pinguino"], titulo: "nieve_fargo" }],
-      [260, 420, "hielo", { titulo: "hielo" }],
+      [260, 420, "hielo", { titulo: "placas_hielo" }],
       [420, 500, "calma"],
       [500, 680, "pinguinos", { titulo: "pinguinos" }],
       [680, 760, "calma"],
@@ -1020,7 +1020,7 @@ const CALLES = [
       [2950, 3100, "mixto", { densidad: 0.5, titulo: "" }],
       [3100, 3240, "sprint", { titulo: "sprint_fargo" }],
     ],
-    control: 1500, caja: 1200,
+    control: 1500, caja: 1250,
     sinEdificios: [3220, 4000],
     chapas: [[1200, "arco"], [2960, "carril"], [3060, "arco"]],
     hitos: ["hotel_donaldson", "np_depot", "black_building", "radisson_fargo"],
@@ -1073,7 +1073,7 @@ const CALLES = [
       [2900, 3150, "alfombra", { titulo: "rocket_park" }],
       [3150, 3290, "sprint", { titulo: "sprint_houston" }],
     ],
-    control: 1800, caja: 1250,
+    control: 1800, caja: 1200,
     interior: { rango: [2002, 2418], tipo: "luna", sinEdificios: [1990, 2430] },
     sinEdificios: [3200, 4000],
     chapas: [[1560, "arco"], [1840, "carril"], [3000, "arco"]],
@@ -1083,7 +1083,7 @@ const CALLES = [
       40, ["kit", 2], 14, ["bank_of_america_hou", 1], 14, ...cuadras(5), ["city_hall_hou", 1], 14, ...cuadras(26),
     ],
     derecha: [
-      40, ["kit", 3], 14, ...cuadras(2), ["jpmorgan_hou", 1], 14, ...cuadras(19), ["saturno_v", 1], 14, ...cuadras(6),
+      40, ["kit", 3], 14, ...cuadras(2), ["jpmorgan_hou", 1], 14, ...cuadras(22), ["saturno_v", 1], 14, ...cuadras(3),
     ],
     fondo: [{ pieza: "independence_plaza", d: 3366, centro: true },
       { pieza: "hangar_luna", d: 2000, cruza: true }],
@@ -1130,9 +1130,9 @@ const CALLES = [
       [2860, 3140, "mixto", { densidad: 0.55, titulo: "" }],
       [3140, 3290, "sprint", { titulo: "sprint_capitolio_ok" }],
     ],
-    control: 1900, caja: 1250,
+    control: 1900, caja: 1200,
     sinEdificios: [3260, 4000],
-    chapas: [[600, "carril"], [1980, "carril"], [2950, "arco"]],
+    chapas: [[600, "carril"], [1930, "carril"], [2950, "arco"]],
     hitos: ["bricktown", "devon_tower", "cristal_bridge"],
     meta: "capitolio_ok", metaNombre: { es: "el Capitolio de Oklahoma", en: "the Oklahoma Capitol" },
     izquierda: [
