@@ -38,12 +38,18 @@ export function valorMejora(id, nivel = nivelMejora(id)) {
   return m ? m.base + m.paso * nivel : 0;
 }
 // La oferta de hoy: una mejora a mitad de camino, con el 40 % de descuento.
+// 13/11 (auditoria): la oferta se apunta al elegirla: la misma todo el dia y
+// rebajada en una sola subida (antes cubria los 5 niveles y luego saltaba a otra).
 export function ofertaHoy() {
+  const s = getSave();
+  const d = new Date();
+  const dia = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  if (s.oferta && s.oferta.dia === dia) return s.oferta.usada || nivelMejora(s.oferta.id) >= MAX_NIVEL ? null : s.oferta.id;
   const libres = MEJORAS.filter((m) => nivelMejora(m.id) < MAX_NIVEL);
   if (!libres.length) return null;
-  const d = new Date();
   const k = d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate();
-  return libres[(k * 7 + 3) % libres.length].id;
+  s.oferta = { dia, id: libres[(k * 7 + 3) % libres.length].id, usada: false };
+  return s.oferta.id;
 }
 export function precioMejora(id) {
   const n = nivelMejora(id);
@@ -52,9 +58,11 @@ export function precioMejora(id) {
 }
 export function subirMejora(id) {
   const p = precioMejora(id);
+  const rebajada = ofertaHoy() === id;
   if (p === null || !spendTacos(p)) return false;
   const s = getSave();
   s.mejoras = { ...(s.mejoras || {}), [id]: nivelMejora(id) + 1 };
+  if (rebajada && s.oferta) s.oferta.usada = true;
   persistSave();
   return true;
 }

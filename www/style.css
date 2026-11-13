@@ -962,3 +962,7 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
   font-family: var(--letra-titulo); font-size: 28px; color: #fff; background: rgba(31, 58, 122, 0.72); padding: 6px 18px; border-radius: 999px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
 #rafagaAviso b { font-size: 34px; }
+
+/* 13/11: mientras baja un nivel, el menu y el mapa no responden */
+.cargandoNivel #startScreen, .cargandoNivel #mapaGira { pointer-events: none; }
+.cargandoNivel #startScreen button:not(#startBtn), .cargandoNivel #mapaGira button:not(#mapaJugar) { opacity: 0.6; }

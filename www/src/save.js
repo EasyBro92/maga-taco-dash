@@ -36,6 +36,7 @@ let alGuardar = null;
 export function onGuardar(fn) { alGuardar = fn; }
 
 function persist() {
+  state.guardado = Date.now();
   localStorage.setItem(KEY, JSON.stringify(state));
   if (alGuardar) alGuardar();
 }
@@ -53,10 +54,27 @@ export function fundirPartida(n) {
   const a = state;
   const estrellas = (s) => Object.values(s.niveles || {}).reduce((x, r) => x + (r.estrellas || 0), 0);
   const antes = JSON.stringify(partidaParaNube());
-  const nubeMejor = estrellas(n) > estrellas(a) || (estrellas(n) === estrellas(a) && (n.totalTacos || 0) > (a.totalTacos || 0));
+  // 13/11 (auditoria): si las dos saben cuando se guardaron, manda la mas
+  // reciente (asi lo gastado no vuelve y lo cobrado no se cobra otra vez).
+  const conHora = !!(a.guardado && n.guardado);
+  const nubeMejor = conHora ? n.guardado > a.guardado
+    : estrellas(n) > estrellas(a) || (estrellas(n) === estrellas(a) && (n.totalTacos || 0) > (a.totalTacos || 0));
   const b = nubeMejor ? { ...defaults(), ...n } : { ...a };
   b.settings = a.settings;
-  b.totalTacos = Math.max(a.totalTacos || 0, n.totalTacos || 0);
+  b.totalTacos = conHora ? ((nubeMejor ? n : a).totalTacos || 0) : Math.max(a.totalTacos || 0, n.totalTacos || 0);
+  // El pase del mismo mes: los puntos mas altos y todo lo cobrado en los dos.
+  if (a.pase && n.pase && a.pase.temporada === n.pase.temporada) {
+    b.pase = { temporada: a.pase.temporada, puntos: Math.max(a.pase.puntos || 0, n.pase.puntos || 0),
+      cobrados: [...new Set([...(a.pase.cobrados || []), ...(n.pase.cobrados || [])])] };
+  }
+  // Los retos de la misma semana: lo mas avanzado de cada uno.
+  if (a.semana && n.semana && a.semana.clave === n.semana.clave) {
+    const cont = { ...(a.semana.cont || {}) };
+    for (const [k, v] of Object.entries(n.semana.cont || {})) cont[k] = Math.max(cont[k] || 0, v);
+    b.semana = { clave: a.semana.clave, cont, hechos: [...new Set([...(a.semana.hechos || []), ...(n.semana.hechos || [])])] };
+  }
+  // El premio del dia: el del dia mas reciente (AAAA-MM-DD se compara tal cual).
+  if (a.diario || n.diario) b.diario = ((a.diario || {}).dia || "") >= ((n.diario || {}).dia || "") ? a.diario : n.diario;
   b.bestScore = Math.max(a.bestScore || 0, n.bestScore || 0);
   b.ownedItems = [...new Set([...(a.ownedItems || []), ...(n.ownedItems || [])])];
   b.lideres = [...new Set([...(a.lideres || []), ...(n.lideres || [])])];
@@ -76,7 +94,10 @@ export function fundirPartida(n) {
     const ta = a.tienda || { tengo: [], puesto: {} }, tn = n.tienda || { tengo: [], puesto: {} };
     b.tienda = { tengo: [...new Set([...(ta.tengo || []), ...(tn.tengo || [])])], puesto: (nubeMejor ? tn : ta).puesto || {} };
   }
-  state = b;
+  // (13/11: se rellena el mismo objeto: los modulos que guardaron
+  // getSave() siguen viendo la partida buena.)
+  for (const k of Object.keys(state)) delete state[k];
+  Object.assign(state, b);
   localStorage.setItem(KEY, JSON.stringify(state));
   return JSON.stringify(partidaParaNube()) !== antes;
 }

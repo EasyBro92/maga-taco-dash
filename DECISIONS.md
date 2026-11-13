@@ -2101,3 +2101,27 @@ con sus mecánicas propias:
     que cruzan tres carriles; silban antes (aviso) y solo chocan mientras
     sale el vapor (`soplarVapor`). Balas de algodón entre medias.
   - Objeto: pajitas de plástico.
+
+## 13/11/2026 (2): revisión con Opus de lo nuevo (v58)
+
+Isidro: «Fable gasta demasiado; continúalo con Opus». Revisión de jefes,
+tienda, pase, cajas, cuenta y ranking. Arreglado:
+
+- Premio del día: ya no se cobra dos veces (se vuelve a leer la partida al
+  recoger; `fundirPartida` rellena el mismo objeto).
+- «¡Jugar con él!» y la cuenta recargan la página: antes se guarda la
+  carrera del sin fin (tacos, récord, pase).
+- Nube: manda la partida guardada más reciente (`guardado`); el pase, los
+  retos de la semana y el premio del día se juntan; lo gastado no vuelve.
+- Cohete mejorado: se aterriza siempre en zona limpia (`zonaAterriza`).
+- Mientras baja un nivel, el menú y el mapa no responden, y solo arranca uno.
+- Jefes: el rojo de la furia se ve en todos; sin temblor ni sacudidas de
+  cámara en cada golpe (mareo); en el debate el robot no salta ni se cubre;
+  no se gasta munición de más.
+- Boris y la frase del líder van con el reloj de la carrera; el brazo de
+  Putin no se balancea al saltar.
+- Pantallas finales con los tacos de verdad (Recaudación y finde ×2).
+- «¡Por los pelos!» no sale al tropezar; los escalones del pase sin cobrar
+  se dan al cambiar de mes; la oferta del día es una mejora y una subida.
+- El ranking recoge el récord al entrar; textos y números bien en inglés.
+

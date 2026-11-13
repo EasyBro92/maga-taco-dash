@@ -236,6 +236,13 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
   // k: cuanto se acerca en este fotograma (para entrar en la postura suave).
   const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _d = new THREE.Vector3();
   const _qd = new THREE.Quaternion(), _qw = new THREE.Quaternion(), _qp = new THREE.Quaternion();
+  // El brazo quieto del pistolero (Putin), en la carrera y en el salto.
+  function fijarBrazo() {
+    if (!brazoQuieto) return;
+    root.updateMatrixWorld(true);
+    apuntar("RightArm", "RightForeArm", 0.12, -1, -0.12, 1);
+    apuntar("RightForeArm", "RightHand", 0.08, -1, -0.35, 1);
+  }
   function apuntar(nombre, hijo, x, y, z, k) {
     const h = huesos[nombre], c = huesos[hijo];
     if (!h || !c || !h.parent) return;
@@ -275,11 +282,7 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
       pose.position.set(0, 0, 0);   // (27/10: tambien z: tras deslizarse se quedaba medio metro atras)
       root.scale.lerp(NEUTRAL, Math.min(1, dt * 8));
       mixer.update(dt);
-      if (brazoQuieto) {
-        root.updateMatrixWorld(true);
-        apuntar("RightArm", "RightForeArm", 0.12, -1, -0.12, 1);
-        apuntar("RightForeArm", "RightHand", 0.08, -1, -0.35, 1);
-      }
+      fijarBrazo();
     },
 
     setJumpPose(t) {
@@ -296,6 +299,7 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
       const sy = 1 + 0.18 * stretch - 0.22 * squash;
       const sxz = 1 - 0.1 * stretch + 0.16 * squash;
       root.scale.set(sxz * mega, sy * mega, sxz * mega);
+      fijarBrazo();   // (13/11: si no, en el salto el brazo volvia a balancearse)
     },
 
     setSlidePose(active) {

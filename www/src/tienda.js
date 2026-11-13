@@ -111,7 +111,7 @@ function pintar() {
 function listaMejoras() {
   const tacos = getSave().totalTacos, L = getLang(), oferta = ofertaHoy();
   const peg = `<img class="peg" src="${urlPegatina("taco")}" alt="">`;
-  const fmt = (m, v) => (m.unidad === "%" ? `+${v} %` : m.unidad === "s" ? `${String(v).replace(".", ",")} s` : `${v}`);
+  const fmt = (m, v) => (m.unidad === "%" ? `+${v} %` : m.unidad === "s" ? `${getLang() === "en" ? v : String(v).replace(".", ",")} s` : `${v}`);
   const caja = `<div class="mejoraItem cajaVenta">${icono("regalo")}
       <div class="mejoraTexto"><b>${t("comprarCaja")}</b><small>${t("comprarCajaTexto")}</small></div>
       <button class="${tacos >= PRECIO_CAJA ? "comprar" : "caro"}" data-caja="1" ${tacos >= PRECIO_CAJA ? "" : "disabled"}>${PRECIO_CAJA} ${peg}</button></div>`;

@@ -60,7 +60,7 @@ function carta(p, l = null) {
     l = l || unoDe(p.lider);
     return `<div class="ruletaCarta lider" style="--c:${p.color}"><img src="${fotoLider(l.id)}" alt=""><span>${l.corto}</span></div>`;
   }
-  return `<div class="ruletaCarta" style="--c:${p.color}"><img src="${urlPegatina("taco")}" alt=""><span>${p.tacos.toLocaleString("es")}</span></div>`;
+  return `<div class="ruletaCarta" style="--c:${p.color}"><img src="${urlPegatina("taco")}" alt=""><span>${p.tacos.toLocaleString(getLang() === "en" ? "en" : "es")}</span></div>`;
 }
 
 // Abre UNA caja: la ruleta gira, se para en el premio y se cobra.
@@ -130,11 +130,11 @@ export function abrirCaja(alCerrar) {
       const r = RAREZAS[lider.rareza];
       texto.innerHTML = `<span class="rareza" style="background:${r.color}">${r[getLang()] || r.es}</span> ${t("cajaLider")} <b>${nombreLider(lider)}</b>!<small>${tituloLider(lider)}</small>`;
       jugar.classList.remove("hidden");
-      jugar.onclick = () => { ponerLider(lider.id); location.reload(); };
+      jugar.onclick = () => { ponerLider(lider.id); window.dispatchEvent(new Event("antesDeRecargar")); location.reload(); };
     } else if (repe) {
-      texto.innerHTML = `${t("cajaRepetido").replace("{n}", nombreLider(repe))} <b>+${tacos.toLocaleString("es")} tacos</b>`;
+      texto.innerHTML = `${t("cajaRepetido").replace("{n}", nombreLider(repe))} <b>+${tacos.toLocaleString(getLang() === "en" ? "en" : "es")} tacos</b>`;
     } else {
-      texto.innerHTML = `${t("cajaGanas")} <b>${tacos.toLocaleString("es")} tacos</b>!`;
+      texto.innerHTML = `${t("cajaGanas")} <b>${tacos.toLocaleString(getLang() === "en" ? "en" : "es")} tacos</b>!`;
     }
     cinta.children[GANA].classList.add("gana");
     if (lider || tacos >= 800) sndFanfarria(true); else sndChapa();
@@ -175,6 +175,10 @@ export function premioDiario(alCerrar) {
   const ov = document.getElementById("diarioOverlay");
   ov.classList.remove("hidden");
   document.getElementById("diarioRecoger").onclick = () => {
+    // (13/11, auditoria: la partida puede haberse juntado con la nube entre
+    // medias; se vuelve a leer y, si hoy ya se cobro, no se cobra otra vez.)
+    const s = getSave();
+    if ((s.diario || {}).dia === hoyStr) { ov.classList.add("hidden"); if (alCerrar) alCerrar(false); return; }
     const premio = DIARIO[racha - 1];
     if (premio === "lider") guardarCaja("lider");
     else if (premio === "caja") { addTacos(500); guardarCaja(); } else addTacos(premio);

@@ -4353,6 +4353,7 @@ export function createWorld(scene) {
   // obstaculo y, al acabar, los que quedasen arriba se van con un destello.
   let cielo = false, carrilCielo = 1;
   // vel: metros por segundo; tiempo: segundos de vuelo.
+  let zonaAterriza = null;
   function setCielo(v, vel = 20, tiempo = 6.5) {
     if (v && !cielo) {
       const hasta = -Math.max(20, vel * (tiempo - 1.6));
@@ -4362,6 +4363,9 @@ export function createWorld(scene) {
       }
       // Donde se aterriza (al acabar el vuelo y caer), sin obstaculos.
       const aterriza = vel * (tiempo + 0.8);
+      // 13/11 (auditoria): con el cohete mejorado se aterriza mas alla de
+      // donde ya hay filas; las que nazcan ahi luego tambien van limpias.
+      zonaAterriza = [totalScrolled + aterriza - 15, totalScrolled + aterriza + 30];
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
         if (o.type === "bus" || o.z > -(aterriza - 15) || o.z < -(aterriza + 30)) continue;
@@ -4677,13 +4681,23 @@ export function createWorld(scene) {
   }
   // La furia: el jefe se pone rojo (sin parpadear: un tono fijo).
   const tintes = new Map();
+  const ROJO_FURIA = new THREE.Color(0xff8a8a);
   function teñirFuria(on) {
     const m = jefe.mesh;
     if (!m) return;
+    // 13/11 (auditoria): 6 de los 7 jefes llevan la luz en una textura
+    // (emissiveMap): ahi el emisivo multiplica la textura, asi que se tiñe
+    // ella de rojo; y el color tambien, para que se note en todos.
     m.traverse((o) => {
-      if (!o.isMesh || !o.material || !o.material.emissive) return;
-      if (!tintes.has(o.material)) tintes.set(o.material, o.material.emissive.getHex());
-      o.material.emissive.setHex(on ? 0x6a0d0d : tintes.get(o.material));
+      const mt = o.isMesh && o.material;
+      if (!mt || !mt.emissive) return;
+      if (!tintes.has(mt)) tintes.set(mt, { e: mt.emissive.getHex(), c: mt.color ? mt.color.getHex() : null });
+      const t0 = tintes.get(mt);
+      mt.emissive.setHex(on ? (mt.emissiveMap ? 0xff6a6a : 0x6a0d0d) : t0.e);
+      if (mt.color && t0.c !== null) {
+        mt.color.setHex(t0.c);
+        if (on) mt.color.multiply(ROJO_FURIA);
+      }
     });
   }
   let burbuja = null;
@@ -4712,6 +4726,8 @@ export function createWorld(scene) {
   }
   // (El que solo pasa de largo no se pelea: no hace falta municion.)
   function armaActual() { return jefeActivo() && !jefe.paso ? armaJefe(jefe.tipo) : null; }
+  function disparosEnVuelo() { return disparos.length; }
+  function vidaJefeActual() { return jefeActivo() ? jefe.vida : 0; }
   function dispararJefe(x, y) {
     if (!jefeActivo()) return;
     const arma = armaJefe(jefe.tipo);
@@ -4749,13 +4765,16 @@ export function createWorld(scene) {
     }
     jefe.z += (JEFE_Z - jefe.z) * Math.min(1, dt * 1.2);
     jefe.x += (LANE_X[jefe.carril] - jefe.x) * Math.min(1, dt * (jefe.furia ? 5.5 : 4));
-    const temblor = jefe.golpe > 0 ? Math.sin(jefe.tiempo * 70) * 0.25 * jefe.golpe : 0;
+    // 13/11 (auditoria): sin temblor al recibir (con los golpes en rafaga
+    // temblaba sin parar y marea); el empuje y el aplastado ya lo marcan.
+    const temblor = 0;
     const altura = esDragon ? DRAGON_Y : J ? J.y : JEFE_Y;
     // (El toro va por el suelo al galope: botes cortos, sin flotar.)
     const bote = J && J.galope ? Math.abs(Math.sin(jefe.tiempo * 7)) * 0.25 : Math.sin(jefe.tiempo * 2.2) * 0.25;
     // Se balancea de lado a lado, da saltos de vez en cuando y retrocede al recibir.
     const vaiven = esDragon ? 0 : Math.sin(jefe.tiempo * 1.3) * 0.35;
-    if (!esDragon && !jefe.paso) {
+    const debate = !!(nivel && nivel.debate);   // (13/11: en el atril, ni salta ni se cubre)
+    if (!esDragon && !jefe.paso && !debate) {
       jefe.proximoSalto -= dt;
       if (jefe.proximoSalto <= 0 && jefe.salto <= 0) { jefe.salto = 0.62; jefe.proximoSalto = (jefe.furia ? 2 : 3) + Math.random() * 2.5; }
     }
@@ -4774,7 +4793,7 @@ export function createWorld(scene) {
       m.scale.set(base * k * (1 - 0.03 * r + 0.08 * carga), base * k * (1 + 0.04 * r - 0.1 * carga), base * k * (1 - 0.03 * r + 0.08 * carga));
     }
     // El escudo (solo enfadado): se cubre a ratos; lo que llega rebota.
-    if (jefe.furia && !jefe.paso) {
+    if (jefe.furia && !jefe.paso && !debate) {
       jefe.proximoEscudo -= dt;
       if (jefe.proximoEscudo <= 0 && jefe.escudo <= 0) {
         jefe.escudo = 1.4; jefe.proximoEscudo = 5 + Math.random() * 3;
@@ -6479,6 +6498,7 @@ export function createWorld(scene) {
   function generarFila(z) {
     const d = totalScrolled - z;
     if (nivel && d > nivel.largo - 30) return;
+    if (zonaAterriza && d > zonaAterriza[0] && d < zonaAterriza[1]) { PATRONES.calma(z, d, null, 0); return; }
     carrilOcupado = busFilas > 0 ? busCarril : -1;
     if (busFilas > 0) busFilas--;
     try {
@@ -7321,6 +7341,7 @@ export function createWorld(scene) {
   // los que se empieza). `chapasHechas`: las chapas que ya no hay que poner.
   function reset(desde = 0, opciones = {}) {
     totalScrolled = desde;
+    zonaAterriza = null;
     // 06/11 (2): se sale a 13 (BASE_SPEED de main.js). Antes seguia el ritmo de
     // la partida anterior (o 17) y los coches de la salida, que se calculan con
     // el, recorrian mas calle de la prevista: en Washington una escolta
@@ -7385,7 +7406,7 @@ export function createWorld(scene) {
   showMidLayer("city");
 
   return { group, obstacles, tacos, powerups, chapas, update, reset, setForcedZone, surfaceAt, smash, spawnObstacle, spawnPowerup,
-    congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, onJefe, setJugador, primerObstaculo, lanzarFrase,
+    congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
     onAvisoMapa, hieloEn, carrilDespejado, cavar };

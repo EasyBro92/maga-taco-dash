@@ -12,7 +12,7 @@
 // como un correo inventado (<nombre>@magatacodash.app): no se manda nada a
 // ningún sitio. Firebase se baja solo si hay sesión o se pulsa Entrar.
 
-import { onGuardar, partidaParaNube, fundirPartida } from "./save.js";
+import { onGuardar, partidaParaNube, fundirPartida, getSave } from "./save.js";
 
 const CONFIG = {
   apiKey: "AIzaSyAwzbv3vb6Ju-ie3mgYPBp9C-V0QMw_ZKY",
@@ -113,7 +113,7 @@ async function trasEntrar(u, nombre) {
   usuario = { uid: u.uid, nombre };
   try { localStorage.setItem(CLAVE_SESION, nombre); } catch (e) { /* sin almacenamiento */ }
   avisar();
-  try { return { ok: true, cambio: await bajarYJuntar() }; }
+  try { const cambio = await bajarYJuntar(); subirRecord(getSave().bestScore); return { ok: true, cambio }; }
   catch (e) { nubeRota = true; return { ok: true, cambio: false, aviso: traducirError(e) }; }
 }
 
@@ -154,6 +154,8 @@ export async function arrancarCuenta(alCambiarPartida) {
     if (!u) { try { localStorage.removeItem(CLAVE_SESION); } catch (e) { /* nada */ } return; }
     usuario = { uid: u.uid, nombre };
     avisar();
-    if (await bajarYJuntar() && alCambiarPartida) alCambiarPartida();
+    const cambio = await bajarYJuntar();
+    subirRecord(getSave().bestScore);
+    if (cambio && alCambiarPartida) alCambiarPartida();
   } catch (e) { nubeRota = true; }
 }

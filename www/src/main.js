@@ -21,7 +21,7 @@ import { makePool } from "./pool.js";
 import { loadZoneModels, modelo, cargarCarpeta, cargarPersonaje, cargarLider } from "./models.js";
 import { liderPuesto, liderDe, nombreLider, tituloLider } from "./lideres.js";
 import { valorMejora } from "./mejoras.js";
-import { estadoPase, sumarPuntos, puntosCarrera, cobrar as cobrarPase, contar as contarReto, retosSemana, premioEscalon, ESCALONES, PUNTOS_ESCALON, PUNTOS_RETO, LIDER_PASE } from "./pase.js";
+import { estadoPase, pendientesPase, sumarPuntos, puntosCarrera, cobrar as cobrarPase, contar as contarReto, retosSemana, premioEscalon, ESCALONES, PUNTOS_ESCALON, PUNTOS_RETO, LIDER_PASE } from "./pase.js";
 import { darLider, tengoLider, fotoLider } from "./lideres.js";
 import * as misiones from "./missions.js";
 import { FRASES, TRUMP, traduccion } from "./frases.js";
@@ -595,13 +595,21 @@ function mostrarPrologo() {
   ov.classList.remove("hidden");
 }
 document.getElementById("mapaHistoria").addEventListener("click", mostrarPrologo);
+let cargaNivel = 0;
 async function empezarNivel(n, boton = document.getElementById("mapaJugar")) {
   if (!nivelAbierto(n, getNiveles()) && !PRUEBA) return;
   // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
+  // 13/11 (auditoria): mientras baja, el menu y el mapa no responden, y si se
+  // pide otro nivel a la vez solo arranca el ultimo.
+  const yo = ++cargaNivel;
   const piezas = piezasDeNivel(n);
-  await cargarCarpeta(n.carpeta, piezas, (h, total) => { if (boton) boton.textContent = `${Math.round((100 * h) / total)}%`; });
-  if (usaKit(n)) await cargarCarpeta("kit", PIEZAS_KIT);
-  for (const k of n.acera || []) { const [c, p] = k.split("/"); await cargarCarpeta(c, [p]); }
+  document.body.classList.add("cargandoNivel");
+  try {
+    await cargarCarpeta(n.carpeta, piezas, (h, total) => { if (boton) boton.textContent = `${Math.round((100 * h) / total)}%`; });
+    if (usaKit(n)) await cargarCarpeta("kit", PIEZAS_KIT);
+    for (const k of n.acera || []) { const [c, p] = k.split("/"); await cargarCarpeta(c, [p]); }
+  } finally { if (yo === cargaNivel) document.body.classList.remove("cargandoNivel"); }
+  if (yo !== cargaNivel) return;
   nivelActual = n;
   unlockAudio();
   startMusic(n.id);
@@ -619,7 +627,8 @@ function nuevoIntento() {
 function arrancar() {
   gameState = "playing";
   pausado = false;
-  for (const id of ["mapaGira", "startScreen", "choqueNivel", "gameOverScreen", "nivelFin", "pausaOverlay"]) document.getElementById(id).classList.add("hidden");
+  for (const id of ["mapaGira", "startScreen", "choqueNivel", "gameOverScreen", "nivelFin", "pausaOverlay",
+    "shopOverlay", "paseOverlay", "leaderboardOverlay", "sinFinOverlay", "settingsOverlay", "cuentaOverlay"]) document.getElementById(id).classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
   prepararBarra();
   regaloLider();
@@ -647,10 +656,17 @@ function regaloLider() {
   else if (v === "doble") dobleLeft = DOBLE_DURATION * 2.5;
   else if (v === "mega") { megaTimeLeft = MEGA_DURATION * 1.4; character.setMega(MEGA_SCALE); }
   // Boris: a los dos segundos y medio, sale volando en cohete.
-  else if (v === "cohete") setTimeout(() => { if (gameState === "playing" && !pausado && rocketTimeLeft === 0 && !world.jefeActivo()) activarCohete(); }, 2500);
+  else if (v === "cohete") coheteLider = 2.5;
   updatePowerupBadge();
   avisoVerde(`<b>${nombreLider(lider)}</b> · ${tituloLider(lider)}`);
-  setTimeout(() => { if (gameState === "playing") showBubble(fraseLider(), 2400); }, 1600);
+  fraseLiderT = 1.6;
+}
+// 13/11 (auditoria): el cohete de Boris y la frase cuentan con el reloj de la
+// carrera (con setTimeout, una pausa en ese momento dejaba a Boris sin cohete).
+let coheteLider = 0, fraseLiderT = 0;
+function relojLider(dt) {
+  if (coheteLider > 0 && (coheteLider -= dt) <= 0 && rocketTimeLeft === 0 && !world.jefeActivo()) activarCohete();
+  if (fraseLiderT > 0 && (fraseLiderT -= dt) <= 0 && lider) showBubble(fraseLider(), 2400);
 }
 
 // ---- Barra de progreso del nivel (27/10/2026) ----
@@ -969,7 +985,8 @@ function completarNivel() {
   const sinFinAntes = sinFinAbierto(antes);
   const votosAntes = votosGanados(NIVELES, antes);
   const estadoNuevo = !antes[n.id];   // (antes es el mismo objeto que se guarda: mirarlo ya)
-  addTacos(conBonus(tacos));
+  const cobrados = conBonus(tacos);   // (13/11: con la Recaudacion y el finde x2)
+  addTacos(cobrados);
   finCarreraPase(true);
   const r = guardarNivel(n.id, { sinChocar: !intento.chocado, chapas: intento.chapas });
   misiones.fijarDisponibles(misionPosible);
@@ -1004,7 +1021,7 @@ function completarNivel() {
     objetivos.push([cogidos === OBJETOS_POR_NIVEL, `${t("objObjetos").replace("{o}", nombreObjetos(n))} (${cogidos}/${OBJETOS_POR_NIVEL})`]);
   }
   document.getElementById("nivelFinObjetivos").innerHTML = objetivos.map(([ok, txt]) => `<li>${icono(ok ? "check" : "cruz")}<span>${txt}</span></li>`).join("");
-  document.getElementById("nivelFinTacos").textContent = tacos + premio;
+  document.getElementById("nivelFinTacos").textContent = cobrados + premio;
   document.getElementById("nivelFinBonus").textContent = t("premioVictoria").replace("{n}", premio);
   // ¿Se ha abierto algo nuevo?
   const ahora = getNiveles();
@@ -1083,7 +1100,6 @@ world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
   if (evento === "golpe") {
     pintarBarraJefe(vida);
-    triggerCameraShake(0.03);
     flashExpression("happy", 0.5);
   } else if (evento === "derrotado") {
     if (nivelActual && nivelActual.debate) pintarBarraJefe(0);
@@ -1100,11 +1116,9 @@ world.onJefe((evento, vida) => {
     setTimeout(() => barra.classList.add("hidden"), 1500);
   } else if (evento === "combo") {
     textoFlotante(t("jefeCombo"));
-    triggerCameraShake(0.03);
     vibrate([20, 20, 40]);
   } else if (evento === "furia") {
     showBubble(t("jefeFuria"), 1400, 3);
-    triggerCameraShake(0.03);
     vibrate([30, 30, 30]);
   } else if (evento === "escudo") {
     showBubble(t("jefeEscudo"), 1000, 1);
@@ -1258,6 +1272,7 @@ function resetRun(desde = 0) {
   py = 0; vy = 0; enSuelo = true; camY = 0;
   megaTimeLeft = 0; character.setMega(1);
   freezeTimeLeft = 0; rocketTimeLeft = 0; nextJefeAt = JEFE_PRIMERO; misionesReloj = 0;
+  coheteLider = 0; fraseLiderT = 0;
   frasesCargas = 1;   // empieza con una para que se pruebe enseguida
   aplicarMejoras();
   municion = 0; municionPintada = "";
@@ -1578,6 +1593,7 @@ function tropezar(o) {
   const vuelta = carrilAntes;
   carrilAntes = currentLane;
   currentLane = vuelta;
+  pelos.t = -9;   // (13/11: al volver de un tropezon no hay «por los pelos»)
   streak = 0; multiplier = 1;
   tropiezo = 0.5;
   sndTropiezo();
@@ -1611,7 +1627,7 @@ let pelos = { carril: -1, t: -9, ultimo: -9 };
 function cambioCarril() { pelos.carril = carrilAntes; pelos.t = performance.now() / 1000; }
 function porLosPelos() {
   const ahora = performance.now() / 1000;
-  if (ahora - pelos.t > 0.5 || ahora - pelos.ultimo < 1.2 || rocketTimeLeft > 0 || montado) return;
+  if (ahora - pelos.t > 0.5 || ahora - pelos.ultimo < 1.2 || rocketTimeLeft > 0 || montado || pelos.carril === currentLane) return;
   for (const o of world.obstacles) {
     if (o.smashed || o.pelos || o.lane !== pelos.carril || o.type === "nada" || o.type === "rampa") continue;
     const zc = o.z + (o.centro || 0);
@@ -2084,7 +2100,7 @@ function mostrarFinSinFin() {
   pintarMisiones("misionesFin");
   const record = Math.floor(distance) > getSave().bestScore;
   document.getElementById("finalScore").textContent = Math.floor(distance);
-  document.getElementById("finalTacos").textContent = Math.floor(tacosThisRun);
+  document.getElementById("finalTacos").textContent = conBonus(tacosThisRun) + (esFinde() ? " (×2)" : "");
   document.getElementById("bestLine").innerHTML = record ? `${icono("estrella")} ${t("newRecord")}` : "";
   botonSeguir("seguirSinFin");
   document.getElementById("gameOverScreen").classList.remove("hidden");
@@ -2304,6 +2320,12 @@ function abrirPase() {
     <div class="paseGrid">${celdas.join("")}</div>`;
   document.getElementById("paseOverlay").classList.remove("hidden");
 }
+function darPremioPase(p) {
+  if (p.tipo === "tacos") addTacos(p.n);
+  else if (p.tipo === "caja") guardarCaja();
+  else if (p.tipo === "cajaLider") guardarCaja("lider");
+  else if (p.tipo === "lider") { if (tengoLider(p.id)) addTacos(5000); else darLider(p.id); }
+}
 document.getElementById("paseBtn").addEventListener("click", () => { unlockAudio(); abrirPase(); });
 document.getElementById("paseCerrar").addEventListener("click", () => { document.getElementById("paseOverlay").classList.add("hidden"); pintarPaseBtn(); });
 document.getElementById("paseCuerpo").addEventListener("click", (ev) => {
@@ -2311,17 +2333,21 @@ document.getElementById("paseCuerpo").addEventListener("click", (ev) => {
   if (!b) return;
   const p = cobrarPase(Number(b.dataset.escalon));
   if (!p) return;
-  if (p.tipo === "tacos") addTacos(p.n);
-  else if (p.tipo === "caja") guardarCaja();
-  else if (p.tipo === "cajaLider") guardarCaja("lider");
-  else if (p.tipo === "lider") { if (tengoLider(p.id)) addTacos(5000); else darLider(p.id); }
+  darPremioPase(p);
   sndChapa(); vibrate([20, 30, 20]);
-  if (p.tipo === "lider") { spawnConfetti(40); showBubble(`¡${t("paseExclusivo")}: Boris Johnson!`, 1800, 3); }
+  if (p.tipo === "lider") { spawnConfetti(40); showBubble(t("paseBorisGanado"), 1800, 3); }
   pintarCajaBtn();
   abrirPase();
   pintarPaseBtn();
 });
 pintarPaseBtn();
+{
+  const viejos = pendientesPase();
+  if (viejos.length) {
+    for (const p of viejos) darPremioPase(p);
+    setTimeout(() => { pintarCajaBtn(); avisoMenu(t("pasePendiente").replace("{n}", viejos.length)); }, 1500);
+  }
+}
 
 // ---------- 11/11: el ranking del sin fin (cuenta.js; necesita la regla de Firestore) ----------
 document.getElementById("startRankBtn").addEventListener("click", async () => {
@@ -2332,7 +2358,7 @@ document.getElementById("startRankBtn").addEventListener("click", async () => {
   const yo = cuentaActual();
   try {
     const filas = await leerRanking(30);
-    const html = filas.map((f, i) => `<li class="${yo && f.uid === yo.uid ? "yo" : ""}"><span>${i + 1}. ${String(f.nombre || "?").replace(/[<>&"]/g, "")}</span><b>${(f.metros || 0).toLocaleString("es")} m</b></li>`).join("");
+    const html = filas.map((f, i) => `<li class="${yo && f.uid === yo.uid ? "yo" : ""}"><span>${i + 1}. ${String(f.nombre || "?").replace(/[<>&"]/g, "")}</span><b>${(f.metros || 0).toLocaleString(getLang() === "en" ? "en" : "es")} m</b></li>`).join("");
     lista.innerHTML = (html || `<li class="lbEmpty">${t("rankVacio")}</li>`) + (yo ? "" : `<li class="lbEmpty">${t("rankEntra")}</li>`);
   } catch (e) {
     lista.innerHTML = `<li class="lbEmpty">${t("nubeNoLista")}</li>`;
@@ -2350,6 +2376,8 @@ function lanzarAlJefe(pos, sinApuntar) {
     vibrate(10);
     return true;
   }
+  // 13/11 (auditoria): si lo que ya va volando basta para vencerle, no se gasta mas.
+  if (world.disparosEnVuelo() >= world.vidaJefeActual()) return true;
   municion--;
   world.dispararJefe(playerX, py + 1.2);
   avisarRetos(contarReto("lanzar"));
@@ -2449,6 +2477,7 @@ function frame(dtFijo) {
       invulnerable = Math.max(0, invulnerable - dt);
       character.object3D.visible = invulnerable === 0 || Math.floor(invulnerable * 12) % 2 === 0;
     }
+    relojLider(dt);
     if (magnetTimeLeft > 0) { magnetTimeLeft = Math.max(0, magnetTimeLeft - dt); updatePowerupBadge(); }
     if (boostTimeLeft > 0) { boostTimeLeft = Math.max(0, boostTimeLeft - dt); updatePowerupBadge(); }
     if (botasTimeLeft > 0) { botasTimeLeft = Math.max(0, botasTimeLeft - dt); updatePowerupBadge(); }
@@ -2974,7 +3003,10 @@ $c("cuentaEntrar").addEventListener("click", () => usarCuenta(entrarCuenta));
 $c("cuentaCrear").addEventListener("click", () => usarCuenta(crearCuenta));
 $c("cuentaClave").addEventListener("keydown", (e) => { if (e.key === "Enter") usarCuenta(entrarCuenta); });
 $c("cuentaSalir").addEventListener("click", async () => { await salirCuenta(); });
-arrancarCuenta(() => { if (gameState !== "playing") location.reload(); });
+// 13/11 (auditoria): antes de recargar se guarda la carrera que acaba de
+// terminar (tacos, record, pase); si no, se perdia.
+window.addEventListener("antesDeRecargar", () => { if (gameState === "gameover") cerrarCarrera(); });
+arrancarCuenta(() => { if (gameState === "gameover") cerrarCarrera(); if (gameState !== "playing") location.reload(); });
 
 alCambiarInstalar(() => {
   const m = modoInstalar();

@@ -32,7 +32,16 @@ export function diasQuedan(d = new Date()) {
 function estado() {
   const s = getSave();
   const tem = temporadaHoy();
-  if (!s.pase || s.pase.temporada !== tem) s.pase = { temporada: tem, puntos: 0, cobrados: [] };
+  if (!s.pase || s.pase.temporada !== tem) {
+    // 13/11 (auditoria): los escalones alcanzados y sin cobrar no se pierden.
+    if (s.pase && s.pase.temporada) {
+      const alcanzado = Math.min(ESCALONES, Math.floor((s.pase.puntos || 0) / PUNTOS_ESCALON));
+      const quedan = [];
+      for (let i = 1; i <= alcanzado; i++) if (!(s.pase.cobrados || []).includes(i)) quedan.push(premioEscalon(i));
+      if (quedan.length) s.pasePendiente = [...(s.pasePendiente || []), ...quedan];
+    }
+    s.pase = { temporada: tem, puntos: 0, cobrados: [] };
+  }
   const sem = semanaHoy();
   if (!s.semana || s.semana.clave !== sem) s.semana = { clave: sem, cont: {}, hechos: [] };
   return s;
@@ -72,6 +81,14 @@ export function sumarPuntos(n) {
 // Los puntos de una carrera.
 export function puntosCarrera({ metros = 0, tacos = 0, jefes = 0, ganado = false }) {
   return Math.round(metros / 20 + tacos / 4 + jefes * 60 + (ganado ? 80 : 0));
+}
+
+// Lo que quedo sin cobrar del mes pasado (se entrega una vez).
+export function pendientesPase() {
+  const s = estado();
+  const p = s.pasePendiente || [];
+  if (p.length) { delete s.pasePendiente; persistSave(); }
+  return p;
 }
 
 // Marca un escalón como cobrado (el premio lo da quien llama). Devuelve el premio o null.
