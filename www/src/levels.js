@@ -1375,6 +1375,124 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 14/11/2026: nivel 22: Nashville (blender/nashville.py). «Musica
+    // country. Llega a la meta bailando el YMCA». Recomendado: Broadway al
+    // atardecer (con los neones de los honky-tonks) y final ante el Partenon
+    // de Nashville, donde baila el YMCA (`baileFinal`, main.js). Dinamicas
+    // propias: el baile en linea (una pareja de vaqueros tapa dos carriles y
+    // da pasos de lado a lado: el carril libre va cambiando) y el momento
+    // estrella, el Grand Ole Opry: el escenario es el mastil de una guitarra
+    // gigante y las notas que brillan se pisan (suenan y dan tacos).
+    id: "nashville", nombre: "Broadway", lugar: "Nashville, Tennessee", listo: true,
+    zona: "city", carpeta: "nashville", luz: "atardecer", semilla: 1825,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "nashville" },
+    horizonte: "nashville",
+    obstaculos: { low: ["amplificador", "bota_vaquera", "paca"], high: ["cartel_country", "guirnalda"],
+      full: ["pickup", "furgoneta", "taxi", "bateria"] },
+    publico: { personas: ["fan", "turista", "chico", "senora", "granjero"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "nashville" }],
+      [70, 280, "mixto", { densidad: 0.45, titulo: "broadway" }],
+      [280, 640, "baile", { titulo: "baile" }],
+      [640, 720, "calma"],
+      [720, 880, "premios", { titulo: "premios" }],
+      [880, 1040, "slalom", { full: ["pickup", "furgoneta", "taxi"], titulo: "ryman" }],
+      [1040, 1120, "calma", { titulo: "entrada_opry" }],
+      // El momento estrella: el Grand Ole Opry (pieza de `fondo` e `interior`).
+      [1120, 1540, "opry", { titulo: "opry" }],
+      [1540, 1620, "calma"],
+      [1620, 1780, "jefe_paso", { titulo: "jefe_paso" }],
+      [1780, 1860, "calma"],
+      [1860, 2020, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2020, 2400, "baile", { titulo: "baile2" }],
+      [2400, 2480, "calma"],
+      [2480, 2640, "vallas", { low: ["amplificador", "bota_vaquera"], high: ["cartel_country"], titulo: "honky" }],
+      [2640, 2800, "rampa", { titulo: "rampa" }],
+      [2800, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_partenon" }],
+    ],
+    control: 1600, caja: 680,
+    interior: { rango: [1122, 1538], tipo: "opry", sinEdificios: [1110, 1550] },
+    sinEdificios: [3260, 4000],
+    chapas: [[200, "carril"], [1930, "carril"], [2900, "arco"]],
+    hitos: ["honky_tonk", "ryman", "batman_building"],
+    meta: "partenon", metaNombre: { es: "el Partenón de Nashville", en: "the Nashville Parthenon" },
+    izquierda: [
+      40, ["kit", 2], 14, ["honky_tonk", 1], ["kit", 2], 14, ...cuadras(3), ["ryman", 1], 14, ...cuadras(22),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(4), ["batman_building", 1], 14, ...cuadras(3), ["honky_tonk", 1], 14, ...cuadras(20),
+    ],
+    fondo: [{ pieza: "partenon", d: 3330, centro: true },
+      { pieza: "arco_broadway", d: 120, cruza: true }, { pieza: "arco_broadway", d: 2000, cruza: true },
+      { pieza: "opry", d: 1120, cruza: true }],
+    // Se para en medio del escenario redondo y baila el YMCA (cuatro posturas, dos veces).
+    final: "parada", parada: 7, baileFinal: "ymca",
+    camaraFinal: { pos: [2.2, 1.7, 6.5], mira: [0, 4.2, -30] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 14/11/2026: nivel 23: Louisville (blender/louisville.py). «La carrera
+    // de caballos del Derby: los caballos le adelantan». Recomendado: tarde
+    // de primavera (el Derby se corre por la tarde) y final en el circulo del
+    // ganador de Churchill Downs, bajo las dos agujas. Dinamicas propias:
+    // los bates gigantes de Louisville Slugger (de pie en el bordillo, caen
+    // atravesados en la calle) y el momento estrella, la pista de Churchill
+    // Downs: los caballos vienen por DETRAS y le adelantan (una flecha en el
+    // suelo marca el carril del que hay que quitarse).
+    id: "louisville", nombre: "Main Street", lugar: "Louisville, Kentucky", listo: true,
+    zona: "city", carpeta: "louisville", luz: "tarde", semilla: 1826,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 6, estilo: "louisville" },
+    horizonte: "louisville",
+    obstaculos: { low: ["barricas_bourbon", "seto_derby", "paca"], high: ["cartel_rosas", "andamio"],
+      full: ["pickup", "furgoneta", "cubo_pollo", "tractor"] },
+    publico: { personas: ["fan", "senora", "abuelo", "chico", "granjero"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "louisville" }],
+      [70, 300, "mixto", { densidad: 0.45, titulo: "main_street" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 520, "calma", { titulo: "slugger" }],
+      [520, 900, "bates", { titulo: "bates" }],
+      [900, 980, "calma"],
+      [980, 1140, "premios", { titulo: "premios" }],
+      [1140, 1300, "jefe_paso", { titulo: "jefe_paso" }],
+      [1300, 1380, "calma"],
+      [1380, 1540, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1540, 1700, "alfombra", { titulo: "alfombra" }],
+      [1700, 1780, "calma", { titulo: "bourbon" }],
+      [1780, 2140, "bates", { titulo: "bates2" }],
+      [2140, 2220, "calma", { titulo: "entrada_pista" }],
+      // El momento estrella: la pista de Churchill Downs (pieza de `fondo` e `interior`, al aire libre).
+      [2220, 2640, "derby", { titulo: "derby" }],
+      [2640, 2720, "calma", { titulo: "derby_fin" }],
+      [2720, 2880, "vallas", { low: ["seto_derby", "barricas_bourbon"], high: ["cartel_rosas"], titulo: "rosas" }],
+      [2880, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_churchill" }],
+    ],
+    control: 1740, caja: 940,
+    interior: { rango: [2222, 2638], tipo: "hipodromo", aire: true, sinEdificios: [2210, 2650] },
+    sinEdificios: [3260, 4000],
+    chapas: [[180, "carril"], [1460, "carril"], [3000, "arco"]],
+    hitos: ["slugger_museum", "destileria", "pollo_frito"],
+    meta: "churchill_downs", metaNombre: { es: "la tribuna de Churchill Downs", en: "the Churchill Downs grandstand" },
+    izquierda: [
+      40, ["kit", 2], 14, ...cuadras(2), ["slugger_museum", 1], 14, ...cuadras(8), ["destileria", 1], 14, ...cuadras(16),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(4), ["pollo_frito", 1], 14, ...cuadras(5), ["destileria", 1], 14, ...cuadras(4), ["pollo_frito", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "churchill_downs", d: 3330, centro: true },
+      { pieza: "arco_derby", d: 120, cruza: true }, { pieza: "arco_derby", d: 2190, cruza: true },
+      { pieza: "hipodromo", d: 2220, cruza: true }],
+    final: "parada", parada: 5,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1478,7 +1596,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -1541,6 +1659,8 @@ export const ANCHO = {
   capitolio_ms: 82, old_capitol_ms: 35, casa_blues: 21, barco_vapor: 420,
   catedral_sl: 70, casa_criolla: 19, cafe_du_monde: 22, superdome: 64, arco_carnaval: 4, golfo_america: 2,
   vulcano: 52, sloss_hornos: 42, alabama_theatre: 23, magic_city: 2, fundicion: 420,
+  partenon: 40, ryman: 32, batman_building: 27, honky_tonk: 21, arco_broadway: 2, opry: 420,
+  churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
@@ -1754,7 +1874,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

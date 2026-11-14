@@ -7,7 +7,7 @@
 // GitHub al publicar) y cada archivo sale de lo guardado si su huella no ha
 // cambiado; solo se baja lo nuevo. Sin lista (en el PC de pruebas), como antes:
 // primero internet y, sin conexion, lo guardado.
-const CACHE = "taco-dash-v61";
+const CACHE = "taco-dash-v62";
 const ARCHIVOS = "taco-dash-archivos";   // lo que va por huella (no cambia de nombre)
 
 self.addEventListener("install", () => self.skipWaiting());

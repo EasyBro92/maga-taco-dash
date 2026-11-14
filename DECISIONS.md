@@ -2184,3 +2184,63 @@ Isidro: «sigue con los niveles, no preguntes». Cada uno con sus mecánicas pro
     que la onda no alcanza antes de llegar a ti.
   - Objeto: rotuladores.
 
+## 14/11/2026 (2): niveles 22 y 23, Nashville y Louisville (v62)
+
+Siguen los niveles sin preguntar (se aplica lo recomendado). Cada uno con dos
+mecánicas que no hay en ningún otro:
+
+- **Nashville** (3.300 m; `blender/nashville.py`; atardecer con los neones de
+  Broadway, country de honky-tonk con banjo, melodía propia). El arco de
+  «Music City», un honky-tonk con su guitarra de neón, el auditorio Ryman y
+  el «edificio Batman»; final en el Partenón de Nashville.
+  - El baile en línea: una pareja de vaqueros tapa dos carriles y da pasos de
+    lado a lado (0,9 s quietos, 0,35 s de paso): el carril libre va cambiando.
+    A 26 m dejan de cambiar de sitio, para que se vea dónde quedan
+    (`bailarEnLinea`). El objeto de la ciudad no sale en su fila.
+  - Momento estrella, el Grand Ole Opry (interior `opry`): el escenario es el
+    mástil de una guitarra gigante y cada 14 m hay una nota que brilla, en el
+    mismo carril o en el de al lado. Al pisarla suena (escala de banjo,
+    `sndNota`) y da 3 tacos; ocho seguidas son un «¡RIFF!» (+20). Las notas
+    marcan el camino libre: amplificadores, baterías y pancartas van solo por
+    donde no pasa la melodía (`pisarNota`).
+  - La meta: baila el YMCA. Cuatro posturas de brazos (Y, M, C, A), dos veces,
+    con las letras en pantalla (se enciende la que toca, sin parpadeos) y una
+    nota por letra. `baileFinal: "ymca"` en el nivel, `bailarYMCA` en main.js y
+    `setYMCA` en presidente.js (con `apuntar`). Nada de la canción de verdad:
+    las notas son de la escala propia.
+  - Objeto: guitarras.
+- **Louisville** (3.300 m; `blender/louisville.py`; tarde de primavera,
+  bluegrass al galope). El arco de «Derby City», el museo Louisville Slugger
+  con su bate de seis pisos, la destilería de bourbon y el puesto del cubo de
+  «Kentucky Fried Tacos»; final en el círculo del ganador de Churchill Downs,
+  bajo las dos agujas y la herradura de rosas.
+  - Los bates gigantes: esperan de pie en el bordillo (se ve de qué lado); a
+    72 m caen como un árbol y quedan atravesados tapando dos carriles; uno de
+    cada tres es el largo y tapa los tres (se salta). Hasta que caen no chocan
+    (`caerBate`).
+  - Momento estrella, la pista de Churchill Downs (interior `hipodromo`, al
+    aire libre): los caballos vienen por DETRÁS y le adelantan. Cada uno sale
+    17 m por detrás y corre 9 m/s más que el jugador; una flecha fija en el
+    suelo, delante del jugador, marca su carril (2 s para quitarse). Solo
+    chocan al pasar a su altura. Después se cruzan al carril de al lado,
+    saltan los setos y se pierden pista abajo. Uno de cada tres viene con
+    pareja (dos carriles a la vez); nunca los tres (`galoparCaballo`).
+  - Objeto: herraduras.
+
+Decisiones tomadas sin preguntar:
+
+- La luz de Nashville es `atardecer` y no `anochecer` (ya lo es Nueva Orleans).
+- El final de Nashville es el Partenón (el Ryman queda como edificio de la
+  calle) y el de Louisville, Churchill Downs; el momento estrella de
+  Louisville es la pista y no la tribuna.
+- La flecha del caballo no parpadea ni se mueve: aparece suave y se queda.
+- El cubo de pollo dice «Kentucky Fried Tacos» (sin marcas de verdad).
+- Las piezas largas (el Opry y la pista) se aligeraron de triángulos para que
+  pesen menos (1,9 y 2,5 MB).
+
+Comprobado con `?prueba`: sin errores en consola; en los dos niveles salen los
+10 objetos y la meta se completa; en Nashville, 12 parejas con 69 cambios de
+sitio y ninguno a menos de 25 m, y las 29 notas del Opry se pisan con un
+piloto automático; en Louisville, 11 bates caen entre 72 y 54 m, y 13 caballos
+adelantan (flecha 2 s cada uno) sin ningún choque del piloto automático.
+Falta el veredicto de Isidro jugando en el móvil.

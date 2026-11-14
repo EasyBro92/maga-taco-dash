@@ -94,6 +94,16 @@ const ESTILOS = {
     ladrillos: [0x9a4a32, 0xa85a3a, 0x8a3e2a, 0xb06a48], piedras: [0xe2d4b6, 0xd8c8a6], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x9d2235, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
     rotulos: ["DIAMONDS", "BBQ", "RAZORBACKS", "CATFISH", "PIG SOOIE", "OZARK", "BOOTS", "PIES", "MINING CO", "BLUES"] },
+  // 14/11: Nashville: los bares de ladrillo de Broadway, con balcones y rótulos de neón.
+  nashville: { plantas: ["planta_ladrillo", "planta_balcones", "planta_ladrillo", "planta_frontones", "planta_balcones"],
+    ladrillos: [0x9a4a36, 0x7a3a2a, 0xb06a48, 0x8a5a4a, 0x6a3a32], piedras: [0xe8dcc0, 0xd8c8a6], cristal: [0xc8a060, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_deco"], remate: ["remate_antena", 0.04], toldos: [0xc8282c, 0x1f3a6a, 0xe8b830, 0x2a2a2e],
+    rotulos: ["HONKY TONK", "LIVE MUSIC", "BOOTS", "HOT CHICKEN", "WHISKEY", "SALOON", "GUITARS", "RECORDS", "BBQ", "YEE-HAW"] },
+  // 14/11: Louisville: los almacenes de hierro y ladrillo de Main Street (la «fila del whiskey»).
+  louisville: { plantas: ["planta_frontones", "planta_ladrillo", "planta_miradores", "planta_lisa", "planta_frontones"],
+    ladrillos: [0x8a4a3a, 0xa8603e, 0x6e4a3a, 0xc8b08a, 0x7a5a4a], piedras: [0xe8e0d0, 0xd0c4a8], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.06], toldos: [0x2f6a3a, 0x8a2a1e, 0x1f3a6a, 0xf4f0e8],
+    rotulos: ["BOURBON", "DERBY HATS", "HOT BROWN", "BATS", "MINT JULEP", "FRIED CHICKEN", "BLUEGRASS", "HORSESHOES", "ROSES", "WHISKEY ROW"] },
   // 13/11: Nueva Orleans: casas del Barrio Francés, bajas, de colores y con balcones.
   nuevaorleans: { plantas: ["planta_balcones", "planta_balcones", "planta_miradores", "planta_balcones", "planta_lisa"],
     ladrillos: [0xe8a8a0, 0xf2d48a, 0xa8c8b0, 0xb8a8d8, 0xf0b890], piedras: [0xf4efe4, 0xe8dcc8], cristal: [0x8aa0b0, 0x9fb4c4],

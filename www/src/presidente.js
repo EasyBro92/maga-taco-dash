@@ -258,6 +258,7 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
     h.quaternion.slerp(_qp, k);
     h.updateMatrixWorld(true);
   }
+  const _qy = new THREE.Quaternion(), _dy = new THREE.Vector3();   // (14/11: el YMCA)
   let deslizando = 0;
   const ATRAS = 0.45;                  // adelanta la postura: la cadera, sobre su sitio
 
@@ -386,6 +387,39 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
       apuntar("LeftLeg", "LeftFoot", -0.15, 0.7, -0.8, kk);
     },
 
+    // 14/11: Nashville: el baile del YMCA de la meta. `letra`: 0 Y, 1 M, 2 C,
+    // 3 A (las posturas de brazos de siempre); `t`: segundos, para el vaiven
+    // de la cadera. Las direcciones van en el espacio del personaje (su
+    // derecha es +X) y se pasan al mundo: baila girado hacia la camara.
+    setYMCA(letra, t) {
+      if (!base) {
+        modoAndar = 1; andar.weight = 1; correr.weight = 0;
+        andar.timeScale = 0; andar.time = 0.45;
+        mixer.update(0);
+        base = { brazo: huesos.RightArm ? huesos.RightArm.quaternion.clone() : null, ante: huesos.RightForeArm ? huesos.RightForeArm.quaternion.clone() : null };
+      }
+      pose.rotation.set(0, 0, Math.sin(t * 5.7) * 0.05);
+      pose.position.set(0, -Math.abs(Math.sin(t * 5.7)) * 0.035, 0);
+      root.scale.set(mega, mega, mega);
+      root.updateMatrixWorld(true);
+      root.getWorldQuaternion(_qy);
+      const P = [
+        // Y: los dos brazos rectos, arriba y abiertos.
+        [[0.62, 1, 0], [0.62, 1, 0], [-0.62, 1, 0], [-0.62, 1, 0]],
+        // M: los codos arriba y fuera, y las manos bajan a los hombros.
+        [[0.9, 0.7, 0], [-0.8, -0.45, -0.1], [-0.9, 0.7, 0], [0.8, -0.45, -0.1]],
+        // C: los dos brazos en arco hacia su izquierda.
+        [[0.05, 1, 0], [-1, 0.45, 0], [-1, -0.3, 0], [-0.1, -1, -0.15]],
+        // A: las manos juntas por encima de la cabeza.
+        [[0.3, 1, 0], [-0.32, 1, 0], [-0.3, 1, 0], [0.32, 1, 0]],
+      ][letra] || null;
+      if (!P) return;
+      const H = [["RightArm", "RightForeArm"], ["RightForeArm", "RightHand"], ["LeftArm", "LeftForeArm"], ["LeftForeArm", "LeftHand"]];
+      H.forEach(([h, c], i) => {
+        _dy.set(P[i][0], P[i][1], P[i][2]).applyQuaternion(_qy);
+        apuntar(h, c, _dy.x, _dy.y, _dy.z, 0.3);
+      });
+    },
     // 08/11: Chicago: colgado del paraguas, con el brazo derecho arriba.
     // Deja en `destino` donde queda la mano (en el espacio del personaje),
     // para poner alli el mango.

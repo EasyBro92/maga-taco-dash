@@ -120,6 +120,18 @@ export function sndPoint() {
   tono(880, 0.14, { tipo: "triangle", vol: 0.12 });
   tono(1318, 0.2, { tipo: "triangle", vol: 0.1, cuando: 0.07 });
 }
+// 14/11: Nashville: la nota de banjo de cada nota pisada en el mastil del
+// Opry (y de cada letra del YMCA): una escala de country que sube y baja.
+const ESCALA_NOTA = [72, 74, 76, 79, 81, 84, 81, 79, 76, 79, 81, 84, 86, 88, 86, 84];
+export function sndNota(i) {
+  const f = 440 * Math.pow(2, (ESCALA_NOTA[((i % 16) + 16) % 16] - 69) / 12);
+  tono(f, 0.3, { tipo: "triangle", vol: 0.16 });
+  tono(f * 2, 0.12, { tipo: "square", vol: 0.03, filtro: 3000 });
+}
+// 14/11: Louisville: el galope del caballo que viene por detras (seis cascos).
+export function sndGalope() {
+  for (let i = 0; i < 6; i++) soplo(0.07, { desde: 320, hasta: 90, tipo: "lowpass", vol: 0.22, q: 0.8, cuando: i * 0.14 + (i % 2) * 0.05 });
+}
 export function sndChapa() {
   // Arpegio brillante: do-mi-sol-do, como una moneda especial.
   [1046, 1318, 1568, 2093].forEach((f, i) => {
@@ -266,6 +278,16 @@ const CANCIONES = {
     melodia: [67, 70, 71, null, 74, null, 71, 69, 67, null, 64, 67, 69, null, null, null,
       74, 76, 74, 71, 69, null, 71, 69, 67, null, 66, null, 67, null, null, null],
     timbre: "metal" },
+  // 14/11: Nashville: country de honky-tonk, «boom-chic» y banjo (melodia propia).
+  nashville: { bpm: 144, swing: 0.5, acordes: [C, Am, F, G7], bateria: "country", bajo: "alterna",
+    melodia: [76, null, 79, 76, 72, null, 74, 76, 72, null, 69, 72, 76, null, null, null,
+      77, null, 81, 77, 72, null, 74, 77, 79, 77, 74, 71, 72, null, null, null],
+    timbre: "banjo" },
+  // 14/11: Louisville: bluegrass al galope para el Derby (melodia propia).
+  louisville: { bpm: 164, swing: 0.5, acordes: [F, Bb, C7, F], bateria: "country", bajo: "alterna",
+    melodia: [77, 77, 81, null, 84, null, 81, 77, 82, null, 82, 86, 82, null, null, null,
+      79, 79, 82, null, 84, 82, 79, 76, 77, null, 81, null, 77, null, null, null],
+    timbre: "pluck" },
   // 13/11: Nueva Orleans: jazz de desfile (banjo, tuba y bombo de la banda).
   nueva_orleans: { bpm: 150, swing: 0.62, acordes: [C, F, C, G7], bateria: "marcha", bajo: "marcha",
     melodia: [72, null, 74, 76, 79, null, 76, 74, 72, null, 69, null, 72, null, null, null,

@@ -352,6 +352,55 @@ const SITIOS = {
     x.beginPath(); x.ellipse(2400, SUELO - 20, 80, 24, 0, Math.PI, 0); x.fill();
     x.fillRect(2320, SUELO - 20, 160, 16);
   },
+  // 14/11: Nashville: las colinas de Tennessee, el rio Cumberland con su
+  // puente de arcos y el centro con el «edificio Batman» (las dos orejas).
+  nashville(x, c, r) {
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - 34 * (0.6 + 0.4 * Math.sin(px * 0.0021 + 2)) - r() * 5);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 6, ANCHO, 5);
+    x.strokeStyle = c.puente; x.fillStyle = c.puente; x.lineWidth = 4;
+    x.fillRect(2500, SUELO - 24, 620, 4);
+    for (let k = 0; k < 4; k++) { x.beginPath(); x.arc(2577 + k * 155, SUELO - 24, 74, Math.PI, 0); x.stroke(); }
+    for (const [x0, x1] of [[900, 1250], [1420, 1800]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 28, h = 44 + r() * 80; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.willis;
+    x.fillRect(1290, SUELO - 150, 86, 150);
+    x.fillRect(1318, SUELO - 162, 30, 14);
+    for (const px of [1296, 1366]) { x.beginPath(); x.moveTo(px - 5, SUELO - 150); x.lineTo(px, SUELO - 212); x.lineTo(px + 5, SUELO - 150); x.closePath(); x.fill(); }
+  },
+  // 14/11: Louisville: el rio Ohio con el puente de hierro (el Big Four) y el
+  // de la autopista, el centro y, a un lado, las dos agujas de Churchill Downs.
+  louisville(x, c, r) {
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - 18 * (0.6 + 0.4 * Math.sin(px * 0.0018)) - r() * 5);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 7, ANCHO, 6);
+    x.strokeStyle = c.puente; x.fillStyle = c.puente; x.lineWidth = 3;
+    x.fillRect(500, SUELO - 30, 760, 4);
+    for (let k = 0; k < 5; k++) {
+      const a = 500 + k * 152;
+      x.fillRect(a - 3, SUELO - 30, 6, 26);
+      x.beginPath(); x.moveTo(a, SUELO - 30); x.lineTo(a + 30, SUELO - 62); x.lineTo(a + 122, SUELO - 62); x.lineTo(a + 152, SUELO - 30); x.stroke();
+      for (let j = 1; j < 5; j++) { x.beginPath(); x.moveTo(a + j * 30.4, SUELO - 30); x.lineTo(a + j * 30.4, SUELO - 62); x.stroke(); }
+    }
+    for (const [x0, x1] of [[1500, 1980]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 30, h = 46 + r() * 84; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.vela;
+    x.fillRect(2760, SUELO - 34, 300, 30);
+    for (const px of [2880, 2940]) {
+      x.fillRect(px - 7, SUELO - 50, 14, 18);
+      x.beginPath(); x.moveTo(px - 9, SUELO - 50); x.lineTo(px, SUELO - 86); x.lineTo(px + 9, SUELO - 50); x.closePath(); x.fill();
+    }
+  },
   // 13/11: Birmingham: Red Mountain con Vulcano en lo alto, las chimeneas de
   // Sloss y, en el cielo, el huracan pintado con rotulador (con su cono).
   birmingham(x, c, r) {
@@ -565,7 +614,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

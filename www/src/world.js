@@ -2986,6 +2986,25 @@ export function createWorld(scene) {
     vagoneta_mineral: { choque: "full", medio: 1.4, alto: 2.2, centro: 0 },
     gancho_grua: { choque: "high", medio: 0.4, alto: 2.4 },
     cartel_huracan: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 14/11: Nashville (blender/nashville.py): el bailarin de baile en linea
+    // (va en pareja y da pasos de lado a lado), la nota del mastil (se pisa),
+    // el amplificador, la bota vaquera, la bateria y la pancarta.
+    bailarin_linea: { choque: "full", medio: 0.5, alto: 2.3, centro: 0 },
+    nota_mastil: { choque: "nada", medio: 0.8, alto: 0 },
+    amplificador: { choque: "low", medio: 0.5, alto: 0.95 },
+    bota_vaquera: { choque: "low", medio: 0.65, alto: 0.95 },
+    bateria: { choque: "full", medio: 1.0, alto: 2.0, centro: 0 },
+    cartel_country: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 14/11: Louisville (blender/louisville.py): los caballos del Derby
+    // (vienen por detras y te adelantan: ver galoparCaballo), el seto de la
+    // pista, las barricas de bourbon, el cubo de pollo y la pancarta de las
+    // rosas. (El bate gigante que cae es una pieza compuesta: ver abajo.)
+    caballo_derby: { choque: "full", medio: 1.6, alto: 2.5, centro: 0 },
+    caballo_derby_azul: { choque: "full", medio: 1.6, alto: 2.5, centro: 0 },
+    seto_derby: { choque: "low", medio: 0.45, alto: 0.9 },
+    barricas_bourbon: { choque: "low", medio: 0.55, alto: 0.8 },
+    cubo_pollo: { choque: "full", medio: 1.0, alto: 2.3, centro: 0 },
+    cartel_rosas: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3038,7 +3057,11 @@ export function createWorld(scene) {
     carro_clydesdale: { pata: "clydesdale_pata", eje: "x", zancada: 1.7, amp: 0.28,
       fases: [...CUATRO, ...CUATRO.map((f) => f + 0.6)],
       patas: [-0.45, 0.45].flatMap((x) => [[x - 0.2, 5.15, 1.25], [x + 0.2, 5.15, 1.25], [x - 0.2, 4.05, 1.25], [x + 0.2, 4.05, 1.25]]) },
+    // 14/11: los caballos del Derby de Louisville, al galope.
+    caballo_derby: { pata: "derby_pata", eje: "x", zancada: 1.7, amp: 0.6, fases: [0, 0.6, Math.PI, Math.PI + 0.6],
+      patas: [[-0.2, 0.75, 1.15], [0.2, 0.75, 1.15], [-0.2, -0.7, 1.15], [0.2, -0.7, 1.15]] },
   };
+  ANDAR.caballo_derby_azul = ANDAR.caballo_derby;
   function ponerPatas(g, nombre) {
     const an = ANDAR[nombre];
     if (!an || !g || !hayModelo("obstaculos/" + an.pata)) return;
@@ -3398,6 +3421,22 @@ export function createWorld(scene) {
       });
       obstaclePools.vapor_lado = makePool(() => new THREE.Group());
     }
+    // 14/11: Louisville: el bate gigante de Louisville Slugger: espera de pie
+    // en el bordillo y cae atravesado en la calle (el del centro lleva el
+    // dibujo; los de los lados, sin dibujo, solo chocan).
+    if (hayModelo("obstaculos/bate_gigante")) {
+      TIPOS.bate = { choque: "low", medio: 0.5, alto: 0.9, centro: 0 };
+      TIPOS.bate_lado = { choque: "low", medio: 0.5, alto: 0.9, centro: 0 };
+      obstaclePools.bate = makePool(() => {
+        const g = new THREE.Group();
+        const eje = new THREE.Group();
+        eje.add(modeloConContorno("obstaculos/bate_gigante"));
+        g.add(eje);
+        g.userData.eje = eje;
+        return g;
+      });
+      obstaclePools.bate_lado = makePool(() => new THREE.Group());
+    }
     // 13/11: Birmingham: el rotulador gigante pinta muros de tinta carril a
     // carril (el del centro lleva el rotulador; los de los lados, solo su
     // tinta) y la onda de choque del martinete (cruza los tres carriles: el
@@ -3688,6 +3727,138 @@ export function createWorld(scene) {
     u.chorro.scale.set(avisa ? 0.12 : Math.min(1, (f - 1.6) / 0.12), 1, 1);
     o.escondido = f < 1.65;
     for (const l of o.lados || []) { l.escondido = o.escondido; l.z = o.z; }
+  }
+  // ---- 14/11: Nashville ----
+  // El baile en linea: una pareja de vaqueros, hombro con hombro, tapa dos
+  // carriles y da pasos de lado a lado (0,9 s quietos y 0,35 s de paso), asi
+  // que el carril libre va cambiando de lado. A 26 m dejan de cambiar de
+  // sitio (si iban a medio paso, lo acaban): se ve donde se quedan.
+  function bailarEnLinea(o, dt) {
+    const b = o.baile;
+    if (!b) return;                       // (a la pareja la mueve el que manda)
+    const T = 2.5, q0 = b.t % T;
+    const enPaso = (q0 > 0.9 && q0 < 1.25) || q0 > 2.15;
+    const baila = o.z < -26 || enPaso;
+    if (baila) b.t += dt;
+    const q = b.t % T, sua = (x) => x * x * (3 - 2 * x);
+    const s = q < 0.9 ? 0 : q < 1.25 ? sua((q - 0.9) / 0.35) : q < 2.15 ? 1 : 1 - sua((q - 2.15) / 0.35);
+    const paso = Math.sin(s * Math.PI);
+    [o, b.pareja].forEach((p, i) => {
+      if (!p || p.smashed) return;
+      const m = p.mesh;
+      m.position.x = LANE_X[i] + s * LANE_WIDTH;
+      m.scale.setScalar(1.15);
+      p.lane = i + (s < 0.5 ? 0 : 1);
+      m.position.y = paso * 0.12;
+      m.rotation.z = (q < 1.25 ? -1 : 1) * paso * 0.12;
+      m.rotation.y = baila ? Math.sin(animClock * 2.6 + i) * 0.22 : m.rotation.y * Math.max(0, 1 - dt * 6);
+    });
+  }
+  // Las notas del mastil del Opry: al pisar una (por el suelo) suena y da
+  // tacos (main.js). Devuelve el numero de la nota, o -1.
+  function pisarNota(lane) {
+    for (const o of obstacles) {
+      if (o.pool === "nota_mastil" && !o.pisada && o.lane === lane && Math.abs(o.z) < 1.3) {
+        o.pisada = true; o.mesh.visible = false;
+        burstSparkles(LANE_X[lane], 0.8, o.z);
+        return o.nota || 0;
+      }
+    }
+    return -1;
+  }
+  // ---- 14/11: Louisville ----
+  // El bate gigante: de pie en el bordillo; a 72 m empieza a caer hacia la
+  // calle (despacio al principio, como un arbol) y queda tumbado tapando dos
+  // carriles (o los tres, el largo): se salta. Hasta que cae no choca.
+  function caerBate(o, dt) {
+    const u = o.mesh.userData, c = o.bate;
+    if (!c) return;
+    if (c.f === undefined) c.f = 0;
+    if (c.f === 0 && o.z > -72) c.f = 0.0001;
+    if (c.f > 0 && c.f < 1) {
+      c.f = Math.min(1, c.f + dt / 0.95);
+      if (c.f === 1 && alAvisoMapa) alAvisoMapa("bate");
+    }
+    const a = c.f * c.f * (Math.PI / 2);
+    u.eje.position.set(c.lado * 3.5, 0.55 * Math.sin(a), 0);
+    u.eje.rotation.set(0, 0, c.lado * a);
+    u.eje.scale.set(1.35, c.largo, 1.35);
+    o.escondido = c.f < 0.8;
+    for (const l of o.lados || []) if (l) l.escondido = o.escondido;
+  }
+  // Los caballos del Derby vienen por DETRAS y te adelantan. Cada uno espera
+  // (sin verse) a que el jugador llegue a 30 m de su fila; entonces sale 17 m
+  // por detras y corre 9 m/s mas que tu por su carril: una flecha en el suelo,
+  // delante de ti, marca ese carril (1,7 s para quitarse). Solo choca mientras
+  // pasa a tu altura. Al adelantarte se cruza al carril de al lado, salta los
+  // setos que pilla y se pierde calle abajo (se encoge al salir de la pista).
+  let texFlecha = null;
+  function flechaCaballo() {
+    if (!texFlecha) {
+      const c = document.createElement("canvas"); c.width = 64; c.height = 192;
+      const x = c.getContext("2d");
+      x.fillStyle = "rgba(255,190,40,0.35)"; x.fillRect(6, 0, 52, 192);
+      x.fillStyle = "#ffd040"; x.strokeStyle = "#7a3a10"; x.lineWidth = 4; x.lineJoin = "round";
+      for (const y0 of [14, 76, 138]) {
+        x.beginPath(); x.moveTo(32, y0); x.lineTo(54, y0 + 26); x.lineTo(54, y0 + 42); x.lineTo(32, y0 + 18); x.lineTo(10, y0 + 42); x.lineTo(10, y0 + 26); x.closePath();
+        x.fill(); x.stroke();
+      }
+      texFlecha = new THREE.CanvasTexture(c);
+      texFlecha.colorSpace = THREE.SRGBColorSpace;
+    }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 5.4),
+      sobreCalzada(new THREE.MeshBasicMaterial({ map: texFlecha, transparent: true, opacity: 0, depthWrite: false, fog: false })));
+    m.rotation.x = -Math.PI / 2;
+    return m;
+  }
+  function galoparCaballo(o, dt, dz) {
+    const m = o.mesh, c = o.derby, u = m.userData;
+    if (!c) return;
+    if (!u.flecha) { u.flecha = flechaCaballo(); m.add(u.flecha); }
+    if (c.fase === 0) {
+      m.visible = false; o.fuera = true; u.flecha.visible = false;
+      if (o.z < -30) return;
+      c.fase = 1; c.t = 0; o.z = 17;
+      m.visible = true; m.scale.setScalar(1); m.position.x = LANE_X[o.lane];
+      if (u.andar) { u.andar.px = null; u.andar.pz = null; }
+      if (alAvisoMapa) alAvisoMapa("caballo");
+      return;
+    }
+    c.t += dt;
+    // (o.z ya lleva sumado lo que anda la calle: se lo quito y corre lo suyo)
+    const v = o.z > -4 ? 9 : Math.min(17, 9 + (-4 - o.z) * 0.5);
+    o.z -= dz + v * dt;
+    o.fuera = o.z > 1.7;                  // por detras aun no choca: solo al pasar a tu altura
+    // La flecha: en el suelo, delante del jugador, mientras viene por detras.
+    const f = u.flecha;
+    f.visible = c.fase === 1 && o.z > -1;
+    if (f.visible) {
+      f.material.opacity = Math.min(0.85, c.t * 3.5);
+      f.position.set(0, 0.07 - m.position.y, -5.2 - o.z);
+    }
+    // Ya te ha adelantado: se cruza al carril de al lado (si no hay otro caballo).
+    if (c.fase === 1 && o.z < -9) {
+      c.fase = 2;
+      const hueco = (l) => !obstacles.some((p) => p !== o && p.derby && p.derby.fase > 0 && p.lane === l && Math.abs(p.z - o.z) < 7);
+      if (c.corta !== undefined && c.corta !== o.lane && hueco(c.corta)) o.lane = c.corta;
+    }
+    m.position.x += (LANE_X[o.lane] - m.position.x) * Math.min(1, dt * 2.2);
+    m.rotation.y = (LANE_X[o.lane] - m.position.x) * -0.12;
+    // Salta los setos de su carril; el galope, un vaiven suave del cuerpo.
+    let salto = 0;
+    for (const p of obstacles) {
+      if (p.pool !== "seto_derby" || p.smashed || Math.abs(LANE_X[p.lane] - m.position.x) > 1.1) continue;
+      const k = (p.z - o.z) / 3.6;
+      if (Math.abs(k) < 1) salto = Math.max(salto, 1.3 * (1 - k * k));
+    }
+    m.position.y = salto + (u.andar ? Math.abs(Math.sin(u.andar.fase)) * 0.1 : 0);
+    m.rotation.x = salto > 0 ? 0.12 : 0;
+    // Al salir de la pista se encoge y se va.
+    if (totalScrolled - o.z > c.fin || o.z < -235) {
+      const e = m.scale.x - dt * 2.5;
+      if (e <= 0.05) { m.scale.setScalar(1); m.rotation.set(0, 0, 0); c.fase = 0; o.derby = null; m.position.y = -7; return; }
+      m.scale.setScalar(e);
+    }
   }
   // ---- 13/11: Nueva Orleans ----
   // La carroza: a 60 m frena (va en tu sentido, despacio: se adelanta) y a
@@ -6157,6 +6328,106 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 14/11: Nashville ----
+    // El baile en linea: cada 28 m una pareja de vaqueros que tapa dos
+    // carriles y da pasos de lado a lado (ver bailarEnLinea). Entre medias,
+    // un amplificador o una bota en un carril de los lados, y tacos.
+    baile(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 4 === 2 && obstaclePools.bailarin_linea && carrilOcupado < 0) {
+        const o = spawnObstacle(0, "full", z, "bailarin_linea");
+        const p = spawnObstacle(1, "full", z, "bailarin_linea");
+        if (o) o.baile = { pareja: p, t: Math.random() < 0.5 ? 0 : 1.25 };
+        filaSinObjeto = true;
+        return;
+      }
+      if (k % 4 === 0) {
+        const l = elegirDe([0, 2].filter((x) => x !== carrilOcupado));
+        obst(l, "low", z, d, ["amplificador", "bota_vaquera"]);
+        arcoDeTacos(l, z);
+      } else if (k % 4 === 1) tacosEn(elegirDe(LANES.filter((l) => l !== carrilOcupado)), z, 2);
+    },
+    // El Grand Ole Opry (momento estrella): el escenario es el mastil de una
+    // guitarra gigante. Cada 14 m una nota que brilla (en el mismo carril o
+    // en el de al lado): pisarlas suena y da tacos, y las notas marcan el
+    // camino libre. Entre medias, amplificadores, baterias y pancartas en
+    // los carriles por los que no pasa la melodia.
+    opry(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      const c = t._nota && k >= 2 ? t._nota : (t._nota = { lane: 1, sig: 1, i: 0 });
+      if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 2 === 0) {
+        if (!obstaclePools.nota_mastil) return;
+        c.lane = c.sig;
+        c.sig = elegirDe(LANES.filter((l) => Math.abs(l - c.lane) <= 1));
+        const o = c.lane !== carrilOcupado ? spawnObstacle(c.lane, "nada", z, "nota_mastil") : null;
+        if (o) { o.nota = c.i++; o.pisada = false; }
+        return;
+      }
+      if (k % 4 === 3) {
+        const L = { low: ["amplificador", "bota_vaquera"], high: ["cartel_country"], full: ["bateria"] };
+        const fuera = LANES.filter((l) => l !== c.lane && l !== c.sig && l !== carrilOcupado);
+        fuera.forEach((l) => { if (Math.random() < 0.8) { const ty = elegirDe(["low", "high", "full"]); obst(l, ty, z, d, L[ty]); } });
+      }
+    },
+    // ---- 14/11: Louisville ----
+    // Los bates gigantes: cada 35 m uno de pie en un bordillo que cae
+    // atravesado y tapa dos carriles (ver caerBate); uno de cada tres es el
+    // largo, que tapa los tres: se salta (con su arco de tacos). Entre
+    // medias, barricas o la pancarta, y tacos.
+    bates(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 5 === 2 && obstaclePools.bate && carrilOcupado < 0) {
+        const lado = Math.random() < 0.5 ? -1 : 1, largo = Math.floor(k / 5) % 3 === 2;
+        const o = spawnObstacle(1, "low", z, "bate");
+        if (o) {
+          o.bate = { lado, largo: largo ? 1.26 : 0.85 };
+          o.lados = (largo ? [0, 2] : [lado < 0 ? 0 : 2]).map((l) => spawnObstacle(l, "low", z, "bate_lado"));
+          if (largo) arcoDeTacos(1, z);
+          else for (let i = 0; i < 4; i++) spawnTaco(lado < 0 ? 2 : 0, z - i * 1.4, 0.9);
+        }
+        return;
+      }
+      if (k % 5 === 4) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        const ty = Math.random() < 0.6 ? "low" : "high";
+        obst(l, ty, z, d, ty === "low" ? ["barricas_bourbon"] : ["cartel_rosas"]);
+        if (ty === "low") arcoDeTacos(l, z);
+      } else if (k % 5 === 0) tacosEn(elegirDe(LANES.filter((l) => l !== carrilOcupado)), z, 2);
+    },
+    // La pista de Churchill Downs (momento estrella): cada 35 m sale un
+    // caballo por detras (ver galoparCaballo); uno de cada tres, con otro a
+    // su lado (dos carriles a la vez: queda uno). Por delante solo setos
+    // (que los caballos saltan) y tacos; en los ultimos 60 m ya no salen.
+    derby(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      const caballos = ["caballo_derby", "caballo_derby_azul"].filter((x) => obstaclePools[x]);
+      if (k % 5 === 2 && k < n - 8 && caballos.length && carrilOcupado < 0) {
+        const i = Math.floor(k / 5);
+        const l = elegirDe(LANES), otros = LANES.filter((x) => x !== l);
+        const suelta = (lane, corta, nombre) => {
+          const o = spawnObstacle(lane, "full", z, nombre);
+          if (o) { o.derby = { fase: 0, t: 0, corta, fin: t.hasta + 45 }; o.fuera = true; o.mesh.visible = false; }
+        };
+        const vecino = elegirDe(otros.filter((x) => Math.abs(x - l) === 1));
+        suelta(l, i % 3 === 2 ? undefined : vecino, caballos[i % caballos.length]);
+        if (i % 3 === 2) suelta(elegirDe(otros), undefined, caballos[(i + 1) % caballos.length]);
+        return;
+      }
+      if (k % 5 === 0) {
+        const l = elegirDe(LANES);
+        obst(l, "low", z, d, ["seto_derby"]);
+        arcoDeTacos(l, z);
+        if (Math.random() < 0.4) obst(elegirDe(LANES.filter((x) => x !== l)), "low", z, d, ["seto_derby"]);
+      } else if (k % 5 === 3) tacosEn(elegirDe(LANES), z, 3);
+    },
     // ---- 13/11: Nueva Orleans ----
     // El desfile del Mardi Gras: cada 28 m una carroza (frena cerca: se
     // adelanta) que tira tacos de oro a los lados; su carril queda libre
@@ -6367,6 +6638,8 @@ export function createWorld(scene) {
   const NIEBLA_INTERIOR = {
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
+    // 14/11: el Grand Ole Opry de Nashville: la sala a oscuras, granate.
+    opry: { color: new THREE.Color(0x1e0c12), near: 40, far: 170 },
     // 13/11: la fundicion Sloss de Birmingham: humo naranja y oscuro.
     fundicion: { color: new THREE.Color(0x2a160a), near: 18, far: 95 },
     // 12/11: el hangar de la Luna de Houston: de noche, azul muy oscuro.
@@ -6660,7 +6933,9 @@ export function createWorld(scene) {
   }
   // Lo pone en la fila que se acaba de generar: en el carril de los tacos, o
   // en uno sin nada delante.
+  let filaSinObjeto = false;   // (14/11: la fila de los bailarines: el carril libre cambia)
   function ponerObjeto(z, idx) {
+    if (filaSinObjeto) return false;
     // 13/11 (auditoria): lo que no estorba (placas de hielo, brillos...) no
     // cuenta; y si no cabe en esta fila, se prueba en las siguientes.
     const libres = LANES.filter((l) => l !== carrilOcupado && !obstacles.some((o) => o.lane === l && o.type !== "nada" && !o.smashed
@@ -6754,7 +7029,7 @@ export function createWorld(scene) {
         if (i >= 0 && ponerObjeto(z, i)) objHechos.add(i);
       }
     } finally {
-      carrilOcupado = -1; filaD = null; respiro = false;
+      carrilOcupado = -1; filaD = null; respiro = false; filaSinObjeto = false;
       if (new Set(obstacles.filter((o) => o.z === z && o.type !== "bus" && o.type !== "nada" && o.type !== "rampa").map((o) => o.lane)).size === 3) ultimaCerrada = d;
     }
   }
@@ -7416,6 +7691,10 @@ export function createWorld(scene) {
         else if (o.pool === "carroza_rey" || o.pool === "carroza_bufon") desfilarCarroza(o);
         else if (o.pool === "trazo") pintarTrazo(o, dt);
         else if (o.pool === "onda") correrOnda(o, dt);
+        else if (o.pool === "bailarin_linea") bailarEnLinea(o, dt);
+        else if (o.pool === "nota_mastil") o.mesh.rotation.y += dt * 1.2;
+        else if (o.pool === "bate") caerBate(o, dt);
+        else if (o.pool === "caballo_derby" || o.pool === "caballo_derby_azul") galoparCaballo(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
@@ -7465,7 +7744,7 @@ export function createWorld(scene) {
         }
       }
       // (07/11: lo largo, como el tren del metro, cuando ha pasado entero; antes desaparecia de golpe.)
-      if (o.z > DESPAWN_Z + (o.type === "bus" ? o.largo : Math.max(0, -2 * o.centro)) || o.mesh.position.y < -6) {
+      if ((o.z > DESPAWN_Z + (o.type === "bus" ? o.largo : Math.max(0, -2 * o.centro)) && !o.derby) || o.mesh.position.y < -6) {
         o.mesh.position.y = 0;
         if (o.hielo) { o.mesh.remove(o.hielo); o.hielo = null; }
         obstaclePools[o.pool].release(o.mesh);
@@ -7637,5 +7916,5 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado, cavar };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota };
 }

@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -333,6 +333,8 @@ let luzBase = null, metroAntes = 0;
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
   // 13/11: la mina de Little Rock: la luz calida de los farolillos, poca.
+  // 14/11: el Grand Ole Opry de Nashville: la luz calida de los focos del escenario.
+  opry: { hemi: new THREE.Color(0xffe2b8), suelo: new THREE.Color(0x6a3a2a), hemiI: 1.15, fill: new THREE.Color(0xfff0d0), fillI: 1.0, sunI: 0.2 },
   fundicion: { hemi: new THREE.Color(0xffb878), suelo: new THREE.Color(0x4a2a18), hemiI: 1.0, fill: new THREE.Color(0xff9040), fillI: 0.9, sunI: 0.15 },
   mina: { hemi: new THREE.Color(0xffc890), suelo: new THREE.Color(0x5a4030), hemiI: 0.85, fill: new THREE.Color(0xffb070), fillI: 0.75, sunI: 0.12 },
   // 12/11: el hangar de la Luna: luz blanca y fria de los focos.
@@ -713,7 +715,9 @@ const NOMBRE_HITO = {
     river_market: "El River Market", clinton_library: "La biblioteca de Clinton", old_state_house: "El viejo Capitolio de Arkansas",
     old_capitol_ms: "El viejo Capitolio de Misisipi", casa_blues: "Un bar de blues de Farish Street",
     casa_criolla: "Una casa criolla del Barrio Francés", cafe_du_monde: "El Café du Monde", superdome: "El Superdome",
-    alabama_theatre: "El teatro Alabama", sloss_hornos: "Los hornos Sloss" },
+    alabama_theatre: "El teatro Alabama", sloss_hornos: "Los hornos Sloss",
+    honky_tonk: "Un honky-tonk de Broadway", ryman: "El auditorio Ryman", batman_building: "El «edificio Batman»",
+    slugger_museum: "El museo del bate Louisville Slugger", destileria: "Una destilería de bourbon", pollo_frito: "El pollo frito de Kentucky" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -746,7 +750,9 @@ const NOMBRE_HITO = {
     river_market: "The River Market", clinton_library: "The Clinton Library", old_state_house: "The Old State House",
     old_capitol_ms: "The Old Mississippi Capitol", casa_blues: "A Farish Street blues bar",
     casa_criolla: "A French Quarter Creole townhouse", cafe_du_monde: "Café du Monde", superdome: "The Superdome",
-    alabama_theatre: "The Alabama Theatre", sloss_hornos: "Sloss Furnaces" },
+    alabama_theatre: "The Alabama Theatre", sloss_hornos: "Sloss Furnaces",
+    honky_tonk: "A Broadway honky-tonk", ryman: "The Ryman Auditorium", batman_building: "The “Batman Building”",
+    slugger_museum: "The Louisville Slugger Museum", destileria: "A bourbon distillery", pollo_frito: "Kentucky fried chicken" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -881,8 +887,10 @@ function finalCamion(dt, flat, zParadaDada) {
     if (zParada + dz >= 0) { dz = Math.max(0, -zParada); fin.fase = 2; fin.t = 0; showBubble(finTexto(nivelActual), 1300, 3); vibrate([30, 40, 30]); mostrarPremio(premioDe(nivelActual)); spawnConfetti(30); }
   } else if (fin.fase === 2) {
     character.object3D.rotation.y += (Math.PI - character.object3D.rotation.y) * Math.min(1, dt * 5);
-    character.setIdlePose(fin.t + 1);
-    if (fin.t > 2.8) { fin.fase = 5; completarNivel(); }
+    // 14/11: Nashville: en la meta baila el YMCA (5,3 s en vez de 2,8).
+    const ymca = nivelActual.baileFinal === "ymca" && !!character.setYMCA;
+    if (ymca) bailarYMCA(fin.t); else character.setIdlePose(fin.t + 1);
+    if (fin.t > (ymca ? YMCA_T0 + 8 * YMCA_PASO + 0.25 : 2.8)) { fin.fase = 5; quitarYMCA(); completarNivel(); }
   }
   if (dz) world.update(dz);
   py = 0;
@@ -1302,6 +1310,7 @@ function resetRun(desde = 0) {
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
   tramoMostrado = null; jefeLanzado = false; gritoChina = 0; jefeSinFin = "dragon";
   ponerAlReves(false);
+  rachaNotas = 0; ultimaNota = -9; quitarYMCA();
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1542,6 +1551,31 @@ function spawnConfetti(count) {
   }
 }
 
+// 14/11: Nashville: las notas del mastil pisadas seguidas (ver el fotograma).
+var rachaNotas = 0, ultimaNota = -9;
+// 14/11: Nashville: al llegar a la meta baila el YMCA: cuatro posturas de
+// brazos (Y, M, C, A), dos veces, con las letras en pantalla (se enciende la
+// que toca) y una nota por letra (melodia propia, no la de la cancion).
+const YMCA_T0 = 0.7, YMCA_PASO = 0.55;
+var ymcaLetra = -1;   // (var: resetRun puede llamar antes de llegar aqui)
+function bailarYMCA(tt) {
+  const n = Math.floor((tt - YMCA_T0) / YMCA_PASO);
+  const letra = tt < YMCA_T0 || n >= 8 ? -1 : n % 4;
+  if (letra < 0 && tt < YMCA_T0) character.setIdlePose(tt + 1); else character.setYMCA(letra < 0 ? 0 : letra, tt);
+  let el = document.getElementById("ymca");
+  if (!el) {
+    el = document.createElement("div"); el.id = "ymca";
+    el.innerHTML = "YMCA".split("").map((c) => `<span>${c}</span>`).join("");
+    document.body.appendChild(el);
+  }
+  el.classList.toggle("hidden", tt < YMCA_T0);
+  if (letra !== ymcaLetra) {
+    ymcaLetra = letra;
+    [...el.children].forEach((sp, i) => sp.classList.toggle("on", i === letra));
+    if (letra >= 0) { sndNota([0, 2, 4, 7][letra] + (n >= 4 ? 4 : 0)); vibrate(10); }
+  }
+}
+function quitarYMCA() { ymcaLetra = -1; const el = document.getElementById("ymca"); if (el) el.classList.add("hidden"); }
 // ---------- Controles ----------
 // 13/11: Nueva Orleans, el golfo de America: los mapas se vuelven locos y
 // izquierda y derecha van al reves (con un cartel fijo mientras dura).
@@ -2451,6 +2485,8 @@ world.onAvisoMapa((que) => {
   else if (que === "diana") { if (ahora - avisoMapaT > 3000) { avisoMapaT = ahora; textoFlotante(t("dianaFijada")); } vibrate([15, 30, 15]); sndTic(); }
   else if (que === "cybertruck") vibrate(30);   // (13/11: sin sacudir la camara, marea)
   else if (que === "roca") vibrate(12);
+  else if (que === "bate") vibrate(15);                          // (14/11: Louisville: el bate toca el suelo)
+  else if (que === "caballo") { sndGalope(); vibrate(10); }      // (y el caballo que sale por detras)
 });
 
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
@@ -2586,7 +2622,8 @@ function frame(dtFijo) {
       const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso",
         elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso",
         jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso",
-        desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso" };
+        desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso",
+        baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2739,6 +2776,18 @@ function frame(dtFijo) {
       tacosThisRun += n;
       textoFlotante(`${t("diamante")} +${n}`);
       sndChapa(); vibrate([15, 20, 15]);
+    }
+    // 14/11: Nashville: pisar una nota del mastil del Opry: suena y da tacos;
+    // ocho seguidas son un riff (+20).
+    if (gameState === "playing" && py < 0.5) {
+      const nota = world.pisarNota(currentLane);
+      if (nota >= 0) {
+        rachaNotas = nota === ultimaNota + 1 ? rachaNotas + 1 : 1;
+        ultimaNota = nota;
+        tacosThisRun += 3 * multiplier;
+        sndNota(nota); vibrate(8);
+        if (rachaNotas % 8 === 0) { tacosThisRun += 20 * multiplier; textoFlotante(`${t("riff")} +${20 * multiplier}`); }
+      }
     }
     checkCollectibles(dt);
     checkChapas();

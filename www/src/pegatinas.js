@@ -296,6 +296,46 @@ const DIBUJOS = {
     x.restore();
   },
   // 13/11: la pajita de plástico de Jackson (doblada, roja y blanca).
+  // 14/11: la guitarra de Nashville.
+  guitarra(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(0.6);
+    const forma = () => {
+      x.beginPath();
+      x.ellipse(0, 52, 56, 50, 0, 0, Math.PI * 2);
+      x.ellipse(0, -8, 40, 36, 0, 0, Math.PI * 2);
+      x.rect(-11, -108, 22, 80);
+      x.rect(-17, -124, 34, 24);
+    };
+    x.lineJoin = "round";
+    x.lineWidth = 30; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#d88a2a"; x.beginPath(); x.ellipse(0, 52, 56, 50, 0, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.ellipse(0, -8, 40, 36, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#6a3a1e"; x.fillRect(-11, -108, 22, 96); x.fillRect(-17, -124, 34, 24);
+    x.fillStyle = "#2a1a12"; x.beginPath(); x.arc(0, 22, 18, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#3a2416"; x.fillRect(-24, 70, 48, 9);
+    x.strokeStyle = "#f4f0e8"; x.lineWidth = 1.6;
+    for (const dx of [-6, -2, 2, 6]) { x.beginPath(); x.moveTo(dx, -104); x.lineTo(dx * 2.4, 74); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-26, 34, 9, 18, 0.5, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: la herradura de la suerte del Derby de Louisville.
+  herradura(x) {
+    x.save();
+    x.translate(128, 122);
+    const arco = (ancho, color) => {
+      x.lineWidth = ancho; x.strokeStyle = color; x.lineCap = "butt"; x.lineJoin = "round";
+      x.beginPath(); x.moveTo(-50, 94); x.lineTo(-58, 30); x.arc(0, 0, 66, Math.PI * 0.85, Math.PI * 0.15); x.lineTo(50, 94); x.stroke();
+    };
+    arco(62, "#fff"); arco(42, CONTORNO); arco(28, "#c8c8c0");
+    x.lineWidth = 6; x.strokeStyle = "rgba(255,255,255,0.6)";
+    x.beginPath(); x.arc(0, 0, 74, Math.PI * 1.15, Math.PI * 1.6); x.stroke();
+    x.fillStyle = "#4a4e54";
+    for (const a of [0.95, 1.2, 1.5, 1.8, 2.05]) { x.beginPath(); x.arc(Math.cos(a * Math.PI) * 66, Math.sin(a * Math.PI) * 66, 5, 0, Math.PI * 2); x.fill(); }
+    for (const sx of [-1, 1]) { x.beginPath(); x.arc(sx * 54, 60, 5, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+  },
   // 13/11: el collar del carnaval de Nueva Orleans (morado, verde y oro).
   collar(x) {
     x.save();

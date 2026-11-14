@@ -42,7 +42,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Indiana | Indianápolis | capital y la más famosa |
 | Iowa | Des Moines | capital, y el «caucus» con el que empieza la carrera (hecho el 01/11: Locust Street hasta el Capitolio) |
 | Kansas | Wichita (capital: Topeka) | la más grande |
-| Kentucky | Louisville (capital: Frankfort) | el Derby |
+| Kentucky | Louisville (capital: Frankfort) | el Derby (hecho el 14/11: Main Street, los bates gigantes que caen y la pista de Churchill Downs con los caballos que adelantan) |
 | Luisiana | Nueva Orleans (capital: Baton Rouge) | la más famosa (hecho el 14/11: Bourbon Street, el desfile de carrozas y el golfo de América con los controles al revés) |
 | Maine | Portland (capital: Augusta) | la más grande |
 | Maryland | Baltimore (capital: Annapolis) | la más grande |
@@ -60,7 +60,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Oregón | Portland (capital: Salem) | la más famosa |
 | Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad |
 | Rhode Island | Providence | capital y la más grande |
-| Tennessee | Nashville | capital y la música country |
+| Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
 | Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |
 | Utah | Salt Lake City | capital y la más famosa |
 | Vermont | Burlington (capital: Montpelier) | la más grande |
