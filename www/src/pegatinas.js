@@ -365,6 +365,45 @@ const DIBUJOS = {
     x.fillStyle = "#e05a88"; x.beginPath(); x.ellipse(-20, 18, 26, 14, -0.4, 0, Math.PI * 2); x.fill();
     x.restore();
   },
+  // 14/11: los esquís cruzados con los bastones (Denver).
+  esquis(x) {
+    x.save();
+    x.translate(128, 132);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const esqui = (a) => { x.save(); x.rotate(a); x.beginPath(); x.moveTo(-14, 96); x.lineTo(-14, -80); x.quadraticCurveTo(-14, -112, 0, -116); x.quadraticCurveTo(14, -112, 14, -80); x.lineTo(14, 96); x.closePath(); x.restore(); };
+    const baston = (a) => { x.save(); x.rotate(a); x.beginPath(); x.moveTo(0, -104); x.lineTo(0, 100); x.restore(); };
+    for (const a of [-0.42, 0.42]) { x.lineWidth = 30; x.strokeStyle = "#fff"; esqui(a); x.stroke(); }
+    for (const a of [-0.42, 0.42]) {
+      x.lineWidth = 8; x.strokeStyle = CONTORNO; esqui(a); x.stroke();
+      x.fillStyle = a < 0 ? "#c8202a" : "#2a5ab8"; esqui(a); x.fill();
+      x.save(); x.rotate(a); x.fillStyle = "#f6f4ee"; x.fillRect(-14, -20, 28, 10); x.restore();
+    }
+    for (const a of [-0.12, 0.12]) { x.lineWidth = 8; x.strokeStyle = CONTORNO; baston(a); x.stroke(); x.lineWidth = 4; x.strokeStyle = "#d8dce0"; baston(a); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-30, -40, 6, 26, -0.42, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: el globo de la fiesta de Albuquerque (gajos rojos y amarillos).
+  globo(x) {
+    x.save();
+    x.translate(128, 112);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const tela = () => { x.beginPath(); x.moveTo(-30, 62); x.bezierCurveTo(-118, -10, -70, -104, 0, -104); x.bezierCurveTo(70, -104, 118, -10, 30, 62); x.closePath(); };
+    const cesta = () => { x.beginPath(); x.rect(-20, 92, 40, 30); };
+    const cuerdas = () => { x.beginPath(); x.moveTo(-28, 62); x.lineTo(-18, 94); x.moveTo(28, 62); x.lineTo(18, 94); };
+    x.lineWidth = 28; x.strokeStyle = "#fff"; tela(); x.stroke(); cesta(); x.stroke(); cuerdas(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; tela(); x.stroke(); cesta(); x.stroke();
+    x.lineWidth = 5; cuerdas(); x.stroke();
+    x.fillStyle = "#e8402a"; tela(); x.fill();
+    x.save(); tela(); x.clip();
+    x.fillStyle = "#f6c81e";
+    for (const k of [-2, 0, 2]) { x.beginPath(); x.ellipse(k * 26, -20, 12, 110, 0, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+    x.fillStyle = "#a8783e"; cesta(); x.fill();
+    x.strokeStyle = "#7a5228"; x.lineWidth = 3;
+    for (const dy of [100, 110]) { x.beginPath(); x.moveTo(-20, dy); x.lineTo(20, dy); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-40, -50, 12, 26, 0.4, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 14/11: el melocotón de Georgia (Atlanta).
   melocoton(x) {
     x.save();

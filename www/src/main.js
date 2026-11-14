@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -63,7 +63,7 @@ const JEFE_CADA = 2000;      // y luego cada tantos
 // el sprint final. Un nivel dura asi unos 3 minutos (antes 2 y medio).
 const SPRINT_EXTRA = 1.08;
 // Seguir tras chocar: cuesta tacos, cada vez el doble.
-const PRECIO_SEGUIR = 300;
+const PRECIO_SEGUIR = 100; // 14/11: de 300 a 100, ahora que solo valen los tacos de la partida
 const PREMIO_BASE = 500, PREMIO_ESTRELLA = 250;   // 05/11: el premio de cada victoria (750 a 1250 tacos)
 const INVULNERABLE = 2.2;    // segundos de parpadeo al seguir: lo de delante no cuenta
 // ---- 28/10/2026: ideas de Subway Surfers ----
@@ -728,7 +728,9 @@ const NOMBRE_HITO = {
     torre_led: "La torre de las luces",
     rainbow_row: "Rainbow Row, las casas de colores", san_miguel: "La iglesia de San Miguel", mercado_charleston: "El Market Hall",
     casa_battery: "Una mansión de la Battery", hotel_deco_rosa: "Un hotel art déco de Ocean Drive",
-    hotel_deco_azul: "Un hotel art déco de Ocean Drive", playa_socorrista: "La playa de Miami Beach" },
+    hotel_deco_azul: "Un hotel art déco de Ocean Drive", playa_socorrista: "La playa de Miami Beach",
+    kimo_theatre: "El teatro KiMo", casa_adobe: "Una casa de adobe", motel_66: "Un motel de la Ruta 66",
+    torre_daniels: "La torre del reloj", union_station_den: "La Union Station", oso_azul: "El oso azul" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -770,7 +772,9 @@ const NOMBRE_HITO = {
     torre_led: "The tower of lights",
     rainbow_row: "Rainbow Row, the colorful houses", san_miguel: "St. Michael's Church", mercado_charleston: "The Market Hall",
     casa_battery: "A Battery mansion", hotel_deco_rosa: "An Ocean Drive Art Deco hotel",
-    hotel_deco_azul: "An Ocean Drive Art Deco hotel", playa_socorrista: "Miami Beach" },
+    hotel_deco_azul: "An Ocean Drive Art Deco hotel", playa_socorrista: "Miami Beach",
+    kimo_theatre: "The KiMo Theatre", casa_adobe: "An adobe house", motel_66: "A Route 66 motel",
+    torre_daniels: "The clock tower", union_station_den: "Union Station", oso_azul: "The big blue bear" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1332,7 +1336,7 @@ function resetRun(desde = 0) {
   if (!desde) { votosMision = 0; votosHecha = false; }
   ponerVotos();
   rebufoT = 0; ponerRebufo();
-  rachaGolf = 0;
+  rachaGolf = 0; rachaPuertas = 0;
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1634,7 +1638,7 @@ function ponerRebufo() {
   }
 }
 // 14/11: Charleston: las bolas de golf cogidas seguidas.
-var rachaGolf = 0;
+var rachaGolf = 0, rachaPuertas = 0;
 // 14/11: Nashville: las notas del mastil pisadas seguidas (ver el fotograma).
 var rachaNotas = 0, ultimaNota = -9;
 // 14/11: Nashville: al llegar a la meta baila el YMCA: cuatro posturas de
@@ -2195,26 +2199,27 @@ function terminarCaida() {
   if (nivelActual) mostrarChoqueNivel();
   else mostrarFinSinFin();
 }
-// Seguir cuesta tacos (los guardados mas los de esta partida), cada vez el doble.
+// Seguir cuesta tacos, cada vez el doble. 14/11: solo los de ESTA partida
+// (antes tiraba de los guardados y se seguia aunque no llevaras ninguno).
 function precioSeguir() {
   return PRECIO_SEGUIR * Math.pow(2, intento ? intento.pagos : 0);
 }
 function puedePagar(precio) {
-  return getSave().totalTacos + Math.floor(tacosThisRun) >= precio;
+  return Math.floor(tacosThisRun) >= precio;
 }
 function pagar(precio) {
   if (!puedePagar(precio)) return false;
-  const deGuardados = Math.min(getSave().totalTacos, precio);
-  spendTacos(deGuardados);
-  tacosThisRun -= precio - deGuardados;
+  tacosThisRun -= precio;
   lastTacoShown = Math.floor(tacosThisRun);
   return true;
 }
 function botonSeguir(id) {
   const b = document.getElementById(id);
   const precio = precioSeguir();
-  b.innerHTML = `${t("seguirAqui").replace("{n}", precio)} ${TACO_IMG()}`;
   b.disabled = !puedePagar(precio);
+  b.innerHTML = b.disabled
+    ? `${t("faltanSeguir").replace("{n}", precio - Math.floor(tacosThisRun))} ${TACO_IMG()}`
+    : `${t("seguirAqui").replace("{n}", precio)} ${TACO_IMG()}`;
   b.classList.toggle("apagado", b.disabled);
 }
 function mostrarChoqueNivel() {
@@ -2590,6 +2595,9 @@ world.onAvisoMapa((que) => {
   else if (que === "trompo") { sndTrompo(); vibrate(20); }       // (y el accidente en cadena)
   else if (que === "golpe") sndSwing();                          // (14/11: Charleston: el golpe de golf)
   else if (que === "ola") sndOla();                              // (14/11: Miami: la ola sale de la playa)
+  else if (que === "platillo") sndPlatillo();                    // (14/11: Albuquerque: el rayo del platillo)
+  else if (que === "globo") sndQuemador();                       // (y el quemador del globo que va a despegar)
+  else if (que === "bola") sndRodar();                           // (14/11: Denver: la bola de nieve ya es grande)
 });
 
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
@@ -2728,7 +2736,8 @@ function frame(dtFijo) {
         desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso",
         baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso",
         papeletas: "papeletasAviso", recuento: "recuentoAviso", rebufo: "rebufoAviso", ovalo: "ovaloAviso",
-        calesas: "calesasAviso", golf: "golfAviso", marejada: "marejadaAviso", bano: "banoAviso" };
+        calesas: "calesasAviso", golf: "golfAviso", marejada: "marejadaAviso", bano: "banoAviso",
+        platillo: "platilloAviso", globos: "globosAviso", bolas: "bolasAviso", esqui: "esquiAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2765,7 +2774,8 @@ function frame(dtFijo) {
     // 06/11 (3): el jefe de paso de los niveles sin jefe (tres barriles y se va).
     if (nivelActual && tramo.tipo === "jefe_paso" && !tramo.lanzado && distance > tramo.desde + 8 && rocketTimeLeft === 0 && !world.jefeActivo()) {
       tramo.lanzado = true;
-      if (world.iniciarJefe("robot", true)) { showBubble(t("jefePasa"), 1800, 3); triggerCameraShake(0.03); }
+      // (14/11: en el acto de la Armada Espanola, el que pasa es el Toro.)
+      if (world.iniciarJefe(tramo.jefe || "robot", true)) { showBubble(t(tramo.jefe === "toro" ? "toroPasa" : "jefePasa"), 1800, 3); triggerCameraShake(0.03); }
     }
     if (nivelActual && nivelActual.control && intento && !intento.control && distance >= nivelActual.control) {
       intento.control = { tacos: Math.floor(tacosThisRun) };
@@ -2915,6 +2925,17 @@ function frame(dtFijo) {
         else textoFlotante(`${t("birdie")} +${5 * multiplier}`);
         sndBirdie(); vibrate(10);
       } else if (g === -1) { rachaGolf = 0; textoFlotante(t("bogey")); sndBogey(); }
+    }
+    // 14/11: Denver: el eslalon (cada puerta, tacos; cinco seguidas, oro).
+    if (gameState === "playing") {
+      const p = world.pasarPuerta(playerX);
+      if (p === 1) {
+        rachaPuertas++;
+        tacosThisRun += 3 * multiplier;
+        if (rachaPuertas % 5 === 0) { tacosThisRun += 15 * multiplier; textoFlotante(`${t("oroEsqui")} +${18 * multiplier}`); sndBirdie(); }
+        else { textoFlotante(`${t("puerta")} +${3 * multiplier}`); sndPuerta(); }
+        vibrate(8);
+      } else if (p === -1) { rachaPuertas = 0; textoFlotante(t("puertaFallada")); sndBogey(); }
     }
     checkCollectibles(dt);
     checkChapas();

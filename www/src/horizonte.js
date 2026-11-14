@@ -392,6 +392,56 @@ const SITIOS = {
     x.fillRect(2300, SUELO - 14, 70, 8);
     for (const px of [1700, 1830, 1960]) { x.fillRect(px, SUELO - 50, 10, 42); x.beginPath(); x.moveTo(px - 2, SUELO - 50); x.lineTo(px + 5, SUELO - 88); x.lineTo(px + 12, SUELO - 50); x.closePath(); x.fill(); }
   },
+  // 14/11: Denver: las Montanas Rocosas nevadas de punta a punta (el pico
+  // Longs, el mas alto) y el centro de Denver delante.
+  denver(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    const picos = [];
+    for (let i = 0; i <= 90; i++) {
+      const u = i / 90;
+      const h = 70 + 50 * Math.abs(Math.sin(u * 11)) + 30 * Math.sin(u * 3.1) + (Math.abs(u - 0.62) < 0.05 ? 50 * (1 - Math.abs(u - 0.62) / 0.05) : 0);
+      const y = SUELO - h - r() * 6;
+      picos.push([u * ANCHO, y]);
+      x.lineTo(u * ANCHO, y);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.fillStyle = c.nieve;
+    for (let i = 1; i < picos.length - 1; i++) {
+      const [px, py] = picos[i];
+      if (py > picos[i - 1][1] || py > picos[i + 1][1] || py > SUELO - 110) continue;
+      x.beginPath(); x.moveTo(px - 26, py + 22); x.lineTo(px, py); x.lineTo(px + 26, py + 22); x.lineTo(px + 8, py + 16); x.lineTo(px - 10, py + 18); x.closePath(); x.fill();
+    }
+    for (const [x0, x1] of [[1300, 1750]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 22 + r() * 24, h = 40 + r() * 90; torre(x, [cx, 0], w, h, c.cerca, r, null); cx += w * 0.95; }
+    }
+  },
+  // 14/11: Albuquerque: la sierra de Sandia (larga, de color sandia por la
+  // manana), los volcanes del oeste a la izquierda y globos en el cielo.
+  albuquerque(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 70; i++) {
+      const u = i / 70;
+      const h = u < 0.35 ? 18 + 10 * Math.sin(u * 40) * 0.3 : 40 + 120 * Math.sin(((u - 0.35) / 0.65) * Math.PI * 0.9) + Math.sin(u * 37) * 8;
+      x.lineTo(u * ANCHO, SUELO - h - r() * 5);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.fillStyle = c.cerca;
+    for (const [px, w, h] of [[300, 120, 26], [560, 90, 20], [800, 110, 24]]) { x.beginPath(); x.moveTo(px - w, SUELO); x.lineTo(px - w * 0.2, SUELO - h); x.lineTo(px + w * 0.2, SUELO - h); x.lineTo(px + w, SUELO); x.fill(); }
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 6 - 8 * (0.5 + 0.5 * Math.sin(px * 0.006)) - r() * 3);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    const colores = ["#e8402a", "#f6c81e", "#2fa8a0", "#8a3ab8", "#e84a7a", "#f28a1a"];
+    for (let k = 0; k < 14; k++) {
+      const px = 120 + r() * (ANCHO - 240), py = SUELO - 90 - r() * 120, rr = 7 + r() * 7;
+      x.fillStyle = colores[k % colores.length];
+      x.beginPath(); x.arc(px, py, rr, Math.PI * 0.85, Math.PI * 2.15); x.lineTo(px + rr * 0.3, py + rr * 1.35); x.lineTo(px - rr * 0.3, py + rr * 1.35); x.closePath(); x.fill();
+      x.fillStyle = "#6a4a30"; x.fillRect(px - 2, py + rr * 1.5, 4, 3);
+    }
+  },
   // 14/11: Miami: el mar, las nubes del huracan en espiral (pintadas, quietas),
   // el centro de Miami a lo lejos y palmeras.
   miami(x, c, r) {
@@ -695,7 +745,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

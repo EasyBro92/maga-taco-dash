@@ -1730,6 +1730,126 @@ const CALLES = [
     acera: ["phoenix/palmera", "ciudad/farola_ciudad", "phoenix/palmera", "ciudad/banco"],
   },
   {
+    // 14/11/2026: nivel 28: Albuquerque (blender/albuquerque.py). Empieza el
+    // acto de la Armada Espanola. «El festival de globos. Primeros carteles
+    // espanoles. Un platillo volante de Roswell». Recomendado: Central Avenue
+    // (la Ruta 66) por la manana, con la sierra de Sandia al fondo, y final en
+    // la plaza vieja ante San Felipe Neri. Dinamicas propias: el platillo que
+    // se lleva un coche por el aire y lo suelta en el carril libre, y el
+    // momento estrella, la fiesta de los globos: solo despega el globo del
+    // quemador encendido. Pasa el Toro (el jefe del acto) y hay pancartas de
+    // Espana: ALBURQUERQUE, con la R que perdio la ciudad.
+    id: "albuquerque", nombre: "Central Avenue", lugar: "Albuquerque, Nuevo México", listo: true,
+    zona: "city", carpeta: "albuquerque", luz: "manana", semilla: 1831,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 3, estilo: "albuquerque" },
+    horizonte: "albuquerque",
+    obstaculos: { low: ["horno_adobe", "cesta_globo", "valla_metal"], high: ["ristra_chiles", "cartel_alburquerque"],
+      full: ["lowrider", "pickup", "autocaravana", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "albuquerque" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "ruta66" }],
+      [250, 610, "platillo", { titulo: "platillo" }],
+      [610, 690, "calma", { titulo: "kimo" }],
+      [690, 850, "slalom", { full: ["lowrider", "pickup", "autocaravana"], titulo: "lowriders" }],
+      [850, 930, "calma"],
+      [930, 1070, "jefe_paso", { jefe: "toro", titulo: "toro_paso" }],
+      [1070, 1150, "calma"],
+      [1150, 1310, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1310, 1390, "calma", { titulo: "entrada_globos" }],
+      // El momento estrella: la fiesta de los globos (pieza de `fondo` e `interior`, al aire libre).
+      [1390, 1810, "globos", { titulo: "globos" }],
+      [1810, 1890, "calma", { titulo: "globos_fin" }],
+      [1890, 2050, "premios", { titulo: "premios" }],
+      [2050, 2410, "platillo", { titulo: "platillo2" }],
+      [2410, 2490, "calma"],
+      [2490, 2650, "vallas", { low: ["horno_adobe", "valla_metal"], high: ["ristra_chiles", "cartel_alburquerque"], titulo: "con_r" }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_old_town" }],
+    ],
+    control: 1850, caja: 1970,
+    interior: { rango: [1392, 1808], tipo: "globos", aire: true, sinEdificios: [1380, 1820] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1200, "carril"], [2950, "arco"]],
+    hitos: ["kimo_theatre", "casa_adobe", "motel_66"],
+    meta: "san_felipe_neri", metaNombre: { es: "la plaza vieja", en: "the old plaza" },
+    izquierda: [
+      40, ["kit", 2], 14, ["kimo_theatre", 1], 14, ...cuadras(3), ["casa_adobe", 1], 14, ...cuadras(5), ["motel_66", 1], 14, ...cuadras(16),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["motel_66", 1], 14, ...cuadras(3), ["casa_adobe", 1], 14, ...cuadras(6), ["casa_adobe", 1], 14, ...cuadras(13),
+    ],
+    fondo: [{ pieza: "san_felipe_neri", d: 3330, centro: true },
+      { pieza: "arco_66", d: 120, cruza: true }, { pieza: "arco_66", d: 2450, cruza: true },
+      { pieza: "campo_globos", d: 1390, cruza: true }],
+    final: "parada", parada: 4,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 10, -40] },
+    acera: ["ciudad/farola_ciudad", "phoenix/saguaro_maceta", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 14/11/2026: nivel 29: Denver (blender/denver.py). «"Colorado" quiere
+    // decir rojo en espanol: el dice que es una senal». Recomendado: el 16th
+    // Street Mall en invierno, con las Rocosas nevadas al fondo, y final en el
+    // Capitolio de Colorado (la cupula de oro y el escalon de la milla).
+    // Dinamicas propias: las bolas de nieve que bajan rodando y crecen (las
+    // pequenas se saltan, las grandes se esquivan) y el momento estrella, la
+    // pista de esqui de las Rocosas con las puertas del eslalon (tacos por
+    // puerta, oro cada cinco seguidas). Pasa el Toro y hay pancartas de
+    // Espana: COLORADO = ROJO.
+    id: "denver", nombre: "16th Street Mall", lugar: "Denver, Colorado", listo: true,
+    zona: "city", carpeta: "denver", luz: "invierno", semilla: 1832,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 7, estilo: "denver" },
+    horizonte: "denver",
+    obstaculos: { low: ["monton_nieve", "trineo", "valla_metal"], high: ["cartel_colorado", "pancarta"],
+      full: ["mallride", "quitanieves", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "ejecutivo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "denver" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "mall16" }],
+      [250, 610, "bolas", { titulo: "bolas" }],
+      [610, 690, "calma", { titulo: "union_station" }],
+      [690, 850, "slalom", { full: ["mallride", "quitanieves", "pickup"], titulo: "mallride" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["monton_nieve", "valla_metal"], high: ["cartel_colorado"], titulo: "colorado_rojo" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_esqui" }],
+      // El momento estrella: la pista de esqui (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "esqui", { titulo: "esqui" }],
+      [1830, 1910, "calma", { titulo: "esqui_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2210, "jefe_paso", { jefe: "toro", titulo: "toro_paso" }],
+      [2210, 2290, "calma"],
+      [2290, 2650, "bolas", { titulo: "bolas2" }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_co" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "esqui", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["torre_daniels", "union_station_den", "oso_azul"],
+    meta: "capitolio_colorado", metaNombre: { es: "el Capitolio de Colorado", en: "the Colorado Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["torre_daniels", 1], 14, ...cuadras(3), ["union_station_den", 1], 14, ...cuadras(5), ["oso_azul", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["oso_azul", 1], 14, ...cuadras(4), ["torre_daniels", 1], 14, ...cuadras(5), ["union_station_den", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_colorado", d: 3330, centro: true },
+      { pieza: "arco_denver", d: 120, cruza: true }, { pieza: "arco_denver", d: 2250, cruza: true },
+      { pieza: "pista_esqui", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1833,14 +1953,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -1900,6 +2020,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  capitolio_colorado: 76, torre_daniels: 14, union_station_den: 50, oso_azul: 40, arco_denver: 2, pista_esqui: 420,
+  san_felipe_neri: 60, kimo_theatre: 22, casa_adobe: 20, motel_66: 30, arco_66: 2, campo_globos: 420,
   mar_a_lago: 60, hotel_deco_rosa: 22, hotel_deco_azul: 22, playa_socorrista: 40, arco_miami: 2, bano_dorado: 420,
   salon_fama: 54, torre_corona: 26, torre_led: 24, iglesia_presbiteriana: 18, garaje_carreras: 24, arco_carrera: 2, speedway: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
@@ -2115,7 +2237,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

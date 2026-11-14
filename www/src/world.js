@@ -3049,6 +3049,25 @@ export function createWorld(scene) {
     tumbona: { choque: "low", medio: 0.8, alto: 0.6 },
     sombrilla: { choque: "high", medio: 0.8, alto: 2.4 },
     cartel_tachado: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 14/11: Albuquerque (blender/albuquerque.py): el horno de adobe, las
+    // ristras de chiles, la pancarta de España (ALBURQUERQUE, con la R), el
+    // lowrider y la cesta de globo volcada. (El globo que aterriza y el
+    // platillo de Roswell son piezas compuestas: ver abajo.)
+    horno_adobe: { choque: "low", medio: 0.6, alto: 0.95 },
+    ristra_chiles: { choque: "high", medio: 0.3, alto: 2.5 },
+    cartel_alburquerque: { choque: "high", medio: 0.3, alto: 2.5 },
+    lowrider: { choque: "full", medio: 2.85, alto: 1.2, centro: -2.85 },
+    cesta_globo: { choque: "low", medio: 0.7, alto: 0.9 },
+    // 14/11: Denver (blender/denver.py): las puertas del eslalon (se pasa por
+    // en medio: ver pasarPuerta), el pino nevado, la silla de la telesilla, la
+    // pancarta COLORADO = ROJO y el autobus gratis del Mall. (Las bolas de
+    // nieve que crecen son una pieza compuesta: ver abajo.)
+    puerta_roja: { choque: "nada", medio: 0.3, alto: 0 },
+    puerta_azul: { choque: "nada", medio: 0.3, alto: 0 },
+    pino_nevado: { choque: "full", medio: 0.9, alto: 4.6, centro: 0 },
+    telesilla: { choque: "high", medio: 0.4, alto: 2.4 },
+    cartel_colorado: { choque: "high", medio: 0.3, alto: 2.5 },
+    mallride: { choque: "full", medio: 2.5, alto: 2.9, centro: -2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3502,6 +3521,63 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 14/11: Albuquerque: el globo de la fiesta (posado en su carril; el que
+    // va a despegar lleva el quemador encendido) y el de la Armada Espanola.
+    for (const [pool, nombre] of [["globo", "globo_aire"], ["globo_es", "globo_espana"]]) {
+      if (!hayModelo("obstaculos/" + nombre)) continue;
+      TIPOS[pool] = { choque: "full", medio: 0.6, alto: 1.1, centro: 0 };
+      obstaclePools[pool] = makePool(() => {
+        const g = new THREE.Group();
+        const vuelo = new THREE.Group();
+        vuelo.add(modeloConContorno("obstaculos/" + nombre));
+        const fuego = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.7, 10), new THREE.MeshBasicMaterial({ color: 0xffa030 }));
+        fuego.position.y = 2.3;
+        vuelo.add(fuego);
+        vuelo.scale.setScalar(0.8);
+        g.add(vuelo);
+        g.userData.vuelo = vuelo; g.userData.fuego = fuego;
+        return g;
+      });
+    }
+    // 14/11: Albuquerque: el platillo de Roswell, con su rayo verde (de la
+    // panza al suelo) y el aro que marca en el suelo donde va a soltar el coche.
+    if (hayModelo("obstaculos/platillo")) {
+      TIPOS.platillo = { choque: "nada", medio: 1, alto: 0 };
+      const rayoMat = new THREE.MeshBasicMaterial({ color: 0x9affb0, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide });
+      const rayoGeo = new THREE.CylinderGeometry(0.9, 1.5, 1, 24, 1, true);
+      rayoGeo.translate(0, -0.5, 0);
+      obstaclePools.platillo = makePool(() => {
+        const g = new THREE.Group();
+        const nave = new THREE.Group();
+        nave.add(modeloConContorno("obstaculos/platillo"));
+        const rayo = new THREE.Mesh(rayoGeo, rayoMat);
+        nave.add(rayo);
+        g.add(nave);
+        const aro = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.35, 32),
+          sobreCalzada(new THREE.MeshBasicMaterial({ color: 0x7dff9a, transparent: true, opacity: 0, depthWrite: false })));
+        aro.rotation.x = -Math.PI / 2;
+        aro.position.y = 0.06;
+        g.add(aro);
+        g.userData.nave = nave; g.userData.rayo = rayo; g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 14/11: Denver: la bola de nieve que baja rodando y crece (la de siempre,
+    // girando sobre su centro y escalada desde el suelo).
+    if (hayModelo("obstaculos/bola_nieve")) {
+      TIPOS.bolanieve = { choque: "low", medio: 0.45, alto: 0.9 };
+      obstaclePools.bolanieve = makePool(() => {
+        const g = new THREE.Group();
+        const bola = new THREE.Group();
+        const giro = new THREE.Group();
+        const m = modeloConContorno("obstaculos/bola_nieve");
+        m.position.y = -0.45;
+        giro.position.y = 0.45;
+        giro.add(m); bola.add(giro); g.add(bola);
+        g.userData.bola = bola; g.userData.giro = giro;
+        return g;
+      });
+    }
     // 14/11: Atlanta: la urna del trile, con la papeleta de oro dentro (solo
     // se ve al entrar y cuando se levantan las urnas).
     if (hayModelo("obstaculos/urna_trile")) {
@@ -3940,6 +4016,79 @@ export function createWorld(scene) {
     piv.rotation.z = a;
     const x = o.mesh.position.x + 5.9 * Math.sin(a);
     o.lane = Math.max(0, Math.min(2, Math.round(x / LANE_WIDTH) + 1));
+  }
+  // ---- 14/11: Albuquerque ----
+  // Los globos que despegan (la fiesta de los globos): en cada fila hay un
+  // globo posado en cada carril y solo uno va a despegar: es el que tiene el
+  // quemador encendido (se enciende de lejos, con su ruido). Entre 70 y 15 m
+  // sube cada vez mas deprisa y deja libre su carril; los otros se quedan
+  // en el suelo y no se pasan.
+  function subirGlobo(o) {
+    const g = o.globo, u = o.mesh.userData;
+    if (!g.sube) { u.vuelo.position.y = 0; u.fuego.visible = false; o.fuera = false; return; }
+    if (!g.avisado && o.z > -150) { g.avisado = true; if (alAvisoMapa) alAvisoMapa("globo"); }
+    u.fuego.visible = o.z > -150 && u.vuelo.position.y < 14;
+    const f = THREE.MathUtils.clamp((o.z + 70) / 55, 0, 1.6);
+    u.vuelo.position.y = f * f * 9;
+    o.fuera = u.vuelo.position.y > 0.4;
+  }
+  // El platillo de Roswell: llega por el cielo con una fila de dos coches
+  // aparcados (el tercer carril, libre). A 110 m baja su rayo sobre el coche
+  // que esta al lado del carril libre, lo sube, se lo lleva por el aire y lo
+  // suelta EN el carril libre (el aro verde del suelo marca donde): ahora el
+  // libre es el carril del que se lo llevo. Todo va con la calle (por metros,
+  // no por tiempo): lo suelta a 45 m de ti. Luego sube y se va.
+  function moverPlatillo(o, dt) {
+    const p = o.platillo, u = o.mesh.userData, nave = u.nave, c = p.coche;
+    p.t += dt;
+    const xDe = LANE_X[p.de], xA = LANE_X[p.a];
+    const tramo = (z0, z1) => THREE.MathUtils.clamp((o.z - z0) / (z1 - z0), 0, 1);
+    const sube = tramo(-110, -88), cruza = tramo(-84, -64), baja = tramo(-62, -46), vete = tramo(-40, -10);
+    const x = xDe + (xA - xDe) * THREE.MathUtils.smoothstep(cruza, 0, 1);
+    o.mesh.position.x = x;
+    nave.position.y = 8.5 + Math.sin(p.t * 2 + o.phase) * 0.2 + vete * vete * 16;
+    const rayoOn = o.z > -114 && o.z < -44;
+    u.rayo.visible = rayoOn || u.rayo.scale.y > 0.01;
+    const objetivo = rayoOn ? nave.position.y : 0.001;
+    u.rayo.scale.y += (objetivo - u.rayo.scale.y) * Math.min(1, dt * 8);
+    u.aro.material.opacity = cruza > 0 && baja < 1 ? 0.7 : Math.max(0, u.aro.material.opacity - dt * 2);
+    if (!p.avisado && o.z > -114) { p.avisado = true; if (alAvisoMapa) alAvisoMapa("platillo"); }
+    if (c && !c.smashed) {
+      const alto = 4.6 * THREE.MathUtils.smoothstep(sube, 0, 1) * (1 - THREE.MathUtils.smoothstep(baja, 0, 1));
+      c.mesh.position.x = x;
+      c.mesh.position.y = alto;
+      c.mesh.rotation.y = (sube - baja) * 0.6 * (p.a > p.de ? 1 : -1);
+      c.lane = baja > 0.5 ? p.a : p.de;
+      c.fuera = alto > 0.3;
+    }
+  }
+  // ---- 14/11: Denver ----
+  // La bola de nieve que baja rodando hacia ti (algo mas deprisa que la
+  // calle) y crece por el camino: entre 150 y 25 m pasa de pequena a su
+  // tamano. Las pequenas se quedan en 1 (se saltan); las grandes llegan a 2,6
+  // (2,3 m: no se saltan, hay que esquivarlas) y a unos 70 m ya son grandes.
+  function crecerBola(o, dt) {
+    const b = o.bolanieve, u = o.mesh.userData;
+    const f = THREE.MathUtils.clamp((o.z + 150) / 125, 0, 1);
+    const s = 0.7 + (b.max - 0.7) * f * f;
+    u.bola.scale.setScalar(s);
+    u.giro.rotation.x += dt * (o.mueve + ritmo) / (0.45 * s);
+    const grande = s > 1.45;
+    if (grande && o.type !== "full" && alAvisoMapa) alAvisoMapa("bola");
+    o.type = grande ? "full" : "low";
+    o.alto = 0.9 * s;
+    o.medio = 0.45 * s;
+  }
+  // Las puertas del eslalon (la pista de esqui): main.js llama a pasarPuerta
+  // en cada fotograma: 1 si acabas de pasar por dentro de una, -1 si te la
+  // has saltado, 0 si nada.
+  function pasarPuerta(px) {
+    for (const o of obstacles) {
+      if (!o.puerta || o.puerta.hecha || o.z < -0.3) continue;
+      o.puerta.hecha = true;
+      return Math.abs(px - LANE_X[o.lane]) < 1.0 ? 1 : -1;
+    }
+    return 0;
   }
   // ---- 14/11: Atlanta ----
   // La papeleta que se escapa: vuela a media altura haciendo eses de carril a
@@ -5793,6 +5942,7 @@ export function createWorld(scene) {
 
   // Cada forma de tramo: (z de la fila, d = metro de la partida, el tramo, k = fila dentro del tramo).
   const SERPIENTE = [1, 1, 0, 0, 1, 1, 2, 2];
+  let bolasAntes = [], eslalon = { lane: 1, sig: 0, color: 0 };   // (14/11: Denver)
   const PATRONES = {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
@@ -6808,6 +6958,122 @@ export function createWorld(scene) {
         obst(l, ty, z, d, ty === "low" ? ["inodoro_oro"] : ty === "full" ? ["torre_cajas"] : ["cortina_ducha"]);
         if (ty === "low") arcoDeTacos(l, z);
       } else if (k % 4 === 1) tacosEn(elegirDe(LANES), z, 2);
+    },
+    // ---- 14/11: Albuquerque ----
+    // El platillo de Roswell: cada 84 m una fila de dos coches aparcados con
+    // el platillo encima (ver moverPlatillo); lejos de la fila, una cosa que
+    // se salta o se pasa agachado, y tacos.
+    platillo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 4) return;
+      const j = k % 12;
+      if (j === 3 && obstaclePools.platillo) {
+        const libre = elegirDe(LANES);
+        const de = libre === 1 ? elegirDe([0, 2]) : 1;
+        let coche = null;
+        for (const l of LANES) {
+          if (l === libre) continue;
+          const c = spawnObstacle(l, "full", z, l === de ? "lowrider" : elegirDe(["lowrider", "pickup"]));
+          if (l === de) coche = c;
+        }
+        const o = spawnObstacle(de, "nada", z, "platillo");
+        if (o) {
+          o.platillo = { t: 0, de, a: libre, coche, avisado: false };
+          const u = o.mesh.userData;
+          u.nave.position.y = 8.5; u.rayo.visible = false; u.rayo.scale.y = 0.001; u.aro.material.opacity = 0;
+        }
+        filaSinObjeto = true;
+        return;
+      }
+      if (j === 8) {
+        const l = elegirDe(LANES);
+        const ty = elegirDe(["low", "low", "high"]);
+        obst(l, ty, z, d, ty === "low" ? ["horno_adobe", "cesta_globo"] : ["ristra_chiles", "cartel_alburquerque"]);
+        if (ty === "low") arcoDeTacos(l, z);
+      } else if (j === 10 || j === 0) tacosEn(elegirDe(LANES), z, 2);
+    },
+    // La fiesta de los globos (momento estrella): cada 42 m una fila de tres
+    // globos posados (el del centro, un poco mas atras) y solo despega uno: el
+    // del quemador encendido (ver subirGlobo). A veces es el de la Armada
+    // Espanola. Entre medias, cestas volcadas y hornos de adobe, y tacos.
+    globos(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      const j = k % 6;
+      if (j === 3 && obstaclePools.globo) {
+        const sube = elegirDe(LANES);
+        for (const l of LANES) {
+          const pool = obstaclePools.globo_es && Math.random() < 0.25 ? "globo_es" : "globo";
+          const o = spawnObstacle(l, "full", z - (l === 1 ? 5 : 0), pool);
+          if (o) { o.globo = { sube: l === sube, avisado: false }; subirGlobo(o); }
+        }
+        tacosEn(sube, z + 8, 3);
+        filaSinObjeto = true;
+        return;
+      }
+      if (j === 0) {
+        const l = elegirDe(LANES);
+        obst(l, "low", z, d, ["cesta_globo", "horno_adobe"]);
+        arcoDeTacos(l, z);
+      }
+    },
+    // ---- 14/11: Denver ----
+    // Las bolas de nieve: cada 35 m una que baja rodando y crece (ver
+    // crecerBola); una de cada tres veces, dos a la vez en carriles distintos,
+    // una pequena y una grande. Nunca en el carril de la anterior (la
+    // alcanzaria). Entre medias, solo tacos lejos de ellas.
+    bolas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { bolasAntes = []; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 4) return;
+      const j = k % 5;
+      if (j === 2 && obstaclePools.bolanieve) {
+        const ops = LANES.filter((l) => !bolasAntes.includes(l));
+        const l = elegirDe(ops.length ? ops : LANES);
+        const grande = Math.random() < 0.55;
+        const poner = (lane, max) => {
+          const o = spawnObstacle(lane, "low", z, "bolanieve");
+          if (o) { o.bolanieve = { max }; o.mueve = 5; crecerBola(o, 0); }
+        };
+        poner(l, grande ? 2.6 : 1.0);
+        bolasAntes = [l];
+        if (Math.random() < 0.35) {
+          const l2 = elegirDe(LANES.filter((x) => x !== l));
+          poner(l2, grande ? 1.0 : 2.6);
+          bolasAntes.push(l2);
+        }
+        filaSinObjeto = true;
+        return;
+      }
+      if (j === 4) {
+        const ops = LANES.filter((l) => !bolasAntes.includes(l));
+        tacosEn(elegirDe(ops.length ? ops : LANES), z, 3);
+      }
+    },
+    // La pista de esqui (momento estrella): cada 14 m una puerta del eslalon,
+    // roja y azul por turnos, de carril en carril (ver pasarPuerta). Entre
+    // puerta y puerta, a veces un pino en el carril que no se usa o una silla
+    // de la telesilla en el de la siguiente puerta (se pasa agachado).
+    esqui(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { eslalon = { lane: 1, sig: elegirDe([0, 2]), color: 0 }; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      filaSinObjeto = true;
+      if (k % 2 === 0) {
+        const lane = eslalon.sig;
+        const o = spawnObstacle(lane, "nada", z, eslalon.color % 2 ? "puerta_azul" : "puerta_roja");
+        if (o) o.puerta = { hecha: false };
+        eslalon.color++;
+        eslalon.lane = lane;
+        eslalon.sig = lane === 1 ? elegirDe([0, 2]) : 1;
+        return;
+      }
+      const libre = LANES.find((l) => l !== eslalon.lane && l !== eslalon.sig);
+      if (k % 6 === 3) obst(eslalon.sig, "high", z, d, ["telesilla"]);
+      else if (Math.random() < 0.6) obst(libre, "full", z, d, ["pino_nevado"]);
+      else if (Math.random() < 0.5) obst(libre, "low", z, d, ["monton_nieve"]);
     },
     // ---- 14/11: Atlanta ----
     // Las papeletas que se escapan: cada 28 m una (a veces dos, cada una con
@@ -8293,6 +8559,9 @@ export function createWorld(scene) {
         else if (o.pool === "bola") volarBola(o, dt);
         else if (o.ola) cruzarOla(o, dt, dz);
         else if (o.pool === "lampara") balancearLampara(o);
+        else if (o.globo) subirGlobo(o);
+        else if (o.platillo) moverPlatillo(o, dt);
+        else if (o.bolanieve) crecerBola(o, dt);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -8515,5 +8784,5 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf, pasarPuerta };
 }

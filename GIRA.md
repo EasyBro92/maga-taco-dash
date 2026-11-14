@@ -29,7 +29,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa (hecho el 14/11: East Bay Street, las calesas que dejan «regalitos», el campo de golf persiguiendo la bola y la fuente de la piña) |
-| Colorado | Denver | capital y la más famosa |
+| Colorado | Denver | capital y la más famosa (hecho el 14/11: el 16th Street Mall, las bolas de nieve que crecen y el eslalon de las Rocosas) |
 | Connecticut | Hartford | capital |
 | Dakota del Norte | Fargo (capital: Bismarck) | la más conocida (hecho el 12/11: Broadway hasta el teatro, con el Rey Pingüino) |
 | Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
@@ -55,7 +55,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Nebraska | Omaha (capital: Lincoln) | la más grande |
 | Nuevo Hampshire | Manchester (capital: Concord) | las primarias |
 | Nueva Jersey | Atlantic City (capital: Trenton) | los casinos del paseo marítimo |
-| Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos |
+| Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos (hecho el 14/11: Central Avenue, el platillo que cambia los coches de carril y los globos que despegan) |
 | Oklahoma | Oklahoma City | capital y la más grande (hecho el 12/11: Bricktown, molinos en la calle y géiseres de petróleo) |
 | Oregón | Portland (capital: Salem) | la más famosa |
 | Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad |

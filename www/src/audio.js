@@ -165,6 +165,15 @@ export function sndSwing() {
 export function sndBirdie() { [1046, 1318, 1568].forEach((f, i) => tono(f, 0.22, { tipo: "triangle", vol: 0.11, cuando: i * 0.07 })); }
 export function sndBogey() { tono(392, 0.2, { tipo: "triangle", vol: 0.1 }); tono(311, 0.32, { tipo: "triangle", vol: 0.1, cuando: 0.16 }); }
 export function sndOla() { soplo(0.9, { desde: 900, hasta: 200, tipo: "lowpass", vol: 0.22, q: 0.6 }); }
+// 14/11: Albuquerque: el rayo del platillo (un «uiiiu» de pelicula de marcianos) y el quemador del globo.
+export function sndPlatillo() {
+  tono(420, 1.1, { tipo: "sine", vol: 0.09, glide: 520, ataque: 0.05 });
+  tono(630, 1.1, { tipo: "sine", vol: 0.05, glide: -250, ataque: 0.05, cuando: 0.08 });
+}
+// 14/11: Denver: pasar por una puerta del eslalon y la bola de nieve que ya es grande (rueda grave).
+export function sndPuerta() { tono(1318, 0.09, { tipo: "triangle", vol: 0.1 }); tono(1760, 0.12, { tipo: "triangle", vol: 0.08, cuando: 0.06 }); }
+export function sndRodar() { soplo(0.8, { desde: 180, hasta: 90, tipo: "lowpass", vol: 0.2, q: 0.7 }); }
+export function sndQuemador() { soplo(0.6, { desde: 250, hasta: 500, tipo: "lowpass", vol: 0.16, q: 0.5 }); }
 export function sndChapa() {
   // Arpegio brillante: do-mi-sol-do, como una moneda especial.
   [1046, 1318, 1568, 2093].forEach((f, i) => {
@@ -334,6 +343,17 @@ const CANCIONES = {
     melodia: [72, null, null, 76, null, 79, 76, null, 77, null, null, 76, null, 74, 72, null,
       72, null, null, 76, null, 79, 81, null, 79, null, 76, null, 74, null, 72, null],
     timbre: "banjo" },
+  // 14/11: Denver: rock alegre de montana (melodia propia).
+  denver: { bpm: 152, swing: 0, acordes: [C, G, Am, F], bateria: "pop",
+    melodia: [72, null, 76, 79, null, 79, 77, 76, 74, null, 74, 79, null, 77, 76, 74,
+      72, null, 76, 79, null, 81, 79, 77, 76, null, 74, null, 72, null, null, null],
+    timbre: "metal" },
+  // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
+  // trompeta y la cadencia andaluza (melodia propia).
+  albuquerque: { bpm: 120, swing: 0, acordes: [Am, G, F, E7], bateria: "marcha",
+    melodia: [76, null, 76, 77, 76, null, 74, 72, 74, null, 74, 76, 74, null, 72, 71,
+      72, null, 72, 74, 72, null, 71, 69, 68, null, 71, null, 76, null, null, null],
+    timbre: "metal" },
   // 14/11: Miami: salsa con metales (la clave 3-2; melodia propia).
   miami: { bpm: 184, swing: 0, acordes: [Am, Dm, E7, Am], bateria: "salsa",
     melodia: [76, null, 76, 77, null, 76, 74, null, 72, null, 74, 76, null, 72, 69, null,

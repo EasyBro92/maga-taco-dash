@@ -2318,3 +2318,49 @@ vehículo de antes. Probado con el piloto automático: los dos niveles enteros
 sin choques en lo nuevo, con el jefe incluido, y los 10 objetos de cada nivel.
 Falta el veredicto de Isidro.
 
+
+## 14/11/2026 (6): pagar para seguir y niveles 28 y 29, Albuquerque y Denver (v66)
+
+Isidro: «al chocar en algunos sitios me pide que pague con tacos, pero aun no
+teniendo tacos me deja seguir; solo quiero que te quite tacos de partida para
+seguir jugando».
+
+- **Seguir aquí** solo cobra los tacos de la partida. Antes tiraba también de
+  los guardados y por eso le dejaba seguir aunque no llevara ninguno. Sin
+  tacos suficientes, el botón sale apagado y dice cuántos faltan.
+- El precio baja de 300 a 100, porque con solo los de la partida casi nunca
+  llegaba. Sigue doblándose cada vez: 100, 200, 400…
+
+«Continúa con los mapas», sin preguntar. Empieza el acto de la Armada
+Española:
+
+- **Albuquerque** (Central Avenue, la Ruta 66, por la mañana;
+  `blender/albuquerque.py`):
+  - El platillo de Roswell llega con una fila de dos coches aparcados. Se
+    lleva por el aire el coche que está junto al carril libre y lo suelta en
+    ese carril, que un aro verde marca en el suelo. El carril libre pasa a ser
+    el que ha quedado vacío.
+  - Al principio se pensó que el platillo apuntara a tu carril y disparara,
+    pero era igual que la diana de Elon en Houston y se cambió.
+  - El momento estrella es la fiesta de los globos. En cada fila hay un globo
+    posado en cada carril y solo despega el que tiene el quemador encendido.
+  - Pasa el Toro, el jefe del acto. Para eso, el jefe de paso acepta ahora
+    `jefe`.
+  - Las pancartas de España dicen ALBURQUERQUE, «con R», porque es la R que
+    perdió la ciudad.
+  - Piezas: el teatro KiMo, casas de adobe con ristras de chiles y el motel
+    de la Ruta 66.
+  - Final en la plaza vieja, ante San Felipe Neri.
+  - Objeto: globos. Música: pasodoble.
+- **Denver** (16th Street Mall en invierno; `blender/denver.py`):
+  - Las bolas de nieve bajan rodando y crecen. Las pequeñas se quedan en 1 y
+    se saltan. Las grandes llegan a 2,3 m, no se saltan y a unos 70 m ya se ve
+    que lo son.
+  - El momento estrella es la pista de esquí de las Rocosas, con el eslalon.
+    Cada puerta da +3 tacos y cinco seguidas son ORO (+18). En el camino hay
+    pinos, sillas de la telesilla (se pasan agachado) y montones de nieve.
+  - Vuelve a pasar el Toro.
+  - Las pancartas dicen COLORADO = ROJO.
+  - Piezas: la torre del reloj, la Union Station con su neón y el oso azul.
+  - Final en el Capitolio, con la cúpula de oro y el escalón de la milla.
+  - Objeto: esquís.

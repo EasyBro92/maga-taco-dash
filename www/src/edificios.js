@@ -109,6 +109,16 @@ const ESTILOS = {
     ladrillos: [0xf2b8c6, 0xf6dc8c, 0xa8d4e8, 0xc4e0a8, 0xdcc4e8, 0xf4c8a0], piedras: [0xf6f2ea, 0xe8dcc8], cristal: [0x6a8aa0, 0x8aa0b0],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
+  // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  denver: { plantas: ["planta_ladrillo", "planta_cristal", "planta_ladrillo", "planta_lisa", "planta_cristal"],
+    ladrillos: [0xa86a4a, 0x9a5a42, 0x8a4a3a, 0xb8805a, 0x7a5a4a], piedras: [0xd8ccb4, 0xc8bca4], cristal: [0x5a7a9a, 0x7a9ab4, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x2a5a3a, 0xc8202a, 0x1f3a7a, 0xf0c020],
+    rotulos: ["MILE HIGH", "SKI SHOP", "BREWERY", "GREEN CHILE", "ROCKIES", "OUTDOOR", "BOOKS", "BISON", "CAFE", "SNOWBOARDS"] },
+  // 14/11: Albuquerque: Central Avenue: adobe y estuco de colores tierra, bajos.
+  albuquerque: { plantas: ["planta_lisa", "planta_lisa", "planta_balcones", "planta_lisa", "planta_lisa"],
+    ladrillos: [0xc89468, 0xdcb48a, 0xe8c8a0, 0xd8a080, 0xc8a078], piedras: [0xe8d2b0, 0xd8c0a0], cristal: [0x3a5a6a, 0x4a6a7a],
+    cornisas: ["cornisa_simple", "cornisa_simple"], remate: ["remate_atico", 0.05], toldos: [0x2fa8a0, 0xb8583a, 0xc8202a, 0xf2c21a],
+    rotulos: ["CHILE", "TACOS", "TURQUESA", "SOPAIPILLAS", "ROUTE 66", "CURIOS", "BURRITOS", "CAFÉ", "PIÑÓN", "TORTILLAS"] },
   // 14/11: Miami: Ocean Drive: hoteles art déco blancos y pastel.
   miami: { plantas: ["planta_lisa", "planta_balcones", "planta_lisa", "planta_cristal", "planta_lisa"],
     ladrillos: [0xf8f6f0, 0xf0a0b8, 0x9ae0c8, 0xf8c8a0, 0xa8d8f0], piedras: [0xf8f6f0, 0xf0e4c8], cristal: [0x5a9ab0, 0x7ab0c8],
