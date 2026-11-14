@@ -185,6 +185,25 @@ export function sndMugido() {
   tono(150, 0.85, { tipo: "sawtooth", vol: 0.07, glide: -40, ataque: 0.14, filtro: 650 });
   tono(225, 0.7, { tipo: "sawtooth", vol: 0.03, glide: -60, ataque: 0.14, filtro: 900 });
 }
+// 14/11: Boise: la patata que chisporrotea, el hachazo y el tronco que se parte.
+export function sndQuema() { soplo(0.5, { desde: 3000, hasta: 6000, tipo: "highpass", vol: 0.08, q: 0.7 }); }
+export function sndHachazo() {
+  tono(140, 0.07, { tipo: "square", vol: 0.07, glide: -60, filtro: 900 });
+  soplo(0.06, { desde: 900, hasta: 600, tipo: "bandpass", vol: 0.12, q: 1.5 });
+}
+export function sndTronco() {
+  soplo(0.35, { desde: 1800, hasta: 300, tipo: "bandpass", vol: 0.2, q: 0.9 });
+  tono(90, 0.3, { tipo: "sine", vol: 0.2, glide: -40, cuando: 0.05 });
+}
+// 14/11: Salt Lake City: el cambio de marcha (el motor que sube) y el espejismo que se deshace.
+export function sndCambio() {
+  tono(180, 0.25, { tipo: "sawtooth", vol: 0.07, glide: 260, filtro: 1500 });
+  tono(1200, 0.06, { tipo: "triangle", vol: 0.06, cuando: 0.02 });
+}
+export function sndEspejismo() {
+  tono(880, 0.4, { tipo: "sine", vol: 0.06, glide: 440, ataque: 0.05 });
+  tono(1320, 0.35, { tipo: "sine", vol: 0.04, glide: -300, ataque: 0.05, cuando: 0.06 });
+}
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -365,6 +384,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 14/11: Boise: fiesta vasca, el acordeon a la carrera (trikitixa; melodia propia).
+  boise: { bpm: 150, swing: 0, acordes: [G, D, G, C], bateria: "marcha", bajo: "alterna",
+    melodia: [74, 76, 79, null, 79, 81, 79, 76, 74, null, 71, 74, 76, null, null, null,
+      74, 76, 79, 81, 83, null, 81, 79, 76, 74, 72, 71, 67, null, null, null],
+    timbre: "acordeon" },
+  // 14/11: Salt Lake City: rock de velocidad, a toda maquina (melodia propia).
+  salt_lake: { bpm: 168, swing: 0, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
+    melodia: [69, null, 72, 76, 72, null, 76, 79, 77, null, 76, 74, 72, null, null, null,
+      69, null, 72, 76, 79, null, 81, 79, 77, 76, 74, null, 76, null, null, null],
+    timbre: "metal" },
   // 14/11: Cheyenne: country de rodeo, al galope y con banjo (melodia propia).
   cheyenne: { bpm: 156, swing: 0.5, acordes: [C, F, C, G7], bateria: "country", bajo: "alterna",
     melodia: [67, 72, 76, null, 79, null, 76, 72, 77, null, 77, 81, 79, null, null, null,

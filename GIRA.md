@@ -37,7 +37,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Florida | Miami (capital: Tallahassee) | la más famosa (hecho el 14/11: Ocean Drive con huracán, las olas que cruzan la calle, el baño dorado de Mar-a-Lago con lámparas que se balancean, el jefe de los papeles y Mar-a-Lago) |
 | Georgia | Atlanta | capital y la más famosa (hecho el 14/11: Peachtree Street, las papeletas que se escapan, el trile de las urnas del recuento y la marquesina «PRESIDENT ELECT») |
 | Hawái | Honolulu | capital y la más famosa |
-| Idaho | Boise | capital y la más grande |
+| Idaho | Boise | capital y la más grande (hecho el 14/11: Capitol Boulevard, la patata caliente que se pasa a los periodistas y los aizkolaris del barrio vasco) |
 | Illinois | Chicago (capital: Springfield) | la más famosa |
 | Indiana | Indianápolis | capital y la más famosa |
 | Iowa | Des Moines | capital, y el «caucus» con el que empieza la carrera (hecho el 01/11: Locust Street hasta el Capitolio) |
@@ -62,7 +62,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Rhode Island | Providence | capital y la más grande |
 | Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
 | Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |
-| Utah | Salt Lake City | capital y la más famosa |
+| Utah | Salt Lake City | capital y la más famosa (hecho el 14/11: State Street con espejismos y el récord de velocidad en el salar de Bonneville) |
 | Vermont | Burlington (capital: Montpelier) | la más grande |
 | Virginia | Richmond | capital, la más histórica |
 | Virginia Occidental | Charleston | capital y la más grande |

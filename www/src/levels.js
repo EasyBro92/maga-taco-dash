@@ -1968,6 +1968,125 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 14/11/2026: nivel 32: Boise (blender/boise.py). «Patatas rodando cuesta
+    // abajo». Recomendado: Capitol Boulevard, de la estacion de estilo mision
+    // espanola al Capitolio de Idaho, una manana de verano, pasando por el
+    // Basque Block (la comunidad vasca mas grande de America). Dinamicas
+    // propias: la patata caliente (hay que pasarsela a un periodista chocando
+    // con el antes de que queme) y el momento estrella, los aizkolaris del
+    // Jaialdi (filas de troncos que tapan la calle: tocar muy deprisa llena el
+    // hacha y parte el tuyo). Las patatas gigantes bajan rodando por la calle.
+    // Pancartas: ¡AUPA BOISE!
+    id: "boise", nombre: "Capitol Boulevard", lugar: "Boise, Idaho", listo: true,
+    zona: "city", carpeta: "boise", luz: "manana", semilla: 1835,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 4, estilo: "boise" },
+    horizonte: "boise",
+    obstaculos: { low: ["saco_patatas", "caja_patatas", "patata_rodante"], high: ["cartel_boise", "pancarta"],
+      full: ["camion_patata", "pickup", "autocaravana", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "boise" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "capitol_blvd" }],
+      [250, 610, "patata", { titulo: "patata" }],
+      [610, 690, "calma", { titulo: "egipcio" }],
+      [690, 850, "slalom", { full: ["camion_patata", "pickup", "autocaravana"], titulo: "camion_patata" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["saco_patatas", "caja_patatas"], high: ["cartel_boise"], titulo: "aupa" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_jaialdi" }],
+      // El momento estrella: los aizkolaris del Jaialdi (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "aizkolari", { titulo: "aizkolari" }],
+      [1830, 1910, "calma", { titulo: "aizkolari_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "patata", { titulo: "patata2" }],
+      [2430, 2510, "calma", { titulo: "depot_boise" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_id" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "aizkolari", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["boise_depot", "egyptian_theatre", "casa_vasca"],
+    meta: "capitolio_idaho", metaNombre: { es: "el Capitolio de Idaho", en: "the Idaho Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["boise_depot", 1], 14, ...cuadras(3), ["egyptian_theatre", 1], 14, ...cuadras(5), ["casa_vasca", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["casa_vasca", 1], 14, ...cuadras(4), ["egyptian_theatre", 1], 14, ...cuadras(5), ["boise_depot", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_idaho", d: 3330, centro: true },
+      { pieza: "arco_vasco", d: 120, cruza: true }, { pieza: "arco_vasco", d: 2470, cruza: true },
+      { pieza: "plaza_aizkolari", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["boise/patata_acera", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 14/11/2026: nivel 33: Salt Lake City (blender/saltlake.py). «El desierto
+    // de sal: el tramo mas rapido de la gira». Recomendado: State Street en
+    // pleno julio, bajo el arco del aguila, y final en el Capitolio de Utah.
+    // Dinamicas propias: los espejismos (una fila de coches parece tapar la
+    // calle, pero los que no tienen sombra no existen: se pasa por dentro) y
+    // el momento estrella, el record de Bonneville en el bolido (tocar cuando
+    // la aguja esta en lo verde para meter la marcha siguiente: cada una, mas
+    // velocidad). Pancartas de Espana: ¡ESCALANTE LLEGO PRIMERO! (1776).
+    id: "salt_lake", nombre: "State Street", lugar: "Salt Lake City, Utah", listo: true,
+    zona: "city", carpeta: "saltlake", luz: "mediodia", semilla: 1836,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 6, estilo: "saltlake" },
+    horizonte: "saltlake",
+    obstaculos: { low: ["bloque_sal", "barricada", "valla_metal"], high: ["cartel_utah", "pancarta"],
+      full: ["trax", "hot_rod", "pickup", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "salt_lake" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "state_street" }],
+      [250, 610, "espejismo", { titulo: "espejismo" }],
+      [610, 690, "calma", { titulo: "eagle_gate" }],
+      [690, 850, "slalom", { full: ["trax", "pickup", "autocaravana"], titulo: "trax" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["bloque_sal", "valla_metal"], high: ["cartel_utah"], titulo: "escalante" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_salar" }],
+      // El momento estrella: el record de Bonneville (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "record", { momento: "vehiculo", vehiculo: "bolido_sal", titulo: "record" }],
+      [1830, 1910, "calma", { titulo: "record_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "espejismo", { titulo: "espejismo2" }],
+      [2430, 2510, "calma", { titulo: "colmenas" }],
+      [2510, 2650, "slalom", { full: ["hot_rod", "trax", "pickup"], titulo: "hot_rods" }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ut" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "record", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["city_county_slc", "depot_slc", "beehive_house"],
+    meta: "capitolio_utah", metaNombre: { es: "el Capitolio de Utah", en: "the Utah Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["city_county_slc", 1], 14, ...cuadras(3), ["depot_slc", 1], 14, ...cuadras(5), ["beehive_house", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["beehive_house", 1], 14, ...cuadras(4), ["depot_slc", 1], 14, ...cuadras(5), ["city_county_slc", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_utah", d: 3330, centro: true },
+      { pieza: "eagle_gate", d: 660, cruza: true }, { pieza: "eagle_gate", d: 2470, cruza: true },
+      { pieza: "salar_bonneville", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["saltlake/colmena", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2071,14 +2190,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2138,6 +2257,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  capitolio_idaho: 90, boise_depot: 40, egyptian_theatre: 22, casa_vasca: 36, arco_vasco: 2, plaza_aizkolari: 420,
+  capitolio_utah: 96, city_county_slc: 44, depot_slc: 46, beehive_house: 24, eagle_gate: 2, salar_bonneville: 420,
   capitolio_wyoming: 80, cheyenne_depot: 44, plains_hotel: 26, big_boy: 46, arco_cheyenne: 2, arena_rodeo: 420,
   rims_billings: 120, billings_depot: 40, first_interstate: 32, moss_mansion: 28, skypoint: 12, pradera_arreo: 420,
   capitolio_colorado: 76, torre_daniels: 14, union_station_den: 50, oso_azul: 40, arco_denver: 2, pista_esqui: 420,
@@ -2357,7 +2478,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

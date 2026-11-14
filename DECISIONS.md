@@ -2423,3 +2423,59 @@ objetos de cada uno. En Billings acertó con los 18 osos y metió las 7 vacas.
 Sin equilibrarse, el toro le tira y sale otro.
 
 Falta el veredicto de Isidro.
+
+## 14/11/2026 (8): niveles 32 y 33, Boise y Salt Lake City (v68)
+
+Otra vez «Sigue con los mapas, sin preguntar». Las patatas de Boise no ruedan
+como las bolas de nieve de Denver: las gigantes bajan rodando como cualquier
+otro obstáculo, y la dinámica nueva es otra.
+
+- **Boise** (Capitol Boulevard una mañana de verano, de la estación de estilo
+  misión española al Capitolio de Idaho; `blender/boise.py`):
+  - La patata caliente: en su tramo te dan una patata que quema, con una
+    cuenta de 4,5 s. Hay que pasársela a un periodista de las noticias falsas
+    chocando con él (+8). Si se acaba la cuenta, te quema (−10 tacos de la
+    partida). Encima del periodista que viene sale «¡PÁSALA!», y la patata
+    salta de mano en mano encima de tu cabeza, cada vez más roja.
+  - La patata solo llega cuando hay un periodista a una distancia a la que se
+    puede llegar (de 18 a 55 m). Con 3,4 s y desde más cerca, se quemaba la
+    mitad.
+  - El momento estrella es el Jaialdi en el Basque Block, la comunidad vasca
+    más grande de América: los aizkolaris. Filas de troncos tapan los tres
+    carriles. Tocando la pantalla muy deprisa se llena el hacha y el tronco
+    de tu carril se parte en dos (+10). Si no se llena, te lo comes.
+  - La primera fila sale a 70 m de la entrada. A 21 m no daba tiempo tocando
+    a velocidad de persona. Probado con 4 y 6 toques por segundo: 7 de 7.
+  - Las pancartas dicen ¡AUPA BOISE! · LA CASA VASCA DE AMÉRICA.
+  - Piezas: la estación con su campanario, el teatro egipcio, el barrio vasco
+    (con el frontón Anduiza de 1914), el camión de la patata gigante, la
+    patata de la acera, los sacos y las cajas de patatas.
+  - Final en el Capitolio de Idaho, con el águila de cobre y la campana.
+  - Objeto: patatas. Música: fiesta vasca con acordeón.
+- **Salt Lake City** (State Street en pleno julio; `blender/saltlake.py`):
+  - Los espejismos: una fila de coches parece tapar la calle, pero uno o dos
+    son espejismos. No tienen sombra, flotan un poco y de 45 a 12 m se
+    desvanecen. Se pasa por dentro (+3), y detrás hay tacos.
+  - El momento estrella es el récord de Bonneville, en el salar. Encima del
+    bólido, la aguja de las vueltas sube sola. Tocar cuando está en lo verde
+    mete la marcha siguiente (+5, y cada marcha un 14 % más rápido). Antes de
+    tiempo, la aguja cae; en el rojo, se pasa de vueltas. Con la quinta,
+    RÉCORD DEL MUNDO (+30). Si no te subes, sale otro bólido.
+  - Las pancartas dicen ¡ESCALANTE LLEGÓ PRIMERO! · 1776 (los frailes
+    Domínguez y Escalante).
+  - Piezas: el ayuntamiento con su torre, la estación de la Union Pacific, la
+    Beehive House, el arco del águila cruzando la calle, las colmenas de las
+    aceras, el tren TRAX y el hot rod del salar.
+  - Final en el Capitolio de Utah.
+  - Objeto: gelatinas verdes (el aperitivo oficial de Utah). Música: rock a
+    toda máquina.
+
+Probado con el piloto automático, que ahora pasa la patata, toca el hacha,
+cambia de marcha y se sube a los vehículos. Llega a la meta en los dos
+niveles sin chocar y salen los 10 objetos de cada uno:
+
+- **Boise:** pasó 10 de 10 patatas.
+- **Salt Lake City:** hubo 31 espejismos y el robot pasó por dentro de 21.
+  Batió el récord a 41 m/s.
+
+Falta el veredicto de Isidro.

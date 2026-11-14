@@ -366,6 +366,36 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 14/11: la patata de Idaho (Boise).
+  patata(x) {
+    x.save(); x.translate(128, 132); x.rotate(-0.35);
+    const forma = () => { x.beginPath(); x.ellipse(0, 0, 100, 64, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#c8945a"; forma(); x.fill();
+    x.fillStyle = "#b07a44"; x.beginPath(); x.ellipse(20, 22, 70, 30, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#6a4426";
+    for (const [a, b, r] of [[-50, -14, 7], [-10, -30, 6], [34, -8, 7], [60, 18, 6], [-30, 24, 6]]) {
+      x.beginPath(); x.ellipse(a, b, r, r * 0.6, 0.3, 0, Math.PI * 2); x.fill();
+    }
+    x.fillStyle = "rgba(255,255,255,0.4)"; x.beginPath(); x.ellipse(-46, -30, 22, 9, -0.3, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: la gelatina verde de Utah (Salt Lake City).
+  gelatina(x) {
+    x.save(); x.translate(128, 140);
+    const plato = () => { x.beginPath(); x.ellipse(0, 66, 104, 18, 0, 0, Math.PI * 2); };
+    const molde = () => { x.beginPath(); x.moveTo(-80, 60); x.lineTo(-62, -40); x.quadraticCurveTo(0, -78, 62, -40); x.lineTo(80, 60); x.closePath(); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; plato(); x.stroke(); molde(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; plato(); x.stroke(); molde(); x.stroke();
+    x.fillStyle = "#e8e8f0"; plato(); x.fill();
+    x.fillStyle = "#4ac83a"; molde(); x.fill();
+    x.strokeStyle = "#2a9a2a"; x.lineWidth = 6;
+    for (const dx of [-36, 0, 36]) { x.beginPath(); x.moveTo(dx * 1.15, 60); x.lineTo(dx * 0.85, -50); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.55)"; x.beginPath(); x.ellipse(-40, -10, 9, 30, 0.15, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#e82a3a"; x.beginPath(); x.arc(0, -64, 14, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 14/11: el sombrero vaquero (Cheyenne).
   sombrero(x) {
     x.save();

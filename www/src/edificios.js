@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 14/11: Boise: ladrillo y piedra clara, algo de cristal; bares vascos.
+  boise: { plantas: ["planta_ladrillo", "planta_lisa", "planta_cristal", "planta_ladrillo", "planta_balcones"],
+    ladrillos: [0xa85a3e, 0xb8704a, 0x9a5038, 0xd8c4a0, 0x8a4a34], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.06], toldos: [0x1e7a3e, 0xc8202a, 0x2a4a9a, 0xf2c21a],
+    rotulos: ["PINTXOS", "SPUDS", "FRIES", "BASQUE BAR", "CHORIZO", "TXAKOLI", "OUTDOORS", "COFFEE", "BOOKS", "POTATO BAR"] },
+  // 14/11: Salt Lake City: piedra clara y cristal, algo de ladrillo.
+  saltlake: { plantas: ["planta_lisa", "planta_cristal", "planta_ladrillo", "planta_lisa", "planta_cristal"],
+    ladrillos: [0xc8b490, 0xa8603e, 0xd8c8a8, 0xb89a74, 0x8a6a4a], piedras: [0xe8e0cc, 0xd0c8b4], cristal: [0x4a6a8a, 0x5a7a9a],
+    cornisas: ["cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.08], toldos: [0x2a4a9a, 0xc8202a, 0xe0a830, 0x2a5a3a],
+    rotulos: ["FRY SAUCE", "JELLO", "SKI SHOP", "SODA", "SCONES", "DINER", "HONEY", "OUTDOORS", "BOOKS", "SALT"] },
   // 14/11: Cheyenne: ladrillo del Oeste y fachadas falsas de tienda, bajas.
   cheyenne: { plantas: ["planta_ladrillo", "planta_lisa", "planta_ladrillo", "planta_balcones", "planta_lisa"],
     ladrillos: [0xb8704a, 0xa85a3e, 0xc88a5a, 0xd8b088, 0x8a5a3a], piedras: [0xe0d4bc, 0xd0bc94], cristal: [0x3a5a70, 0x4a6a7a],

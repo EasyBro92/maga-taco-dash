@@ -95,8 +95,8 @@ Fermín.
 | 29 | Denver, Colorado | +10 | «Colorado» quiere decir rojo en español: él dice que es una señal. *(hecho)* |
 | 30 | Cheyenne, Wyoming | +3 | Rodeo y estampida de bisontes. *(hecho)* |
 | 31 | Billings, Montana | +4 | «Montana» viene de «montaña». Osos pardos. *(hecho)* |
-| 32 | Boise, Idaho | +4 | Patatas rodando cuesta abajo. |
-| 33 | Salt Lake City, Utah | +6 | El desierto de sal: tramo de velocidad. |
+| 32 | Boise, Idaho | +4 | Patatas rodando cuesta abajo. *(hecho)* |
+| 33 | Salt Lake City, Utah | +6 | El desierto de sal: tramo de velocidad. *(hecho)* |
 | 34 | Seattle, Washington | +12 | Llueve sin parar: su pelo corre peligro. |
 | 35 | Portland, Oregón | +8 | Manifestantes disfrazados de rana hinchable (pasó de verdad). |
 | 36 | Anchorage, Alaska | +3 | Intenta comprar Alaska. Le recuerdan que ya es suya. «Pues compro Groenlandia». |

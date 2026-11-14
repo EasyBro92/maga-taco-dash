@@ -3087,6 +3087,26 @@ export function createWorld(scene) {
     remolque_ganado: { choque: "full", medio: 2.5, alto: 2.9, centro: -2.5 },
     corral_der: { choque: "nada", medio: 3, alto: 0 },
     corral_izq: { choque: "nada", medio: 3, alto: 0 },
+    // 14/11: Boise (blender/boise.py): el periodista (no estorba: se le pasa
+    // la patata caliente chocando con el), los sacos y la caja de patatas, la
+    // pancarta ¡AUPA BOISE!, el camion de la patata gigante (el morro en el
+    // origen) y la patata que baja rodando. El tronco de los aizkolaris es
+    // una pieza compuesta: ver abajo.
+    periodista: { choque: "nada", medio: 0.4, alto: 0 },
+    saco_patatas: { choque: "low", medio: 0.4, alto: 0.85 },
+    caja_patatas: { choque: "low", medio: 0.5, alto: 0.95 },
+    cartel_boise: { choque: "high", medio: 0.3, alto: 2.5 },
+    camion_patata: { choque: "full", medio: 5.0, alto: 3.6, centro: -5.0 },
+    patata_rodante: { choque: "low", medio: 0.5, alto: 0.85, mueve: 4, rueda: true },
+    // 14/11: Salt Lake City (blender/saltlake.py): los bloques de sal, la
+    // pancarta ¡ESCALANTE LLEGO PRIMERO!, el tren TRAX y el hot rod (el morro
+    // en el origen) y la baliza de las millas del salar. El bolido es un
+    // vehiculo (ver VEHICULOS) y los espejismos, piezas compuestas.
+    bloque_sal: { choque: "low", medio: 0.3, alto: 0.75 },
+    cartel_utah: { choque: "high", medio: 0.3, alto: 2.5 },
+    trax: { choque: "full", medio: 4.7, alto: 3.3, centro: -4.7 },
+    hot_rod: { choque: "full", medio: 2.3, alto: 1.5, centro: -2.3 },
+    baliza_sal: { choque: "low", medio: 0.25, alto: 0.75 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3271,7 +3291,7 @@ export function createWorld(scene) {
     // 08/11 (2): el barril del Robot Burrito tiene el eje a 0,42 m del suelo y
     // giraba alrededor de la base: medio barril se metia en el suelo. Ahora
     // gira sobre su eje (EJE_ALTO: lo que hay que bajarlo dentro del giro).
-    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42, papelera: 0.42, rueda_queso: 0.5 };
+    const EJE_RUEDA = { rodillo_heno: 0.6, barril_sirope: 0.45, barril: 0.42, papelera: 0.42, rueda_queso: 0.5, patata_rodante: 0.42 };
     const EJE_ALTO = { barril: 0.42 };
     if (EJE_RUEDA[nombre] && g) {
       const r = new THREE.Group();
@@ -3578,6 +3598,54 @@ export function createWorld(scene) {
         aro.position.y = 0.06;
         g.add(aro);
         g.userData.nave = nave; g.userData.rayo = rayo; g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 14/11: Boise: el tronco de los aizkolaris: entero y, al cortarlo, sus
+    // dos mitades (el mismo tronco a lo estrecho) que caen a los lados.
+    if (hayModelo("obstaculos/tronco_aizkolari")) {
+      TIPOS.tronco_vasco = { choque: "full", medio: 0.45, alto: 2.4 };
+      obstaclePools.tronco_vasco = makePool(() => {
+        const g = construirObstaculo("tronco_aizkolari");
+        const entero = new THREE.Group();
+        while (g.children.length) entero.add(g.children[0]);
+        g.add(entero);
+        const mitades = [-1, 1].map((s) => {
+          const piv = new THREE.Group();
+          const m = modeloConContorno("obstaculos/tronco_aizkolari");
+          m.scale.set(0.5, 1, 1); m.position.x = s * 0.21;
+          piv.add(m); piv.visible = false; g.add(piv);
+          return piv;
+        });
+        g.userData.entero = entero; g.userData.mitades = mitades;
+        return g;
+      });
+    }
+    // 14/11: Salt Lake City: los espejismos: los mismos coches, sin sombra,
+    // un poco en el aire y transparentes (cada uno con sus materiales: se
+    // desvanecen al acercarte).
+    for (const n of ["pickup", "autocaravana", "furgoneta", "hot_rod", "trax"]) {
+      if (!hayModelo("obstaculos/" + n) || !TIPOS[n]) continue;
+      TIPOS["esp_" + n] = { choque: "nada", medio: TIPOS[n].medio, alto: 0, centro: TIPOS[n].centro || 0 };
+      obstaclePools["esp_" + n] = makePool(() => {
+        const g = construirObstaculo(n);
+        const mats = [];
+        const tinte = new THREE.Color(0xa8d8ff);
+        g.traverse((c) => {
+          if (!c.isMesh && !c.isSprite) return;
+          if (c.material === sombraMat) { c.visible = false; return; }
+          const lista = Array.isArray(c.material) ? c.material : [c.material];
+          const nuevos = lista.map((mm) => {
+            const k = mm.clone();
+            k.transparent = true; k.depthWrite = false;
+            k.userData = { op0: mm.opacity ?? 1 };
+            if (k.color) k.color.lerp(tinte, 0.3);
+            mats.push(k);
+            return k;
+          });
+          c.material = Array.isArray(c.material) ? nuevos : nuevos[0];
+        });
+        g.userData.mats = mats;
         return g;
       });
     }
@@ -4113,6 +4181,185 @@ export function createWorld(scene) {
       c.mesh.rotation.y = (sube - baja) * 0.6 * (p.a > p.de ? 1 : -1);
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
+    }
+  }
+  // ---- 14/11: Boise ----
+  // La patata caliente: main.js lleva la cuenta (quien la tiene y cuanto le
+  // queda) y aqui se ve: la patata que salta de mano en mano encima de la
+  // cabeza (cada vez mas roja y con mas vapor), la flecha «¡PASALA!» encima
+  // del periodista que viene y, al pasarsela, el periodista que se va dando
+  // saltos con ella. Al periodista se le pasa chocando con el (es «nada»:
+  // aqui se mira si llega por tu carril).
+  const patataVis = { g: null, piel: null, vapor: [], flecha: null, tiene: false, x: 0, y: 0, calor: 0, o: null, t: 0 };
+  let ultimoPeriodista = null;
+  function texturaPasala() {
+    const cache = texturaPasala.cache || (texturaPasala.cache = {});
+    if (cache[getLang()]) return cache[getLang()];
+    const c = document.createElement("canvas"); c.width = 256; c.height = 192;
+    const x = c.getContext("2d");
+    x.fillStyle = "#e8401a"; x.strokeStyle = "#ffffff"; x.lineWidth = 8;
+    x.beginPath(); x.roundRect(10, 8, 236, 92, 26); x.fill(); x.stroke();
+    x.font = `900 44px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffffff";
+    x.fillText(tr("pasala"), 128, 56);
+    x.beginPath(); x.moveTo(96, 112); x.lineTo(160, 112); x.lineTo(128, 180); x.closePath();
+    x.fillStyle = "#e8401a"; x.fill(); x.stroke();
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return (cache[getLang()] = tx);
+  }
+  function prepararPatata() {
+    if (patataVis.g) return;
+    const g = new THREE.Group();
+    patataVis.piel = new THREE.MeshLambertMaterial({ color: 0xb8884e });
+    const p = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 10), patataVis.piel);
+    p.scale.set(1.35, 0.95, 1.0);
+    g.add(p);
+    const ojo = new THREE.MeshBasicMaterial({ color: 0x5a3a1a });
+    for (const [a, b, c] of [[0.12, 0.1, 0.16], [-0.1, 0.05, 0.17], [0.02, -0.08, 0.18]]) {
+      const e = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), ojo);
+      e.position.set(a, b, c); g.add(e);
+    }
+    const vm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false });
+    for (let i = 0; i < 3; i++) {
+      const v = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), vm.clone());
+      v.userData.fase = i / 3; g.add(v); patataVis.vapor.push(v);
+    }
+    g.visible = false;
+    group.add(g);
+    patataVis.g = g;
+    patataVis.flecha = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaPasala(), transparent: true, depthWrite: false, fog: false }));
+    patataVis.flecha.scale.set(2.2, 1.65, 1);
+    patataVis.flecha.visible = false; patataVis.flecha.userData.lang = getLang();
+    group.add(patataVis.flecha);
+  }
+  // main.js: cada fotograma, si el jugador tiene la patata, donde esta y cuanto quema (0..1).
+  function setPatata(tiene, x, y, calor) {
+    if (!patataVis.g) { if (!tiene) return; prepararPatata(); }
+    patataVis.tiene = tiene; patataVis.x = x; patataVis.y = y; patataVis.calor = calor;
+  }
+  function hayPeriodista() {
+    return obstacles.some((o) => o.periodista && o.periodista.estado === 0 && o.z > -55 && o.z < -18);
+  }
+  // main.js: el periodista que acaba de llegar por tu carril se queda la patata.
+  function darPatata() {
+    const o = ultimoPeriodista;
+    if (!o || !obstacles.includes(o)) return;
+    const p = o.periodista;
+    p.estado = 1; p.t = 0;
+    p.lado = o.lane === 0 ? -1 : o.lane === 2 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+    patataVis.o = o; patataVis.t = 0;
+  }
+  function moverPeriodista(o, dt) {
+    const p = o.periodista, m = o.mesh;
+    if (p.estado === 0) {
+      // Esperando con el microfono: se balancea un poco.
+      m.rotation.z = Math.sin((animClock + o.phase) * 2.5) * 0.04;
+      if (o.z > -0.8) {
+        p.estado = 2; p.t = 0; p.apartar = o.lane === jugadorCarril;
+        p.lado = o.lane === 0 ? -1 : o.lane === 2 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+        if (p.apartar) { ultimoPeriodista = o; if (alAvisoMapa) alAvisoMapa("periodista"); }
+      }
+      return;
+    }
+    p.t += dt;
+    if (p.estado === 1) {
+      // Con la patata: se va a la acera dando saltos.
+      m.position.x += p.lado * dt * 6;
+      m.position.y = Math.abs(Math.sin(p.t * 11)) * 0.45;
+      m.rotation.set(0, -p.lado * Math.min(1.4, p.t * 6), 0);
+      if (p.t > 1.4) m.visible = false;
+    } else if (p.apartar) {
+      // Sin patata: se aparta de un salto para no ser atropellado.
+      const f = Math.min(1, p.t / 0.3);
+      m.position.x = LANE_X[o.lane] + p.lado * f * 1.3;
+      m.rotation.z = -p.lado * f * 0.3;
+    }
+  }
+  function moverPatataVis(dt) {
+    if (!patataVis.g) return;
+    const g = patataVis.g, t = animClock;
+    if (patataVis.flecha.userData.lang !== getLang()) {
+      patataVis.flecha.userData.lang = getLang();
+      patataVis.flecha.material.map = texturaPasala(); patataVis.flecha.material.needsUpdate = true;
+    }
+    // La flecha encima del periodista mas cercano que viene.
+    let obj = null;
+    if (patataVis.tiene) for (const o of obstacles) {
+      if (!o.periodista || o.periodista.estado !== 0 || o.z < -50 || o.z > -1.5) continue;
+      if (!obj || o.z > obj.z) obj = o;
+    }
+    patataVis.flecha.visible = !!obj;
+    if (obj) patataVis.flecha.position.set(obj.mesh.position.x, 3.0 + Math.sin(t * 4) * 0.15, obj.z);
+    const o = patataVis.o;
+    if (o) {
+      // En las manos del periodista, mientras se va.
+      patataVis.t += dt;
+      if (patataVis.t > 1.4 || !obstacles.includes(o)) patataVis.o = null;
+      else { g.visible = true; g.position.set(o.mesh.position.x + 0.35, o.mesh.position.y + 1.45, o.z - 0.55); }
+    }
+    if (!patataVis.o) {
+      g.visible = patataVis.tiene;
+      if (!g.visible) return;
+      // Salta de una mano a otra encima de la cabeza (cada vez mas deprisa).
+      const f = Math.sin(t * (6 + patataVis.calor * 5));
+      g.position.set(patataVis.x + 0.32 * f, patataVis.y + 2.25 + 0.38 * (1 - f * f), -0.2);
+    }
+    g.rotation.set(t * 3, t * 2, 0);
+    const c = patataVis.o ? 1 : patataVis.calor;
+    patataVis.piel.color.setRGB(0.72 + 0.26 * c, 0.53 - 0.25 * c, 0.3 - 0.18 * c);
+    for (const v of patataVis.vapor) {
+      const u = (t * (0.7 + c) + v.userData.fase) % 1;
+      v.position.set(Math.sin(u * 9 + v.userData.fase * 6) * 0.08, 0.15 + u * 0.75, 0);
+      v.scale.setScalar(0.6 + u * 1.2);
+      v.material.opacity = (0.15 + 0.45 * c) * (1 - u);
+      v.rotation.set(-g.rotation.x, -g.rotation.y, 0);
+    }
+  }
+  // Los aizkolaris: main.js lleva el hacha (la barra que se llena tocando
+  // muy deprisa) y dice aqui si esta lista y donde esta el jugador. El
+  // tronco que te llega con el hacha lista se parte en dos y cae a los lados.
+  const hacha = { lista: false, x: 0 };
+  function setHacha(lista, x) { hacha.lista = lista; hacha.x = x; }
+  // La fila de troncos que viene (la z del mas cercano por cortar), o null.
+  function troncoCerca() {
+    let z = null;
+    for (const o of obstacles) if (o.tronco && !o.tronco.cortado && o.z < -2.5 && (z === null || o.z > z)) z = o.z;
+    return z;
+  }
+  function moverTronco(o, dt) {
+    const tr = o.tronco, u = o.mesh.userData;
+    if (!tr.cortado) {
+      if (hacha.lista && o.z > -2.4 && o.z < 0.6 && Math.abs(LANE_X[o.lane] - hacha.x) < 1.5) {
+        tr.cortado = true; tr.t = 0; o.fuera = true;
+        u.entero.visible = false;
+        for (const m of u.mitades) { m.visible = true; m.rotation.set(0, 0, 0); m.position.set(0, 0, 0); }
+        if (alAvisoMapa) alAvisoMapa("tronco");
+      }
+      return;
+    }
+    tr.t += dt;
+    const f = Math.min(1, tr.t / 0.45), sm = f * f * (3 - 2 * f);
+    u.mitades.forEach((m, i) => {
+      const s = i ? 1 : -1;
+      m.rotation.z = -s * sm * 1.45;
+      m.position.x = s * sm * 0.45;
+    });
+  }
+  // ---- 14/11: Salt Lake City ----
+  // El espejismo: de lejos parece un coche de verdad (pero no tiene sombra y
+  // flota un poco); de 45 a 12 m se va desvaneciendo; se pasa por dentro.
+  function moverEspejismo(o, dt) {
+    const e = o.espejismo, mats = o.mesh.userData.mats || [];
+    let a = 0.92;
+    if (o.z > -45) a = 0.92 - 0.72 * Math.min(1, (o.z + 45) / 33);
+    if (e.pasado) { e.t += dt; a = Math.max(0, 0.2 - e.t * 0.6); }
+    a = Math.round(a * 50) / 50;
+    if (a !== e.a) { e.a = a; for (const m of mats) m.opacity = a * m.userData.op0; o.mesh.visible = a > 0; }
+    o.mesh.position.y = 0.16;
+    if (!e.pasado && o.z + (o.centro || 0) > -0.5) {
+      e.pasado = true; e.t = 0;
+      if (o.lane === jugadorCarril && alAvisoMapa) alAvisoMapa("espejismo");
     }
   }
   // ---- 14/11: Cheyenne ----
@@ -6212,6 +6459,7 @@ export function createWorld(scene) {
   const SERPIENTE = [1, 1, 0, 0, 1, 1, 2, 2];
   let bolasAntes = [], eslalon = { lane: 1, sig: 0, color: 0 };   // (14/11: Denver)
   let estampidaFila = 0, osoAntes = "";                             // (14/11: Cheyenne y Billings)
+  let periodistaAntes = -1;                                         // (14/11: Boise)
   const PATRONES = {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
@@ -7288,6 +7536,88 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 14/11: Boise ----
+    // La patata caliente: cada 28 m un periodista en un carril (main.js te da
+    // la patata: hay que chocar con uno antes de que queme). Entre medias,
+    // algo que saltar o pasar agachado en otro carril, y tacos.
+    patata(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      const j = k % 4;
+      if (j === 2 && obstaclePools.periodista) {
+        let l = elegirDe(LANES);
+        if (l === periodistaAntes && Math.random() < 0.6) l = elegirDe(LANES.filter((x) => x !== l));
+        periodistaAntes = l;
+        const o = spawnObstacle(l, "nada", z, "periodista");
+        if (o) o.periodista = { estado: 0, t: 0, lado: 1 };
+        filaSinObjeto = true;
+        return;
+      }
+      if (j === 0) {
+        const l = elegirDe(LANES.filter((x) => x !== periodistaAntes));
+        if (Math.random() < 0.5) obst(l, "low", z, d, ["saco_patatas", "caja_patatas"]);
+        else obst(l, "high", z, d, ["cartel_boise"]);
+        return;
+      }
+      if (j === 3) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // Los aizkolaris (momento estrella): cada 49 m (la primera a 70 m de la
+    // entrada, para que de tiempo a llenar el hacha) una fila de tres troncos
+    // que tapa la calle; tocando muy deprisa se llena el hacha (main.js) y el
+    // tuyo se parte. Tacos entre medias.
+    aizkolari(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 3) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      filaSinObjeto = true;
+      const j = k % 7;
+      if (j === 3 && k >= 10 && obstaclePools.tronco_vasco) {
+        for (const l of LANES) {
+          const o = spawnObstacle(l, "full", z, "tronco_vasco");
+          if (o) o.tronco = { cortado: false, t: 0 };
+        }
+        return;
+      }
+      if (j === 5 || j === 0) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // ---- 14/11: Salt Lake City ----
+    // Los espejismos: cada 28 m una fila de coches que parece tapar los tres
+    // carriles, pero uno o dos son espejismos (sin sombra; se desvanecen al
+    // acercarte): hay que ir por uno de ellos. Detras del espejismo, tacos.
+    espejismo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 4 !== 2) return;
+      const coches = ["pickup", "autocaravana", "furgoneta", "hot_rod"].filter((c) => obstaclePools[c] && obstaclePools["esp_" + c]);
+      if (!coches.length) return;
+      filaSinObjeto = true;
+      const orden = [...LANES].sort(() => Math.random() - 0.5);
+      const reales = orden.slice(0, Math.random() < 0.55 ? 1 : 2);
+      const libre = Math.random() < 0.2 ? orden[2] : -1;
+      for (const l of LANES) {
+        const c = elegirDe(coches);
+        if (reales.includes(l)) {
+          const o = spawnObstacle(l, "full", z, c);
+          if (o) { o.puedeCambiar = false; o.mueve = 0; o.cruce = null; }
+        } else if (l !== libre) {
+          const o = spawnObstacle(l, "nada", z, "esp_" + c);
+          if (o) { o.espejismo = { a: -1, pasado: false, t: 0 }; o.mueve = 0; }
+        }
+      }
+      const falso = orden.find((l) => !reales.includes(l));
+      for (let i = 0; i < 3; i++) spawnTaco(falso, z - 5.5 - i * 1.3, 0.9);
+    },
+    // El record de Bonneville (momento estrella): el bolido espera al
+    // principio en el carril del medio (ver VEHICULOS; main.js saca otro si
+    // no te subes). Balizas de las millas por los lados (el bolido se las
+    // lleva por delante) y tacos.
+    record(z, d, t, k) {
+      const j = k % 3;
+      if (j === 0) obst(Math.random() < 0.5 ? 0 : 2, "low", z, d, ["baliza_sal"]);
+      else if (j === 1) tacosEn(elegirDe(LANES), z, 4);
+    },
     // ---- 14/11: Cheyenne ----
     // La estampida: cada 28 m una fila de bisontes que vienen corriendo: dos
     // y un hueco (con tacos), y cada tercera fila los TRES: hay que echarle
@@ -7991,6 +8321,9 @@ export function createWorld(scene) {
     // 14/11: Cheyenne: de pie encima del toro del rodeo (hay que aguantar 8 s:
     // ver la barra de equilibrio en main.js).
     toro_rodeo: { alto: 1.55, z: 0.9, gira: true },
+    // 14/11: Salt Lake City: de pie encima del bolido del record (detras de
+    // la cabina): hay que cambiar de marcha a tiempo (ver main.js).
+    bolido_sal: { alto: 1.24, z: 2.6, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -8870,6 +9203,7 @@ export function createWorld(scene) {
     actualizarDisparos(dt);
     actualizarFrases(dt);
     moverLazo(dt);
+    moverPatataVis(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
       o.z += dz + o.mueve * dt;
@@ -8930,6 +9264,9 @@ export function createWorld(scene) {
         else if (o.bolanieve) crecerBola(o, dt);
         else if (o.oso) moverOso(o, dt);
         else if (o.arreo) arrearVaca(o, dt, dz);
+        else if (o.periodista) moverPeriodista(o, dt);
+        else if (o.tronco) moverTronco(o, dt);
+        else if (o.espejismo) moverEspejismo(o, dt);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -9154,5 +9491,6 @@ export function createWorld(scene) {
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
     onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf, pasarPuerta,
     echarLazo, hayEstampida, setToroEquilibrio, vehiculoNombre: () => vehiculo.nombre, vehiculoLibre: () => vehiculo.fase === 0,
-    arreoCuenta: () => arreoCuenta };
+    arreoCuenta: () => arreoCuenta,
+    setPatata, hayPeriodista, darPatata, setHacha, troncoCerca };
 }
