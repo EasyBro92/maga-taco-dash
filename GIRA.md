@@ -51,7 +51,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Minnesota | Minneapolis (capital: Saint Paul) | la más grande |
 | Misisipi | Jackson | capital y la más grande (hecho el 13/11: casas del blues, pajitas que se deshacen y el barco de vapor) |
 | Misuri | San Luis (capital: Jefferson City) | el arco Gateway |
-| Montana | Billings (capital: Helena) | la más grande |
+| Montana | Billings (capital: Helena) | la más grande (hecho el 14/11: Montana Avenue, los osos que se van a tu carril y el Gran Arreo hasta el corral) |
 | Nebraska | Omaha (capital: Lincoln) | la más grande |
 | Nuevo Hampshire | Manchester (capital: Concord) | las primarias |
 | Nueva Jersey | Atlantic City (capital: Trenton) | los casinos del paseo marítimo |
@@ -68,4 +68,4 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Virginia Occidental | Charleston | capital y la más grande |
 | Washington (estado) | Seattle (capital: Olympia) | la Space Needle |
 | Wisconsin | Milwaukee (capital: Madison) | la más grande |
-| Wyoming | Cheyenne | capital y la más grande |
+| Wyoming | Cheyenne | capital y la más grande (hecho el 14/11: los Frontier Days, la estampida que se para con el lazo y aguantar 8 segundos en el toro) |

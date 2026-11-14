@@ -1850,6 +1850,124 @@ const CALLES = [
     acera: ["des_moines/arbol_nieve", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 14/11/2026: nivel 30: Cheyenne (blender/cheyenne.py). «Rodeo y estampida
+    // de bisontes». Recomendado: Capitol Avenue en pleno Cheyenne Frontier
+    // Days, a mediodia de verano, y final en el Capitolio de Wyoming (la
+    // cupula de oro y el jinete de bronce del caballo que corcovea). Dinamicas
+    // propias: la estampida, que se para echando el lazo (tocar la pantalla:
+    // cuando vienen tres en fila es la unica salida), y el momento estrella,
+    // el ruedo de Frontier Park: aguantar 8 segundos encima del toro con la
+    // barra de equilibrio. Pancartas de Espana: ¡RODEO ES ESPAÑOL!
+    id: "cheyenne", nombre: "Capitol Avenue", lugar: "Cheyenne, Wyoming", listo: true,
+    zona: "city", carpeta: "cheyenne", luz: "mediodia", semilla: 1833,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 4, estilo: "cheyenne" },
+    horizonte: "cheyenne",
+    obstaculos: { low: ["barril_rodeo", "paca", "valla_rodeo"], high: ["cartel_rodeo", "pancarta"],
+      full: ["diligencia", "pickup", "autocaravana", "payaso_barril"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "cheyenne" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "frontier" }],
+      [250, 610, "estampida", { titulo: "estampida" }],
+      [610, 690, "calma", { titulo: "depot" }],
+      [690, 850, "slalom", { full: ["diligencia", "pickup", "autocaravana"], titulo: "diligencias" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["barril_rodeo", "valla_rodeo"], high: ["cartel_rodeo"], titulo: "rodeo_es" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_ruedo" }],
+      // El momento estrella: el ruedo de Frontier Park (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "rodeo", { momento: "vehiculo", vehiculo: "toro_rodeo", titulo: "ruedo" }],
+      [1830, 1910, "calma", { titulo: "ruedo_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "estampida", { titulo: "estampida2" }],
+      [2430, 2510, "calma"],
+      [2510, 2650, "slalom", { full: ["payaso_barril", "diligencia", "pickup"], titulo: "payasos" }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_wy" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "rodeo", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["cheyenne_depot", "plains_hotel", "big_boy"],
+    meta: "capitolio_wyoming", metaNombre: { es: "el Capitolio de Wyoming", en: "the Wyoming Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["cheyenne_depot", 1], 14, ...cuadras(3), ["plains_hotel", 1], 14, ...cuadras(5), ["big_boy", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["big_boy", 1], 14, ...cuadras(4), ["plains_hotel", 1], 14, ...cuadras(5), ["cheyenne_depot", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_wyoming", d: 3330, centro: true },
+      { pieza: "arco_cheyenne", d: 120, cruza: true }, { pieza: "arco_cheyenne", d: 2250, cruza: true },
+      { pieza: "arena_rodeo", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["cheyenne/bota_gigante", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 14/11/2026: nivel 31: Billings (blender/billings.py). «"Montana" viene
+    // de "montaña". Osos pardos». Recomendado: Montana Avenue en otono, con
+    // las Rimrocks al fondo, y final al pie de las Rimrocks, en la puerta de
+    // rancho de THE MAGIC CITY. Dinamicas propias: los osos que se van a tu
+    // carril (apartarse no sirve: al pardo, que se pone de pie, hazte el
+    // muerto; al negro, hazte grande), y el momento estrella, el Gran Arreo
+    // de Montana: la vaca huye de ti y hay que llevarla al corral poniendose
+    // al otro lado. Pancartas de Espana: MONTANA = MONTAÑA.
+    id: "billings", nombre: "Montana Avenue", lugar: "Billings, Montana", listo: true,
+    zona: "city", carpeta: "billings", luz: "otono", semilla: 1834,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "billings" },
+    horizonte: "billings",
+    obstaculos: { low: ["tronco_caido", "paca", "valla_metal"], high: ["cartel_montana", "pancarta"],
+      full: ["remolque_ganado", "pickup", "autocaravana", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "billings" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "montana_ave" }],
+      [250, 610, "osos", { titulo: "osos" }],
+      [610, 690, "calma", { titulo: "moss" }],
+      [690, 850, "slalom", { full: ["remolque_ganado", "pickup", "autocaravana"], titulo: "remolques" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["tronco_caido", "valla_metal"], high: ["cartel_montana"], titulo: "montana_es" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_arreo" }],
+      // El momento estrella: el Gran Arreo de Montana (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "arreo", { titulo: "arreo" }],
+      [1830, 1910, "calma", { titulo: "arreo_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "osos", { titulo: "osos2" }],
+      [2430, 2510, "calma", { titulo: "skypoint" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_rims" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "arreo", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["billings_depot", "first_interstate", "moss_mansion"],
+    meta: "rims_billings", metaNombre: { es: "las Rimrocks", en: "the Rimrocks" },
+    izquierda: [
+      40, ["kit", 2], 14, ["billings_depot", 1], 14, ...cuadras(3), ["first_interstate", 1], 14, ...cuadras(5), ["moss_mansion", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["moss_mansion", 1], 14, ...cuadras(4), ["first_interstate", 1], 14, ...cuadras(5), ["billings_depot", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "rims_billings", d: 3330, centro: true },
+      { pieza: "skypoint", d: 120, cruza: true }, { pieza: "skypoint", d: 2470, cruza: true },
+      { pieza: "pradera_arreo", d: 1410, cruza: true }],
+    final: "parada", parada: -2,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1953,14 +2071,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2020,6 +2138,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  capitolio_wyoming: 80, cheyenne_depot: 44, plains_hotel: 26, big_boy: 46, arco_cheyenne: 2, arena_rodeo: 420,
+  rims_billings: 120, billings_depot: 40, first_interstate: 32, moss_mansion: 28, skypoint: 12, pradera_arreo: 420,
   capitolio_colorado: 76, torre_daniels: 14, union_station_den: 50, oso_azul: 40, arco_denver: 2, pista_esqui: 420,
   san_felipe_neri: 60, kimo_theatre: 22, casa_adobe: 20, motel_66: 30, arco_66: 2, campo_globos: 420,
   mar_a_lago: 60, hotel_deco_rosa: 22, hotel_deco_azul: 22, playa_socorrista: 40, arco_miami: 2, bano_dorado: 420,
@@ -2237,7 +2357,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

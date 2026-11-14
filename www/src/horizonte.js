@@ -394,6 +394,82 @@ const SITIOS = {
   },
   // 14/11: Denver: las Montanas Rocosas nevadas de punta a punta (el pico
   // Longs, el mas alto) y el centro de Denver delante.
+  // 14/11: Cheyenne: la llanura, los montes Laramie bajos y azules al oeste,
+  // los molinos de viento del parque eolico y la cupula del Capitolio.
+  cheyenne(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 60; i++) {
+      const u = i / 60;
+      x.lineTo(u * ANCHO, SUELO - 28 - 22 * Math.abs(Math.sin(u * 7.3)) - 10 * Math.sin(u * 2.1) - r() * 4);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.fillStyle = c.cerca;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let px = 0; px <= ANCHO; px += 30) x.lineTo(px, SUELO - 8 - 10 * (0.5 + 0.5 * Math.sin(px * 0.004 + 1)) - r() * 2);
+    x.lineTo(ANCHO, SUELO); x.fill();
+    // Los molinos del parque eolico (quietos: el horizonte es una pintura).
+    x.strokeStyle = c.molino; x.fillStyle = c.molino; x.lineCap = "round";
+    for (let k = 0; k < 9; k++) {
+      const px = 180 + k * 95 + r() * 30, h = 70 + r() * 20, py = SUELO - 12 - h;
+      x.lineWidth = 4; x.beginPath(); x.moveTo(px, SUELO - 12); x.lineTo(px, py); x.stroke();
+      x.lineWidth = 3;
+      for (let a = 0; a < 3; a++) {
+        const ang = k * 0.7 + a * (Math.PI * 2 / 3);
+        x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(ang) * 34, py + Math.sin(ang) * 34); x.stroke();
+      }
+    }
+    // El centro de Cheyenne, bajo, con la cupula.
+    for (const [x0, x1] of [[1500, 1820]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 22 + r() * 20, h = 20 + r() * 40; torre(x, [cx, 0], w, h, c.cerca, r, null); cx += w * 0.95; }
+    }
+    x.fillStyle = c.monumento;
+    x.fillRect(1640, SUELO - 70, 60, 70);
+    x.beginPath(); x.ellipse(1670, SUELO - 70, 18, 26, 0, Math.PI, Math.PI * 2); x.fill();
+    x.fillRect(1668, SUELO - 108, 4, 14);
+  },
+  // 14/11: Billings: las Rimrocks (el acantilado de arenisca de techo plano,
+  // con sus capas) delante, los montes Beartooth nevados detras y los
+  // alamos amarillos del otono abajo.
+  billings(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    const picos = [];
+    for (let i = 0; i <= 70; i++) {
+      const u = i / 70;
+      const h = 80 + 45 * Math.abs(Math.sin(u * 9)) + 25 * Math.sin(u * 2.6);
+      const y = SUELO - h - r() * 6;
+      picos.push([u * ANCHO, y]); x.lineTo(u * ANCHO, y);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.fillStyle = c.nieve;
+    for (let i = 1; i < picos.length - 1; i++) {
+      const [px, py] = picos[i];
+      if (py > picos[i - 1][1] || py > picos[i + 1][1] || py > SUELO - 105) continue;
+      x.beginPath(); x.moveTo(px - 22, py + 18); x.lineTo(px, py); x.lineTo(px + 22, py + 18); x.lineTo(px + 6, py + 13); x.lineTo(px - 8, py + 15); x.closePath(); x.fill();
+    }
+    // Las Rimrocks: una banda de techo plano con escalones y capas.
+    const roca = c.letrero;
+    x.fillStyle = roca;
+    x.beginPath(); x.moveTo(0, SUELO);
+    let alto = 55;
+    for (let px = 0; px <= ANCHO; px += 40) {
+      if (r() < 0.25) alto = 45 + r() * 22;
+      x.lineTo(px, SUELO - alto); x.lineTo(px + 40, SUELO - alto);
+    }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    x.strokeStyle = "rgba(0,0,0,0.12)"; x.lineWidth = 3;
+    for (const dy of [14, 26, 38]) { x.beginPath(); x.moveTo(0, SUELO - dy); x.lineTo(ANCHO, SUELO - dy); x.stroke(); }
+    // Los alamos amarillos.
+    for (let k = 0; k < 26; k++) {
+      const px = r() * ANCHO, rr = 8 + r() * 8;
+      x.fillStyle = k % 3 ? "#d8a838" : "#c89030";
+      x.beginPath(); x.ellipse(px, SUELO - rr * 0.9, rr * 1.2, rr, 0, 0, Math.PI * 2); x.fill();
+    }
+    // La torre First Interstate.
+    torre(x, [1580, 0], 26, 120, c.cerca, r, null);
+  },
   denver(x, c, r) {
     x.fillStyle = c.lejos;
     x.beginPath(); x.moveTo(0, SUELO);
@@ -745,7 +821,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a, cheyenne: 0x8a8a6a, billings: 0x8a7a8a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

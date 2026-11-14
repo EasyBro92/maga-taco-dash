@@ -366,6 +366,37 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 14/11: el sombrero vaquero (Cheyenne).
+  sombrero(x) {
+    x.save();
+    x.translate(128, 140);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const ala = () => { x.beginPath(); x.moveTo(-108, -6); x.quadraticCurveTo(-96, 30, 0, 30); x.quadraticCurveTo(96, 30, 108, -6); x.quadraticCurveTo(70, 12, 0, 12); x.quadraticCurveTo(-70, 12, -108, -6); x.closePath(); };
+    const copa = () => { x.beginPath(); x.moveTo(-54, 10); x.bezierCurveTo(-62, -60, -40, -84, -14, -70); x.quadraticCurveTo(0, -60, 14, -70); x.bezierCurveTo(40, -84, 62, -60, 54, 10); x.closePath(); };
+    x.lineWidth = 28; x.strokeStyle = "#fff"; ala(); x.stroke(); copa(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; copa(); x.stroke(); ala(); x.stroke();
+    x.fillStyle = "#b8823e"; copa(); x.fill();
+    x.fillStyle = "#c8924a"; ala(); x.fill();
+    x.fillStyle = "#6a3a1a"; x.fillRect(-55, -6, 110, 14);
+    x.fillStyle = "#f2c21a"; x.beginPath(); x.arc(0, 1, 6, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(255,255,255,0.4)"; x.beginPath(); x.ellipse(-30, -40, 7, 20, 0.2, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: la huella de oso (Billings).
+  huella(x) {
+    x.save();
+    x.translate(128, 136);
+    const planta = () => { x.beginPath(); x.ellipse(0, 22, 58, 48, 0, 0, Math.PI * 2); };
+    const dedos = [[-62, -44, 20], [-30, -66, 21], [6, -72, 21], [42, -62, 20], [70, -36, 18]];
+    const dedo = ([dx, dy, rr]) => { x.beginPath(); x.ellipse(dx, dy, rr, rr * 1.15, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; planta(); x.stroke(); dedos.forEach((d) => { dedo(d); x.stroke(); });
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; planta(); x.stroke(); dedos.forEach((d) => { dedo(d); x.stroke(); });
+    x.fillStyle = "#6a4426"; planta(); x.fill(); dedos.forEach((d) => { dedo(d); x.fill(); });
+    x.strokeStyle = "#e8dcc0"; x.lineWidth = 5; x.lineCap = "round";
+    for (const [dx, dy] of dedos) { x.beginPath(); x.moveTo(dx, dy - 20); x.lineTo(dx + dx * 0.08, dy - 34); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.ellipse(-22, 4, 10, 22, 0.4, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   esquis(x) {
     x.save();
     x.translate(128, 132);

@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 14/11: Cheyenne: ladrillo del Oeste y fachadas falsas de tienda, bajas.
+  cheyenne: { plantas: ["planta_ladrillo", "planta_lisa", "planta_ladrillo", "planta_balcones", "planta_lisa"],
+    ladrillos: [0xb8704a, 0xa85a3e, 0xc88a5a, 0xd8b088, 0x8a5a3a], piedras: [0xe0d4bc, 0xd0bc94], cristal: [0x3a5a70, 0x4a6a7a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.06], toldos: [0x2a5a3a, 0xc8202a, 0x2a4a9a, 0xf2c21a],
+    rotulos: ["SADDLERY", "BOOTS", "WESTERN WEAR", "SALOON", "RODEO", "HATS", "STEAKHOUSE", "TACK", "SPURS", "BISON"] },
+  // 14/11: Billings: ladrillo rojo de Montana Avenue y algo de cristal.
+  billings: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_cristal", "planta_lisa", "planta_ladrillo"],
+    ladrillos: [0xa8603e, 0x9a5038, 0xb8784e, 0xd8b88a, 0x8a4a34], piedras: [0xe0d4bc, 0xc8b89c], cristal: [0x4a6a8a, 0x5a7a9a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.06], toldos: [0x2a5a3a, 0xc8202a, 0x8a4a2a, 0xf2c21a],
+    rotulos: ["OUTFITTERS", "FLY FISHING", "BREWERY", "HUCKLEBERRY", "BIG SKY", "GRIZZLY", "RANCH SUPPLY", "BOOKS", "CAFE", "SADDLES"] },
   denver: { plantas: ["planta_ladrillo", "planta_cristal", "planta_ladrillo", "planta_lisa", "planta_cristal"],
     ladrillos: [0xa86a4a, 0x9a5a42, 0x8a4a3a, 0xb8805a, 0x7a5a4a], piedras: [0xd8ccb4, 0xc8bca4], cristal: [0x5a7a9a, 0x7a9ab4, 0x4a6a8a],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x2a5a3a, 0xc8202a, 0x1f3a7a, 0xf0c020],

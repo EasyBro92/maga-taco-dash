@@ -174,6 +174,21 @@ export function sndPlatillo() {
 export function sndPuerta() { tono(1318, 0.09, { tipo: "triangle", vol: 0.1 }); tono(1760, 0.12, { tipo: "triangle", vol: 0.08, cuando: 0.06 }); }
 export function sndRodar() { soplo(0.8, { desde: 180, hasta: 90, tipo: "lowpass", vol: 0.2, q: 0.7 }); }
 export function sndQuemador() { soplo(0.6, { desde: 250, hasta: 500, tipo: "lowpass", vol: 0.16, q: 0.5 }); }
+// 14/11: Cheyenne: el lazo (el silbido de la cuerda y el tiron) y la coz del toro.
+export function sndLazo() {
+  soplo(0.32, { desde: 700, hasta: 2600, tipo: "bandpass", vol: 0.14, q: 1.4 });
+  tono(240, 0.09, { tipo: "square", vol: 0.06, glide: -80, filtro: 1400, cuando: 0.28 });
+}
+export function sndCoz() { tono(95, 0.14, { tipo: "sine", vol: 0.22, glide: -45 }); }
+// 14/11: Billings: el mugido de la vaca y el gruñido del oso.
+export function sndMugido() {
+  tono(150, 0.85, { tipo: "sawtooth", vol: 0.07, glide: -40, ataque: 0.14, filtro: 650 });
+  tono(225, 0.7, { tipo: "sawtooth", vol: 0.03, glide: -60, ataque: 0.14, filtro: 900 });
+}
+export function sndRugido() {
+  soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
+  tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
+}
 export function sndChapa() {
   // Arpegio brillante: do-mi-sol-do, como una moneda especial.
   [1046, 1318, 1568, 2093].forEach((f, i) => {
@@ -350,6 +365,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 14/11: Cheyenne: country de rodeo, al galope y con banjo (melodia propia).
+  cheyenne: { bpm: 156, swing: 0.5, acordes: [C, F, C, G7], bateria: "country", bajo: "alterna",
+    melodia: [67, 72, 76, null, 79, null, 76, 72, 77, null, 77, 81, 79, null, null, null,
+      76, 79, 76, 72, 74, null, 71, 67, 72, null, 76, null, 72, null, null, null],
+    timbre: "banjo" },
+  // 14/11: Billings: balada de montana, tranquila y abierta (melodia propia).
+  billings: { bpm: 126, swing: 0.5, acordes: [F, C, Dm, Bb], bateria: "country", bajo: "alterna",
+    melodia: [72, null, 77, null, 81, 79, 77, null, 76, null, 72, 74, 76, null, null, null,
+      77, null, 81, 84, 82, null, 81, 79, 77, null, 74, null, 77, null, null, null],
+    timbre: "pluck" },
   albuquerque: { bpm: 120, swing: 0, acordes: [Am, G, F, E7], bateria: "marcha",
     melodia: [76, null, 76, 77, 76, null, 74, 72, 74, null, 74, 76, 74, null, 72, 71,
       72, null, 72, 74, 72, null, 71, 69, 68, null, 71, null, 76, null, null, null],

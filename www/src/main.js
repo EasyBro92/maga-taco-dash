@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -730,7 +730,9 @@ const NOMBRE_HITO = {
     casa_battery: "Una mansión de la Battery", hotel_deco_rosa: "Un hotel art déco de Ocean Drive",
     hotel_deco_azul: "Un hotel art déco de Ocean Drive", playa_socorrista: "La playa de Miami Beach",
     kimo_theatre: "El teatro KiMo", casa_adobe: "Una casa de adobe", motel_66: "Un motel de la Ruta 66",
-    torre_daniels: "La torre del reloj", union_station_den: "La Union Station", oso_azul: "El oso azul" },
+    torre_daniels: "La torre del reloj", union_station_den: "La Union Station", oso_azul: "El oso azul",
+    cheyenne_depot: "La estación de la Union Pacific", plains_hotel: "El hotel Plains", big_boy: "La locomotora Big Boy",
+    billings_depot: "La estación del Northern Pacific", first_interstate: "La torre más alta de Montana", moss_mansion: "La mansión Moss" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -774,7 +776,9 @@ const NOMBRE_HITO = {
     casa_battery: "A Battery mansion", hotel_deco_rosa: "An Ocean Drive Art Deco hotel",
     hotel_deco_azul: "An Ocean Drive Art Deco hotel", playa_socorrista: "Miami Beach",
     kimo_theatre: "The KiMo Theatre", casa_adobe: "An adobe house", motel_66: "A Route 66 motel",
-    torre_daniels: "The clock tower", union_station_den: "Union Station", oso_azul: "The big blue bear" },
+    torre_daniels: "The clock tower", union_station_den: "Union Station", oso_azul: "The big blue bear",
+    cheyenne_depot: "The Union Pacific depot", plains_hotel: "The Plains Hotel", big_boy: "The Big Boy locomotive",
+    billings_depot: "The Northern Pacific depot", first_interstate: "Montana's tallest tower", moss_mansion: "The Moss Mansion" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1327,6 +1331,7 @@ function resetRun(desde = 0) {
   carrilAntes = 1; tropiezo = 0; persigueLeft = 0; world.perseguir(false, true);
   montado = false; superSalto = false; persigueMomento = false; dobleLeft = 0; reto = null;
   document.getElementById("retoBar").classList.add("hidden");
+  quitarRodeo();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1675,10 +1680,99 @@ function ponerAlReves(on) {
   el.textContent = `⇄ ${t("alReves")}`;
   el.classList.toggle("hidden", !on);
 }
+// 14/11: Cheyenne: la monta del toro del rodeo. Hay que aguantar 8 s: el
+// toro da coces hacia un lado y el jinete se va cayendo hacia donde ya
+// esta; se desliza hacia el lado CONTRARIO para enderezarse (en el toro no
+// se cambia de carril). Si la aguja llega al borde, al suelo.
+var rodeo = null;   // (var: resetRun puede llamar antes de llegar aqui)
+const RODEO_T = 8, RODEO_PREMIO = 25;
+function barraRodeo() {
+  let el = document.getElementById("rodeoBar");
+  if (!el) {
+    el = document.createElement("div"); el.id = "rodeoBar"; el.className = "hidden";
+    el.innerHTML = '<div class="rodeoTit"></div><div class="rodeoPista"><div class="rodeoAguja"></div></div><div class="rodeoPie"></div>';
+    document.getElementById("hud").appendChild(el);
+  }
+  return el;
+}
+function empezarRodeo() {
+  rodeo = { e: 0, t: RODEO_T, coz: 0.9, pintado: "" };
+  const el = barraRodeo();
+  el.querySelector(".rodeoPie").textContent = t("rodeoPista");
+  el.classList.remove("hidden");
+  pintarRodeo();
+}
+function quitarRodeo() {
+  rodeo = null;
+  const el = document.getElementById("rodeoBar");
+  if (el) el.classList.add("hidden");
+  if (world.setToroEquilibrio) world.setToroEquilibrio(0);
+}
+function pintarRodeo() {
+  const el = barraRodeo();
+  const texto = t("aguanta").replace("{s}", Math.max(0, Math.ceil(rodeo.t)));
+  if (texto !== rodeo.pintado) { el.querySelector(".rodeoTit").textContent = texto; rodeo.pintado = texto; }
+  el.querySelector(".rodeoAguja").style.left = `${50 + Math.max(-1, Math.min(1, rodeo.e)) * 50}%`;
+}
+function actualizarRodeo(dt) {
+  if (!rodeo) return;
+  if (!montado) { quitarRodeo(); return; }
+  rodeo.t -= dt;
+  rodeo.e += rodeo.e * 0.9 * dt;
+  rodeo.coz -= dt;
+  if (rodeo.coz <= 0) {
+    rodeo.e += (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.12);
+    rodeo.coz = 0.75 + Math.random() * 0.3;
+    sndCoz(); vibrate(12);
+  }
+  world.setToroEquilibrio(rodeo.e);
+  pintarRodeo();
+  if (Math.abs(rodeo.e) >= 1) {
+    // Al suelo: cae hacia el carril de ese lado y el toro se va.
+    const lado = Math.sign(rodeo.e);
+    quitarRodeo();
+    montado = false; world.bajarVehiculo();
+    const nl = Math.max(0, Math.min(2, currentLane + lado));
+    if (nl !== currentLane) { carrilAntes = currentLane; currentLane = nl; }
+    saltar();
+    textoFlotante(t("alSuelo")); sndBogey(); vibrate([40, 40, 40]);
+  } else if (rodeo.t <= 0) {
+    quitarRodeo();
+    tacosThisRun += RODEO_PREMIO * multiplier;
+    textoFlotante(`${t("ochoSegundos")} +${RODEO_PREMIO * multiplier}`);
+    spawnConfetti(24); sndFanfarria(); vibrate([30, 30, 60]);
+    montado = false; world.bajarVehiculo();
+    saltar();
+  }
+}
+// Cuando el toro de antes se ha ido, sale otro del cajon (si queda ruedo
+// para una monta entera: 75 m hasta el toro y unos 190 encima).
+function otroToro() {
+  if (!tramoMostrado || tramoMostrado.tipo !== "rodeo" || montado || rodeo || !world.vehiculoLibre) return;
+  if (tramoMostrado.hasta - distance < 260 || !world.vehiculoLibre()) return;
+  world.aparcarVehiculo("toro_rodeo", 1, -75);
+}
+// 14/11: Cheyenne: en la estampida, tocar la pantalla es echar el lazo al
+// bisonte de tu carril.
+function lazoEstampida() {
+  if (!world.hayEstampida || !world.hayEstampida()) return false;
+  if (world.echarLazo(playerX)) {
+    tacosThisRun += 5 * multiplier;
+    textoFlotante(`${t("lazado")} +${5 * multiplier}`);
+    sndLazo(); vibrate(20);
+  }
+  return true;
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
   if (alReves && (action === "left" || action === "right")) action = action === "left" ? "right" : "left";
+  if (rodeo && montado && (action === "left" || action === "right")) {
+    rodeo.e += action === "left" ? -0.42 : 0.42;
+    sndLaneSwitch(); vibrate(8);
+    return;
+  }
+  if ((action === "frase" || action === "lanzar") && lazoEstampida()) return;
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -2135,7 +2229,10 @@ function subirAlVehiculo() {
   vy = Math.sqrt(2 * GRAVEDAD * Math.max(JUMP_HEIGHT, tope - py + 1.0));
   enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0; gestoGuardado = null; gestoReloj = 0;
   sndJump(); vibrate([20, 30, 40]); flashExpression("happy", 2);
-  showBubble(t("subeAviso"), 1600, 2);
+  // 14/11: Cheyenne: el toro del rodeo: a aguantar 8 segundos.
+  const toro = world.vehiculoNombre && world.vehiculoNombre() === "toro_rodeo";
+  showBubble(t(toro ? "rodeoSube" : "subeAviso"), 1600, 2);
+  if (toro) empezarRodeo();
   // (09/11: en el camion de la basura se pone el chaleco al subir, y ya no se
   // lo quita hasta la meta.)
   if (tramoMostrado && tramoMostrado.tipo === "basura" && character.setChaleco) {
@@ -2146,7 +2243,7 @@ function subirAlVehiculo() {
 function terminarMomento(tr) {
   if (!tr) return;
   if (tr.momento === "persigue" && persigueMomento) { persigueMomento = false; persigueLeft = 0; world.perseguir(false); }
-  if (tr.momento === "vehiculo" && montado) {
+  if (tr.momento === "vehiculo" && montado && !rodeo) {
     montado = false;
     world.bajarVehiculo();
     if (gameState === "playing") saltar();
@@ -2598,7 +2695,21 @@ world.onAvisoMapa((que) => {
   else if (que === "platillo") sndPlatillo();                    // (14/11: Albuquerque: el rayo del platillo)
   else if (que === "globo") sndQuemador();                       // (y el quemador del globo que va a despegar)
   else if (que === "bola") sndRodar();                           // (14/11: Denver: la bola de nieve ya es grande)
+  // 14/11: Billings: el oso te ha visto; si haces lo que toca, se va.
+  else if (que === "oso") { sndRugido(); vibrate(25); }
+  else if (que === "osoBien" && gameState === "playing") {
+    tacosThisRun += 5 * multiplier;
+    textoFlotante(`${t("osoBien")} +${5 * multiplier}`); sndPoint(); vibrate(15);
+  }
+  // Y las vacas del arreo: mugen al apartarse; al corral, tacos.
+  else if (que === "muu") { if (ahora - muuT > 900) { muuT = ahora; sndMugido(); } }
+  else if (que === "vacaDentro" && gameState === "playing") {
+    tacosThisRun += 8 * multiplier;
+    textoFlotante(`${t("alCorral")} +${8 * multiplier}`); sndBirdie(); vibrate([15, 20, 15]);
+  }
+  else if (que === "vacaFuera" && gameState === "playing") { textoFlotante(t("seEscapa")); sndBogey(); }
 });
+let muuT = 0;
 
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
 // paso a paso aunque la ventana este oculta (ahi el navegador no da fotogramas).
@@ -2677,13 +2788,15 @@ function frame(dtFijo) {
     // Tropezon: un tambaleo corto.
     let tambaleo = 0;
     if (tropiezo > 0) { tropiezo = Math.max(0, tropiezo - dt); tambaleo = Math.sin(tropiezo * 30) * 0.6 * (tropiezo / 0.5); }
-    character.setLean((playerX - prevX) * 12 + tambaleo);
+    character.setLean((playerX - prevX) * 12 + tambaleo + (rodeo ? rodeo.e * 0.5 : 0));
     if (Math.abs(playerX - targetX) < 0.15) carrilAntes = currentLane;
     world.moverPerseguidor(dt, playerX);
     // 09/11: el vehiculo espera aparcado: se sube solo quien llega a su carril.
     const ve = !montado && rocketTimeLeft === 0 && world.vehiculoEsperando();
     if (ve && ve.z > -5 && ve.z - ve.largo < -0.5 && Math.abs(playerX - LANE_X[ve.lane]) < 0.9) subirAlVehiculo();
     world.moverVehiculo(dt, playerX);
+    actualizarRodeo(dt);
+    otroToro();
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -2737,9 +2850,20 @@ function frame(dtFijo) {
         baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso",
         papeletas: "papeletasAviso", recuento: "recuentoAviso", rebufo: "rebufoAviso", ovalo: "ovaloAviso",
         calesas: "calesasAviso", golf: "golfAviso", marejada: "marejadaAviso", bano: "banoAviso",
-        platillo: "platilloAviso", globos: "globosAviso", bolas: "bolasAviso", esqui: "esquiAviso" };
+        platillo: "platilloAviso", globos: "globosAviso", bolas: "bolasAviso", esqui: "esquiAviso",
+        estampida: "estampidaAviso", rodeo: "rodeoAviso", osos: "ososAviso", arreo: "arreoAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
+      // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.
+      if (antes && antes.tipo === "arreo" && gameState === "playing" && world.arreoCuenta) {
+        const c = world.arreoCuenta();
+        if (c.total > 0 && c.dentro === c.total) {
+          tacosThisRun += 30 * multiplier;
+          showBubble(t("arreoPerfecto"), 1600, 2);
+          avisoVerde(`+${30 * multiplier} ${TACO_IMG()}`);
+          spawnConfetti(24); sndPoint();
+        }
+      }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
         tacosThisRun += 50;
         showBubble(t("golAviso"), 1800, 2);

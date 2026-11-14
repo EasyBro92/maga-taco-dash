@@ -2364,3 +2364,62 @@ Española:
   - Piezas: la torre del reloj, la Union Station con su neón y el oso azul.
   - Final en el Capitolio, con la cúpula de oro y el escalón de la milla.
   - Objeto: esquís.
+
+
+## 14/11/2026 (7): niveles 30 y 31, Cheyenne y Billings (v67)
+
+«Sigue con los mapas, sin preguntar». Cada nivel trae dos dinámicas que no
+había en ningún otro:
+
+- **Cheyenne** (Capitol Avenue en los Cheyenne Frontier Days, a mediodía;
+  `blender/cheyenne.py`):
+  - La estampida: filas de bisontes que vienen corriendo. Casi siempre dejan
+    un hueco, pero cada tercera fila vienen los tres. Entonces hay que tocar
+    la pantalla para echarle el lazo al de tu carril, y la cuerda se lo lleva
+    a la acera (+5 tacos). Encima del bisonte que se puede enlazar sale una
+    mira amarilla con «¡TOCA!».
+  - Los bisontes de Rushmore embestían si te ponías en su carril. Estos son
+    otra cosa: se paran con el lazo.
+  - Los bisontes echan a correr a 60 m. Si corrieran desde lejos llegarían
+    70 m antes que su fila, encima de lo del tramo de antes.
+  - El momento estrella es el ruedo de Frontier Park. El toro espera en el
+    carril del medio. Encima hay que aguantar 8 segundos con una barra de
+    equilibrio: el toro da coces hacia un lado y se desliza hacia el lado
+    contrario de la aguja. En el toro no se cambia de carril.
+  - Si se aguanta, son 25 tacos. Si la aguja llega al borde, te tira al
+    carril de ese lado. Mientras quede ruedo para una monta entera, sale otro
+    toro. Por los lados hay barriles, vallas y payasos.
+  - Las pancartas dicen ¡RODEO ES ESPAÑOL! (rodeo, lazo y bronco son
+    palabras españolas).
+  - Piezas: la estación de la Union Pacific, el hotel Plains, la locomotora
+    Big Boy, las botas gigantes pintadas de las aceras y la diligencia.
+  - Final en el Capitolio de Wyoming, con el jinete de bronce.
+  - Objeto: sombreros vaqueros. Música: country con banjo.
+- **Billings** (Montana Avenue en otoño, con las Rimrocks al fondo;
+  `blender/billings.py`):
+  - Los osos se van a tu carril y apartarse no sirve («no corras», dicen los
+    guardas). Al pardo, que se pone de pie, hazte el muerto (agáchate). Al
+    negro, hazte grande (salta). Lo dice el cartel que llevan encima. Si
+    aciertas se van al bosque (+5).
+  - Los osos echan a andar a 40 m, y el primero de cada tanda sale a 28 m del
+    principio. Si no, llegaban encima de lo último del tramo de antes.
+  - El momento estrella es el Gran Arreo de Montana. La vaca corre delante y
+    huye de ti: si te pones a su lado, se va al otro. Cuando llega su corral
+    (a un lado de la calle, con letrero y flecha), si está en su carril
+    entra (+8). Si no, se escapa. Todas dentro: arreo perfecto (+30).
+  - Primero una vaca en la orilla equivocada ya no tenía arreglo, porque solo
+    se la podía empujar hacia fuera. Ahora, si te pones detrás de ella en la
+    orilla, vuelve al centro.
+  - Las vacas no reaccionan hasta 30 m, y entonces se lo piensan un momento.
+  - Las pancartas dicen MONTANA = MONTAÑA.
+  - Piezas: la estación del Northern Pacific, la torre First Interstate, la
+    mansión Moss, el Skypoint, el remolque del ganado y el tronco caído.
+  - Final al pie de las Rimrocks, en la puerta de THE MAGIC CITY.
+  - Objeto: huellas de oso.
+
+Probado con el piloto automático, que ahora echa el lazo, se equilibra en el
+toro y arrea las vacas. Llega a la meta en los dos niveles y salen los 10
+objetos de cada uno. En Billings acertó con los 18 osos y metió las 7 vacas.
+Sin equilibrarse, el toro le tira y sale otro.
+
+Falta el veredicto de Isidro.

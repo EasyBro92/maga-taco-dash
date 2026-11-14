@@ -93,8 +93,8 @@ Fermín.
 |---|---|---|---|
 | 28 | Albuquerque, Nuevo México | +5 | El festival de globos. Primeros carteles españoles. Un platillo volante de Roswell (guiño a AlienZ). *(hecho)* |
 | 29 | Denver, Colorado | +10 | «Colorado» quiere decir rojo en español: él dice que es una señal. *(hecho)* |
-| 30 | Cheyenne, Wyoming | +3 | Rodeo y estampida de bisontes. |
-| 31 | Billings, Montana | +4 | «Montana» viene de «montaña». Osos pardos. |
+| 30 | Cheyenne, Wyoming | +3 | Rodeo y estampida de bisontes. *(hecho)* |
+| 31 | Billings, Montana | +4 | «Montana» viene de «montaña». Osos pardos. *(hecho)* |
 | 32 | Boise, Idaho | +4 | Patatas rodando cuesta abajo. |
 | 33 | Salt Lake City, Utah | +6 | El desierto de sal: tramo de velocidad. |
 | 34 | Seattle, Washington | +12 | Llueve sin parar: su pelo corre peligro. |

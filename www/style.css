@@ -997,3 +997,16 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #rebufo .rbBarra { width: 90px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.25); overflow: hidden; }
 #rebufo .rbBarra i { display: block; height: 100%; width: 0; background: #f0c020; }
 #rebufo.listo .rbBarra i { background: #4ad86a; }
+
+/* 14/11: Cheyenne: la barra de equilibrio del toro del rodeo (aguantar 8 s). */
+#rodeoBar { position: absolute; left: 50%; transform: translateX(-50%); top: calc(max(10px, env(safe-area-inset-top)) + 190px);
+  width: min(320px, 76vw); z-index: 5; pointer-events: none; text-align: center; }
+#rodeoBar.hidden { display: none; }
+#rodeoBar .rodeoTit { font-family: var(--letra-titulo); font-weight: 700; color: #fff; font-size: 20px; margin-bottom: 5px;
+  -webkit-text-stroke: 4px var(--azul); paint-order: stroke fill; }
+#rodeoBar .rodeoPista { position: relative; height: 20px; border-radius: 999px; border: 3px solid #fff;
+  background: linear-gradient(90deg, #e8402a 0%, #f2c21a 20%, #5ac85a 38%, #5ac85a 62%, #f2c21a 80%, #e8402a 100%); }
+#rodeoBar .rodeoAguja { position: absolute; top: -8px; left: 50%; width: 10px; height: 30px; margin-left: -5px;
+  background: #1c1c20; border: 2px solid #fff; border-radius: 5px; }
+#rodeoBar .rodeoPie { margin-top: 5px; font-family: var(--letra-titulo); font-weight: 700; font-size: 13px; color: #fff;
+  -webkit-text-stroke: 3px var(--azul); paint-order: stroke fill; }

@@ -3068,6 +3068,25 @@ export function createWorld(scene) {
     telesilla: { choque: "high", medio: 0.4, alto: 2.4 },
     cartel_colorado: { choque: "high", medio: 0.3, alto: 2.5 },
     mallride: { choque: "full", medio: 2.5, alto: 2.9, centro: -2.5 },
+    // 14/11: Cheyenne (blender/cheyenne.py): el barril y la valla del ruedo, el
+    // payaso en su barril, la pancarta ¡RODEO ES ESPAÑOL! y la diligencia con
+    // sus caballos (el morro en el origen, como los coches largos). El toro del
+    // rodeo es un vehiculo (ver VEHICULOS) y los bisontes de la estampida, los
+    // de Rushmore.
+    barril_rodeo: { choque: "low", medio: 0.42, alto: 0.95 },
+    valla_rodeo: { choque: "low", medio: 0.2, alto: 1.0 },
+    payaso_barril: { choque: "full", medio: 0.55, alto: 2.1 },
+    cartel_rodeo: { choque: "high", medio: 0.3, alto: 2.5 },
+    diligencia: { choque: "full", medio: 2.85, alto: 2.9, centro: -2.85 },
+    // 14/11: Billings (blender/billings.py): la pancarta MONTANA = MONTAÑA, el
+    // tronco caido, el remolque del ganado (5 m, el morro en el origen) y los
+    // dos corrales del arreo (al lado de la calle: no estorban). Los osos y la
+    // vaca del arreo son piezas compuestas: ver abajo.
+    cartel_montana: { choque: "high", medio: 0.3, alto: 2.5 },
+    tronco_caido: { choque: "low", medio: 0.35, alto: 0.7 },
+    remolque_ganado: { choque: "full", medio: 2.5, alto: 2.9, centro: -2.5 },
+    corral_der: { choque: "nada", medio: 3, alto: 0 },
+    corral_izq: { choque: "nada", medio: 3, alto: 0 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3559,6 +3578,40 @@ export function createWorld(scene) {
         aro.position.y = 0.06;
         g.add(aro);
         g.userData.nave = nave; g.userData.rayo = rayo; g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 14/11: Billings: los osos. Van sobre las patas de atras (`piv`): el
+    // pardo se pone de pie al acercarse. Encima, el cartel de que hacer.
+    for (const [pool, nombreM, largo] of [["grizzly", "oso_pardo", 1.9], ["osonegro", "oso_negro", 1.35]]) {
+      if (!hayModelo("obstaculos/" + nombreM)) continue;
+      TIPOS[pool] = pool === "grizzly" ? { choque: "high", medio: 0.95, alto: 2.8, centro: -0.95 } : { choque: "low", medio: 0.62, alto: 1.05, centro: -0.62 };
+      obstaclePools[pool] = makePool(() => {
+        const g = new THREE.Group();
+        const piv = new THREE.Group();
+        piv.position.z = -largo;
+        const m = modeloConContorno("obstaculos/" + nombreM);
+        m.position.z = largo;
+        piv.add(m); g.add(piv);
+        const cartel = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaOso(pool), transparent: true, depthWrite: false, fog: false }));
+        cartel.scale.set(2.6, 1.3, 1);
+        cartel.position.set(0, pool === "grizzly" ? 3.9 : 2.5, -0.6);
+        cartel.visible = false;
+        g.add(cartel);
+        g.userData.piv = piv; g.userData.cartel = cartel; g.userData.lang = getLang();
+        return g;
+      });
+    }
+    // 14/11: Billings: la vaca del arreo (la de siempre, con sus patas, mirando
+    // hacia delante: se aleja de ti).
+    if (hayModelo("obstaculos/vaca")) {
+      TIPOS.vaca_arreo = { choque: "nada", medio: 0.8, alto: 0 };
+      obstaclePools.vaca_arreo = makePool(() => {
+        const g = new THREE.Group();
+        const v = construirObstaculo("vaca");
+        v.rotation.y = Math.PI / 2;
+        g.add(v);
+        g.userData.vaca = v;
         return g;
       });
     }
@@ -4061,6 +4114,221 @@ export function createWorld(scene) {
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
     }
+  }
+  // ---- 14/11: Cheyenne ----
+  // La estampida: los bisontes vienen corriendo hacia ti (la cabeza gacha y
+  // botando). Al que le echas el lazo se lo lleva la cuerda a la acera.
+  function correrEstampida(o, dt) {
+    const m = o.mesh, t = animClock + o.phase, e = o.estampida.lazo;
+    // (Echan a correr a 60 m: si corrieran desde lejos llegarian 70 m antes
+    // que su fila, encima de lo del tramo de antes.)
+    if (!e && !o.estampida.corre && o.z > -60) { o.estampida.corre = true; o.mueve = 7; }
+    if (!e) { m.rotation.set(0.16, 0, 0); m.position.y = Math.abs(Math.sin(t * 13)) * 0.14; return; }
+    e.t += dt;
+    const f = Math.min(1, Math.max(0, (e.t - 0.15) / 0.75)), sm = f * f * (3 - 2 * f);
+    m.position.x = e.x0 + e.lado * sm * 6.5;
+    m.position.y = Math.abs(Math.sin(t * 13)) * 0.14 * (1 - sm);
+    m.rotation.set(0.16 * (1 - sm), -e.lado * sm * 1.1, e.lado * sm * 0.2);
+  }
+  // El lazo: main.js llama a echarLazo al tocar la pantalla en la estampida.
+  // Engancha al bisonte mas cercano de tu carril (de 3 a 32 m) y la cuerda
+  // se lo lleva a la acera. Encima del que se puede enlazar sale la mira
+  // amarilla (TOCA). Entre lazo y lazo, medio segundo.
+  const lazo = { cuerda: null, aro: null, mira: null, o: null, t: 0, espera: 0 };
+  let texLazo = null;
+  function texturaLazo() {
+    if (texLazo) return texLazo;
+    const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+    const x = c.getContext("2d");
+    x.lineWidth = 22; x.strokeStyle = "#3a2a08";
+    x.beginPath(); x.arc(128, 112, 78, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = 14; x.strokeStyle = "#ffd23a";
+    x.beginPath(); x.arc(128, 112, 78, 0, Math.PI * 2); x.stroke();
+    x.font = `900 46px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.lineWidth = 10; x.strokeStyle = "#3a2a08"; x.strokeText(tr("tocaLazo"), 128, 222);
+    x.fillStyle = "#ffd23a"; x.fillText(tr("tocaLazo"), 128, 222);
+    texLazo = new THREE.CanvasTexture(c);
+    texLazo.colorSpace = THREE.SRGBColorSpace;
+    return texLazo;
+  }
+  function prepararLazo() {
+    if (lazo.cuerda) return;
+    const mat = new THREE.MeshBasicMaterial({ color: 0xd8b070 });
+    lazo.cuerda = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1, 6), mat);
+    lazo.aro = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.06, 6, 22), mat);
+    lazo.mira = new THREE.Sprite(new THREE.SpriteMaterial({ map: texturaLazo(), transparent: true, depthWrite: false, fog: false }));
+    lazo.mira.scale.set(2.0, 2.0, 1);
+    for (const m of [lazo.cuerda, lazo.aro, lazo.mira]) { m.visible = false; group.add(m); }
+  }
+  function objetivoLazo(px) {
+    let mejor = null;
+    for (const o of obstacles) {
+      if (!o.estampida || o.estampida.lazo || o.fuera || o.smashed) continue;
+      if (Math.abs(o.mesh.position.x - px) > 1.1 || o.z < -32 || o.z > -2.5) continue;
+      if (!mejor || o.z > mejor.z) mejor = o;
+    }
+    return mejor;
+  }
+  function hayEstampida() { return obstacles.some((o) => o.estampida && !o.estampida.lazo && o.z > -60 && o.z < 1); }
+  function echarLazo(px) {
+    if (lazo.espera > 0) return false;
+    const o = objetivoLazo(px);
+    if (!o) return false;
+    prepararLazo();
+    const lado = o.lane === 0 ? -1 : o.lane === 2 ? 1 : (px <= 0 ? 1 : -1);
+    o.estampida.lazo = { t: 0, lado, x0: o.mesh.position.x };
+    o.fuera = true; o.mueve = 0;
+    lazo.o = o; lazo.t = 0; lazo.espera = 0.5; lazo.px = px;
+    return true;
+  }
+  const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _arriba = new THREE.Vector3(0, 1, 0);
+  function moverLazo(dt) {
+    lazo.espera = Math.max(0, lazo.espera - dt);
+    if (!lazo.mira) return;
+    const obj = lazo.espera <= 0 ? objetivoLazo(LANE_X[jugadorCarril]) : null;
+    lazo.mira.visible = !!obj;
+    if (obj) lazo.mira.position.set(obj.mesh.position.x, 3.4, obj.z + 0.4);
+    const o = lazo.o;
+    if (!o) { lazo.cuerda.visible = lazo.aro.visible = false; return; }
+    lazo.t += dt;
+    if (lazo.t > 1.0 || !obstacles.includes(o)) { lazo.o = null; lazo.cuerda.visible = lazo.aro.visible = false; return; }
+    // La mano (del carril del jugador) y el cuello del bisonte; la lazada
+    // vuela de la una al otro en 0,15 s.
+    _v1.set(LANE_X[jugadorCarril] + 0.35, 1.7, -0.3);
+    _v2.set(o.mesh.position.x, 1.75, o.z + 1.0);
+    if (lazo.t < 0.15) _v2.lerpVectors(_v1, _v2, lazo.t / 0.15);
+    const largo = _v1.distanceTo(_v2);
+    lazo.cuerda.visible = lazo.aro.visible = true;
+    lazo.cuerda.position.addVectors(_v1, _v2).multiplyScalar(0.5);
+    lazo.cuerda.scale.set(1, Math.max(0.01, largo), 1);
+    lazo.cuerda.quaternion.setFromUnitVectors(_arriba, _v2.clone().sub(_v1).normalize());
+    lazo.aro.position.copy(_v2);
+    lazo.aro.rotation.set(Math.PI / 2, 0, 0);
+  }
+  // ---- 14/11: Billings ----
+  // Los osos vienen andando por la calle y, de 34 a 7 m, se van a tu carril
+  // (apartarse no sirve: «no corras», dicen los guardas). Encima, el cartel:
+  // al pardo, que se pone de pie a 18 m, hazte el muerto (agacharse); al
+  // negro, hazte grande (saltar). Si lo haces bien (main.js marca `contado`)
+  // se va al bosque y da tacos.
+  function texturaOso(pool) {
+    // (la cache va en la propia funcion: las piezas se crean antes de llegar aqui)
+    const texOso = texturaOso.cache || (texturaOso.cache = {});
+    const clave = pool + getLang();
+    if (texOso[clave]) return texOso[clave];
+    const c = document.createElement("canvas"); c.width = 256; c.height = 128;
+    const x = c.getContext("2d");
+    const pardo = pool === "grizzly";
+    x.fillStyle = pardo ? "#2a5ab8" : "#e8781a";
+    x.strokeStyle = "#ffffff"; x.lineWidth = 8;
+    x.beginPath(); x.roundRect(6, 6, 244, 116, 26); x.fill(); x.stroke();
+    x.save(); x.translate(48, 64); if (pardo) x.rotate(Math.PI);
+    x.fillStyle = "#ffffff";
+    x.beginPath(); x.moveTo(0, -40); x.lineTo(30, -4); x.lineTo(12, -4); x.lineTo(12, 38); x.lineTo(-12, 38); x.lineTo(-12, -4); x.lineTo(-30, -4); x.closePath(); x.fill();
+    x.restore();
+    const [a, b] = tr(pardo ? "osoMuerto" : "osoGrande").split("|");
+    x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle";
+    x.font = `900 30px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    x.fillText(a, 160, b ? 44 : 64);
+    if (b) x.fillText(b, 160, 86);
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return (texOso[clave] = tx);
+  }
+  function moverOso(o, dt) {
+    const b = o.oso, m = o.mesh, u = m.userData;
+    if (u.lang !== getLang()) { u.lang = getLang(); u.cartel.material.map = texturaOso(o.pool); u.cartel.material.needsUpdate = true; }
+    if (b.hecho) {
+      // Se va corriendo al bosque, a la acera mas cercana.
+      b.salir += dt;
+      m.position.x += b.lado * dt * 8;
+      m.rotation.y = -b.lado * Math.min(1.3, b.salir * 5);
+      u.piv.rotation.x *= Math.max(0, 1 - dt * 8);
+      u.cartel.visible = false;
+      if (b.salir > 1.4) m.visible = false;
+      return;
+    }
+    if (o.contado) {
+      b.hecho = true; b.salir = 0; o.fuera = true;
+      b.lado = m.position.x < 0 ? -1 : m.position.x > 0 ? 1 : (Math.random() < 0.5 ? -1 : 1);
+      if (alAvisoMapa) alAvisoMapa("osoBien");
+      return;
+    }
+    if (!b.anda && o.z > -40) { b.anda = true; o.mueve = 2.5; }
+    if (o.z > -34 && o.z < -7) {
+      if (!b.visto) { b.visto = true; if (alAvisoMapa) alAvisoMapa("oso"); }
+      const dx = LANE_X[jugadorCarril] - m.position.x;
+      m.position.x += Math.sign(dx) * Math.min(Math.abs(dx), dt * 6.5);
+    }
+    let mejor = 0;
+    for (const l of LANES) if (Math.abs(LANE_X[l] - m.position.x) < Math.abs(LANE_X[mejor] - m.position.x)) mejor = l;
+    o.lane = mejor;
+    u.cartel.visible = o.z > -44 && o.z < -1.5;
+    let pie = 0;
+    if (o.pool === "grizzly") {
+      const f = THREE.MathUtils.clamp((o.z + 18) / 5, 0, 1);
+      pie = f * f * (3 - 2 * f);
+      u.piv.rotation.x = -1.0 * pie;
+    }
+    // Andando: un balanceo suave (de pie, quieto).
+    m.position.y = (1 - pie) * Math.abs(Math.sin((animClock + o.phase) * 6)) * 0.05;
+    m.rotation.z = (1 - pie) * Math.sin((animClock + o.phase) * 3) * 0.04;
+  }
+  // El arreo: la vaca corre delante de ti (se acerca con la calle hasta 20 m
+  // y luego va a tu paso) y se aparta de ti: si te pones en el carril de al
+  // lado, se va al del otro lado; si te pones detras de ella cuando esta en
+  // una orilla, vuelve al centro. Cuando llega su corral (que va con la
+  // calle), si esta en el carril del corral entra; si no, se escapa.
+  const ESPERA_VACA = -20;
+  let arreoCuenta = { dentro: 0, total: 0 };
+  function arrearVaca(o, dt, dz) {
+    const a = o.arreo, m = o.mesh, v = m.userData.vaca, c = a.corral;
+    let vel = 3;
+    if (!a.hecho) {
+      if (o.z >= ESPERA_VACA) { o.z = ESPERA_VACA; vel = dt > 0 ? dz / dt : 0; }
+      // (Solo a menos de 30 m, y al llegar ahi se lo piensa un momento: asi da
+      // tiempo a ver donde esta y donde esta su corral.)
+      if (o.z > -30 && !a.zona) { a.zona = true; a.cool = 0.6; }
+      a.cool -= dt;
+      if (a.zona && a.cool <= 0) {
+        const p = jugadorCarril, l = a.lane;
+        let nl = l;
+        // A su lado: se va al otro lado. Detras de ella en la orilla: vuelve
+        // al centro (si no, una vaca en la orilla mala ya no tendria arreglo).
+        if (Math.abs(p - l) === 1) nl = l + (l - p);
+        else if (p === l && l !== 1) nl = 1;
+        if (nl !== l && nl >= 0 && nl <= 2) { a.lane = nl; a.cool = 0.5; if (alAvisoMapa) alAvisoMapa("muu"); }
+      }
+      if (!obstacles.includes(c) || c.z >= o.z - 0.3) {
+        a.hecho = true; a.t = 0; o.mueve = 0;
+        a.dentro = obstacles.includes(c) && a.lane === c.corral.lane;
+        if (a.dentro) arreoCuenta.dentro++;
+        if (alAvisoMapa) alAvisoMapa(a.dentro ? "vacaDentro" : "vacaFuera");
+      }
+      const xm = LANE_X[a.lane];
+      const vx = (xm - m.position.x) * Math.min(1, dt * 7);
+      m.position.x += vx;
+      v.rotation.y = Math.PI / 2 - THREE.MathUtils.clamp(vx / Math.max(dt, 1e-3) * 0.08, -0.6, 0.6);
+    } else {
+      a.t += dt;
+      if (a.dentro) {
+        // Entra por la puerta del corral (va con la calle, como el corral).
+        const lado = c.corral.lane === 2 ? 1 : -1;
+        const meta = c.mesh.position.x + lado * 2.4;
+        m.position.x += (meta - m.position.x) * Math.min(1, dt * 2.2);
+        v.rotation.y += ((lado > 0 ? 0 : Math.PI) - v.rotation.y) * Math.min(1, dt * 5);
+        vel = 4;
+        if (a.t > 1.6) m.visible = false;
+      } else {
+        // Se escapa calle adelante.
+        o.z -= dz + 9 * dt;
+        vel = 9;
+        if (o.z < -70) m.visible = false;
+      }
+    }
+    o.lane = a.lane;
+    if (v.userData.patas) moverPatas(v, "vaca", dt, Math.min(10, Math.abs(vel)));
   }
   // ---- 14/11: Denver ----
   // La bola de nieve que baja rodando hacia ti (algo mas deprisa que la
@@ -5943,6 +6211,7 @@ export function createWorld(scene) {
   // Cada forma de tramo: (z de la fila, d = metro de la partida, el tramo, k = fila dentro del tramo).
   const SERPIENTE = [1, 1, 0, 0, 1, 1, 2, 2];
   let bolasAntes = [], eslalon = { lane: 1, sig: 0, color: 0 };   // (14/11: Denver)
+  let estampidaFila = 0, osoAntes = "";                             // (14/11: Cheyenne y Billings)
   const PATRONES = {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
@@ -7019,6 +7288,89 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 14/11: Cheyenne ----
+    // La estampida: cada 28 m una fila de bisontes que vienen corriendo: dos
+    // y un hueco (con tacos), y cada tercera fila los TRES: hay que echarle
+    // el lazo al de tu carril (tocar la pantalla; ver echarLazo).
+    estampida(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { estampidaFila = 0; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      filaSinObjeto = true;
+      if (k < 6 || k % 4 !== 2 || !obstaclePools.bisonte) return;
+      prepararLazo();
+      estampidaFila++;
+      const pared = estampidaFila % 3 === 0;
+      const hueco = elegirDe(LANES);
+      for (const l of LANES) {
+        if (!pared && l === hueco) continue;
+        const o = spawnObstacle(l, "full", z - Math.random() * 1.5, "bisonte");
+        if (o) { o.estampida = { lazo: null, corre: false }; o.mueve = 0; }
+      }
+      if (!pared) for (let i = 0; i < 4; i++) spawnTaco(hueco, z + 3 - i * 1.4, 0.9);
+    },
+    // El ruedo (momento estrella): el toro espera en el carril del medio (ver
+    // VEHICULOS; main.js saca otro del cajon cuando se ha ido el anterior).
+    // Por los lados, barriles, vallas y payasos; el medio, libre y con tacos.
+    rodeo(z, d, t, k) {
+      const j = k % 3;
+      if (j === 0) {
+        const lado = Math.floor(k / 3) % 2 ? 0 : 2;
+        if (Math.random() < 0.3) obst(lado, "full", z, d, ["payaso_barril"]);
+        else obst(lado, "low", z, d, ["barril_rodeo", "valla_rodeo"]);
+        if (Math.random() < 0.35) obst(2 - lado, "low", z - 1, d, ["barril_rodeo", "valla_rodeo"]);
+      } else if (j === 1) for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
+    },
+    // ---- 14/11: Billings ----
+    // Los osos: cada 35 m uno (pardo o negro, casi siempre cambiando) que
+    // se va a tu carril (ver moverOso). Nada mas en la calle; tacos entre medias.
+    osos(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      // (El primero, a 28 m del principio: que no llegue encima de lo ultimo del tramo de antes.)
+      const j = k % 5;
+      if (j === 4 && (obstaclePools.grizzly || obstaclePools.osonegro)) {
+        let pool = osoAntes === "grizzly" ? (Math.random() < 0.7 ? "osonegro" : "grizzly") : (Math.random() < 0.7 ? "grizzly" : "osonegro");
+        if (!obstaclePools[pool]) pool = pool === "grizzly" ? "osonegro" : "grizzly";
+        osoAntes = pool;
+        const o = spawnObstacle(elegirDe(LANES), pool === "grizzly" ? "high" : "low", z, pool);
+        if (o) { o.oso = { hecho: false, visto: false, anda: false, salir: 0, lado: 1 }; o.mueve = 0; }
+        filaSinObjeto = true;
+        return;
+      }
+      if (j === 1) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // El Gran Arreo de Montana (momento estrella): cada 84 m una vaca en el
+    // carril del medio (a veces otra ya en el del corral) y, 75 m detras, su
+    // corral a un lado de la calle (letrero con flecha). La vaca se aparta de
+    // ti (ver arrearVaca): ponte al otro lado para llevarla al corral. A veces
+    // una paca o un tronco en el carril desde el que se empuja (se salta).
+    arreo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { if (k === 0) arreoCuenta = { dentro: 0, total: 0 }; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 8) return;
+      filaSinObjeto = true;
+      const j = k % 12;
+      if (j === 2 && obstaclePools.vaca_arreo && obstaclePools.corral_der && obstaclePools.corral_izq) {
+        const lado = Math.random() < 0.5 ? 0 : 2;
+        const corral = spawnObstacle(lado, "nada", z - 75, lado === 2 ? "corral_der" : "corral_izq");
+        if (!corral) return;
+        corral.mesh.position.x = lado === 2 ? 6.3 : -6.3;
+        corral.corral = { lane: lado };
+        const vacas = Math.random() < 0.3 ? [1, lado] : [1];
+        vacas.forEach((l, i) => {
+          const v = spawnObstacle(l, "nada", z - i * 4, "vaca_arreo");
+          if (!v) return;
+          v.arreo = { corral, lane: l, cool: 0, hecho: false, dentro: false, t: 0 };
+          v.mueve = -3;
+          arreoCuenta.total++;
+        });
+        if (Math.random() < 0.5) obst(2 - lado, "low", z - 40, d, ["paca", "tronco_caido"]);
+        return;
+      }
+      if (j === 8) tacosEn(elegirDe(LANES), z, 3);
+    },
     // ---- 14/11: Denver ----
     // Las bolas de nieve: cada 35 m una que baja rodando y crece (ver
     // crecerBola); una de cada tres veces, dos a la vez en carriles distintos,
@@ -7636,6 +7988,9 @@ export function createWorld(scene) {
     carruaje: { alto: 1.05, z: 0.9 }, carro_clydesdale: { alto: 1.5, z: 0.3 },
     // 09/11: Milwaukee: de pie encima de la cabina, agarrado a la baranda.
     camion_basura: { alto: 2.78, z: 7.3 },
+    // 14/11: Cheyenne: de pie encima del toro del rodeo (hay que aguantar 8 s:
+    // ver la barra de equilibrio en main.js).
+    toro_rodeo: { alto: 1.55, z: 0.9, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -7723,7 +8078,16 @@ export function createWorld(scene) {
     }
     if (vehiculo.fase !== 3) vehiculo.x = x;
     vehiculo.mesh.position.set(vehiculo.x, 0, vehiculo.z);
+    // 14/11: Cheyenne: el toro del rodeo corcovea (cabeza abajo, ancas
+    // arriba) y se ladea hacia donde se va cayendo el jinete.
+    if (vehiculo.nombre === "toro_rodeo") {
+      const m = vehiculo.mesh.children[0];
+      if (vehiculo.fase === 2) { m.rotation.x = Math.sin(vehiculo.t * 9) * 0.2; m.rotation.z = toroE * 0.25; }
+      else { m.rotation.x = 0; m.rotation.z = 0; }
+    }
   }
+  let toroE = 0;
+  function setToroEquilibrio(e) { toroE = e; }
 
   // ---- Los tramos del nivel, o los del sin fin (al azar, se van añadiendo) ----
   let tramos = [];
@@ -8505,6 +8869,7 @@ export function createWorld(scene) {
     moverNave();
     actualizarDisparos(dt);
     actualizarFrases(dt);
+    moverLazo(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
       o.z += dz + o.mueve * dt;
@@ -8535,6 +8900,7 @@ export function createWorld(scene) {
         } else if (o.pool === "bici") {
           o.mesh.position.y = Math.abs(Math.sin(animClock * 9 + o.phase)) * 0.03;
         } else if (o.pool === "vaca" || o.pool === "cerdo") moverVaca(o, dt);
+        else if (o.estampida) correrEstampida(o, dt);
         else if (o.pool === "bisonte") moverBisonte(o, dt);
         else if (o.pool === "perrito_pradera") asomarPerrito(o);
         else if (o.pool === "roca_caida") caerRoca(o, dt);
@@ -8562,6 +8928,8 @@ export function createWorld(scene) {
         else if (o.globo) subirGlobo(o);
         else if (o.platillo) moverPlatillo(o, dt);
         else if (o.bolanieve) crecerBola(o, dt);
+        else if (o.oso) moverOso(o, dt);
+        else if (o.arreo) arrearVaca(o, dt, dz);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -8784,5 +9152,7 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf, pasarPuerta };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf, pasarPuerta,
+    echarLazo, hayEstampida, setToroEquilibrio, vehiculoNombre: () => vehiculo.nombre, vehiculoLibre: () => vehiculo.fase === 0,
+    arreoCuenta: () => arreoCuenta };
 }
