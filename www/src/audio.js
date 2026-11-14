@@ -150,7 +150,15 @@ export function sndFanfarria(corta = false) {
   if (!corta) soplo(1.2, { desde: 6000, hasta: 9000, tipo: "highpass", vol: 0.06, cuando: 1.45 });
 }
 
+// 14/11: Isidro: «no hay opción a quitar las vibraciones». Se quitan en
+// Ajustes y en la pausa (getSettings().vibracion).
+let vibraOn = true;
+export function setVibracion(on) {
+  vibraOn = !!on;
+  if (!vibraOn) { try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {} }
+}
 export function vibrate(pattern) {
+  if (!vibraOn) return;
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
 }
 

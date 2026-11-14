@@ -2244,3 +2244,13 @@ sitio y ninguno a menos de 25 m, y las 29 notas del Opry se pisan con un
 piloto automático; en Louisville, 11 bates caen entre 72 y 54 m, y 13 caballos
 adelantan (flecha 2 s cada uno) sin ningún choque del piloto automático.
 Falta el veredicto de Isidro jugando en el móvil.
+
+## 14/11/2026 (3): quitar las vibraciones (v63)
+
+Isidro: «dentro de ajustes y cuando das pausa no hay opción a quitar las
+vibraciones». Ahora hay un botón con el móvil vibrando en Ajustes (su propia
+fila, «Vibración») y en la pausa, junto a los de música y sonido. Tachado =
+sin vibración. Se guarda en los ajustes (`vibracion: false`); `vibrate()` de
+audio.js no hace nada mientras está quitada, y al volver a ponerla da un
+toque corto para que se note.
+

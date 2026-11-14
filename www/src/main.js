@@ -5,7 +5,7 @@ import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
   sndFanfarria, sndChapa, sndNota, sndGalope, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
-  setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto,
+  setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
 import { FORMAS, CENTROS } from "./mapa-eeuu.js";
@@ -2243,7 +2243,20 @@ function pintarBotonesSonido() {
   document.getElementById("pausaSonido").innerHTML = icono(s.sfxMuted ? "sonidoNo" : "sonido");
   document.getElementById("musicMuteBtn").innerHTML = icono(s.musicMuted ? "musicaNo" : "musica");
   document.getElementById("sfxMuteBtn").innerHTML = icono(s.sfxMuted ? "sonidoNo" : "sonido");
+  const v = icono(s.vibracion === false ? "vibraNo" : "vibra");
+  document.getElementById("pausaVibra").innerHTML = v;
+  document.getElementById("vibraBtn").innerHTML = v;
 }
+// 14/11: quitar o poner las vibraciones (en Ajustes y en la pausa).
+function cambiarVibracion() {
+  const on = getSettings().vibracion === false;
+  setVibracion(on);
+  updateSettings({ vibracion: on });
+  if (on) vibrate(40);
+  pintarBotonesSonido();
+}
+document.getElementById("pausaVibra").addEventListener("click", cambiarVibracion);
+document.getElementById("vibraBtn").addEventListener("click", cambiarVibracion);
 document.getElementById("pausaMusica").addEventListener("click", () => {
   const m = !getSettings().musicMuted; setMusicMuted(m); updateSettings({ musicMuted: m }); pintarBotonesSonido();
 });
@@ -3018,6 +3031,7 @@ const settings = getSettings();
 setSwipeThreshold(settings.swipeSensitivity);
 setSfxVolume(settings.sfxVol);
 setSfxMuted(settings.sfxMuted);
+setVibracion(settings.vibracion !== false);
 setMusicVolume(settings.musicVol);
 setMusicMuted(settings.musicMuted);
 

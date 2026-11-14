@@ -980,3 +980,6 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #ymca span { font-weight: 900; font-size: 54px; line-height: 1; color: #fff; opacity: 0.45; -webkit-text-stroke: 3px #2a1a4a; paint-order: stroke fill;
   text-shadow: 0 4px 0 rgba(0,0,0,.3); transition: opacity .15s, color .15s, transform .15s; }
 #ymca span.on { opacity: 1; color: #ffd040; transform: translateY(-8px) scale(1.2); }
+
+/* 14/11: la fila de la vibracion (un boton, sin barra) */
+.ajuste .ajusteRelleno { flex: 1; }
