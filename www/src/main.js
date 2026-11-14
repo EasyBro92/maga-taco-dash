@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -333,6 +333,8 @@ let luzBase = null, metroAntes = 0;
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
   // 13/11: la mina de Little Rock: la luz calida de los farolillos, poca.
+  // 14/11: el pabellon del recuento de Atlanta: los focos blancos del techo.
+  recuento: { hemi: new THREE.Color(0xfff0dc), suelo: new THREE.Color(0x6a5a48), hemiI: 1.2, fill: new THREE.Color(0xfff4e0), fillI: 1.0, sunI: 0.25 },
   // 14/11: el Grand Ole Opry de Nashville: la luz calida de los focos del escenario.
   opry: { hemi: new THREE.Color(0xffe2b8), suelo: new THREE.Color(0x6a3a2a), hemiI: 1.15, fill: new THREE.Color(0xfff0d0), fillI: 1.0, sunI: 0.2 },
   fundicion: { hemi: new THREE.Color(0xffb878), suelo: new THREE.Color(0x4a2a18), hemiI: 1.0, fill: new THREE.Color(0xff9040), fillI: 0.9, sunI: 0.15 },
@@ -717,7 +719,11 @@ const NOMBRE_HITO = {
     casa_criolla: "Una casa criolla del Barrio Francés", cafe_du_monde: "El Café du Monde", superdome: "El Superdome",
     alabama_theatre: "El teatro Alabama", sloss_hornos: "Los hornos Sloss",
     honky_tonk: "Un honky-tonk de Broadway", ryman: "El auditorio Ryman", batman_building: "El «edificio Batman»",
-    slugger_museum: "El museo del bate Louisville Slugger", destileria: "Una destilería de bourbon", pollo_frito: "El pollo frito de Kentucky" },
+    slugger_museum: "El museo del bate Louisville Slugger", destileria: "Una destilería de bourbon", pollo_frito: "El pollo frito de Kentucky",
+    mural_ficha: "El mural de la ficha policial", capitolio_georgia: "El Capitolio de Georgia", torre_piramide: "La torre de la pirámide dorada",
+    westin_cilindro: "El hotel del cilindro de cristal",
+    torre_corona: "La torre de la corona", garaje_carreras: "Un taller de carreras", iglesia_presbiteriana: "La iglesia presbiteriana",
+    torre_led: "La torre de las luces" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -752,7 +758,11 @@ const NOMBRE_HITO = {
     casa_criolla: "A French Quarter Creole townhouse", cafe_du_monde: "Café du Monde", superdome: "The Superdome",
     alabama_theatre: "The Alabama Theatre", sloss_hornos: "Sloss Furnaces",
     honky_tonk: "A Broadway honky-tonk", ryman: "The Ryman Auditorium", batman_building: "The “Batman Building”",
-    slugger_museum: "The Louisville Slugger Museum", destileria: "A bourbon distillery", pollo_frito: "Kentucky fried chicken" },
+    slugger_museum: "The Louisville Slugger Museum", destileria: "A bourbon distillery", pollo_frito: "Kentucky fried chicken",
+    mural_ficha: "The mugshot mural", capitolio_georgia: "The Georgia State Capitol", torre_piramide: "The golden pyramid tower",
+    westin_cilindro: "The glass cylinder hotel",
+    torre_corona: "The crown tower", garaje_carreras: "A race shop", iglesia_presbiteriana: "The Presbyterian church",
+    torre_led: "The tower of lights" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1311,6 +1321,9 @@ function resetRun(desde = 0) {
   tramoMostrado = null; jefeLanzado = false; gritoChina = 0; jefeSinFin = "dragon";
   ponerAlReves(false);
   rachaNotas = 0; ultimaNota = -9; quitarYMCA();
+  if (!desde) { votosMision = 0; votosHecha = false; }
+  ponerVotos();
+  rebufoT = 0; ponerRebufo();
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1551,6 +1564,66 @@ function spawnConfetti(count) {
   }
 }
 
+// 14/11: Atlanta: la mision «encuentrame 11.780 votos»: el contador arriba;
+// al llegar, premio (150 tacos) y fanfarria.
+var votosMision = 0, votosHecha = false;
+function miles(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, getLang() === "en" ? "," : "."); }
+function ponerVotos() {
+  const meta = nivelActual && nivelActual.mision ? nivelActual.mision.votos : 0;
+  let el = document.getElementById("votosMision");
+  if (!meta) { if (el) el.classList.add("hidden"); return; }
+  if (!el) { el = document.createElement("div"); el.id = "votosMision"; document.getElementById("hud").appendChild(el); }
+  el.classList.remove("hidden");
+  el.classList.toggle("hecha", votosHecha);
+  el.textContent = `${t("votosMision")} ${miles(Math.min(votosMision, meta))} / ${miles(meta)}${votosHecha ? " ✓" : ""}`;
+}
+function sumarVotos(n) {
+  const meta = nivelActual && nivelActual.mision ? nivelActual.mision.votos : 0;
+  if (!meta) return;
+  votosMision += n;
+  if (!votosHecha && votosMision >= meta) {
+    votosHecha = true;
+    tacosThisRun += 150 * multiplier;
+    setTimeout(() => textoFlotante(`${t("votosHecha")} +${150 * multiplier}`), 700);
+    sndFanfarria(true);
+  }
+  ponerVotos();
+}
+// 14/11: Charlotte: el rebufo. Pegado detras de un coche de carreras (a menos
+// de 17 m, en su carril) se carga; al salirte de su carril con mas de 0,8 s
+// cargado, te lanza (un turbo corto) y da tacos. Si el coche frena y no te
+// sales, choca (como siempre). La barra, fija (sin parpadeos).
+var rebufoT = 0, rebufoCarril = -1;
+function actualizarRebufo(dt) {
+  const pegado = world.enRebufo(currentLane);
+  if (pegado) { rebufoT = Math.min(3, rebufoT + dt); rebufoCarril = currentLane; }
+  else if (rebufoT > 0) {
+    if (rebufoT >= 0.8 && currentLane !== rebufoCarril) {
+      const premio = Math.round(4 + rebufoT * 6) * multiplier;
+      tacosThisRun += premio;
+      boostTimeLeft = Math.max(boostTimeLeft, 1.4);
+      textoFlotante(`${t("rebufo")} +${premio}`);
+      sndRebufo(); vibrate(15);
+    }
+    rebufoT = 0;
+  }
+  ponerRebufo();
+}
+function ponerRebufo() {
+  let el = document.getElementById("rebufo");
+  if (!el) {
+    if (!rebufoT) return;
+    el = document.createElement("div"); el.id = "rebufo";
+    el.innerHTML = `<span class="rbTexto"></span><span class="rbBarra"><i></i></span>`;
+    document.getElementById("hud").appendChild(el);
+  }
+  el.classList.toggle("hidden", !rebufoT);
+  if (rebufoT) {
+    el.querySelector(".rbTexto").textContent = t("rebufoBarra");
+    el.querySelector("i").style.width = `${Math.round(Math.min(1, rebufoT / 3) * 100)}%`;
+    el.classList.toggle("listo", rebufoT >= 0.8);
+  }
+}
 // 14/11: Nashville: las notas del mastil pisadas seguidas (ver el fotograma).
 var rachaNotas = 0, ultimaNota = -9;
 // 14/11: Nashville: al llegar a la meta baila el YMCA: cuatro posturas de
@@ -2500,6 +2573,10 @@ world.onAvisoMapa((que) => {
   else if (que === "roca") vibrate(12);
   else if (que === "bate") vibrate(15);                          // (14/11: Louisville: el bate toca el suelo)
   else if (que === "caballo") { sndGalope(); vibrate(10); }      // (y el caballo que sale por detras)
+  else if (que === "trile") sndChapa();                          // (14/11: Atlanta: la papeleta de oro entra en una urna)
+  else if (que === "baraja") sndBarajar();                       // (y se barajan)
+  else if (que === "freno") sndFreno();                          // (14/11: Charlotte: se encienden las luces de freno)
+  else if (que === "trompo") { sndTrompo(); vibrate(20); }       // (y el accidente en cadena)
 });
 
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
@@ -2636,7 +2713,8 @@ function frame(dtFijo) {
         elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso",
         jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso",
         desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso",
-        baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso" };
+        baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso",
+        papeletas: "papeletasAviso", recuento: "recuentoAviso", rebufo: "rebufoAviso", ovalo: "ovaloAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2802,6 +2880,16 @@ function frame(dtFijo) {
         if (rachaNotas % 8 === 0) { tacosThisRun += 20 * multiplier; textoFlotante(`${t("riff")} +${20 * multiplier}`); }
       }
     }
+    // 14/11: Atlanta: las papeletas que se escapan (300 votos) y el trile de
+    // las urnas (la buena: 2.500 votos y tacos).
+    if (gameState === "playing" && nivelActual && nivelActual.mision) {
+      if (world.cogerPapeleta(playerX)) { tacosThisRun += 2 * multiplier; sumarVotos(300); sndPapeleta(); vibrate(6); }
+      const urna = world.abrirUrna(currentLane);
+      if (urna === 1) { tacosThisRun += 15 * multiplier; textoFlotante(`+${miles(2500)} ${t("votos")}`); sumarVotos(2500); sndUrna(true); vibrate(20); }
+      else if (urna === 0) { textoFlotante(t("urnaMala")); sndUrna(false); }
+    }
+    // 14/11: Charlotte: el rebufo (pegado detras de un coche de carreras).
+    if (gameState === "playing") actualizarRebufo(dt);
     checkCollectibles(dt);
     checkChapas();
     checkPowerups();

@@ -3005,6 +3005,27 @@ export function createWorld(scene) {
     barricas_bourbon: { choque: "low", medio: 0.55, alto: 0.8 },
     cubo_pollo: { choque: "full", medio: 1.0, alto: 2.3, centro: 0 },
     cartel_rosas: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 14/11: Atlanta (blender/atlanta.py): la urna, la papeleta que se escapa
+    // (se coge: ver volarPapeleta), la pancarta del fraude, las cajas y el
+    // camion de los melocotones, la maquina y la mesa del recuento. (Las urnas
+    // del trile son una pieza compuesta: ver abajo.)
+    urna_voto: { choque: "low", medio: 0.5, alto: 0.95 },
+    papeleta: { choque: "nada", medio: 0.5, alto: 0 },
+    cartel_fraude: { choque: "high", medio: 0.3, alto: 2.4 },
+    cajas_melocoton: { choque: "low", medio: 0.4, alto: 0.95 },
+    camion_melocotones: { choque: "full", medio: 2.9, alto: 2.6, centro: -0.15 },
+    maquina_recuento: { choque: "full", medio: 0.6, alto: 2.0, centro: 0 },
+    mesa_recuento: { choque: "low", medio: 0.5, alto: 0.95 },
+    // 14/11: Charlotte (blender/charlotte.py): los coches de carreras (van
+    // delante: ver rebufoCoche y trompoCoche), la pila de ruedas, la pancarta,
+    // el carro de boxes y el camion del equipo.
+    stock_car: { choque: "full", medio: 2.5, alto: 1.3, centro: 0 },
+    stock_car_azul: { choque: "full", medio: 2.5, alto: 1.3, centro: 0 },
+    stock_car_amarillo: { choque: "full", medio: 2.5, alto: 1.3, centro: 0 },
+    pila_ruedas: { choque: "low", medio: 0.45, alto: 0.9 },
+    cartel_carrera: { choque: "high", medio: 0.3, alto: 2.4 },
+    carro_boxes: { choque: "low", medio: 0.4, alto: 0.95 },
+    camion_equipo: { choque: "full", medio: 4.0, alto: 3.2, centro: -0.08 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3421,6 +3442,27 @@ export function createWorld(scene) {
       });
       obstaclePools.vapor_lado = makePool(() => new THREE.Group());
     }
+    // 14/11: Atlanta: la urna del trile, con la papeleta de oro dentro (solo
+    // se ve al entrar y cuando se levantan las urnas).
+    if (hayModelo("obstaculos/urna_trile")) {
+      TIPOS.trile = { choque: "nada", medio: 0.8, alto: 0 };
+      obstaclePools.trile = makePool(() => {
+        const g = new THREE.Group();
+        const caja = new THREE.Group();
+        const m = modeloConContorno("obstaculos/urna_trile");
+        m.scale.set(1, 1.25, 1.1);                // (mas altas: se ven mejor)
+        caja.add(m);
+        g.add(caja);
+        g.userData.caja = caja;
+        if (hayModelo("obstaculos/papeleta_oro")) {
+          const p = modeloConContorno("obstaculos/papeleta_oro");
+          p.visible = false;
+          g.add(p);
+          g.userData.oro = p;
+        }
+        return g;
+      });
+    }
     // 14/11: Louisville: el bate gigante de Louisville Slugger: espera de pie
     // en el bordillo y cae atravesado en la calle (el del centro lleva el
     // dibujo; los de los lados, sin dibujo, solo chocan).
@@ -3727,6 +3769,207 @@ export function createWorld(scene) {
     u.chorro.scale.set(avisa ? 0.12 : Math.min(1, (f - 1.6) / 0.12), 1, 1);
     o.escondido = f < 1.65;
     for (const l of o.lados || []) { l.escondido = o.escondido; l.z = o.z; }
+  }
+  // ---- 14/11: Atlanta ----
+  // La papeleta que se escapa: vuela a media altura haciendo eses de carril a
+  // carril (despacio: se ve adonde va) y, cuando la tienes cerca, se aleja un
+  // poco (va en tu sentido, mas despacio que tu: la alcanzas). Se coge
+  // pasando por donde esta (main.js: cogerPapeleta). Sin parpadeos.
+  function volarPapeleta(o, dt) {
+    const p = o.papeleta;
+    if (!p) return;
+    p.t += dt;
+    const m = o.mesh;
+    const x = p.x0 + Math.sin(p.t * p.w + p.fase) * p.amp;
+    m.position.x = x;
+    o.lane = Math.max(0, Math.min(2, Math.round(x / LANE_WIDTH) + 1));
+    m.position.y = 0.55 + Math.sin(p.t * 2.2 + p.fase) * 0.12;
+    m.rotation.y = Math.sin(p.t * 1.3 + p.fase) * 0.5;
+    m.rotation.z = Math.sin(p.t * 1.7) * 0.1;
+    if (o.z > -70) o.z -= 7 * dt;
+  }
+  function cogerPapeleta(x) {
+    for (const o of obstacles) {
+      if (o.pool !== "papeleta" || o.cogida || !o.papeleta || Math.abs(o.z) > 1.2 || Math.abs(o.mesh.position.x - x) > 1.15) continue;
+      o.cogida = true; o.mesh.visible = false;
+      burstSparkles(o.mesh.position.x, 1.2, o.z);
+      return true;
+    }
+    return false;
+  }
+  // El trile de las urnas (el pabellon del recuento): tres urnas grandes, una
+  // por carril. A 28 m la papeleta de oro baja y se mete en una; se barajan
+  // (3 a 5 cambios, uno por delante y otro por detras para que se vea bien)
+  // y se paran: hay que pasar por la buena. Mientras, van en tu sentido casi
+  // a tu velocidad (se acercan muy despacio: se ven grandes). Al tocar una se
+  // levantan las tres como cubiletes y se ve donde estaba la de oro (main.js:
+  // abrirUrna). Las mueve la ultima urna (la primera que se actualiza).
+  function barajarUrnas(o, dt, dz) {
+    const g = o.trile;
+    if (!g || g.lider !== o) return;
+    const us = g.urnas;
+    if (g.fase === 0) {
+      if (o.z < -28) return;
+      g.fase = 1; g.t = 0;
+      const oro = us[g.buena].mesh.userData.oro;
+      if (oro) { oro.visible = true; oro.position.set(0, 5.2, 0); }
+      if (alAvisoMapa) alAvisoMapa("trile");
+    }
+    g.t += dt;
+    if (g.fase < 3) for (const u of us) u.z -= Math.min(dz, 2) * 0.96;   // (min: los saltos de ?prueba no se las llevan)
+    if (g.fase === 1) {
+      const f = Math.min(1, g.t / 1.1);
+      const oro = us[g.buena].mesh.userData.oro;
+      if (oro) { oro.position.y = 5.2 - f * 4.0; oro.rotation.y = f * Math.PI * 2; if (f >= 1) oro.visible = false; }
+      if (f >= 1) { g.fase = 2; g.tp = 0; g.par = null; g.i = 0; }
+    } else if (g.fase === 2) {
+      if (!g.par) {
+        if (g.i >= g.cambios) { g.fase = 3; us.forEach((u) => { u.lane = u.cub.slot; }); return; }
+        const a = Math.floor(Math.random() * 3), b = (a + 1 + Math.floor(Math.random() * 2)) % 3;
+        g.par = [us.find((u) => u.cub.slot === a), us.find((u) => u.cub.slot === b)];
+        g.par[0].cub.a = b; g.par[1].cub.a = a;
+        g.tp = 0;
+        if (alAvisoMapa) alAvisoMapa("baraja");
+      }
+      g.tp += dt;
+      const f = Math.min(1, g.tp / (g.rapido ? 0.65 : 0.8)), s = f * f * (3 - 2 * f);
+      g.par.forEach((u, j) => {
+        u.mesh.position.x = LANE_X[u.cub.slot] + (LANE_X[u.cub.a] - LANE_X[u.cub.slot]) * s;
+        u.mesh.userData.caja.position.z = (j ? 1 : -1) * Math.sin(s * Math.PI) * 1.7;
+      });
+      if (f >= 1) { g.par.forEach((u) => { u.cub.slot = u.cub.a; u.mesh.userData.caja.position.z = 0; }); g.par = null; g.i++; }
+    } else if (g.fase === 4) {
+      // Levantadas como cubiletes: suben y se ve la de oro en el suelo.
+      const y = Math.min(4.2, g.t * 9);
+      us.forEach((u) => { u.mesh.userData.caja.position.y = y; });
+      const oro = us[g.buena].mesh.userData.oro;
+      if (oro) oro.rotation.y += dt * 2.5;
+    }
+  }
+  function abrirUrna(lane) {
+    for (const o of obstacles) {
+      const g = o.trile;
+      if (!g || g.fase !== 3 || o.lane !== lane || Math.abs(o.z) > 1.2) continue;
+      g.fase = 4; g.t = 0;
+      const ub = g.urnas[g.buena];
+      const oro = ub.mesh.userData.oro;
+      if (oro) { oro.visible = true; oro.position.set(0, 0.25, 0); oro.rotation.y = 0; }
+      if (o === ub) burstSparkles(LANE_X[lane], 1.4, o.z);
+      return o === ub ? 1 : 0;
+    }
+    return -1;
+  }
+  // ---- 14/11: Charlotte ----
+  // Los coches de carreras llevan luces de freno (fijas: se encienden y se
+  // quedan) y humo para los trompos; se ponen al sacarlos.
+  function prepCoche(o) {
+    const m = o.mesh, u = m.userData;
+    m.scale.setScalar(1);
+    if (!u.freno) {
+      u.freno = [];
+      for (const sx of [-1, 1]) {
+        const p = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.16), new THREE.MeshBasicMaterial({ color: 0xff2a1a }));
+        p.position.set(sx * 0.62, 0.59, 2.54);
+        const h = halo(1.1, 0.7, 0xff3a20);
+        h.position.set(sx * 0.62, 0.59, 2.62);
+        m.add(p, h);
+        u.freno.push(p, h);
+      }
+    }
+    if (!u.vapor) {
+      u.vapor = [];
+      for (let i = 0; i < 3; i++) {
+        const sp = new THREE.Sprite(vaporMat.clone());
+        sp.material.color.setHex(0x8a8a90);
+        sp.position.set(0, 0.4, 0);
+        m.add(sp);
+        u.vapor.push(sp);
+      }
+    }
+    u.freno.forEach((p) => { p.visible = false; });
+    u.vapor.forEach((sp) => { sp.visible = false; });
+  }
+  // El rebufo: los coches van delante, en tu sentido. Llegan frenando hasta su
+  // sitio (a 13 m de ti, u 8 m detras del coche de su carril) y se quedan a tu
+  // velocidad un rato; luego se les encienden las luces de freno (0,8 s) y
+  // frenan: se te echan encima (o los adelantas por otro carril). Pegado
+  // detras se carga el rebufo (main.js).
+  function delanteDe(o) {
+    let d = null;
+    for (const p of obstacles) {
+      if (p === o || !p.rebufo || p.rebufo.fase < 1 || p.rebufo.fase > 2 || p.lane !== o.lane || p.z <= o.z || p.smashed) continue;
+      if (!d || p.z < d.z) d = p;
+    }
+    return d;
+  }
+  function rebufoCoche(o, dt, dz) {
+    const c = o.rebufo;
+    const d = delanteDe(o);
+    const sitio = d ? Math.min(-13, d.z - 8) : -13;
+    if (c.fase === 0) {
+      const f = Math.min(1, Math.max(0.12, (sitio - o.z) / 40));
+      o.z -= Math.min(dz, 2) * (1 - f);
+      if (o.z >= sitio - 0.3) { o.z = Math.min(o.z, sitio); c.fase = 1; c.t = 0; }
+      return;
+    }
+    if (c.fase < 3) {
+      o.z -= Math.min(dz, 2);
+      if (o.z < sitio) o.z = Math.min(sitio, o.z + 7 * dt);
+      c.t += dt;
+      if (c.fase === 1 && c.t > c.espera && !d) {
+        c.fase = 2; c.t = 0;
+        o.mesh.userData.freno.forEach((p) => { p.visible = true; });
+        if (alAvisoMapa) alAvisoMapa("freno");
+      } else if (c.fase === 2 && c.t > 0.8) { c.fase = 3; c.t = 0; }
+      return;
+    }
+    c.t += dt;
+    o.z -= Math.min(dz, 2);
+    o.z += Math.min(18, 3 + c.t * 22) * dt;
+  }
+  function enRebufo(lane) {
+    return obstacles.some((o) => o.rebufo && o.rebufo.fase >= 1 && o.rebufo.fase <= 2 && o.lane === lane && o.z > -17 && o.z < -4 && !o.smashed);
+  }
+  // El accidente en cadena del ovalo («the Big One»): tres coches en paralelo
+  // van delante (a la mitad de tu velocidad: los alcanzas). A 55 m uno pierde
+  // el control: hacen trompos, se cruzan de carril y se quedan parados, con
+  // humo. Siempre queda un carril libre: el del que se sale de la pista (o el
+  // del centro, si el de en medio acelera y se escapa). Dura 1,4 s y acaban
+  // casi rectos (o del reves): se ve bien que carril tapa cada uno.
+  function trompoCoche(o, dt, dz) {
+    const g = o.bigone;
+    if (g.lider !== o) return;
+    const cs = g.coches.filter((c) => !c.smashed);
+    if (g.fase === 0) { if (o.z < -85) return; g.fase = 1; g.t = 0; }
+    g.t += dt;
+    if (g.fase === 1) {
+      for (const c of cs) c.z -= Math.min(dz, 2) * 0.5;
+      if (o.z > -55) { g.fase = 2; g.t = 0; if (alAvisoMapa) alAvisoMapa("trompo"); }
+      return;
+    }
+    if (g.fase !== 2) return;
+    const f = Math.min(1, g.t / 1.4), s = 1 - (1 - f) * (1 - f);
+    for (const c of cs) {
+      const b = c.big;
+      c.z -= Math.min(dz, 2) * 0.5 * (1 - f);
+      if (b.escapa) {
+        c.z -= (8 + 30 * f) * dt;
+        c.mesh.scale.setScalar(Math.max(0.01, 1 - Math.max(0, f - 0.6) * 2.4));
+      } else {
+        c.mesh.position.x = b.de + (b.a - b.de) * s;
+        c.mesh.rotation.y = b.giro * s;
+        if (f > 0.15) c.mesh.userData.vapor.forEach((v) => { v.visible = true; });
+      }
+    }
+    if (f >= 1) {
+      g.fase = 3;
+      for (const c of cs) {
+        const b = c.big;
+        c.lane = b.lane;
+        if (b.fuera || b.escapa) c.fuera = true;
+        if (b.escapa) c.mesh.visible = false;
+      }
+    }
   }
   // ---- 14/11: Nashville ----
   // El baile en linea: una pareja de vaqueros, hombro con hombro, tapa dos
@@ -6328,6 +6571,112 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 14/11: Atlanta ----
+    // Las papeletas que se escapan: cada 28 m una (a veces dos, cada una con
+    // su ese) volando por encima de la calle; entre medias, una urna o las
+    // cajas de melocotones (a veces dos), la pancarta del fraude, y tacos.
+    papeletas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 4 === 2 && obstaclePools.papeleta) {
+        const dos = Math.floor(k / 4) % 3 === 2;
+        for (let j = 0; j < (dos ? 2 : 1); j++) {
+          const o = spawnObstacle(1, "nada", z - j * 6, "papeleta");
+          if (!o) continue;
+          const lado = Math.random() < 0.5 ? -1 : 1, ancha = !dos && Math.random() < 0.35;
+          o.papeleta = { t: 0, fase: j * Math.PI + Math.random() * 0.6, w: ancha ? 1.1 : 1.4,
+            x0: ancha ? 0 : (dos ? (j ? 1 : -1) : lado) * LANE_WIDTH / 2, amp: ancha ? LANE_WIDTH : LANE_WIDTH / 2 };
+        }
+        return;
+      }
+      if (k % 4 === 0) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        const ty = Math.random() < 0.7 ? "low" : "high";
+        obst(l, ty, z, d, ty === "low" ? ["urna_voto", "cajas_melocoton"] : ["cartel_fraude"]);
+        if (ty === "low") arcoDeTacos(l, z);
+        if (Math.random() < 0.35) {
+          const otros = LANES.filter((x) => x !== l && x !== carrilOcupado);
+          if (otros.length > 1) obst(elegirDe(otros), "low", z, d, ["urna_voto"]);
+        }
+      } else if (k % 4 === 1) tacosEn(elegirDe(LANES.filter((l) => l !== carrilOcupado)), z, 2);
+    },
+    // El pabellon del recuento (momento estrella): cada 147 m el trile de las
+    // urnas (ver barajarUrnas); cuanto mas adentro, mas cambios y mas rapidos.
+    // Las urnas van en tu sentido mientras se barajan: detras de ellas no se
+    // pone nada (se meterian dentro). Antes de cada trile, una fila de tacos.
+    recuento(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      filaSinObjeto = true;
+      if (k > n - 4 || !obstaclePools.trile) return;
+      if (k % 21 === 0) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k % 21 !== 2) return;
+      const us = LANES.map((l) => spawnObstacle(l, "nada", z, "trile")).filter(Boolean);
+      const j = Math.floor(k / 21);
+      const g = { urnas: us, lider: us[us.length - 1], buena: Math.floor(Math.random() * us.length), fase: us.length === 3 ? 0 : 9,
+        t: 0, i: 0, par: null, tp: 0, cambios: 3 + Math.min(2, j), rapido: j >= 1 };
+      us.forEach((u, i) => {
+        u.trile = g; u.cub = { slot: i, a: i };
+        const ud = u.mesh.userData;
+        ud.caja.position.set(0, 0, 0);
+        if (ud.oro) ud.oro.visible = false;
+      });
+    },
+    // ---- 14/11: Charlotte ----
+    // El rebufo: cada 84 m un coche de carreras (uno de cada dos, con otro en
+    // otro carril que espera mas) que se pone delante a tu velocidad (ver
+    // rebufoCoche). Nada mas en la calle: se meteria dentro de los coches.
+    rebufo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      filaSinObjeto = true;
+      if (k > n - 6 || k % 12 !== 3 || carrilOcupado >= 0) return;
+      const coches = ["stock_car", "stock_car_azul", "stock_car_amarillo"].filter((x) => obstaclePools[x]);
+      if (!coches.length) return;
+      const j = Math.floor(k / 12);
+      const l = elegirDe(LANES), otro = elegirDe(LANES.filter((x) => x !== l));
+      const pon = (lane, espera, i) => {
+        const o = spawnObstacle(lane, "full", z, coches[(j + i) % coches.length]);
+        if (o) { prepCoche(o); o.rebufo = { fase: 0, t: 0, espera }; }
+      };
+      pon(l, 1.6 + Math.random() * 0.8, 0);
+      if (j % 2 === 1) pon(otro, 3.0 + Math.random() * 0.8, 1);
+    },
+    // El ovalo (momento estrella), de noche: cada 63 m tres coches en
+    // paralelo y el accidente en cadena (ver trompoCoche). Justo detras de
+    // ellos no se pone nada (van en tu sentido hasta que chocan); entre un
+    // accidente y el siguiente, tacos (una pila de ruedas quedaba justo
+    // detras de los coches parados: no daba tiempo).
+    ovalo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      filaSinObjeto = true;
+      if (k > n - 4) return;
+      const coches = ["stock_car", "stock_car_azul", "stock_car_amarillo"].filter((x) => obstaclePools[x]);
+      if (k % 9 === 3 && coches.length === 3 && carrilOcupado < 0) {
+        const j = Math.floor(k / 9);
+        const cs = LANES.map((l) => spawnObstacle(l, "full", z, coches[(l + j) % 3])).filter(Boolean);
+        if (cs.length < 3) return;
+        const libre = elegirDe(LANES);
+        const g = { coches: cs, lider: cs[2], fase: 0, t: 0 };
+        cs.forEach((c, i) => {
+          prepCoche(c);
+          const b = { de: LANE_X[i], a: LANE_X[i], lane: i, giro: 0, fuera: false, escapa: false };
+          if (libre === 1) {
+            if (i === 1) b.escapa = true;
+            else b.giro = (i === 0 ? 1 : -1) * (Math.PI + 0.16);
+          } else {
+            const a = libre === 0 ? i + 1 : i - 1;
+            b.giro = (i % 2 ? -1 : 1) * (Math.PI * 2 + (i === 1 ? Math.PI : 0) + 0.16);
+            if (a < 0 || a > 2) { b.fuera = true; b.a = (a < 0 ? -1 : 1) * 8.4; }
+            else { b.a = LANE_X[a]; b.lane = a; }
+          }
+          c.big = b; c.bigone = g;
+        });
+        return;
+      }
+      if (k % 9 === 1) tacosEn(elegirDe(LANES), z, 4);
+    },
     // ---- 14/11: Nashville ----
     // El baile en linea: cada 28 m una pareja de vaqueros que tapa dos
     // carriles y da pasos de lado a lado (ver bailarEnLinea). Entre medias,
@@ -6638,6 +6987,8 @@ export function createWorld(scene) {
   const NIEBLA_INTERIOR = {
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
+    // 14/11: el pabellon del recuento de Atlanta: cerrado, gris azulado.
+    recuento: { color: new THREE.Color(0x22262e), near: 60, far: 230 },
     // 14/11: el Grand Ole Opry de Nashville: la sala a oscuras, granate.
     opry: { color: new THREE.Color(0x1e0c12), near: 40, far: 170 },
     // 13/11: la fundicion Sloss de Birmingham: humo naranja y oscuro.
@@ -7695,6 +8046,10 @@ export function createWorld(scene) {
         else if (o.pool === "nota_mastil") o.mesh.rotation.y += dt * 1.2;
         else if (o.pool === "bate") caerBate(o, dt);
         else if (o.pool === "caballo_derby" || o.pool === "caballo_derby_azul") galoparCaballo(o, dt, dz);
+        else if (o.pool === "papeleta") volarPapeleta(o, dt);
+        else if (o.pool === "trile") barajarUrnas(o, dt, dz);
+        else if (o.rebufo) rebufoCoche(o, dt, dz);
+        else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
@@ -7916,5 +8271,5 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo };
 }

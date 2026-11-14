@@ -104,6 +104,16 @@ const ESTILOS = {
     ladrillos: [0x8a4a3a, 0xa8603e, 0x6e4a3a, 0xc8b08a, 0x7a5a4a], piedras: [0xe8e0d0, 0xd0c4a8], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.06], toldos: [0x2f6a3a, 0x8a2a1e, 0x1f3a6a, 0xf4f0e8],
     rotulos: ["BOURBON", "DERBY HATS", "HOT BROWN", "BATS", "MINT JULEP", "FRIED CHICKEN", "BLUEGRASS", "HORSESHOES", "ROSES", "WHISKEY ROW"] },
+  // 14/11: Atlanta: Peachtree Street: torres de cristal y edificios viejos de ladrillo.
+  atlanta: { plantas: ["planta_cristal", "planta_ladrillo", "planta_lisa", "planta_cristal", "planta_balcones"],
+    ladrillos: [0x9a5a42, 0x8a4a3a, 0xb07050, 0x7a5a4a, 0xc8b49a], piedras: [0xe4dccb, 0xd0c4a8], cristal: [0x7a9ab0, 0x5a7a90, 0x9fb4c4],
+    cornisas: ["cornisa_simple", "cornisa_deco"], remate: ["remate_antena", 0.08], toldos: [0xf4a46a, 0x1f4a9a, 0xc8282c, 0x2a6a3a],
+    rotulos: ["PEACHES", "SOUL FOOD", "PEACH COBBLER", "HIP HOP", "WAFFLES", "BBQ", "GEORGIA", "VOTE HERE", "SWEET TEA", "RECORDS"] },
+  // 14/11: Charlotte: Tryon Street: rascacielos de cristal y algún ladrillo.
+  charlotte: { plantas: ["planta_cristal", "planta_lisa", "planta_cristal", "planta_ladrillo", "planta_cristal"],
+    ladrillos: [0x8a5a4a, 0x9a6a52, 0x6e4a3a, 0xb8a090, 0x7a5a4a], piedras: [0xd8d0c4, 0xc8bca8], cristal: [0x4a7a9a, 0x6a8aa8, 0x3a5a7a],
+    cornisas: ["cornisa_simple", "cornisa_deco"], remate: ["remate_antena", 0.1], toldos: [0x1f3a7a, 0xc8282c, 0xf0c020, 0x2a2a2e],
+    rotulos: ["RACE SHOP", "BANK", "BBQ", "SPEED", "PIT STOP", "QUEEN CITY", "TIRES", "GARAGE", "DINER", "MOTOR CLUB"] },
   // 13/11: Nueva Orleans: casas del Barrio Francés, bajas, de colores y con balcones.
   nuevaorleans: { plantas: ["planta_balcones", "planta_balcones", "planta_miradores", "planta_balcones", "planta_lisa"],
     ladrillos: [0xe8a8a0, 0xf2d48a, 0xa8c8b0, 0xb8a8d8, 0xf0b890], piedras: [0xf4efe4, 0xe8dcc8], cristal: [0x8aa0b0, 0x9fb4c4],

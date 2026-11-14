@@ -1493,6 +1493,127 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 14/11/2026: nivel 24: Atlanta (blender/atlanta.py). «Su foto de la ficha
+    // policial en cada pared. Mision: "encuentrame 11.780 votos". Aqui pasa de
+    // 270». Recomendado: manana de sol por Peachtree Street y final ante el
+    // teatro de las cupulas, con la marquesina «PRESIDENT ELECT · 270».
+    // Dinamicas propias: la mision de los votos (contador arriba), las
+    // papeletas que se escapan (vuelan haciendo eses de carril a carril: 300
+    // votos cada una) y el momento estrella, el pabellon del recuento: el
+    // trile de las urnas (la papeleta de oro entra en una, se barajan y hay
+    // que pasar por la buena: 2.500 votos).
+    id: "atlanta", nombre: "Peachtree Street", lugar: "Atlanta, Georgia", listo: true,
+    zona: "city", carpeta: "atlanta", luz: "manana", semilla: 1827,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 12, estilo: "atlanta" },
+    horizonte: "atlanta",
+    obstaculos: { low: ["urna_voto", "cajas_melocoton", "paca"], high: ["cartel_fraude", "andamio"],
+      full: ["pickup", "furgoneta", "taxi", "camion_melocotones"] },
+    publico: { personas: ["fan", "ejecutivo", "chico", "senora", "turista"], valla: "banderas", cada: 2 },
+    mision: { votos: 11780 },
+    tramos: [
+      [0, 70, "calma", { titulo: "atlanta" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "peachtree" }],
+      [250, 610, "papeletas", { titulo: "papeletas" }],
+      [610, 690, "calma", { titulo: "mural" }],
+      [690, 850, "slalom", { full: ["pickup", "furgoneta", "taxi", "camion_melocotones"], titulo: "melocotones" }],
+      [850, 1010, "premios", { titulo: "premios" }],
+      [1010, 1090, "calma"],
+      [1090, 1250, "jefe_paso", { titulo: "jefe_paso" }],
+      [1250, 1330, "calma"],
+      [1330, 1490, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1490, 1650, "rampa", { titulo: "rampa" }],
+      [1650, 1730, "calma", { titulo: "entrada_recuento" }],
+      // El momento estrella: el pabellon del recuento (pieza de `fondo` e `interior`).
+      [1730, 2150, "recuento", { titulo: "recuento" }],
+      [2150, 2230, "calma", { titulo: "recuento_fin" }],
+      [2230, 2590, "papeletas", { titulo: "papeletas2" }],
+      [2590, 2670, "calma"],
+      [2670, 2830, "vallas", { low: ["urna_voto", "cajas_melocoton"], high: ["cartel_fraude"], titulo: "fraude" }],
+      [2830, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_fox" }],
+    ],
+    control: 1300, caja: 930,
+    interior: { rango: [1732, 2148], tipo: "recuento", sinEdificios: [1720, 2160] },
+    sinEdificios: [3260, 4000],
+    chapas: [[180, "carril"], [1400, "carril"], [2950, "arco"]],
+    hitos: ["mural_ficha", "capitolio_georgia", "torre_piramide", "westin_cilindro"],
+    meta: "fox_theatre", metaNombre: { es: "el teatro de las cúpulas", en: "the domed theatre" },
+    izquierda: [
+      40, ["kit", 2], 14, ...cuadras(2), ["mural_ficha", 1], 14, ...cuadras(3), ["capitolio_georgia", 1], 14, ...cuadras(22),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ["torre_piramide", 1], 14, ...cuadras(4), ["westin_cilindro", 1], 14, ...cuadras(4), ["mural_ficha", 1], 14, ...cuadras(17),
+    ],
+    fondo: [{ pieza: "fox_theatre", d: 3330, centro: true },
+      { pieza: "arco_melocoton", d: 120, cruza: true }, { pieza: "arco_melocoton", d: 2240, cruza: true },
+      { pieza: "recuento", d: 1730, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 12, -40] },
+    acera: ["ciudad/farola_ciudad", "atlanta/ficha_poster", "ciudad/arbol_ciudad", "ciudad/banco"],
+  },
+  {
+    // 14/11/2026: nivel 25: Charlotte (blender/charlotte.py). «El circuito de
+    // NASCAR». Recomendado: de noche y con focos (las carreras de Charlotte
+    // son de noche) y final en el salon de la fama, con la cinta de acero y
+    // los tres coches campeones. Dinamicas propias: el rebufo (los coches de
+    // carreras van delante a tu velocidad: pegado detras se carga y, al
+    // salirte de su carril, te lanza; cuando se les encienden las luces de
+    // freno, fuera) y el momento estrella, el ovalo: el accidente en cadena
+    // (tres coches en paralelo hacen trompos y se quedan cruzados: hay que
+    // ver por donde queda el hueco).
+    id: "charlotte", nombre: "Tryon Street", lugar: "Charlotte, Carolina del Norte", listo: true,
+    zona: "city", carpeta: "charlotte", luz: "anochecer", semilla: 1828,
+    largo: 3300, linea: 11.5, velMax: 26,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 4, maxPlantas: 14, estilo: "charlotte" },
+    horizonte: "charlotte",
+    obstaculos: { low: ["pila_ruedas", "carro_boxes", "paca"], high: ["cartel_carrera", "andamio"],
+      full: ["pickup", "furgoneta", "taxi", "camion_equipo"] },
+    publico: { personas: ["fan", "granjero", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "charlotte" }],
+      [70, 230, "mixto", { densidad: 0.45, titulo: "tryon" }],
+      [230, 390, "premios", { titulo: "premios" }],
+      [390, 470, "calma", { titulo: "olor_gasolina" }],
+      [470, 830, "rebufo", { titulo: "rebufo" }],
+      [830, 910, "calma"],
+      [910, 1070, "vallas", { low: ["pila_ruedas", "carro_boxes"], high: ["cartel_carrera"], titulo: "boxes_clt" }],
+      [1070, 1230, "rampa", { titulo: "rampa" }],
+      [1230, 1310, "calma", { titulo: "entrada_ovalo" }],
+      // El momento estrella: el ovalo (pieza de `fondo` e `interior`, al aire libre).
+      [1310, 1730, "ovalo", { titulo: "ovalo" }],
+      [1730, 1810, "calma", { titulo: "bandera_cuadros" }],
+      [1810, 1970, "jefe_paso", { titulo: "jefe_paso" }],
+      [1970, 2050, "calma"],
+      [2050, 2210, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2210, 2570, "rebufo", { titulo: "rebufo2" }],
+      [2570, 2650, "calma"],
+      [2650, 2810, "slalom", { full: ["pickup", "furgoneta", "taxi", "camion_equipo"], titulo: "camiones" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_salon" }],
+    ],
+    control: 1770, caja: 320,
+    interior: { rango: [1312, 1728], tipo: "ovalo", aire: true, sinEdificios: [1300, 1740] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [2100, "carril"], [2950, "arco"]],
+    hitos: ["torre_corona", "garaje_carreras", "iglesia_presbiteriana", "torre_led"],
+    meta: "salon_fama", metaNombre: { es: "el salón de la fama", en: "the Hall of Fame" },
+    izquierda: [
+      40, ["kit", 2], 14, ["torre_corona", 1], 14, ...cuadras(4), ["iglesia_presbiteriana", 1], 14, ...cuadras(22),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["garaje_carreras", 1], 14, ...cuadras(3), ["torre_led", 1], 14, ...cuadras(4), ["garaje_carreras", 1], 14, ...cuadras(16),
+    ],
+    fondo: [{ pieza: "salon_fama", d: 3330, centro: true },
+      { pieza: "arco_carrera", d: 120, cruza: true }, { pieza: "arco_carrera", d: 2620, cruza: true },
+      { pieza: "speedway", d: 1310, cruza: true }],
+    final: "parada", parada: 8,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 10, -40] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1596,14 +1717,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -1661,6 +1782,8 @@ export const ANCHO = {
   vulcano: 52, sloss_hornos: 42, alabama_theatre: 23, magic_city: 2, fundicion: 420,
   partenon: 40, ryman: 32, batman_building: 27, honky_tonk: 21, arco_broadway: 2, opry: 420,
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
+  fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
+  salon_fama: 54, torre_corona: 26, torre_led: 24, iglesia_presbiteriana: 18, garaje_carreras: 24, arco_carrera: 2, speedway: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
@@ -1874,7 +1997,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

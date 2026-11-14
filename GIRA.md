@@ -27,7 +27,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Alaska | Anchorage (capital: Juneau) | la más grande y conocida |
 | Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
-| Carolina del Norte | Charlotte (capital: Raleigh) | la más grande |
+| Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa |
 | Colorado | Denver | capital y la más famosa |
 | Connecticut | Hartford | capital |
@@ -35,7 +35,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
 | Delaware | Wilmington (capital: Dover) | la más grande |
 | Florida | Miami (capital: Tallahassee) | la más famosa |
-| Georgia | Atlanta | capital y la más famosa |
+| Georgia | Atlanta | capital y la más famosa (hecho el 14/11: Peachtree Street, las papeletas que se escapan, el trile de las urnas del recuento y la marquesina «PRESIDENT ELECT») |
 | Hawái | Honolulu | capital y la más famosa |
 | Idaho | Boise | capital y la más grande |
 | Illinois | Chicago (capital: Springfield) | la más famosa |

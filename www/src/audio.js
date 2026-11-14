@@ -132,6 +132,29 @@ export function sndNota(i) {
 export function sndGalope() {
   for (let i = 0; i < 6; i++) soplo(0.07, { desde: 320, hasta: 90, tipo: "lowpass", vol: 0.22, q: 0.8, cuando: i * 0.14 + (i % 2) * 0.05 });
 }
+// 14/11: Atlanta: la papeleta cogida (un papel que se agita y una campanita),
+// la urna buena (arpegio que sube) o la mala (dos notas que bajan), y el
+// barajar de las urnas (un soplo corto).
+export function sndPapeleta() {
+  soplo(0.12, { desde: 2500, hasta: 6000, tipo: "bandpass", vol: 0.12, q: 0.9 });
+  tono(1568, 0.18, { tipo: "triangle", vol: 0.09, cuando: 0.04 });
+}
+export function sndUrna(buena) {
+  if (buena) [784, 988, 1175, 1568].forEach((f, i) => tono(f, 0.25, { tipo: "triangle", vol: 0.12, cuando: i * 0.07 }));
+  else { tono(330, 0.22, { tipo: "square", vol: 0.06, filtro: 1200 }); tono(247, 0.35, { tipo: "square", vol: 0.06, filtro: 1200, cuando: 0.18 }); }
+}
+export function sndBarajar() { soplo(0.22, { desde: 500, hasta: 1800, tipo: "bandpass", vol: 0.1, q: 1.0 }); }
+// 14/11: Charlotte: el rebufo que te lanza (un soplo que sube), el chirrido
+// de los frenos (suave) y el trompo (chirrido largo y golpe sordo).
+export function sndRebufo() {
+  soplo(0.6, { desde: 300, hasta: 3500, tipo: "bandpass", vol: 0.2, q: 0.8 });
+  tono(220, 0.5, { tipo: "sawtooth", vol: 0.05, glide: 300, filtro: 1500 });
+}
+export function sndFreno() { tono(1900, 0.28, { tipo: "sawtooth", vol: 0.025, glide: -500, filtro: 2600 }); }
+export function sndTrompo() {
+  tono(1700, 0.9, { tipo: "sawtooth", vol: 0.03, glide: -900, filtro: 2400 });
+  soplo(0.5, { desde: 400, hasta: 120, tipo: "lowpass", vol: 0.3, q: 0.7, cuando: 0.7 });
+}
 export function sndChapa() {
   // Arpegio brillante: do-mi-sol-do, como una moneda especial.
   [1046, 1318, 1568, 2093].forEach((f, i) => {
@@ -296,6 +319,15 @@ const CANCIONES = {
     melodia: [77, 77, 81, null, 84, null, 81, 77, 82, null, 82, 86, 82, null, null, null,
       79, 79, 82, null, 84, 82, 79, 76, 77, null, 81, null, 77, null, null, null],
     timbre: "pluck" },
+  // 14/11: Atlanta: trap (bombo grave, palmada y charles rapidos; melodia propia).
+  atlanta: { bpm: 140, swing: 0, acordes: [Am, F, C, G], bateria: "trap",
+    melodia: [81, null, 79, 76, null, 76, 74, 76, null, null, 81, null, 79, 76, 74, null,
+      77, null, 76, 72, null, 72, 74, 76, null, null, 79, null, 76, 74, 72, null] },
+  // 14/11: Charlotte: rock sureño con guitarra (melodia propia, escala de blues).
+  charlotte: { bpm: 150, swing: 0, acordes: [G, C, G, D],
+    melodia: [67, null, 70, 67, 72, null, 74, null, 72, 70, 67, null, 65, 67, null, null,
+      67, null, 70, 67, 72, null, 74, 77, 74, 72, 70, 67, 70, null, 67, null],
+    timbre: "metal" },
   // 13/11: Nueva Orleans: jazz de desfile (banjo, tuba y bombo de la banda).
   nueva_orleans: { bpm: 150, swing: 0.62, acordes: [C, F, C, G7], bateria: "marcha", bajo: "marcha",
     melodia: [72, null, 74, 76, 79, null, 76, 74, 72, null, 69, null, 72, null, null, null,
@@ -416,6 +448,12 @@ function scheduleStep(t) {
     if (enCompas % 4 === 0) golpe(t, { vol: 0.35 });
     if (enCompas % 4 === 2) ruidoMusica(t, { dur: 0.1, f: 2000, tipo: "bandpass", vol: 0.18 });
     ruidoMusica(t, { dur: 0.04, f: 8000, vol: 0.04 });
+  } else if (c.bateria === "trap") {
+    // 14/11: Atlanta: trap (bombo grave, palmada en el tercer tiempo y charles rapidos).
+    if (enCompas === 0 || enCompas === 3 || paso % 16 === 14) golpe(t, { vol: 0.45, desde: 90 });
+    if (enCompas === 4) ruidoMusica(t, { dur: 0.16, f: 1400, tipo: "bandpass", vol: 0.24 });
+    ruidoMusica(t, { dur: 0.03, f: 9500, vol: 0.045 });
+    if (enCompas === 6 || enCompas === 7) ruidoMusica(t + corchea / 2, { dur: 0.025, f: 9500, vol: 0.035 });
   } else if (c.bateria === "marcha") {
     if (enCompas % 4 === 0) golpe(t, { vol: 0.4, desde: 110 });
     ruidoMusica(t, { dur: 0.07, f: 1600, tipo: "bandpass", vol: enCompas % 2 ? 0.07 : 0.14 });

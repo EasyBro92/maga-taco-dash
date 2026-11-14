@@ -2254,3 +2254,33 @@ sin vibración. Se guarda en los ajustes (`vibracion: false`); `vibrate()` de
 audio.js no hace nada mientras está quitada, y al volver a ponerla da un
 toque corto para que se note.
 
+## 14/11/2026 (4): niveles 24 y 25, Atlanta y Charlotte (v64)
+
+Isidro: «sigue con los niveles, sin preguntar». Se aplicó lo recomendado:
+
+- **Atlanta** (Peachtree Street, mañana de sol; `blender/atlanta.py`): la
+  misión «encuéntrame 11.780 votos» con su contador arriba. Las papeletas se
+  escapan volando en eses de carril a carril (300 votos cada una). El momento
+  estrella es el pabellón del recuento: el trile de las urnas. La papeleta de
+  oro entra en una, se barajan a unos 25 m y hay que pasar por la buena
+  (2.500 votos); al pasar se levantan las tres como cubiletes. Al llegar a
+  11.780, 150 tacos. La foto de la ficha sale en el mural, en las columnas de
+  anuncios de la acera y a los lados de la puerta del teatro. Final ante el
+  teatro de las cúpulas, con la marquesina «PRESIDENT ELECT · 270». Objeto:
+  melocotones. Música: trap.
+- **Charlotte** (Tryon Street de noche; `blender/charlotte.py`): el rebufo.
+  Los coches de carreras se ponen delante a tu velocidad; pegado detrás se
+  carga una barra y, al cambiarte de carril, sales lanzado (turbo corto y
+  tacos). Cuando se les encienden las luces de freno (fijas, sin parpadeo),
+  frenan y hay que quitarse. El momento estrella es el óvalo con focos: el
+  accidente en cadena. Tres coches en paralelo hacen trompos con humo y se
+  quedan parados; siempre queda un hueco: el del que se sale de la pista, o
+  el del centro si el de en medio se escapa. Final en el salón de la fama, con
+  la cinta de acero y los tres coches campeones. Objeto: ruedas. Música: rock
+  sureño.
+
+La urna nueva se llama `urna_voto`: `urna` ya era la del caucus de Des Moines.
+Probado con el piloto automático: los dos niveles enteros sin choques, los 10
+objetos de cada nivel y el contador y la barra sin tapar nada en el móvil.
+Falta el veredicto de Isidro.
+

@@ -983,3 +983,17 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 
 /* 14/11: la fila de la vibracion (un boton, sin barra) */
 .ajuste .ajusteRelleno { flex: 1; }
+
+/* 14/11: Atlanta: el contador de la mision de los votos; Charlotte: la barra del rebufo (fijos, sin parpadeos) */
+#votosMision { position: absolute; top: 178px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+  background: #1f4a9a; color: #fff; border: 3px solid #fff; border-radius: 16px; padding: 5px 14px;
+  font-weight: 900; font-size: 17px; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,.35); white-space: nowrap; }
+#votosMision.hecha { background: #e8b840; color: #3a2a00; }
+#votosMision.hidden { display: none; }
+#rebufo { position: absolute; top: 204px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+  display: flex; align-items: center; gap: 8px; background: rgba(20,22,28,.82); color: #fff; border: 2px solid #fff;
+  border-radius: 14px; padding: 4px 12px; font-weight: 900; font-size: 15px; white-space: nowrap; }
+#rebufo.hidden { display: none; }
+#rebufo .rbBarra { width: 90px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.25); overflow: hidden; }
+#rebufo .rbBarra i { display: block; height: 100%; width: 0; background: #f0c020; }
+#rebufo.listo .rbBarra i { background: #4ad86a; }

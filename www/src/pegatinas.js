@@ -320,6 +320,46 @@ const DIBUJOS = {
     x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-26, 34, 9, 18, 0.5, 0, Math.PI * 2); x.fill();
     x.restore();
   },
+  // 14/11: el melocotón de Georgia (Atlanta).
+  melocoton(x) {
+    x.save();
+    x.translate(128, 140);
+    x.lineJoin = "round";
+    const bola = () => { x.beginPath(); x.arc(0, 0, 80, 0, Math.PI * 2); };
+    x.lineWidth = 30; x.strokeStyle = "#fff"; bola(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; bola(); x.stroke();
+    const g = x.createRadialGradient(-28, -26, 10, 0, 0, 84);
+    g.addColorStop(0, "#ffd08a"); g.addColorStop(0.55, "#f8a060"); g.addColorStop(1, "#e0583e");
+    x.fillStyle = g; bola(); x.fill();
+    x.strokeStyle = "rgba(190,70,40,0.75)"; x.lineWidth = 5;
+    x.beginPath(); x.moveTo(4, -76); x.quadraticCurveTo(-22, 0, 6, 74); x.stroke();
+    x.fillStyle = "#5a3a1e"; x.fillRect(-4, -100, 8, 26);
+    x.save(); x.translate(26, -92); x.rotate(-0.5);
+    const hoja = () => { x.beginPath(); x.ellipse(0, 0, 30, 14, 0, 0, Math.PI * 2); };
+    x.lineWidth = 14; x.strokeStyle = "#fff"; hoja(); x.stroke();
+    x.lineWidth = 6; x.strokeStyle = CONTORNO; hoja(); x.stroke();
+    x.fillStyle = "#5aa040"; hoja(); x.fill();
+    x.restore();
+    x.fillStyle = "rgba(255,255,255,0.5)"; x.beginPath(); x.ellipse(-36, -30, 14, 22, 0.6, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: la rueda de carreras (Charlotte): goma negra con la raya amarilla y llanta de oro.
+  rueda(x) {
+    x.save();
+    x.translate(128, 128);
+    const disco = (r) => { x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); };
+    x.lineWidth = 30; x.strokeStyle = "#fff"; disco(92); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; disco(92); x.stroke();
+    x.fillStyle = "#202024"; disco(92); x.fill();
+    x.strokeStyle = "#f0c020"; x.lineWidth = 7; disco(73); x.stroke();
+    x.fillStyle = "#e8b840"; disco(50); x.fill();
+    x.strokeStyle = "#8a6420"; x.lineWidth = 4; disco(50); x.stroke();
+    x.fillStyle = "#b8862a"; disco(18); x.fill();
+    x.fillStyle = "#4a3a1a";
+    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5 - Math.PI / 2; x.beginPath(); x.arc(Math.cos(a) * 32, Math.sin(a) * 32, 6, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.ellipse(-44, -46, 12, 26, 0.75, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 14/11: la herradura de la suerte del Derby de Louisville.
   herradura(x) {
     x.save();

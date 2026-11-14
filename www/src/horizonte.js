@@ -373,6 +373,51 @@ const SITIOS = {
     x.fillRect(1318, SUELO - 162, 30, 14);
     for (const px of [1296, 1366]) { x.beginPath(); x.moveTo(px - 5, SUELO - 150); x.lineTo(px, SUELO - 212); x.lineTo(px + 5, SUELO - 150); x.closePath(); x.fill(); }
   },
+  // 14/11: Atlanta: la «ciudad en un bosque» (lomas de arboles), el centro con
+  // la torre de la piramide dorada y el cilindro del hotel y, lejos, la gran
+  // cupula de granito de Stone Mountain.
+  atlanta(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.ellipse(2700, SUELO - 4, 260, 70, 0, Math.PI, 0); x.fill();
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - 26 * (0.6 + 0.4 * Math.sin(px * 0.0025 + 1)) - r() * 6);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    for (const [x0, x1] of [[700, 1150], [1260, 1700]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 30, h = 50 + r() * 100; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.willis;
+    x.fillRect(1190, SUELO - 200, 50, 200);
+    x.fillRect(1460, SUELO - 160, 46, 160);
+    x.fillStyle = c.letrero;
+    x.beginPath(); x.moveTo(1190, SUELO - 200); x.lineTo(1215, SUELO - 250); x.lineTo(1240, SUELO - 200); x.closePath(); x.fill();
+    x.fillRect(1213, SUELO - 285, 4, 36);
+    x.fillRect(1456, SUELO - 172, 54, 12);
+  },
+  // 14/11: Charlotte: las colinas del Piedmont, el centro con la torre de la
+  // corona y, a lo lejos, la tribuna y los focos del ovalo.
+  charlotte(x, c, r) {
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - 22 * (0.6 + 0.4 * Math.sin(px * 0.002 + 3)) - r() * 6);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    for (const [x0, x1] of [[760, 1080], [1180, 1560]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 30, h = 60 + r() * 110; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.willis;
+    x.fillRect(1100, SUELO - 220, 60, 220);
+    for (let k = 0; k < 9; k++) x.fillRect(1101 + k * 7, SUELO - 242 + (k % 2) * 6, 2, 24);
+    x.fillStyle = c.letrero;
+    for (let k = 0; k < 9; k++) x.fillRect(1100 + k * 7, SUELO - 246 + (k % 2) * 6, 4, 4);
+    x.fillStyle = c.cerca;
+    x.beginPath(); x.moveTo(2440, SUELO - 4); x.lineTo(2500, SUELO - 42); x.lineTo(2860, SUELO - 42); x.lineTo(2900, SUELO - 4); x.closePath(); x.fill();
+    for (let k = 0; k < 6; k++) {
+      x.fillStyle = c.cerca; x.fillRect(2505 + k * 70, SUELO - 80, 3, 40);
+      x.fillStyle = c.letrero; x.fillRect(2499 + k * 70, SUELO - 86, 15, 7);
+    }
+  },
   // 14/11: Louisville: el rio Ohio con el puente de hierro (el Big Four) y el
   // de la autopista, el centro y, a un lado, las dos agujas de Churchill Downs.
   louisville(x, c, r) {
@@ -614,7 +659,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),
