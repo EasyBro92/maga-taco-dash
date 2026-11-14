@@ -320,6 +320,51 @@ const DIBUJOS = {
     x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-26, 34, 9, 18, 0.5, 0, Math.PI * 2); x.fill();
     x.restore();
   },
+  // 14/11: la piña de la hospitalidad (Charleston).
+  pina(x) {
+    x.save();
+    x.translate(128, 150);
+    x.lineJoin = "round";
+    const cuerpo = () => { x.beginPath(); x.ellipse(0, 10, 58, 76, 0, 0, Math.PI * 2); };
+    const hojas = () => {
+      x.beginPath();
+      for (const [a, l] of [[-0.9, 70], [-0.45, 92], [0, 104], [0.45, 92], [0.9, 70]]) {
+        x.moveTo(-14, -58); x.quadraticCurveTo(Math.sin(a) * l * 0.5, -66 - Math.cos(a) * l * 0.5, Math.sin(a) * l, -60 - Math.cos(a) * l);
+        x.quadraticCurveTo(Math.sin(a) * l * 0.5 + 10, -60 - Math.cos(a) * l * 0.4, 14, -58);
+      }
+    };
+    x.lineWidth = 28; x.strokeStyle = "#fff"; cuerpo(); x.stroke(); hojas(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cuerpo(); x.stroke(); hojas(); x.stroke();
+    x.fillStyle = "#4a9a3a"; hojas(); x.fill();
+    x.fillStyle = "#f0b830"; cuerpo(); x.fill();
+    x.save(); cuerpo(); x.clip();
+    x.strokeStyle = "#b07818"; x.lineWidth = 4;
+    for (let k = -6; k <= 6; k++) { x.beginPath(); x.moveTo(k * 22 - 80, -80); x.lineTo(k * 22 + 80, 100); x.stroke(); x.beginPath(); x.moveTo(k * 22 + 80, -80); x.lineTo(k * 22 - 80, 100); x.stroke(); }
+    x.restore();
+    x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-26, -10, 10, 22, 0.4, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 14/11: el flamenco rosa de Miami.
+  flamenco(x) {
+    x.save();
+    x.translate(128, 128);
+    x.lineJoin = "round"; x.lineCap = "round";
+    const cuerpo = () => { x.beginPath(); x.ellipse(-6, 22, 50, 32, -0.25, 0, Math.PI * 2); };
+    const cuello = () => { x.beginPath(); x.moveTo(30, 6); x.quadraticCurveTo(70, -20, 40, -50); x.quadraticCurveTo(20, -80, 46, -92); };
+    const patas = () => { x.beginPath(); x.moveTo(-6, 50); x.lineTo(-6, 112); x.moveTo(8, 50); x.lineTo(24, 80); x.lineTo(2, 84); };
+    x.lineWidth = 30; x.strokeStyle = "#fff"; cuerpo(); x.stroke(); cuello(); x.stroke(); patas(); x.stroke();
+    x.lineWidth = 20; x.strokeStyle = CONTORNO; cuello(); x.stroke();
+    x.lineWidth = 12; patas(); x.stroke();
+    x.lineWidth = 8; cuerpo(); x.stroke();
+    x.fillStyle = "#f07aa0"; cuerpo(); x.fill();
+    x.lineWidth = 12; x.strokeStyle = "#f07aa0"; cuello(); x.stroke();
+    x.lineWidth = 5; x.strokeStyle = "#e86a90"; patas(); x.stroke();
+    x.fillStyle = "#f07aa0"; x.beginPath(); x.arc(48, -94, 14, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#2a1a1a"; x.beginPath(); x.moveTo(58, -98); x.lineTo(76, -84); x.lineTo(60, -86); x.closePath(); x.fill();
+    x.fillStyle = "#fff"; x.beginPath(); x.arc(50, -98, 3.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#e05a88"; x.beginPath(); x.ellipse(-20, 18, 26, 14, -0.4, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 14/11: el melocotón de Georgia (Atlanta).
   melocoton(x) {
     x.save();

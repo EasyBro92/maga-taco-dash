@@ -2284,3 +2284,37 @@ Probado con el piloto automático: los dos niveles enteros sin choques, los 10
 objetos de cada nivel y el contador y la barra sin tapar nada en el móvil.
 Falta el veredicto de Isidro.
 
+## 14/11/2026 (5): niveles 26 y 27, Charleston y Miami (v65)
+
+Isidro: «continúa con los otros mapas». Se aplicó lo recomendado:
+
+- **Charleston** (East Bay Street, tarde dorada; `blender/charleston.py`):
+  - Las calesas de turistas van delante, más despacio que tú, y cambian de
+    carril. El caballo deja «regalitos» en su carril cada 9 m; se saltan o se
+    esquivan.
+  - El momento estrella es el campo de golf. Trump da un golpe y la bola cae
+    52 m más allá, en el carril que marca un aro amarillo desde el principio.
+    Si llegas a ese carril es BIRDIE (+5), tres seguidos son EAGLE (+20), y si
+    se te escapa, BOGEY.
+  - Piezas: Rainbow Row, la iglesia de San Miguel, el Market Hall y las
+    mansiones de la Battery.
+  - Final en la fuente de la piña, con el puente de los diamantes detrás.
+  - Objeto: piñas. Música: charlestón con banjo.
+- **Miami** (Ocean Drive con cielo de huracán; `blender/miami.py`; nivel con
+  jefe):
+  - Las olas salen de la playa y cruzan la calle. Cada una solo pilla el
+    carril por el que pasa justo cuando llegas; ahí se salta.
+  - El momento estrella es el baño dorado de Mar-a-Lago: lámparas de araña que
+    se balancean de lado a lado (agachándose se pasa siempre), váteres de oro,
+    torres de cajas «TOP SECRET» y cortinas de ducha.
+  - El jefe es el remolino de papeles, que ya existía, y se le tira el
+    rotulador.
+  - Final en Mar-a-Lago, con el césped lleno de papeles y cajas en la puerta.
+  - Objeto: flamencos. Música: salsa.
+
+Se aprovecharon el descapotable y el caballo con patas que ya existían. El
+carrito de golf nuevo se llama `carrito_parado`, porque `carrito_golf` es el
+vehículo de antes. Probado con el piloto automático: los dos niveles enteros
+sin choques en lo nuevo, con el jefe incluido, y los 10 objetos de cada nivel.
+Falta el veredicto de Isidro.
+

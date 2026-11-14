@@ -373,6 +373,42 @@ const SITIOS = {
     x.fillRect(1318, SUELO - 162, 30, 14);
     for (const px of [1296, 1366]) { x.beginPath(); x.moveTo(px - 5, SUELO - 150); x.lineTo(px, SUELO - 212); x.lineTo(px + 5, SUELO - 150); x.closePath(); x.fill(); }
   },
+  // 14/11: Charleston: el puerto, el puente de las dos torres de diamante con
+  // sus cables, el fuerte Sumter en el agua y las agujas de las iglesias.
+  charleston(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 8, ANCHO, 7);
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 6);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 8 - 10 * (0.5 + 0.5 * Math.sin(px * 0.004)) - r() * 4);
+    x.lineTo(ANCHO, SUELO - 6); x.closePath(); x.fill();
+    x.fillStyle = c.puente; x.strokeStyle = c.puente; x.lineWidth = 1.5;
+    x.fillRect(500, SUELO - 40, 900, 4);
+    for (const tx of [760, 1140]) {
+      x.beginPath(); x.moveTo(tx - 22, SUELO - 8); x.lineTo(tx, SUELO - 130); x.lineTo(tx + 22, SUELO - 8); x.lineTo(tx + 14, SUELO - 8); x.lineTo(tx, SUELO - 112); x.lineTo(tx - 14, SUELO - 8); x.closePath(); x.fill();
+      for (let k = 0; k < 7; k++) for (const d of [-1, 1]) { x.beginPath(); x.moveTo(tx, SUELO - 124 + k * 9); x.lineTo(tx + d * (40 + k * 26), SUELO - 40); x.stroke(); }
+    }
+    x.fillStyle = c.lejos;
+    x.fillRect(2300, SUELO - 14, 70, 8);
+    for (const px of [1700, 1830, 1960]) { x.fillRect(px, SUELO - 50, 10, 42); x.beginPath(); x.moveTo(px - 2, SUELO - 50); x.lineTo(px + 5, SUELO - 88); x.lineTo(px + 12, SUELO - 50); x.closePath(); x.fill(); }
+  },
+  // 14/11: Miami: el mar, las nubes del huracan en espiral (pintadas, quietas),
+  // el centro de Miami a lo lejos y palmeras.
+  miami(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 8, ANCHO, 7);
+    x.fillStyle = c.lejos;
+    for (let k = 0; k < 4; k++) { x.beginPath(); x.arc(2500, SUELO - 150, 40 + k * 32, Math.PI * (0.1 + k * 0.3), Math.PI * (1.2 + k * 0.3)); x.lineWidth = 14 - k * 2; x.strokeStyle = c.lejos; x.stroke(); }
+    for (const [x0, x1] of [[700, 1300]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 22 + r() * 26, h = 50 + r() * 110; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.pino;
+    for (const px of [300, 420, 1500, 1650, 1900, 2050, 3000, 3150]) {
+      x.fillRect(px, SUELO - 70, 4, 64);
+      for (let k = 0; k < 6; k++) { const a = Math.PI * (0.9 + k * 0.24); x.beginPath(); x.ellipse(px + 2 + Math.cos(a) * 16, SUELO - 72 + Math.sin(a) * 6, 16, 4, a, 0, Math.PI * 2); x.fill(); }
+    }
+  },
   // 14/11: Atlanta: la «ciudad en un bosque» (lomas de arboles), el centro con
   // la torre de la piramide dorada y el cilindro del hotel y, lejos, la gran
   // cupula de granito de Stone Mountain.
@@ -659,7 +695,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

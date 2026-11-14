@@ -28,13 +28,13 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
-| Carolina del Sur | Charleston (capital: Columbia) | la más famosa |
+| Carolina del Sur | Charleston (capital: Columbia) | la más famosa (hecho el 14/11: East Bay Street, las calesas que dejan «regalitos», el campo de golf persiguiendo la bola y la fuente de la piña) |
 | Colorado | Denver | capital y la más famosa |
 | Connecticut | Hartford | capital |
 | Dakota del Norte | Fargo (capital: Bismarck) | la más conocida (hecho el 12/11: Broadway hasta el teatro, con el Rey Pingüino) |
 | Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
 | Delaware | Wilmington (capital: Dover) | la más grande |
-| Florida | Miami (capital: Tallahassee) | la más famosa |
+| Florida | Miami (capital: Tallahassee) | la más famosa (hecho el 14/11: Ocean Drive con huracán, las olas que cruzan la calle, el baño dorado de Mar-a-Lago con lámparas que se balancean, el jefe de los papeles y Mar-a-Lago) |
 | Georgia | Atlanta | capital y la más famosa (hecho el 14/11: Peachtree Street, las papeletas que se escapan, el trile de las urnas del recuento y la marquesina «PRESIDENT ELECT») |
 | Hawái | Honolulu | capital y la más famosa |
 | Idaho | Boise | capital y la más grande |

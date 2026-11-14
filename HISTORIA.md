@@ -79,8 +79,8 @@ Jefe: **los Papeles de Epstein**, un huracán de carpetas con tachones negros qu
 | 23 | Louisville, Kentucky | +8 | La carrera de caballos del Derby: los caballos le adelantan. *(hecho)* |
 | 24 | Atlanta, Georgia | +16 | Su foto de la ficha policial en cada pared. Misión: «encuéntrame 11.780 votos». **Aquí pasa de 270: ¡presidente electo!** Pero la Liga grita «¡fraude!» y pide recuento… y a él tampoco le basta: quiere los 538. *(hecho)* |
 | 25 | Charlotte, Carolina del Norte | +16 | El circuito de NASCAR. *(hecho)* |
-| 26 | Charleston, Carolina del Sur | +9 | Se escapa a jugar al golf: pelotas volando y carritos. |
-| 27 | Miami, Florida | +30 | **Jefe.** El huracán de papeles llega a Mar-a-Lago: carpetas con tachones y cajas de documentos secretos en el baño. Intenta desviarlo con su rotulador. |
+| 26 | Charleston, Carolina del Sur | +9 | Se escapa a jugar al golf: pelotas volando y carritos. *(hecho)* |
+| 27 | Miami, Florida | +30 | **Jefe.** El huracán de papeles llega a Mar-a-Lago: carpetas con tachones y cajas de documentos secretos en el baño. Intenta desviarlo con su rotulador. *(hecho)* |
 
 ## Acto 4 — La Armada Española (Oeste · 11 estados · 439 votos)
 

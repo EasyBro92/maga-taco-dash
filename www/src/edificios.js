@@ -104,6 +104,16 @@ const ESTILOS = {
     ladrillos: [0x8a4a3a, 0xa8603e, 0x6e4a3a, 0xc8b08a, 0x7a5a4a], piedras: [0xe8e0d0, 0xd0c4a8], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.06], toldos: [0x2f6a3a, 0x8a2a1e, 0x1f3a6a, 0xf4f0e8],
     rotulos: ["BOURBON", "DERBY HATS", "HOT BROWN", "BATS", "MINT JULEP", "FRIED CHICKEN", "BLUEGRASS", "HORSESHOES", "ROSES", "WHISKEY ROW"] },
+  // 14/11: Charleston: casas georgianas bajas de colores pastel, con contraventanas.
+  charleston: { plantas: ["planta_balcones", "planta_frontones", "planta_lisa", "planta_miradores", "planta_balcones"],
+    ladrillos: [0xf2b8c6, 0xf6dc8c, 0xa8d4e8, 0xc4e0a8, 0xdcc4e8, 0xf4c8a0], piedras: [0xf6f2ea, 0xe8dcc8], cristal: [0x6a8aa0, 0x8aa0b0],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
+    rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
+  // 14/11: Miami: Ocean Drive: hoteles art déco blancos y pastel.
+  miami: { plantas: ["planta_lisa", "planta_balcones", "planta_lisa", "planta_cristal", "planta_lisa"],
+    ladrillos: [0xf8f6f0, 0xf0a0b8, 0x9ae0c8, 0xf8c8a0, 0xa8d8f0], piedras: [0xf8f6f0, 0xf0e4c8], cristal: [0x5a9ab0, 0x7ab0c8],
+    cornisas: ["cornisa_deco", "cornisa_deco"], remate: ["remate_antena", 0.05], toldos: [0xf0a0b8, 0x48c8c0, 0xf6dc6a, 0xf8f6f0],
+    rotulos: ["OCEAN", "CAFE", "MOJITOS", "CUBAN", "SURF", "SUNSET", "SALSA", "GELATO", "BEACH", "TROPICAL"] },
   // 14/11: Atlanta: Peachtree Street: torres de cristal y edificios viejos de ladrillo.
   atlanta: { plantas: ["planta_cristal", "planta_ladrillo", "planta_lisa", "planta_cristal", "planta_balcones"],
     ladrillos: [0x9a5a42, 0x8a4a3a, 0xb07050, 0x7a5a4a, 0xc8b49a], piedras: [0xe4dccb, 0xd0c4a8], cristal: [0x7a9ab0, 0x5a7a90, 0x9fb4c4],

@@ -3026,6 +3026,29 @@ export function createWorld(scene) {
     cartel_carrera: { choque: "high", medio: 0.3, alto: 2.4 },
     carro_boxes: { choque: "low", medio: 0.4, alto: 0.95 },
     camion_equipo: { choque: "full", medio: 4.0, alto: 3.2, centro: -0.08 },
+    // 14/11: Charleston (blender/charleston.py): la calesa de turistas (va
+    // delante y el caballo deja «regalitos»: ver pasearCalesa), la boniga, el
+    // carrito de golf aparcado, el bunker, el estanque, la bolsa de palos y la
+    // pancarta de FORE! (La bola de golf es una pieza compuesta: ver abajo.)
+    calesa_tour: { choque: "full", medio: 2.7, alto: 2.4, centro: -0.9 },
+    boniga: { choque: "low", medio: 0.4, alto: 0.6 },
+    carrito_parado: { choque: "full", medio: 1.3, alto: 1.9, centro: 0 },
+    bunker: { choque: "low", medio: 0.8, alto: 0.5 },
+    estanque: { choque: "low", medio: 0.9, alto: 0.6 },
+    bolsa_golf: { choque: "low", medio: 0.5, alto: 0.6 },
+    cartel_fore: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 14/11: Miami (blender/miami.py): la ola (cruza la calle desde la playa:
+    // ver cruzarOla), el vater de oro, la torre de cajas, la cortina de la
+    // ducha, los flamencos, la tumbona, las sombrillas y la pancarta tachada.
+    // (La lampara de arana es una pieza compuesta: ver abajo.)
+    ola: { choque: "low", medio: 1.6, alto: 0.9, centro: 0 },
+    inodoro_oro: { choque: "low", medio: 0.45, alto: 0.9 },
+    torre_cajas: { choque: "full", medio: 0.4, alto: 2.2, centro: 0 },
+    cortina_ducha: { choque: "high", medio: 0.3, alto: 2.4 },
+    flamencos: { choque: "full", medio: 0.5, alto: 1.8, centro: 0 },
+    tumbona: { choque: "low", medio: 0.8, alto: 0.6 },
+    sombrilla: { choque: "high", medio: 0.8, alto: 2.4 },
+    cartel_tachado: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3083,6 +3106,7 @@ export function createWorld(scene) {
       patas: [[-0.2, 0.75, 1.15], [0.2, 0.75, 1.15], [-0.2, -0.7, 1.15], [0.2, -0.7, 1.15]] },
   };
   ANDAR.caballo_derby_azul = ANDAR.caballo_derby;
+  ANDAR.calesa_tour = ANDAR.carruaje;     // (14/11: la calesa de Charleston: el mismo caballo)
   function ponerPatas(g, nombre) {
     const an = ANDAR[nombre];
     if (!an || !g || !hayModelo("obstaculos/" + an.pata)) return;
@@ -3442,6 +3466,42 @@ export function createWorld(scene) {
       });
       obstaclePools.vapor_lado = makePool(() => new THREE.Group());
     }
+    // 14/11: Charleston: la bola de golf (vuela desde el jugador hasta donde
+    // cae; el aro amarillo del suelo marca ese sitio desde el principio).
+    if (hayModelo("obstaculos/bola_golf")) {
+      TIPOS.bola = { choque: "nada", medio: 0.5, alto: 0 };
+      obstaclePools.bola = makePool(() => {
+        const g = new THREE.Group();
+        const vuelo = new THREE.Group();
+        vuelo.add(modeloConContorno("obstaculos/bola_golf"));
+        vuelo.scale.setScalar(1.6);
+        g.add(vuelo);
+        const aro = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.85, 32),
+          sobreCalzada(new THREE.MeshBasicMaterial({ color: 0xffd040, transparent: true, opacity: 0.9, depthWrite: false })));
+        aro.rotation.x = -Math.PI / 2;
+        aro.position.y = 0.06;
+        g.add(aro);
+        g.userData.vuelo = vuelo;
+        g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 14/11: Miami: la lampara de arana cuelga de su cadena (el pivote, a 7,6 m)
+    // y se balancea de lado a lado.
+    if (hayModelo("obstaculos/lampara_arana")) {
+      TIPOS.lampara = { choque: "high", medio: 0.6, alto: 2.4, centro: 0 };
+      obstaclePools.lampara = makePool(() => {
+        const g = new THREE.Group();
+        const piv = new THREE.Group();
+        piv.position.y = 7.6;
+        const m = modeloConContorno("obstaculos/lampara_arana");
+        m.position.y = -7.6;
+        piv.add(m);
+        g.add(piv);
+        g.userData.piv = piv;
+        return g;
+      });
+    }
     // 14/11: Atlanta: la urna del trile, con la papeleta de oro dentro (solo
     // se ve al entrar y cuando se levantan las urnas).
     if (hayModelo("obstaculos/urna_trile")) {
@@ -3769,6 +3829,117 @@ export function createWorld(scene) {
     u.chorro.scale.set(avisa ? 0.12 : Math.min(1, (f - 1.6) / 0.12), 1, 1);
     o.escondido = f < 1.65;
     for (const l of o.lados || []) { l.escondido = o.escondido; l.z = o.z; }
+  }
+  // ---- 14/11: Charleston ----
+  // La calesa de turistas: va delante, en tu sentido, a algo mas de la mitad
+  // de tu velocidad (la alcanzas despacio). Cada 2,4-3 s se cambia al carril
+  // de al lado (si no hay otro vehiculo cerca) y cada 9 m que anda por la
+  // calle el caballo deja un «regalito» en su carril (se salta). A menos de
+  // 30 m de ti ya no suelta mas (no daria tiempo).
+  function pasearCalesa(o, dt, dz) {
+    const c = o.calesa, m = o.mesh;
+    if (c.fase === 0) { if (o.z < -115) return; c.fase = 1; c.t = 0; c.anda = 0; c.destino = o.lane; }
+    const paso = Math.min(dz, 2) * 0.42;
+    o.z -= paso;
+    c.anda += paso; c.t += dt;
+    if (c.t > c.cada && c.destino === o.lane && o.z < -35) {
+      c.t = 0;
+      const ops = [o.lane - 1, o.lane + 1].filter((l) => l >= 0 && l <= 2 &&
+        !obstacles.some((p) => p !== o && !p.smashed && p.lane === l && p.type === "full" && Math.abs(p.z - o.z) < 9));
+      if (ops.length) c.destino = elegirDe(ops);
+    }
+    const tx = LANE_X[c.destino];
+    if (Math.abs(m.position.x - tx) > 0.005) {
+      m.position.x += Math.sign(tx - m.position.x) * Math.min(Math.abs(tx - m.position.x), dt * 2.4);
+      if (Math.abs(m.position.x - tx) < 1.1) o.lane = c.destino;
+    }
+    m.rotation.y = -(tx - m.position.x) * 0.14;
+    if (c.anda >= 9) {
+      c.anda -= 9;
+      if (o.z < -30 && obstaclePools.boniga) spawnObstacle(o.lane, "low", o.z + 2.4, "boniga");
+    }
+  }
+  // El campo de golf (momento estrella de Charleston): Trump juega mientras
+  // corre. Da un golpe y la bola vuela alta y cae 52 m mas alla en un carril
+  // (un aro amarillo en el suelo marca desde el principio donde va a caer);
+  // hay que llegar a ese carril para cogerla: ¡BIRDIE! Si pasa de largo,
+  // ¡BOGEY! Y otro golpe. main.js llama a jugarGolf en cada fotograma:
+  // devuelve 1 (birdie), -1 (bogey) o 0.
+  let golfBola = null, golfEspera = 0;
+  function volarBola(o, dt) {
+    const b = o.bola, u = o.mesh.userData;
+    if (!b) return;
+    b.t += dt;
+    const f = Math.min(1, b.t / 1.3);
+    const x = b.x0 + (LANE_X[o.lane] - b.x0) * f;
+    const zv = b.z0 + (o.z - b.z0) * f;
+    const y = f < 1 ? 0.3 + Math.sin(Math.PI * f) * 13 : Math.abs(Math.sin((b.t - 1.3) * 9)) * 0.35 * Math.max(0, 1 - (b.t - 1.3) * 2);
+    u.vuelo.position.set(x - LANE_X[o.lane], y, zv - o.z);
+    u.vuelo.rotation.x -= dt * 12;
+  }
+  function jugarGolf(dt, px, lane) {
+    if (golfBola) {
+      const o = golfBola;
+      if (!obstacles.includes(o) || !o.bola) { golfBola = null; golfEspera = 0.3; return 0; }
+      if (!o.cogida && o.bola.t > 1.15 && o.lane === lane && Math.abs(o.z) < 1.5) {
+        o.cogida = true; o.mesh.visible = false;
+        burstSparkles(LANE_X[lane], 0.8, o.z);
+        golfBola = null; golfEspera = 0.35;
+        return 1;
+      }
+      if (o.z > 1.5) { golfBola = null; golfEspera = 0.35; o.mesh.visible = false; return -1; }
+      return 0;
+    }
+    if (!nivel || !obstaclePools.bola) return 0;
+    const t = tramoEn(totalScrolled);
+    if (!t || t.tipo !== "golf" || t.hasta - totalScrolled < 75 || totalScrolled - t.desde < 10) return 0;
+    golfEspera -= dt;
+    if (golfEspera > 0) return 0;
+    const zl = -52;
+    const libre = (l) => !obstacles.some((p) => p.lane === l && p.type !== "nada" && !p.smashed && Math.abs(p.z - zl) < 6);
+    let ops = LANES.filter(libre);
+    if (!ops.length) ops = LANES;
+    const otras = ops.filter((l) => l !== lane);
+    const L = otras.length && Math.random() < 0.7 ? elegirDe(otras) : elegirDe(ops);
+    const o = spawnObstacle(L, "nada", zl, "bola");
+    if (o) {
+      o.bola = { t: 0, x0: px, z0: -1 };
+      o.mesh.userData.vuelo.position.set(px - LANE_X[L], 0.3, -1 - zl);
+      golfBola = o;
+      if (alAvisoMapa) alAvisoMapa("golpe");
+    }
+    return 0;
+  }
+  // ---- 14/11: Miami ----
+  // La ola del huracan: espera en la orilla (a la derecha, creciendo) y,
+  // cuando le toca, cruza la calle hacia la izquierda a 6 m/s. Sale a la hora
+  // justa para pasar por su carril «objetivo» cuando llegas tu: en ese carril
+  // hay que saltarla; en los otros pasa por delante o por detras.
+  function cruzarOla(o, dt, dz) {
+    const c = o.ola, m = o.mesh;
+    if (c.fase === 0) {
+      m.position.x = 7.5; o.fuera = true;
+      const v = dt > 0 ? Math.max(8, Math.min(40, dz / dt)) : 20;
+      const tiempo = (7.5 - LANE_X[c.objetivo]) / 6;
+      m.scale.setScalar(Math.max(0.25, Math.min(1, (o.z + 140) / 70)));
+      if (o.z < -v * tiempo) return;
+      c.fase = 1; m.scale.setScalar(1);
+      if (alAvisoMapa) alAvisoMapa("ola");
+    }
+    m.position.x -= 6 * dt;
+    o.lane = Math.max(0, Math.min(2, Math.round(m.position.x / LANE_WIDTH) + 1));
+    o.fuera = m.position.x > LANE_X[2] + 1.3 || m.position.x < LANE_X[0] - 1.3;
+    if (m.position.x < -9) m.visible = false;
+  }
+  // La lampara de arana del bano dorado: se balancea de lado a lado (2,6 s ida
+  // y vuelta) por encima de los tres carriles; el carril que tapa es el que
+  // tiene debajo. Agachandose se pasa siempre.
+  function balancearLampara(o) {
+    const piv = o.mesh.userData.piv;
+    const a = 0.43 * Math.sin(animClock * (Math.PI * 2 / 2.6) + o.phase);
+    piv.rotation.z = a;
+    const x = o.mesh.position.x + 5.9 * Math.sin(a);
+    o.lane = Math.max(0, Math.min(2, Math.round(x / LANE_WIDTH) + 1));
   }
   // ---- 14/11: Atlanta ----
   // La papeleta que se escapa: vuela a media altura haciendo eses de carril a
@@ -6571,6 +6742,73 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 14/11: Charleston ----
+    // Las calesas de turistas: cada 98 m una (y una de cada dos veces, otra en
+    // otro carril) que va delante soltando «regalitos» (ver pasearCalesa).
+    // Detras de ellas no se pone nada (van en tu sentido: se meterian dentro);
+    // solo una fila de tacos justo antes de la siguiente.
+    calesas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      filaSinObjeto = true;
+      if (k > n - 8 || !obstaclePools.calesa_tour) return;
+      if (k % 14 === 1) { tacosEn(elegirDe(LANES), z, 3); return; }
+      if (k % 14 !== 3 || carrilOcupado >= 0) return;
+      const j = Math.floor(k / 14);
+      const l = elegirDe(LANES);
+      const pon = (lane, cada) => { const o = spawnObstacle(lane, "full", z, "calesa_tour"); if (o) o.calesa = { fase: 0, t: 0, anda: 0, cada }; };
+      pon(l, 2.4 + Math.random() * 0.6);
+      if (j % 2 === 1) pon(elegirDe(LANES.filter((x) => x !== l)), 3.0 + Math.random() * 0.6);
+    },
+    // El campo de golf (momento estrella): las bolas las tira jugarGolf; por
+    // la calle de hierba, bunkeres, estanques, bolsas de palos y carritos
+    // aparcados (siempre queda un carril), y pocos tacos.
+    golf(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      filaSinObjeto = true;
+      if (k < 3 || k > n - 2) return;
+      if (k % 3 === 0) {
+        const l = elegirDe(LANES);
+        const ty = Math.random() < 0.75 ? "low" : "full";
+        obst(l, ty, z, d, ty === "low" ? ["bunker", "estanque", "bolsa_golf"] : ["carrito_parado"]);
+        if (k % 6 === 0 && Math.random() < 0.5) obst(elegirDe(LANES.filter((x) => x !== l)), "low", z, d, ["bunker", "estanque"]);
+      } else if (k % 9 === 4) tacosEn(elegirDe(LANES), z, 2);
+    },
+    // ---- 14/11: Miami ----
+    // La marejada: cada 42 m una ola que cruza la calle desde la playa (ver
+    // cruzarOla); entre medias, una tumbona, unas sombrillas o los flamencos
+    // en un carril, y tacos.
+    marejada(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 6 === 3 && obstaclePools.ola) {
+        const o = spawnObstacle(2, "low", z, "ola");
+        if (o) { o.ola = { fase: 0, objetivo: elegirDe(LANES) }; o.fuera = true; o.mesh.position.x = 7.5; }
+        return;
+      }
+      if (k % 6 === 0) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        const ty = elegirDe(["low", "low", "high", "full"]);
+        obst(l, ty, z, d, ty === "low" ? ["tumbona"] : ty === "high" ? ["sombrilla", "cartel_tachado"] : ["flamencos"]);
+        if (ty === "low") arcoDeTacos(l, z);
+      } else if (k % 6 === 1) tacosEn(elegirDe(LANES.filter((l) => l !== carrilOcupado)), z, 2);
+    },
+    // El bano dorado de Mar-a-Lago (momento estrella): cada 28 m una lampara
+    // de arana que se balancea (ver balancearLampara); entre medias, vateres
+    // de oro, torres de cajas de documentos y cortinas de ducha.
+    bano(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 4 === 2 && obstaclePools.lampara) { spawnObstacle(1, "high", z, "lampara"); filaSinObjeto = true; return; }
+      if (k % 4 === 0) {
+        const l = elegirDe(LANES);
+        const ty = elegirDe(["low", "low", "full", "high"]);
+        obst(l, ty, z, d, ty === "low" ? ["inodoro_oro"] : ty === "full" ? ["torre_cajas"] : ["cortina_ducha"]);
+        if (ty === "low") arcoDeTacos(l, z);
+      } else if (k % 4 === 1) tacosEn(elegirDe(LANES), z, 2);
+    },
     // ---- 14/11: Atlanta ----
     // Las papeletas que se escapan: cada 28 m una (a veces dos, cada una con
     // su ese) volando por encima de la calle; entre medias, una urna o las
@@ -6987,6 +7225,8 @@ export function createWorld(scene) {
   const NIEBLA_INTERIOR = {
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
+    // 14/11: el bano dorado de Mar-a-Lago (Miami): calido, dorado.
+    bano: { color: new THREE.Color(0x3a2a18), near: 50, far: 210 },
     // 14/11: el pabellon del recuento de Atlanta: cerrado, gris azulado.
     recuento: { color: new THREE.Color(0x22262e), near: 60, far: 230 },
     // 14/11: el Grand Ole Opry de Nashville: la sala a oscuras, granate.
@@ -8049,6 +8289,10 @@ export function createWorld(scene) {
         else if (o.pool === "papeleta") volarPapeleta(o, dt);
         else if (o.pool === "trile") barajarUrnas(o, dt, dz);
         else if (o.rebufo) rebufoCoche(o, dt, dz);
+        else if (o.calesa) pasearCalesa(o, dt, dz);
+        else if (o.pool === "bola") volarBola(o, dt);
+        else if (o.ola) cruzarOla(o, dt, dz);
+        else if (o.pool === "lampara") balancearLampara(o);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -8271,5 +8515,5 @@ export function createWorld(scene) {
     congelar, setCielo, quitarCielo, iniciarJefe, jefeActivo, tipoJefe, dispararJefe, disparosEnVuelo, vidaJefeActual, onJefe, setJugador, primerObstaculo, lanzarFrase,
     setNivel, getNivel, setLuz, onHelicoptero, getCasaBlanca, tramoEn, tomarAviso, cameoJefe, currentZoneName, despedirJefe,
     perseguir, moverPerseguidor, setVelEn, onGiro, quitarMuro, lanzarAvion, aparcarVehiculo, vehiculoEsperando, subirVehiculo, bajarVehiculo, moverVehiculo, factorMetro, tipoInterior, vidaJefe: () => JEFE_VIDA, hayJefe, ARMAS_JEFE, tocaJefe, armaActual, asustarPublico,
-    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo };
+    onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf };
 }

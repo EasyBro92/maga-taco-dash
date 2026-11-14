@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -333,6 +333,8 @@ let luzBase = null, metroAntes = 0;
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
   // 13/11: la mina de Little Rock: la luz calida de los farolillos, poca.
+  // 14/11: el bano dorado de Mar-a-Lago: luz calida que rebota en el oro.
+  bano: { hemi: new THREE.Color(0xffe8c0), suelo: new THREE.Color(0x8a6a3a), hemiI: 1.2, fill: new THREE.Color(0xfff0d0), fillI: 1.0, sunI: 0.25 },
   // 14/11: el pabellon del recuento de Atlanta: los focos blancos del techo.
   recuento: { hemi: new THREE.Color(0xfff0dc), suelo: new THREE.Color(0x6a5a48), hemiI: 1.2, fill: new THREE.Color(0xfff4e0), fillI: 1.0, sunI: 0.25 },
   // 14/11: el Grand Ole Opry de Nashville: la luz calida de los focos del escenario.
@@ -723,7 +725,10 @@ const NOMBRE_HITO = {
     mural_ficha: "El mural de la ficha policial", capitolio_georgia: "El Capitolio de Georgia", torre_piramide: "La torre de la pirámide dorada",
     westin_cilindro: "El hotel del cilindro de cristal",
     torre_corona: "La torre de la corona", garaje_carreras: "Un taller de carreras", iglesia_presbiteriana: "La iglesia presbiteriana",
-    torre_led: "La torre de las luces" },
+    torre_led: "La torre de las luces",
+    rainbow_row: "Rainbow Row, las casas de colores", san_miguel: "La iglesia de San Miguel", mercado_charleston: "El Market Hall",
+    casa_battery: "Una mansión de la Battery", hotel_deco_rosa: "Un hotel art déco de Ocean Drive",
+    hotel_deco_azul: "Un hotel art déco de Ocean Drive", playa_socorrista: "La playa de Miami Beach" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -762,7 +767,10 @@ const NOMBRE_HITO = {
     mural_ficha: "The mugshot mural", capitolio_georgia: "The Georgia State Capitol", torre_piramide: "The golden pyramid tower",
     westin_cilindro: "The glass cylinder hotel",
     torre_corona: "The crown tower", garaje_carreras: "A race shop", iglesia_presbiteriana: "The Presbyterian church",
-    torre_led: "The tower of lights" },
+    torre_led: "The tower of lights",
+    rainbow_row: "Rainbow Row, the colorful houses", san_miguel: "St. Michael's Church", mercado_charleston: "The Market Hall",
+    casa_battery: "A Battery mansion", hotel_deco_rosa: "An Ocean Drive Art Deco hotel",
+    hotel_deco_azul: "An Ocean Drive Art Deco hotel", playa_socorrista: "Miami Beach" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1324,6 +1332,7 @@ function resetRun(desde = 0) {
   if (!desde) { votosMision = 0; votosHecha = false; }
   ponerVotos();
   rebufoT = 0; ponerRebufo();
+  rachaGolf = 0;
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1624,6 +1633,8 @@ function ponerRebufo() {
     el.classList.toggle("listo", rebufoT >= 0.8);
   }
 }
+// 14/11: Charleston: las bolas de golf cogidas seguidas.
+var rachaGolf = 0;
 // 14/11: Nashville: las notas del mastil pisadas seguidas (ver el fotograma).
 var rachaNotas = 0, ultimaNota = -9;
 // 14/11: Nashville: al llegar a la meta baila el YMCA: cuatro posturas de
@@ -2577,6 +2588,8 @@ world.onAvisoMapa((que) => {
   else if (que === "baraja") sndBarajar();                       // (y se barajan)
   else if (que === "freno") sndFreno();                          // (14/11: Charlotte: se encienden las luces de freno)
   else if (que === "trompo") { sndTrompo(); vibrate(20); }       // (y el accidente en cadena)
+  else if (que === "golpe") sndSwing();                          // (14/11: Charleston: el golpe de golf)
+  else if (que === "ola") sndOla();                              // (14/11: Miami: la ola sale de la playa)
 });
 
 // Un fotograma del juego. `dtFijo` solo lo usa el modo ?prueba para avanzar
@@ -2714,7 +2727,8 @@ function frame(dtFijo) {
         jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso",
         desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso",
         baile: "baileAviso", opry: "opryAviso", bates: "batesAviso", derby: "derbyAviso",
-        papeletas: "papeletasAviso", recuento: "recuentoAviso", rebufo: "rebufoAviso", ovalo: "ovaloAviso" };
+        papeletas: "papeletasAviso", recuento: "recuentoAviso", rebufo: "rebufoAviso", ovalo: "ovaloAviso",
+        calesas: "calesasAviso", golf: "golfAviso", marejada: "marejadaAviso", bano: "banoAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {
@@ -2890,6 +2904,18 @@ function frame(dtFijo) {
     }
     // 14/11: Charlotte: el rebufo (pegado detras de un coche de carreras).
     if (gameState === "playing") actualizarRebufo(dt);
+    // 14/11: Charleston: el golf (llegar adonde cae la bola: birdie; tres
+    // seguidos, eagle).
+    if (gameState === "playing") {
+      const g = world.jugarGolf(dt, playerX, currentLane);
+      if (g === 1) {
+        rachaGolf++;
+        tacosThisRun += 5 * multiplier;
+        if (rachaGolf % 3 === 0) { tacosThisRun += 15 * multiplier; textoFlotante(`${t("eagle")} +${20 * multiplier}`); }
+        else textoFlotante(`${t("birdie")} +${5 * multiplier}`);
+        sndBirdie(); vibrate(10);
+      } else if (g === -1) { rachaGolf = 0; textoFlotante(t("bogey")); sndBogey(); }
+    }
     checkCollectibles(dt);
     checkChapas();
     checkPowerups();

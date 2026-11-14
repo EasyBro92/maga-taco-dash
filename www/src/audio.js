@@ -155,6 +155,16 @@ export function sndTrompo() {
   tono(1700, 0.9, { tipo: "sawtooth", vol: 0.03, glide: -900, filtro: 2400 });
   soplo(0.5, { desde: 400, hasta: 120, tipo: "lowpass", vol: 0.3, q: 0.7, cuando: 0.7 });
 }
+// 14/11: Charleston: el golpe de golf (el palo que silba y el «toc»), el
+// birdie (campanitas que suben) y el bogey (dos notas que bajan).
+// Miami: la ola que sale de la playa (un rugido de agua).
+export function sndSwing() {
+  soplo(0.25, { desde: 600, hasta: 2600, tipo: "bandpass", vol: 0.14, q: 1.0 });
+  tono(1300, 0.08, { tipo: "triangle", vol: 0.14, cuando: 0.22 });
+}
+export function sndBirdie() { [1046, 1318, 1568].forEach((f, i) => tono(f, 0.22, { tipo: "triangle", vol: 0.11, cuando: i * 0.07 })); }
+export function sndBogey() { tono(392, 0.2, { tipo: "triangle", vol: 0.1 }); tono(311, 0.32, { tipo: "triangle", vol: 0.1, cuando: 0.16 }); }
+export function sndOla() { soplo(0.9, { desde: 900, hasta: 200, tipo: "lowpass", vol: 0.22, q: 0.6 }); }
 export function sndChapa() {
   // Arpegio brillante: do-mi-sol-do, como una moneda especial.
   [1046, 1318, 1568, 2093].forEach((f, i) => {
@@ -319,6 +329,16 @@ const CANCIONES = {
     melodia: [77, 77, 81, null, 84, null, 81, 77, 82, null, 82, 86, 82, null, null, null,
       79, 79, 82, null, 84, 82, 79, 76, 77, null, 81, null, 77, null, null, null],
     timbre: "pluck" },
+  // 14/11: Charleston: el charlestón de los años veinte, con banjo (melodia propia).
+  charleston_sc: { bpm: 208, swing: 0.5, acordes: [C, E7, F, G7], bateria: "swing", bajo: "camina",
+    melodia: [72, null, null, 76, null, 79, 76, null, 77, null, null, 76, null, 74, 72, null,
+      72, null, null, 76, null, 79, 81, null, 79, null, 76, null, 74, null, 72, null],
+    timbre: "banjo" },
+  // 14/11: Miami: salsa con metales (la clave 3-2; melodia propia).
+  miami: { bpm: 184, swing: 0, acordes: [Am, Dm, E7, Am], bateria: "salsa",
+    melodia: [76, null, 76, 77, null, 76, 74, null, 72, null, 74, 76, null, 72, 69, null,
+      74, null, 74, 76, null, 74, 72, null, 71, null, 72, 74, null, 71, 68, null],
+    timbre: "metal" },
   // 14/11: Atlanta: trap (bombo grave, palmada y charles rapidos; melodia propia).
   atlanta: { bpm: 140, swing: 0, acordes: [Am, F, C, G], bateria: "trap",
     melodia: [81, null, 79, 76, null, 76, 74, 76, null, null, 81, null, 79, 76, 74, null,
@@ -448,6 +468,12 @@ function scheduleStep(t) {
     if (enCompas % 4 === 0) golpe(t, { vol: 0.35 });
     if (enCompas % 4 === 2) ruidoMusica(t, { dur: 0.1, f: 2000, tipo: "bandpass", vol: 0.18 });
     ruidoMusica(t, { dur: 0.04, f: 8000, vol: 0.04 });
+  } else if (c.bateria === "salsa") {
+    // 14/11: Miami: salsa (la clave 3-2, la conga y el cencerro).
+    if ([0, 3, 6, 10, 12].includes(paso % 16)) ruidoMusica(t, { dur: 0.05, f: 2600, tipo: "bandpass", vol: 0.16 });
+    if (enCompas === 0) golpe(t, { vol: 0.3, desde: 110 });
+    if (enCompas === 3 || enCompas === 6 || enCompas === 7) ruidoMusica(t, { dur: 0.09, f: 380, tipo: "bandpass", vol: 0.2 });
+    if (enCompas % 2 === 0) ruidoMusica(t, { dur: 0.04, f: 900, tipo: "bandpass", vol: 0.07 });
   } else if (c.bateria === "trap") {
     // 14/11: Atlanta: trap (bombo grave, palmada en el tercer tiempo y charles rapidos).
     if (enCompas === 0 || enCompas === 3 || paso % 16 === 14) golpe(t, { vol: 0.45, desde: 90 });

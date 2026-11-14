@@ -1614,6 +1614,122 @@ const CALLES = [
     acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 14/11/2026: nivel 26: Charleston (blender/charleston.py). «Se escapa a
+    // jugar al golf: pelotas volando y carritos». Recomendado: tarde dorada
+    // por East Bay Street y final en la fuente de la pina del parque del
+    // puerto, con el puente de los diamantes al fondo. Dinamicas propias: las
+    // calesas de turistas (van delante y el caballo deja «regalitos» que se
+    // saltan) y el momento estrella, el campo de golf: Trump da golpes y hay
+    // que correr al carril donde cae su bola (el aro amarillo).
+    id: "charleston_sc", nombre: "East Bay Street", lugar: "Charleston, Carolina del Sur", listo: true,
+    zona: "city", carpeta: "charleston", luz: "dorada", semilla: 1829,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 4, estilo: "charleston" },
+    horizonte: "charleston",
+    obstaculos: { low: ["bolsa_golf", "paca", "valla_metal"], high: ["cartel_fore", "andamio"],
+      full: ["pickup", "furgoneta", "taxi", "carrito_parado"] },
+    publico: { personas: ["turista", "senora", "abuelo", "fan", "chico"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "charleston" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "east_bay" }],
+      [250, 610, "calesas", { titulo: "calesas" }],
+      [610, 690, "calma", { titulo: "rainbow_row" }],
+      [690, 850, "premios", { titulo: "premios" }],
+      [850, 1010, "slalom", { full: ["carrito_parado", "pickup", "furgoneta", "taxi"], titulo: "carritos" }],
+      [1010, 1090, "calma"],
+      [1090, 1250, "jefe_paso", { titulo: "jefe_paso" }],
+      [1250, 1330, "calma"],
+      [1330, 1490, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1490, 1570, "calma", { titulo: "entrada_golf" }],
+      // El momento estrella: el campo de golf (pieza de `fondo` e `interior`, al aire libre).
+      [1570, 1990, "golf", { titulo: "golf" }],
+      [1990, 2070, "calma", { titulo: "hoyo18" }],
+      [2070, 2430, "calesas", { titulo: "calesas2" }],
+      [2430, 2510, "calma"],
+      [2510, 2670, "vallas", { low: ["bolsa_golf", "valla_metal"], high: ["cartel_fore"], titulo: "fore" }],
+      [2670, 2830, "rampa", { titulo: "rampa" }],
+      [2830, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_pina" }],
+    ],
+    control: 1290, caja: 770,
+    interior: { rango: [1572, 1988], tipo: "golf", aire: true, sinEdificios: [1560, 2000] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1400, "carril"], [2950, "arco"]],
+    hitos: ["rainbow_row", "san_miguel", "mercado_charleston", "casa_battery"],
+    meta: "fuente_pina", metaNombre: { es: "la fuente de la piña", en: "the Pineapple Fountain" },
+    izquierda: [
+      40, ["kit", 2], 14, ["rainbow_row", 1], 14, ...cuadras(3), ["mercado_charleston", 1], 14, ...cuadras(5), ["casa_battery", 1], 14, ...cuadras(16),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["san_miguel", 1], 14, ...cuadras(2), ["rainbow_row", 1], 14, ...cuadras(6), ["casa_battery", 1], 14, ...cuadras(13),
+    ],
+    fondo: [{ pieza: "fuente_pina", d: 3330, centro: true },
+      { pieza: "arco_charleston", d: 120, cruza: true }, { pieza: "arco_charleston", d: 2030, cruza: true },
+      { pieza: "campo_golf", d: 1570, cruza: true }],
+    final: "parada", parada: 2,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 8, -40] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 14/11/2026: nivel 27: Miami (blender/miami.py). Jefe. «El huracan de
+    // papeles llega a Mar-a-Lago: carpetas con tachones y cajas de documentos
+    // secretos en el bano. Intenta desviarlo con su rotulador». Recomendado:
+    // Ocean Drive con cielo de huracan (verde gris, sin relampagos) y final
+    // en Mar-a-Lago. Dinamicas propias: las olas que cruzan la calle desde la
+    // playa (solo pillan el carril por el que pasan justo cuando llegas: ahi
+    // se saltan), el momento estrella, el bano dorado de Mar-a-Lago, con
+    // lamparas de arana que se balancean entre vateres de oro y torres de
+    // cajas de documentos, y el jefe: el remolino de papeles (con el rotulador).
+    id: "miami", nombre: "Ocean Drive", lugar: "Miami, Florida", listo: true,
+    zona: "city", carpeta: "miami", luz: "tornado", semilla: 1830,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 6, estilo: "miami" },
+    horizonte: "miami",
+    obstaculos: { low: ["tumbona", "paca", "valla_metal"], high: ["sombrilla", "cartel_tachado"],
+      full: ["descapotable", "taxi", "furgoneta", "flamencos"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "ejecutivo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "miami" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "ocean_drive" }],
+      [250, 610, "marejada", { titulo: "marejada" }],
+      [610, 690, "calma"],
+      [690, 850, "slalom", { full: ["descapotable", "taxi", "flamencos"], titulo: "flamencos" }],
+      [850, 930, "calma", { titulo: "entrada_bano" }],
+      // El momento estrella: el bano dorado de Mar-a-Lago (pieza de `fondo` e `interior`).
+      [930, 1350, "bano", { titulo: "bano_dorado" }],
+      [1350, 1430, "calma", { titulo: "bano_fin" }],
+      [1430, 1590, "premios", { titulo: "premios" }],
+      [1590, 1670, "calma"],
+      [1670, 2290, "jefe", { jefe: "papeles", titulo: "huracan_papeles" }],
+      [2290, 2370, "calma"],
+      [2370, 2730, "marejada", { titulo: "marejada2" }],
+      [2730, 2810, "calma"],
+      [2810, 2970, "vallas", { low: ["tumbona", "valla_metal"], high: ["sombrilla", "cartel_tachado"], titulo: "tachones" }],
+      [2970, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_maralago" }],
+    ],
+    control: 1630, caja: 1510,
+    interior: { rango: [932, 1348], tipo: "bano", sinEdificios: [920, 1360] },
+    sinEdificios: [3260, 4000],
+    chapas: [[160, "carril"], [3000, "carril"], [3100, "arco"]],
+    hitos: ["hotel_deco_rosa", "playa_socorrista", "hotel_deco_azul"],
+    meta: "mar_a_lago", metaNombre: { es: "Mar-a-Lago", en: "Mar-a-Lago" },
+    izquierda: [
+      40, ["kit", 2], 14, ["hotel_deco_rosa", 1], 14, ...cuadras(2), ["hotel_deco_azul", 1], 14, ...cuadras(3), ["hotel_deco_rosa", 1], 14, ...cuadras(19),
+    ],
+    derecha: [
+      40, ["playa_socorrista", 1], 14, ["kit", 2], 14, ["playa_socorrista", 1], 14, ...cuadras(3), ["playa_socorrista", 1], 14, ...cuadras(19),
+    ],
+    fondo: [{ pieza: "mar_a_lago", d: 3330, centro: true },
+      { pieza: "arco_miami", d: 120, cruza: true }, { pieza: "arco_miami", d: 2330, cruza: true },
+      { pieza: "bano_dorado", d: 930, cruza: true }],
+    final: "parada", parada: 4,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["phoenix/palmera", "ciudad/farola_ciudad", "phoenix/palmera", "ciudad/banco"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1717,14 +1833,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -1783,6 +1899,8 @@ export const ANCHO = {
   partenon: 40, ryman: 32, batman_building: 27, honky_tonk: 21, arco_broadway: 2, opry: 420,
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
+  fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  mar_a_lago: 60, hotel_deco_rosa: 22, hotel_deco_azul: 22, playa_socorrista: 40, arco_miami: 2, bano_dorado: 420,
   salon_fama: 54, torre_corona: 26, torre_led: 24, iglesia_presbiteriana: 18, garaje_carreras: 24, arco_carrera: 2, speedway: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
@@ -1997,7 +2115,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);
