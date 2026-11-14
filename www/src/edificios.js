@@ -94,6 +94,16 @@ const ESTILOS = {
     ladrillos: [0x9a4a32, 0xa85a3a, 0x8a3e2a, 0xb06a48], piedras: [0xe2d4b6, 0xd8c8a6], cristal: [0x8aa0b0, 0x9fb4c4],
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.08], toldos: [0x9d2235, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
     rotulos: ["DIAMONDS", "BBQ", "RAZORBACKS", "CATFISH", "PIG SOOIE", "OZARK", "BOOTS", "PIES", "MINING CO", "BLUES"] },
+  // 13/11: Nueva Orleans: casas del Barrio Francés, bajas, de colores y con balcones.
+  nuevaorleans: { plantas: ["planta_balcones", "planta_balcones", "planta_miradores", "planta_balcones", "planta_lisa"],
+    ladrillos: [0xe8a8a0, 0xf2d48a, 0xa8c8b0, 0xb8a8d8, 0xf0b890], piedras: [0xf4efe4, 0xe8dcc8], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.02], toldos: [0x5a2a8a, 0x1f8a4a, 0xe8b830, 0x8a2a1e],
+    rotulos: ["JAZZ", "GUMBO", "BEIGNETS", "VOODOO", "PRALINES", "OYSTERS", "PO-BOYS", "CREOLE", "BOURBON ST", "MARDI GRAS"] },
+  // 13/11: Birmingham: ladrillo de la ciudad del hierro y el acero.
+  birmingham: { plantas: ["planta_ladrillo", "planta_frontones", "planta_lisa", "planta_ladrillo", "planta_miradores"],
+    ladrillos: [0x8a4a3a, 0x9a5a42, 0x7a3e2e, 0xa86a4a], piedras: [0xe2d4b6, 0xd0c0a0], cristal: [0x8aa0b0, 0x9fb4c4],
+    cornisas: ["cornisa_clasica", "cornisa_deco"], remate: ["remate_antena", 0.1], toldos: [0x8a2a1e, 0x2d5a3a, 0x1f3a6a, 0xc89a3a],
+    rotulos: ["STEEL", "IRON WORKS", "MAGIC CITY", "BBQ", "SWEET TEA", "FOUNDRY", "HOT DOGS", "RAILROAD", "VULCAN", "BISCUITS"] },
   // 13/11: Jackson: casas del sur con balcones y porches, y bares de blues.
   jackson: { plantas: ["planta_balcones", "planta_ladrillo", "planta_miradores", "planta_lisa", "planta_balcones"],
     ladrillos: [0xc8a070, 0xb88a5a, 0x9a4a32, 0xe0c8a0], piedras: [0xf0e6d0, 0xe2d4b6], cristal: [0x8aa0b0, 0x9fb4c4],

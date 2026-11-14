@@ -966,3 +966,9 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 /* 13/11: mientras baja un nivel, el menu y el mapa no responden */
 .cargandoNivel #startScreen, .cargandoNivel #mapaGira { pointer-events: none; }
 .cargandoNivel #startScreen button:not(#startBtn), .cargandoNivel #mapaGira button:not(#mapaJugar) { opacity: 0.6; }
+
+/* 13/11: Nueva Orleans: el cartel de «al reves» del golfo de America */
+#alReves { position: absolute; top: 118px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+  background: #5a2a8a; color: #ffd860; border: 3px solid #ffd860; border-radius: 16px; padding: 6px 16px;
+  font-weight: 900; font-size: 20px; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,.35); white-space: nowrap; }
+#alReves.hidden { display: none; }

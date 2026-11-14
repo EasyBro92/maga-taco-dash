@@ -332,6 +332,50 @@ const SITIOS = {
     }
   },
   // 13/11: Jackson: el río, un barco de vapor a lo lejos, algodonales y robles.
+  // 13/11: Nueva Orleans: el Misisipi con el puente Crescent City Connection,
+  // las torres del centro y el Superdome a lo lejos.
+  nuevaorleans(x, c, r) {
+    x.fillStyle = c.lago;
+    x.fillRect(0, SUELO - 7, ANCHO, 6);
+    x.fillStyle = c.puente;
+    x.fillRect(380, SUELO - 30, 760, 4);
+    for (const cx of [600, 920]) {
+      x.beginPath(); x.moveTo(cx - 130, SUELO - 30); x.lineTo(cx, SUELO - 74); x.lineTo(cx + 130, SUELO - 30);
+      x.lineTo(cx + 116, SUELO - 30); x.lineTo(cx, SUELO - 64); x.lineTo(cx - 116, SUELO - 30); x.closePath(); x.fill();
+      x.fillRect(cx - 4, SUELO - 74, 8, 68);
+    }
+    for (const [x0, x1] of [[1500, 1980]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 24 + r() * 30, h = 50 + r() * 90; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.fillStyle = c.vela;
+    x.beginPath(); x.ellipse(2400, SUELO - 20, 80, 24, 0, Math.PI, 0); x.fill();
+    x.fillRect(2320, SUELO - 20, 160, 16);
+  },
+  // 13/11: Birmingham: Red Mountain con Vulcano en lo alto, las chimeneas de
+  // Sloss y, en el cielo, el huracan pintado con rotulador (con su cono).
+  birmingham(x, c, r) {
+    x.fillStyle = c.arbol;
+    x.beginPath(); x.moveTo(0, SUELO - 4);
+    for (let px = 0; px <= ANCHO; px += 40) x.lineTo(px, SUELO - 4 - 46 * (0.55 + 0.45 * Math.sin(px * 0.0016 + 1)) - r() * 6);
+    x.lineTo(ANCHO, SUELO - 4); x.closePath(); x.fill();
+    x.fillStyle = c.willis;
+    x.fillRect(1300, SUELO - 112, 8, 26); x.fillRect(1297, SUELO - 126, 14, 16); x.fillRect(1310, SUELO - 140, 3, 16);
+    for (const px of [700, 730, 760, 790]) x.fillRect(px, SUELO - 70 - (px % 60), 9, 70 + (px % 60));
+    for (const [x0, x1] of [[1900, 2250]]) {
+      let cx = x0;
+      while (cx < x1) { const w = 22 + r() * 26, h = 40 + r() * 70; torre(x, [cx, 0], w, h, c.lejos, r, null); cx += w * 0.9; }
+    }
+    x.strokeStyle = "#16161a"; x.lineWidth = 6; x.lineCap = "round"; x.lineJoin = "round";
+    x.beginPath();
+    for (let a = 0; a < Math.PI * 6; a += 0.08) {
+      const rr = 4 + a * 4.2, qx = 2900 + Math.cos(a) * rr, qy = SUELO - 260 + Math.sin(a) * rr * 0.8;
+      if (a === 0) x.moveTo(qx, qy); else x.lineTo(qx, qy);
+    }
+    x.stroke();
+    x.beginPath(); x.moveTo(2900, SUELO - 260); x.lineTo(3380, SUELO - 320); x.moveTo(2900, SUELO - 260); x.lineTo(3380, SUELO - 200); x.stroke();
+    x.beginPath(); x.ellipse(3460, SUELO - 262, 90, 66, 0, 0, Math.PI * 2); x.stroke();
+  },
   jackson(x, c, r) {
     x.fillStyle = c.lago;
     x.fillRect(0, SUELO - 7, ANCHO, 6);
@@ -521,7 +565,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

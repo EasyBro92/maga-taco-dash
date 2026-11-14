@@ -73,8 +73,8 @@ Jefe: **los Papeles de Epstein**, un huracán de carpetas con tachones negros qu
 | 17 | Oklahoma City, Oklahoma | +7 | Molinos de viento girando en la pista (él dice que dan cáncer). *(hecho)* |
 | 18 | Little Rock, Arkansas | +6 | La mina de diamantes: tacos de oro para su torre. *(hecho)* |
 | 19 | Jackson, Misisipi | +6 | Barcos de vapor. Pajitas de papel que se deshacen (él volvió a las de plástico). *(hecho)* |
-| 20 | Nueva Orleans, Luisiana | +8 | Carnaval. Ha rebautizado el golfo de México como «golfo de América» y los mapas se vuelven locos. |
-| 21 | Birmingham, Alabama | +9 | Un huracán que solo existe porque lo pintó él con un rotulador en el mapa (pasó de verdad). |
+| 20 | Nueva Orleans, Luisiana | +8 | Carnaval. Ha rebautizado el golfo de México como «golfo de América» y los mapas se vuelven locos. *(hecho)* |
+| 21 | Birmingham, Alabama | +9 | Un huracán que solo existe porque lo pintó él con un rotulador en el mapa (pasó de verdad). *(hecho)* |
 | 22 | Nashville, Tennessee | +11 | Música country. Llega a la meta bailando el YMCA. |
 | 23 | Louisville, Kentucky | +8 | La carrera de caballos del Derby: los caballos le adelantan. |
 | 24 | Atlanta, Georgia | +16 | Su foto de la ficha policial en cada pared. Misión: «encuéntrame 11.780 votos». **Aquí pasa de 270: ¡presidente electo!** Pero la Liga grita «¡fraude!» y pide recuento… y a él tampoco le basta: quiere los 538. |

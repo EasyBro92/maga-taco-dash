@@ -266,6 +266,16 @@ const CANCIONES = {
     melodia: [67, 70, 71, null, 74, null, 71, 69, 67, null, 64, 67, 69, null, null, null,
       74, 76, 74, 71, 69, null, 71, 69, 67, null, 66, null, 67, null, null, null],
     timbre: "metal" },
+  // 13/11: Nueva Orleans: jazz de desfile (banjo, tuba y bombo de la banda).
+  nueva_orleans: { bpm: 150, swing: 0.62, acordes: [C, F, C, G7], bateria: "marcha", bajo: "marcha",
+    melodia: [72, null, 74, 76, 79, null, 76, 74, 72, null, 69, null, 72, null, null, null,
+      77, null, 76, 74, 72, 74, 76, null, 79, 77, 76, 74, 72, null, null, null],
+    timbre: "banjo" },
+  // 13/11: Birmingham: rock de fundición.
+  birmingham: { bpm: 124, swing: 0.5, acordes: [Am, G, F, E7], bateria: "pop", bajo: "octavas",
+    melodia: [69, null, 72, 74, 76, null, 74, 72, 71, null, 67, null, 69, null, null, null,
+      76, 77, 76, 74, 72, null, 71, 72, 74, null, 71, null, 69, null, null, null],
+    timbre: "metal" },
   // 13/11: Jackson: blues de Misisipi, en tres acordes.
   jackson: { bpm: 112, swing: 0.62, acordes: [C7, F7, C7, G7], bateria: "swing", bajo: "camina",
     melodia: [72, 75, 76, null, 79, null, 76, 75, 72, null, 70, null, 72, null, null, null,

@@ -2969,6 +2969,23 @@ export function createWorld(scene) {
     // las pajitas. (La pajita y el vapor son piezas compuestas: ver abajo.)
     bala_algodon: { choque: "low", medio: 0.55, alto: 0.95 },
     cartel_pajitas: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 13/11: Nueva Orleans (blender/nuevaorleans.py): las carrozas del Mardi
+    // Gras (cerca de ti van despacio en tu sentido: se adelantan, y tiran
+    // tacos de oro a los carriles de al lado), el tranvia de St. Charles
+    // (viene hacia ti), la valla del desfile, la rosca de reyes y la pancarta.
+    carroza_rey: { choque: "full", medio: 2.35, alto: 4, centro: 0 },
+    carroza_bufon: { choque: "full", medio: 2.35, alto: 4, centro: 0 },
+    tranvia_nola: { choque: "full", medio: 3.6, alto: 3.2, centro: 0, mueve: 6 },
+    rosca_reyes: { choque: "low", medio: 0.55, alto: 1.05 },
+    valla_desfile: { choque: "low", medio: 0.45, alto: 1.0 },
+    cartel_golfo: { choque: "high", medio: 0.3, alto: 2.4 },
+    // 13/11: Birmingham (blender/birmingham.py): los lingotes, la vagoneta de
+    // mineral, el gancho de la grua y la pancarta del huracan. (El rotulador
+    // con su tinta y la onda del martinete son piezas compuestas: ver abajo.)
+    lingotes: { choque: "low", medio: 0.65, alto: 0.85 },
+    vagoneta_mineral: { choque: "full", medio: 1.4, alto: 2.2, centro: 0 },
+    gancho_grua: { choque: "high", medio: 0.4, alto: 2.4 },
+    cartel_huracan: { choque: "high", medio: 0.3, alto: 2.4 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3381,6 +3398,36 @@ export function createWorld(scene) {
       });
       obstaclePools.vapor_lado = makePool(() => new THREE.Group());
     }
+    // 13/11: Birmingham: el rotulador gigante pinta muros de tinta carril a
+    // carril (el del centro lleva el rotulador; los de los lados, solo su
+    // tinta) y la onda de choque del martinete (cruza los tres carriles: el
+    // del centro lleva el dibujo).
+    if (hayModelo("obstaculos/rotulador") && hayModelo("obstaculos/trazo_tinta")) {
+      TIPOS.trazo = { choque: "full", medio: 0.4, alto: 2.0, centro: 0 };
+      TIPOS.trazo_lado = { choque: "full", medio: 0.4, alto: 2.0, centro: 0 };
+      const conTinta = (g) => { const tinta = modeloConContorno("obstaculos/trazo_tinta"); g.add(tinta); g.userData.tinta = tinta; return g; };
+      obstaclePools.trazo = makePool(() => {
+        const g = conTinta(new THREE.Group());
+        const boli = new THREE.Group();
+        boli.add(modeloConContorno("obstaculos/rotulador"));
+        g.add(boli);
+        g.userData.boli = boli;
+        return g;
+      });
+      obstaclePools.trazo_lado = makePool(() => conTinta(new THREE.Group()));
+    }
+    if (hayModelo("obstaculos/onda_choque")) {
+      TIPOS.onda = { choque: "low", medio: 0.45, alto: 0.75, centro: 0 };
+      TIPOS.onda_lado = { choque: "low", medio: 0.45, alto: 0.75, centro: 0 };
+      obstaclePools.onda = makePool(() => {
+        const g = new THREE.Group();
+        const cresta = modeloConContorno("obstaculos/onda_choque");
+        g.add(cresta);
+        g.userData.cresta = cresta;
+        return g;
+      });
+      obstaclePools.onda_lado = makePool(() => new THREE.Group());
+    }
     // 12/11: las aspas del molino: dos obstaculos sin dibujo (carriles de los
     // lados) que solo chocan cuando una pala pasa por abajo.
     TIPOS.aspa = { choque: "full", medio: 0.45, alto: 9, centro: 1.15 };
@@ -3641,6 +3688,69 @@ export function createWorld(scene) {
     u.chorro.scale.set(avisa ? 0.12 : Math.min(1, (f - 1.6) / 0.12), 1, 1);
     o.escondido = f < 1.65;
     for (const l of o.lados || []) { l.escondido = o.escondido; l.z = o.z; }
+  }
+  // ---- 13/11: Nueva Orleans ----
+  // La carroza: a 60 m frena (va en tu sentido, despacio: se adelanta) y a
+  // 42 m tira tres tacos de oro, que vuelan en arco a un carril de al lado.
+  let carrilCarroza = -1;
+  function desfilarCarroza(o) {
+    if (!o.despacio && o.z > -60) { o.despacio = true; o.mueve = -6; }
+    if (o.lanzo || o.z < -42) return;
+    o.lanzo = true;
+    const destinos = LANES.filter((l) => Math.abs(l - o.lane) === 1);
+    for (let i = 0; i < 3; i++) {
+      spawnTaco(elegirDe(destinos), o.z + 5 + i * 2.4, 0.9, true);
+      tacos[tacos.length - 1].vuela = { x0: LANE_X[o.lane], t: -i * 0.22 };
+    }
+  }
+  // ---- 13/11: Birmingham ----
+  // El rotulador: a 80 m empieza a pintar. Pinta un carril (un trazo de lado
+  // a lado), vuela al segundo y lo pinta, y se va. El carril que no pinta es
+  // el bueno; hasta que la tinta sube, se puede pasar.
+  function pintarTrazo(o, dt) {
+    const u = o.mesh.userData;
+    const segs = { 0: o.lados && o.lados[0], 1: o, 2: o.lados && o.lados[1] };
+    const crecer = (seg, f) => {
+      if (!seg) return;
+      const ti = seg.mesh.userData.tinta;
+      ti.visible = f > 0;
+      ti.scale.set(1, Math.max(0.001, f), 1);
+      seg.escondido = f < 0.5;
+    };
+    const [A, B] = o.orden || [0, 1];
+    const xr = (l) => LANE_X[l] - LANE_X[1];
+    const dirA = Math.sign(xr(B) - xr(A)) || 1;
+    if (o.pinta === undefined) {
+      o.pinta = -1;
+      for (const l of LANES) crecer(segs[l], 0);
+      u.boli.visible = true;
+    }
+    if (o.pinta < 0 && o.z > -80) o.pinta = 0;
+    let bx = xr(A) - dirA, by = 2.9, t = Math.max(0, o.pinta);
+    if (o.pinta >= 0) o.pinta += dt;
+    if (t < 0.35) { bx = xr(A) - dirA + 2 * dirA * (t / 0.35); if (o.pinta >= 0) crecer(segs[A], t / 0.35); }
+    else if (t < 0.75) {
+      crecer(segs[A], 1);
+      const f = (t - 0.35) / 0.4;
+      bx = xr(A) + dirA + (xr(B) - dirA - xr(A) - dirA) * f;
+      by = 2.9 + Math.sin(Math.PI * f) * 1.4;
+    } else if (t < 1.1) { crecer(segs[A], 1); bx = xr(B) - dirA + 2 * dirA * ((t - 0.75) / 0.35); crecer(segs[B], (t - 0.75) / 0.35); }
+    else { crecer(segs[A], 1); crecer(segs[B], 1); bx = xr(B) + dirA * (1 + (t - 1.1) * 3); by = 2.9 + (t - 1.1) * 9; u.boli.visible = t < 2.2; }
+    u.boli.position.set(bx, by, 0);
+    u.boli.rotation.set(0, 0, -0.45 * dirA);
+  }
+  // La onda del martinete: primero es una grieta que brilla en el suelo (no
+  // choca); a 42 m salta y corre hacia ti por los tres carriles: se salta.
+  function correrOnda(o, dt) {
+    const c = o.mesh.userData.cresta;
+    if (o.onda === undefined) { o.onda = 0; o.mueve = 0; o.escondido = true; c.scale.set(1, 0.2, 0.15); }
+    if (!o.onda && o.z > -42) o.onda = 0.001;
+    if (o.onda) {
+      o.onda = Math.min(1, o.onda + dt * 6);
+      o.mueve = 13; o.escondido = false;
+      c.scale.set(1, 0.2 + 0.8 * o.onda, 0.15 + 0.85 * o.onda);
+    }
+    for (const l of o.lados || []) if (l) { l.escondido = o.escondido; l.mueve = o.mueve; }
   }
   // ---- 12/11: Fargo ----
   // ¿Hay hielo bajo el jugador? (las placas de hielo de su carril; y en
@@ -6047,6 +6157,86 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 13/11: Nueva Orleans ----
+    // El desfile del Mardi Gras: cada 28 m una carroza (frena cerca: se
+    // adelanta) que tira tacos de oro a los lados; su carril queda libre
+    // detras de ella. Entre medias, vallas del desfile y roscas de reyes.
+    desfile(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { carrilCarroza = -1; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 4 === 2 && obstaclePools.carroza_rey) {
+        const l = [1, 0, 2, 1, 2, 0][Math.floor(k / 4) % 6];
+        if (l !== carrilOcupado) { spawnObstacle(l, "full", z, elegirDe(["carroza_rey", "carroza_bufon"].filter((x) => obstaclePools[x]))); carrilCarroza = l; }
+        return;
+      }
+      const libres = LANES.filter((l) => l !== carrilOcupado && l !== carrilCarroza);
+      if (!libres.length) return;
+      if (k % 4 === 0 && libres.length > 1) {
+        const l = elegirDe(libres);
+        obst(l, "low", z, d, ["valla_desfile", "rosca_reyes"]);
+        arcoDeTacos(l, z);
+      } else if (k % 2 === 1) tacosEn(elegirDe(libres), z, 2);
+    },
+    // El golfo de America: los mapas se han vuelto locos (main.js cambia
+    // izquierda por derecha). Filas con dos carriles cerrados por cosas que
+    // se saltan o se pasan agachado, y el libre con tacos.
+    golfo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 3) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 3 !== 0) { if (k % 3 === 1) tacosEn(elegirDe(LANES.filter((l) => l !== carrilOcupado)), z, 2); return; }
+      const libre = [0, 2, 1, 2, 0, 1][Math.floor(k / 3) % 6];
+      const L = { low: ["valla_desfile", "rosca_reyes"], high: ["cartel_golfo"] };
+      for (const l of LANES) {
+        if (l === libre || l === carrilOcupado) continue;
+        const ty = elegirDe(["low", "high"]);
+        obst(l, ty, z, d, L[ty]);
+      }
+      for (let i = 0; i < 4; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+    },
+    // ---- 13/11: Birmingham ----
+    // El rotulador: cada 35 m pinta dos carriles (ver pintarTrazo); el
+    // tercero es el bueno. Entre medias, lingotes y tacos.
+    rotulador(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 5 === 2 && obstaclePools.trazo && carrilOcupado < 0) {
+        const o = spawnObstacle(1, "full", z, "trazo");
+        if (o) {
+          o.lados = [0, 2].map((l) => spawnObstacle(l, "full", z, "trazo_lado"));
+          o.orden = elegirDe([[0, 1], [2, 1], [0, 2], [2, 0], [1, 0], [1, 2]]);
+        }
+        return;
+      }
+      if (k % 5 === 4) {
+        const l = elegirDe(LANES.filter((x) => x !== carrilOcupado));
+        obst(l, "low", z, d, ["lingotes", "paca"]);
+        arcoDeTacos(l, z);
+      } else if (k % 5 === 0) tacosEn(elegirDe(LANES), z, 2);
+    },
+    // La fundicion Sloss (momento estrella): cada 35 m la onda del martinete
+    // (una grieta que a 42 m salta y corre hacia ti: hay que saltarla); las
+    // cosas, solo en las filas que la onda no alcanza antes de llegar a ti.
+    fundicion(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 2) return;
+      if (k % 5 === 3 && obstaclePools.onda) {
+        const o = spawnObstacle(1, "low", z, "onda");
+        if (o) o.lados = [0, 2].map((l) => spawnObstacle(l, "low", z, "onda_lado"));
+        return;
+      }
+      if (k % 5 === 0) {
+        const libres = LANES.filter((l) => l !== carrilOcupado);
+        const L = { low: ["lingotes"], high: ["gancho_grua"], full: ["vagoneta_mineral"] };
+        const bloq = libres.slice().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 1 : 2);
+        bloq.forEach((l) => { const ty = elegirDe(["low", "high", "full"]); obst(l, ty, z, d, L[ty]); });
+        const libre = libres.find((l) => !bloq.includes(l));
+        if (libre !== undefined) for (let i = 0; i < 3; i++) spawnTaco(libre, z - i * 1.4, 0.9);
+      } else if (k % 5 === 1) tacosEn(elegirDe(LANES), z, 3);
+    },
     // ---- 12/11: Houston ----
     // Elon te persigue: cada 35 m un Cybertruck con su diana que te sigue de
     // carril (main.js avisa al fijarse). Entre medias solo tacos y alguna
@@ -6177,6 +6367,8 @@ export function createWorld(scene) {
   const NIEBLA_INTERIOR = {
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
+    // 13/11: la fundicion Sloss de Birmingham: humo naranja y oscuro.
+    fundicion: { color: new THREE.Color(0x2a160a), near: 18, far: 95 },
     // 12/11: el hangar de la Luna de Houston: de noche, azul muy oscuro.
     luna: { color: new THREE.Color(0x101830), near: 70, far: 230 },
     metro: { color: new THREE.Color(0x2e2620), near: 35, far: 160 },
@@ -7221,6 +7413,9 @@ export function createWorld(scene) {
         else if (o.pool === "pajita") deshacerPajita(o, dt);
         else if (o.pool === "vapor") soplarVapor(o, dt);
         else if (o.pool === "brillo_diamante") o.mesh.rotation.y += dt * 0.8;
+        else if (o.pool === "carroza_rey" || o.pool === "carroza_bufon") desfilarCarroza(o);
+        else if (o.pool === "trazo") pintarTrazo(o, dt);
+        else if (o.pool === "onda") correrOnda(o, dt);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
           o.mesh.position.y = Math.abs(Math.sin(animClock * 5 + o.phase)) * 0.03;
@@ -7281,6 +7476,15 @@ export function createWorld(scene) {
       const it = tacos[i];
       it.z += dz; it.mesh.position.z = it.z;
       it.mesh.rotation.y += 0.08;
+      // 13/11: los tacos de oro que tira una carroza de Nueva Orleans vuelan en arco.
+      if (it.vuela) {
+        const v = it.vuela;
+        v.t = Math.min(1, v.t + dt / 0.6);
+        const f = Math.max(0, v.t);
+        it.mesh.position.x = v.x0 + (LANE_X[it.lane] - v.x0) * f;
+        it.baseY = 0.9 + 1.8 * (1 - f) + Math.sin(Math.PI * f) * 1.6;
+        if (v.t >= 1) { it.vuela = null; it.baseY = 0.9; }
+      }
       if (it.cae) {
         // Cae desde 13 m: despacio arriba y cada vez mas rapido, como de verdad; llega a 7 m del jugador.
         const f = Math.min(1, Math.max(0, (-it.z - 7) / 48));

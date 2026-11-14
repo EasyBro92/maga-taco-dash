@@ -333,6 +333,7 @@ let luzBase = null, metroAntes = 0;
 // roja; el Capitolio, blanca y calida, la mas clara.
 const LUZ_INTERIOR = {
   // 13/11: la mina de Little Rock: la luz calida de los farolillos, poca.
+  fundicion: { hemi: new THREE.Color(0xffb878), suelo: new THREE.Color(0x4a2a18), hemiI: 1.0, fill: new THREE.Color(0xff9040), fillI: 0.9, sunI: 0.15 },
   mina: { hemi: new THREE.Color(0xffc890), suelo: new THREE.Color(0x5a4030), hemiI: 0.85, fill: new THREE.Color(0xffb070), fillI: 0.75, sunI: 0.12 },
   // 12/11: el hangar de la Luna: luz blanca y fria de los focos.
   luna: { hemi: new THREE.Color(0xdfe8ff), suelo: new THREE.Color(0x7a7a78), hemiI: 1.25, fill: new THREE.Color(0xffffff), fillI: 0.9, sunI: 0.5 },
@@ -710,7 +711,9 @@ const NOMBRE_HITO = {
     city_hall_hou: "El Ayuntamiento de Houston", saturno_v: "El Saturno V, el cohete de la Luna",
     bricktown: "Los almacenes de Bricktown", devon_tower: "La Devon Tower, la más alta de Oklahoma", cristal_bridge: "El Crystal Bridge",
     river_market: "El River Market", clinton_library: "La biblioteca de Clinton", old_state_house: "El viejo Capitolio de Arkansas",
-    old_capitol_ms: "El viejo Capitolio de Misisipi", casa_blues: "Un bar de blues de Farish Street" },
+    old_capitol_ms: "El viejo Capitolio de Misisipi", casa_blues: "Un bar de blues de Farish Street",
+    casa_criolla: "Una casa criolla del Barrio Francés", cafe_du_monde: "El Café du Monde", superdome: "El Superdome",
+    alabama_theatre: "El teatro Alabama", sloss_hornos: "Los hornos Sloss" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -741,7 +744,9 @@ const NOMBRE_HITO = {
     city_hall_hou: "Houston City Hall", saturno_v: "The Saturn V, the Moon rocket",
     bricktown: "The Bricktown warehouses", devon_tower: "The Devon Tower, the tallest in Oklahoma", cristal_bridge: "The Crystal Bridge",
     river_market: "The River Market", clinton_library: "The Clinton Library", old_state_house: "The Old State House",
-    old_capitol_ms: "The Old Mississippi Capitol", casa_blues: "A Farish Street blues bar" },
+    old_capitol_ms: "The Old Mississippi Capitol", casa_blues: "A Farish Street blues bar",
+    casa_criolla: "A French Quarter Creole townhouse", cafe_du_monde: "Café du Monde", superdome: "The Superdome",
+    alabama_theatre: "The Alabama Theatre", sloss_hornos: "Sloss Furnaces" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1296,6 +1301,7 @@ function resetRun(desde = 0) {
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
   tramoMostrado = null; jefeLanzado = false; gritoChina = 0; jefeSinFin = "dragon";
+  ponerAlReves(false);
   if (typeof apagarSirenas === "function") apagarSirenas();
   mostrarTutorial = !!nivelActual && nivelActual.numero === 1 && !getNiveles()[nivelActual.id];
   character.object3D.position.set(0, 0, 0);
@@ -1537,9 +1543,20 @@ function spawnConfetti(count) {
 }
 
 // ---------- Controles ----------
+// 13/11: Nueva Orleans, el golfo de America: los mapas se vuelven locos y
+// izquierda y derecha van al reves (con un cartel fijo mientras dura).
+var alReves = false;   // (var: resetRun puede llamar antes de llegar aqui)
+function ponerAlReves(on) {
+  alReves = on;
+  let el = document.getElementById("alReves");
+  if (!el) { el = document.createElement("div"); el.id = "alReves"; document.getElementById("hud").appendChild(el); }
+  el.textContent = `⇄ ${t("alReves")}`;
+  el.classList.toggle("hidden", !on);
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
+  if (alReves && (action === "left" || action === "right")) action = action === "left" ? "right" : "left";
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -2556,6 +2573,7 @@ function frame(dtFijo) {
     if (tramo !== tramoMostrado) {
       const antes = tramoMostrado;
       tramoMostrado = tramo;
+      ponerAlReves(tramo.tipo === "golfo");
       terminarMomento(antes);
       empezarMomento(tramo);
       // 08/11: Chicago: en la ciudad del viento se le levanta el tupe.
@@ -2567,7 +2585,8 @@ function frame(dtFijo) {
       // 12/11: Monte Rushmore y Fargo: cada dinamica nueva con su aviso.
       const AVISOS = { bisontes: "bisontesAviso", perritos: "perritosAviso", rocas: "rocasAviso", hielo: "hieloTramo", ventisca: "ventiscaAviso", pinguinos: "pinguinosAviso",
         elon: "elonAviso", luna: "lunaAviso", molinos: "molinosAviso", geiseres: "geiseresAviso",
-        jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso" };
+        jabalies: "jabaliesAviso", mina: "minaAviso", pajitas: "pajitasAviso", vapor: "vaporAviso",
+        desfile: "desfileAviso", golfo: "golfoAviso", rotulador: "rotuladorAviso", fundicion: "fundicionAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       if (antes && antes.tipo === "hockey" && gameState === "playing") {

@@ -296,6 +296,41 @@ const DIBUJOS = {
     x.restore();
   },
   // 13/11: la pajita de plástico de Jackson (doblada, roja y blanca).
+  // 13/11: el collar del carnaval de Nueva Orleans (morado, verde y oro).
+  collar(x) {
+    x.save();
+    x.translate(128, 132);
+    const cols = ["#7a3aaa", "#2aa85a", "#f0c030"];
+    for (let capa = 0; capa < 3; capa++) {
+      for (let k = 0; k < 22; k++) {
+        const a = (k / 22) * Math.PI * 2;
+        x.beginPath(); x.arc(Math.cos(a) * 74, Math.sin(a) * 86, capa === 0 ? 25 : capa === 1 ? 18 : 14, 0, Math.PI * 2);
+        x.fillStyle = capa === 0 ? "#fff" : capa === 1 ? CONTORNO : cols[k % 3];
+        x.fill();
+      }
+    }
+    x.fillStyle = "rgba(255,255,255,0.7)";
+    for (let k = 0; k < 22; k++) {
+      const a = (k / 22) * Math.PI * 2;
+      x.beginPath(); x.arc(Math.cos(a) * 74 - 4, Math.sin(a) * 86 - 5, 4, 0, Math.PI * 2); x.fill();
+    }
+    x.restore();
+  },
+  // 13/11: el rotulador del huracan de Birmingham.
+  rotulador(x) {
+    x.save();
+    x.translate(128, 128); x.rotate(-0.75);
+    const cuerpo = () => { x.beginPath(); x.rect(-96, -28, 150, 56); };
+    const punta = () => { x.beginPath(); x.moveTo(54, -22); x.lineTo(96, -8); x.lineTo(104, 0); x.lineTo(96, 8); x.lineTo(54, 22); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 30; x.strokeStyle = "#fff"; cuerpo(); x.stroke(); punta(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cuerpo(); x.stroke(); punta(); x.stroke();
+    cuerpo(); x.fillStyle = "#1b1c20"; x.fill();
+    punta(); x.fillStyle = "#6a6e72"; x.fill();
+    x.fillStyle = "#f4f0e8"; x.fillRect(-40, -28, 34, 56);
+    x.fillStyle = "#1b1c20"; x.beginPath(); x.moveTo(96, -8); x.lineTo(104, 0); x.lineTo(96, 8); x.closePath(); x.fill();
+    x.restore();
+  },
   pajita(x) {
     x.save();
     x.translate(128, 140); x.rotate(0.2);

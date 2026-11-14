@@ -1260,6 +1260,121 @@ const CALLES = [
     acera: ["jackson/magnolia", "ciudad/farola_ciudad", "jackson/magnolia", "ciudad/banco"],
   },
   {
+    // 13/11/2026: nivel 20: Nueva Orleans (blender/nuevaorleans.py).
+    // «Carnaval. Ha rebautizado el golfo de Mexico como "golfo de America" y
+    // los mapas se vuelven locos». Recomendado: anochecer de Mardi Gras (con
+    // los faroles y neones) y final ante la catedral de San Luis. Dinamicas
+    // propias: el desfile (las carrozas frenan cerca y se adelantan, y tiran
+    // tacos de oro que vuelan a los carriles de al lado) y el momento
+    // estrella, el golfo de America: izquierda y derecha van al reves.
+    id: "nueva_orleans", nombre: "Bourbon Street", lugar: "Nueva Orleans, Luisiana", listo: true,
+    zona: "city", carpeta: "nuevaorleans", luz: "anochecer", semilla: 1823,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 4, estilo: "nuevaorleans" },
+    horizonte: "nuevaorleans",
+    obstaculos: { low: ["rosca_reyes", "valla_desfile", "paca"], high: ["cartel_golfo", "guirnalda"],
+      full: ["carruaje", "furgoneta", "taxi", "pickup"] },
+    coche: "tranvia_nola",
+    publico: { personas: ["fan", "turista", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "nueva_orleans" }],
+      [70, 300, "mixto", { densidad: 0.45, titulo: "bourbon_street" }],
+      [300, 450, "rampa", { titulo: "rampa" }],
+      [450, 520, "calma", { titulo: "mardi_gras" }],
+      [520, 900, "desfile", { titulo: "desfile" }],
+      [900, 980, "calma"],
+      [980, 1140, "premios", { titulo: "premios" }],
+      [1140, 1300, "jefe_paso", { titulo: "jefe_paso" }],
+      [1300, 1380, "calma", { titulo: "golfo_cartel" }],
+      // El momento estrella: el golfo de America (izquierda y derecha al reves).
+      [1380, 1700, "golfo", { titulo: "golfo" }],
+      [1700, 1780, "calma", { titulo: "golfo_fin" }],
+      [1780, 1940, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1940, 2020, "calma"],
+      [2020, 2400, "desfile", { titulo: "desfile2" }],
+      [2400, 2480, "calma"],
+      [2480, 2640, "vallas", { low: ["rosca_reyes", "valla_desfile"], high: ["cartel_golfo"], titulo: "beignets" }],
+      [2640, 2800, "alfombra", { titulo: "alfombra" }],
+      [2800, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_catedral" }],
+    ],
+    control: 1750, caja: 1050,
+    sinEdificios: [3260, 4000],
+    chapas: [[700, "carril"], [1850, "carril"], [2900, "arco"]],
+    hitos: ["casa_criolla", "cafe_du_monde", "superdome"],
+    meta: "catedral_sl", metaNombre: { es: "la catedral de San Luis", en: "St. Louis Cathedral" },
+    izquierda: [
+      40, ["kit", 2], 14, ["casa_criolla", 1], ["kit", 2], 14, ...cuadras(3), ["cafe_du_monde", 1], 14, ...cuadras(22),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(3), ["superdome", 1], 14, ...cuadras(3), ["casa_criolla", 1], 14, ...cuadras(20),
+    ],
+    fondo: [{ pieza: "catedral_sl", d: 3330, centro: true },
+      { pieza: "arco_carnaval", d: 470, cruza: true }, { pieza: "arco_carnaval", d: 1990, cruza: true },
+      { pieza: "golfo_america", d: 1376, cruza: true }],
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 20, -45] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 13/11/2026: nivel 21: Birmingham (blender/birmingham.py). «Un huracan
+    // que solo existe porque lo pinto el con un rotulador en el mapa».
+    // Recomendado: mediodia de sol (el huracan solo esta pintado: en el cielo
+    // del horizonte) y final ante la estatua de Vulcano. Dinamicas propias:
+    // el rotulador gigante pinta muros de tinta carril a carril (hay que ir
+    // por el que no pinta) y el momento estrella, la fundicion Sloss: el
+    // martinete manda ondas al rojo por el suelo que hay que saltar a tiempo.
+    id: "birmingham", nombre: "20th Street", lugar: "Birmingham, Alabama", listo: true,
+    zona: "city", carpeta: "birmingham", luz: "mediodia", semilla: 1824,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 12, estilo: "birmingham" },
+    horizonte: "birmingham",
+    obstaculos: { low: ["lingotes", "paca", "valla_metal"], high: ["cartel_huracan", "andamio"],
+      full: ["pickup", "furgoneta", "taxi", "tractor"] },
+    publico: { personas: ["fan", "abuelo", "chico", "senora", "granjero"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "birmingham" }],
+      [70, 280, "mixto", { densidad: 0.45, titulo: "magic_city" }],
+      [280, 640, "rotulador", { titulo: "rotulador" }],
+      [640, 720, "calma"],
+      [720, 880, "premios", { titulo: "premios" }],
+      [880, 1040, "slalom", { full: ["pickup", "furgoneta", "taxi"], titulo: "alabama_theatre" }],
+      [1040, 1120, "calma", { titulo: "entrada_sloss" }],
+      // El momento estrella: la fundicion Sloss (pieza de `fondo` e `interior`).
+      [1120, 1540, "fundicion", { titulo: "fundicion" }],
+      [1540, 1620, "calma"],
+      [1620, 1780, "jefe_paso", { titulo: "jefe_paso" }],
+      [1780, 1860, "calma"],
+      [1860, 2020, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [2020, 2400, "rotulador", { titulo: "rotulador2" }],
+      [2400, 2480, "calma"],
+      [2480, 2640, "vallas", { low: ["lingotes", "paca"], high: ["cartel_huracan"], titulo: "cono" }],
+      [2640, 2800, "rampa", { titulo: "rampa" }],
+      [2800, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_vulcano" }],
+    ],
+    control: 1700, caja: 800,
+    interior: { rango: [1122, 1538], tipo: "fundicion", sinEdificios: [1110, 1550] },
+    sinEdificios: [3260, 4000],
+    chapas: [[760, "carril"], [1900, "carril"], [2900, "arco"]],
+    hitos: ["alabama_theatre", "sloss_hornos"],
+    meta: "vulcano", metaNombre: { es: "la estatua de Vulcano", en: "the Vulcan statue" },
+    izquierda: [
+      40, ["kit", 2], 14, ...cuadras(3), ["alabama_theatre", 1], 14, ...cuadras(24),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(5), ["sloss_hornos", 1], 14, ...cuadras(22),
+    ],
+    fondo: [{ pieza: "vulcano", d: 3330, centro: true },
+      { pieza: "magic_city", d: 120, cruza: true },
+      { pieza: "fundicion", d: 1120, cruza: true }],
+    final: "parada", parada: 14,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 30, -40] },
+    acera: ["ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -1363,7 +1478,7 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
@@ -1424,6 +1539,8 @@ export const ANCHO = {
   bank_of_america_hou: 35, jpmorgan_hou: 36, city_hall_hou: 40, saturno_v: 70, independence_plaza: 80, hangar_luna: 420,
   capitolio_ar: 78, clinton_library: 54, old_state_house: 40, river_market: 37, mina: 420,
   capitolio_ms: 82, old_capitol_ms: 35, casa_blues: 21, barco_vapor: 420,
+  catedral_sl: 70, casa_criolla: 19, cafe_du_monde: 22, superdome: 64, arco_carnaval: 4, golfo_america: 2,
+  vulcano: 52, sloss_hornos: 42, alabama_theatre: 23, magic_city: 2, fundicion: 420,
   devon_tower: 34, cristal_bridge: 46, bricktown: 40, skydance: 8, capitolio_ok: 72,
   fargo_theatre: 26, hotel_donaldson: 25, black_building: 26, radisson_fargo: 30, np_depot: 42,
   ids_center: 36, foshay_tower: 30, wells_fargo_mpls: 34, city_hall_mpls: 46, basilica_mary: 44, lago_helado: 440, cuchara_cereza: 100,
@@ -1637,7 +1754,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

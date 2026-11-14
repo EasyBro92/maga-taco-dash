@@ -2157,3 +2157,30 @@ larga hasta el portón con la luz roja, ventanillas tintadas con el pilar
 blanco, pasos de rueda trapezoidales negros, tapacubos lisos y retrovisores.
 Sin la «X». Choque: `medio` 2,6 y `alto` 1,7.
 
+## 14/11/2026: niveles 20 y 21, Nueva Orleans y Birmingham (v61)
+
+Isidro: «sigue con los niveles, no preguntes». Cada uno con sus mecánicas propias:
+
+- **Nueva Orleans** (3.300 m; `blender/nuevaorleans.py`; anochecer de Mardi
+  Gras, jazz de desfile con banjo). Bourbon Street con casas criollas de
+  balcones de hierro, el Café du Monde y el Superdome; final en la catedral
+  de San Luis con la estatua de Jackson a caballo.
+  - El desfile: las carrozas del Rey y del Bufón frenan a 60 m (van en tu
+    sentido: se adelantan) y a 42 m tiran tres tacos de oro que vuelan en
+    arco a los carriles de al lado (`desfilarCarroza`, `it.vuela`).
+  - Momento estrella, el golfo de América: bajo el cartel gigante, izquierda
+    y derecha van al revés (`alReves` en main.js, con el cartel «⇄ AL REVÉS»).
+  - El tranvía verde de St. Charles es el coche que viene hacia ti.
+  - Objeto: collares del carnaval.
+- **Birmingham** (3.300 m; `blender/birmingham.py`; mediodía de sol, rock de
+  fundición). 20th Street con el cartel de «The Magic City», el teatro
+  Alabama y los hornos Sloss; final en la estatua de Vulcano; en el cielo
+  del horizonte, el huracán pintado con rotulador y su cono.
+  - El rotulador gigante pinta muros de tinta en dos carriles, uno detrás de
+    otro; hay que ir por el que no pinta (`pintarTrazo`).
+  - Momento estrella, la fundición Sloss (interior `fundicion`): la onda del
+    martinete es una grieta que brilla; a 42 m salta y corre hacia ti por
+    los tres carriles: se salta (`correrOnda`). Las cosas solo van en filas
+    que la onda no alcanza antes de llegar a ti.
+  - Objeto: rotuladores.
+

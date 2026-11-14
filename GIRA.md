@@ -23,7 +23,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 
 | Estado | Ciudad | Por qué |
 |---|---|---|
-| Alabama | Birmingham (capital: Montgomery) | la más grande |
+| Alabama | Birmingham (capital: Montgomery) | la más grande (hecho el 14/11: el rotulador que pinta muros, la fundición Sloss y Vulcano) |
 | Alaska | Anchorage (capital: Juneau) | la más grande y conocida |
 | Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
@@ -43,7 +43,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Iowa | Des Moines | capital, y el «caucus» con el que empieza la carrera (hecho el 01/11: Locust Street hasta el Capitolio) |
 | Kansas | Wichita (capital: Topeka) | la más grande |
 | Kentucky | Louisville (capital: Frankfort) | el Derby |
-| Luisiana | Nueva Orleans (capital: Baton Rouge) | la más famosa |
+| Luisiana | Nueva Orleans (capital: Baton Rouge) | la más famosa (hecho el 14/11: Bourbon Street, el desfile de carrozas y el golfo de América con los controles al revés) |
 | Maine | Portland (capital: Augusta) | la más grande |
 | Maryland | Baltimore (capital: Annapolis) | la más grande |
 | Massachusetts | Boston | capital y la más famosa |
