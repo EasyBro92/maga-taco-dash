@@ -222,6 +222,12 @@ export function sndClank() {
   tono(240, 0.25, { tipo: "square", vol: 0.06, glide: -60, filtro: 1200 });
   tono(360, 0.2, { tipo: "square", vol: 0.04, glide: -80, filtro: 1500, cuando: 0.03 });
 }
+// 15/11: Richmond: el pitido del detector (mas agudo cuanto mas cerca), el
+// tambor del desfile y la mina de confeti; Baltimore: la pinza del cangrejo.
+export function sndBip(p = 0.5) { tono(700 + p * 700, 0.06, { tipo: "sine", vol: 0.07 }); }
+export function sndTambor() { tono(120, 0.16, { tipo: "sine", vol: 0.25, glide: -50 }); soplo(0.07, { desde: 900, hasta: 400, tipo: "bandpass", vol: 0.1, q: 1 }); }
+export function sndPum() { soplo(0.4, { desde: 2500, hasta: 300, tipo: "bandpass", vol: 0.22, q: 0.8 }); tono(160, 0.2, { tipo: "sine", vol: 0.2, glide: -80 }); }
+export function sndPinza() { tono(1600, 0.05, { tipo: "square", vol: 0.06 }); tono(1300, 0.05, { tipo: "square", vol: 0.06, cuando: 0.06 }); }
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -402,6 +408,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Richmond: marcha militar de desfile, a 100 (el tambor del desfile va a 0,6 s) (melodia propia).
+  richmond: { bpm: 100, swing: 0, acordes: [C, G, C, G7], bateria: "marcha", bajo: "alterna",
+    melodia: [72, null, 72, 74, 76, null, 72, null, 79, null, 77, 76, 74, null, null, null,
+      72, null, 72, 74, 76, 77, 79, null, 77, null, 74, 71, 72, null, null, null],
+    timbre: "metal" },
+  // 15/11: Baltimore: canción de puerto con acordeón (melodia propia).
+  baltimore: { bpm: 118, swing: 0.5, acordes: [Am, F, C, G], bateria: "marcha", bajo: "alterna",
+    melodia: [69, 72, 76, null, 74, 72, 71, null, 72, 74, 72, null, 69, null, null, null,
+      69, 72, 76, 77, 76, 74, 72, null, 71, null, 67, 71, 69, null, null, null],
+    timbre: "acordeon" },
   // 15/11: Los Angeles: rock con cadencia andaluza para el encierro (melodia propia).
   los_angeles: { bpm: 140, swing: 0, acordes: [Am, G, F, E7], bateria: "pop", bajo: "octavas",
     melodia: [76, null, 76, 77, 76, 74, 72, null, 71, null, 72, 74, 72, 71, 69, null,

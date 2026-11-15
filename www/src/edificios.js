@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 15/11: Richmond: ladrillo y piedra de Virginia, banderas en las tiendas.
+  richmond: { plantas: ["planta_ladrillo", "planta_balcones", "planta_ladrillo", "planta_lisa", "planta_ladrillo"],
+    ladrillos: [0xa85a3e, 0x9a5038, 0xb8784e, 0xd8c4a0, 0x8a4a34], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.06], toldos: [0x1e4a9a, 0xc8202a, 0x2a6a3a, 0xf2c21a],
+    rotulos: ["PARTY STORE", "BALLOONS", "FLAGS", "DINER", "BBQ", "BOOKS", "TOYS", "CAKES", "MILITARY SURPLUS", "COFFEE"] },
+  // 15/11: Baltimore: casas de ladrillo en fila, marisco.
+  baltimore: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_lisa", "planta_balcones", "planta_ladrillo"],
+    ladrillos: [0xa85a3e, 0x8a4a34, 0xb8784e, 0xa89a8a, 0x9a5038], piedras: [0xf2f0ea, 0xe0d6c0], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.05], toldos: [0x1e4a9a, 0xf2c21a, 0xc8202a, 0x2a6a3a],
+    rotulos: ["CRAB CAKES", "SEAFOOD", "OYSTERS", "HON", "LEXINGTON MKT", "BOOKS", "CRABS", "DINER", "TAVERN", "BAKERY"] },
   // 15/11: Los Angeles: estuco claro y art deco, tiendas de recuerdos.
   losangeles: { plantas: ["planta_lisa", "planta_balcones", "planta_lisa", "planta_cristal", "planta_lisa"],
     ladrillos: [0xf0e2c8, 0xe8c8a0, 0xd8b0a0, 0xc8d0d8, 0xf0d8b8], piedras: [0xf6eedc, 0xe8dcc4], cristal: [0x3a5a70, 0x4a6a8a],

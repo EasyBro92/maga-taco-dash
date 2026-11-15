@@ -112,8 +112,8 @@ con gafas que lanza libros y datos.
 | # | Ciudad | Votos | Qué pasa |
 |---|---|---|---|
 | 39 | Charleston, Virginia Occidental | +4 | Vagonetas de su «precioso carbón limpio». *(hecho)* |
-| 40 | Richmond, Virginia | +13 | Tanques del desfile de su cumpleaños. Ha rebautizado Defensa como «Departamento de Guerra». |
-| 41 | Baltimore, Maryland | +10 | Cangrejos que pellizcan los tobillos. |
+| 40 | Richmond, Virginia | +13 | Tanques del desfile de su cumpleaños. Ha rebautizado Defensa como «Departamento de Guerra». *(hecho)* |
+| 41 | Baltimore, Maryland | +10 | Cangrejos que pellizcan los tobillos. *(hecho)* |
 | 42 | Wilmington, Delaware | +3 | El pueblo de su rival dormilón: mecedoras y helados por la calle. |
 | 43 | Filadelfia, Pensilvania | +19 | La Campana de la Libertad. Se pone en la freidora de un McDonald's, como hizo de verdad. |
 | 44 | Atlantic City, Nueva Jersey | +14 | Sus casinos arruinados: con él hasta la banca pierde. Fichas rodando. |

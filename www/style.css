@@ -1055,3 +1055,17 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #rodajeBar .barraLleno { background: #f2c21a; }
 #rodajeBar .rodeoTit { font-size: 30px; }
 #carbonBar .barraLleno { background: linear-gradient(90deg, #4a4a52, #1a1a1e); }
+
+/* 15/11: Richmond (el detector y el tambor) y Baltimore (el cangrejo y las banderas) */
+#minaBar .barraLleno { background: linear-gradient(90deg, #f2c21a, #e8402a); }
+#pinzaBar .barraLleno { background: linear-gradient(90deg, #4a7aa8, #5ac85a); }
+#desfileAro { position: absolute; left: 50%; bottom: 30%; width: 0; height: 0; z-index: 5; pointer-events: none; }
+#desfileAro.hidden { display: none; }
+#desfileAro .aroFijo, #desfileAro .aroCae { position: absolute; left: 0; top: 0; width: 84px; height: 84px; border-radius: 50%;
+  transform: translate(-50%, -50%); box-sizing: border-box; }
+#desfileAro .aroFijo { border: 6px solid rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 3px var(--azul); }
+#desfileAro .aroCae { border: 6px solid #e8402a; }
+#desfileAro.ya .aroFijo, #desfileAro.ya .aroCae { border-color: #5ac85a; }
+#desfileAro .aroPie { position: absolute; left: 0; top: 56px; transform: translateX(-50%); white-space: nowrap;
+  font-family: var(--letra-titulo); font-weight: 700; font-size: 14px; color: #fff; -webkit-text-stroke: 3px var(--azul); paint-order: stroke fill; }
+#senalBar .leiFlores span { border-radius: 6px; }

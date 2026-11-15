@@ -3161,6 +3161,19 @@ export function createWorld(scene) {
     aguja_via: { choque: "nada", medio: 3.2, alto: 0, orilla: true },
     carbon_monton: { choque: "low", medio: 0.5, alto: 0.75 },
     cartel_wv: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Richmond (blender/richmond.py): el tanque del desfile (5 m, el
+    // morro en el origen), la tarta de cumpleaños y la pancarta. La mina de
+    // confeti es una pieza compuesta (escondida hasta que se pisa).
+    tanque: { choque: "full", medio: 2.6, alto: 2.4, centro: -2.6 },
+    tarta_cumple: { choque: "low", medio: 0.4, alto: 1.0 },
+    cartel_va: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Baltimore (blender/baltimore.py): el cangrejo azul (cruza de
+    // lado; si te pilla se te agarra: lo lleva main.js), la olla de
+    // cangrejos, el camion de las especias y la pancarta.
+    cangrejo: { choque: "nada", medio: 0.5, alto: 0 },
+    olla_cangrejos: { choque: "low", medio: 0.55, alto: 0.85 },
+    camion_especias: { choque: "full", medio: 3.6, alto: 3.3, centro: -3.6 },
+    cartel_md: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3655,6 +3668,32 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 15/11: Richmond: la mina de confeti: la placa esta escondida hasta que
+    // se pisa.
+    if (hayModelo("obstaculos/placa_mina")) {
+      TIPOS.mina_confeti = { choque: "nada", medio: 0.5, alto: 0 };
+      obstaclePools.mina_confeti = makePool(() => {
+        const g = new THREE.Group();
+        const m = modeloConContorno("obstaculos/placa_mina");
+        g.add(m); g.userData.placa = m;
+        return g;
+      });
+    }
+    // 15/11: Baltimore: la bandera de señales del muelle (el palo y la
+    // bandera grande, hecha aqui; el color lo pone el patron).
+    TIPOS.bandera_senal = { choque: "nada", medio: 0.5, alto: 0 };
+    obstaclePools.bandera_senal = makePool(() => {
+      const g = new THREE.Group();
+      const palo = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.4, 8), new THREE.MeshLambertMaterial({ color: 0xf6f4ee }));
+      palo.position.set(-0.9, 1.7, 0); g.add(palo);
+      const mat = new THREE.MeshLambertMaterial({ color: 0xc8202a, side: THREE.DoubleSide });
+      const tela = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.1), mat);
+      tela.position.set(0, 2.75, 0); g.add(tela);
+      const borde = new THREE.Mesh(new THREE.PlaneGeometry(1.85, 1.25), new THREE.MeshBasicMaterial({ color: 0x1c1c20, side: THREE.DoubleSide }));
+      borde.position.set(0, 2.75, -0.02); g.add(borde);
+      g.userData.mat = mat; g.userData.tela = tela;
+      return g;
+    });
     // 15/11: Charleston WV: el trozo de carbon «limpio» que se recoge (negro y
     // brillante, hecho aqui) y la vagoneta donde se vacia el saco (la del
     // patio, con una flecha encima).
@@ -4283,6 +4322,57 @@ export function createWorld(scene) {
       c.mesh.rotation.y = (sube - baja) * 0.6 * (p.a > p.de ? 1 : -1);
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
+    }
+  }
+  // ---- 15/11: Richmond ----
+  // La altura del jugador (las minas no se pisan saltando ni los cangrejos
+  // te pillan en el aire).
+  let jugadorY = 0;
+  function setJugadorY(y) { jugadorY = y; }
+  // Las minas de confeti: escondidas; al pisarla aparece la placa y revienta.
+  function moverMina(o) {
+    const m = o.mina;
+    o.mesh.userData.placa.visible = m.pisada;
+    if (!m.pisada && o.z > -0.6 && o.z < 0.6 && o.lane === jugadorCarril && jugadorY < 0.4) {
+      m.pisada = true;
+      if (alAvisoMapa) alAvisoMapa("mina");
+    }
+  }
+  // El detector: lo cerca que esta la mina escondida mas cercana de tu carril (0..1).
+  function detectorMina() {
+    let mejor = 0;
+    for (const o of obstacles) {
+      if (!o.mina || o.mina.pisada || o.lane !== jugadorCarril || o.z < -30 || o.z > 0.6) continue;
+      mejor = Math.max(mejor, 1 + Math.min(0, o.z) / 30);
+    }
+    return mejor;
+  }
+  // ---- 15/11: Baltimore ----
+  // El cangrejo va de lado de un carril a otro; si llega a tus pies (y no vas
+  // por el aire), se te agarra (main.js).
+  function moverCangrejo(o, dt) {
+    const c = o.cangrejo, m = o.mesh;
+    if (c.agarrado) { m.visible = false; return; }
+    m.position.x += c.dir * c.vel * dt;
+    if (Math.abs(m.position.x) > 2.6) { m.position.x = Math.sign(m.position.x) * 2.6; c.dir = -c.dir; }
+    m.rotation.z = Math.sin((animClock + o.phase) * 14) * 0.08;
+    let mejor = 0;
+    for (const l of LANES) if (Math.abs(LANE_X[l] - m.position.x) < Math.abs(LANE_X[mejor] - m.position.x)) mejor = l;
+    o.lane = mejor;
+    if (o.z > -0.5 && o.z < 0.5 && Math.abs(m.position.x - LANE_X[jugadorCarril]) < 0.9 && jugadorY < 0.4) {
+      c.agarrado = true;
+      if (alAvisoMapa) alAvisoMapa("pinza");
+    }
+  }
+  // Las banderas de señales: la que te llega por tu carril se coge.
+  const COLORES_SENAL = [0xc8202a, 0xf2c21a, 0x2a5ad8];
+  let ultimaBandera = -1;
+  function moverBandera(o) {
+    const b = o.bandera;
+    o.mesh.userData.tela.rotation.y = Math.sin((animClock + o.phase) * 2) * 0.25;
+    if (!b.pasado && o.z > -0.5) {
+      b.pasado = true;
+      if (o.lane === jugadorCarril) { ultimaBandera = b.color; if (alAvisoMapa) alAvisoMapa("bandera"); }
     }
   }
   // ---- 15/11: Los Angeles ----
@@ -7871,6 +7961,55 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Richmond ----
+    // Las minas de confeti: cada 42 m, escondidas en uno o dos carriles (el
+    // detector de main.js avisa cuando hay una en el tuyo). Tartas entre medias.
+    minas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 6 === 3 && obstaclePools.mina_confeti) {
+        const orden = [...LANES].sort(() => Math.random() - 0.5);
+        const cuantas = Math.random() < 0.4 ? 2 : 1;
+        for (let i = 0; i < cuantas; i++) {
+          const o = spawnObstacle(orden[i], "nada", z, "mina_confeti");
+          if (o) o.mina = { pisada: false };
+        }
+        filaSinObjeto = true;
+      } else if (k % 6 === 0 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["tarta_cumple"]);
+      else if (k % 6 === 1) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // El desfile al paso (momento estrella): el ritmo lo lleva main.js; en
+    // la avenida solo hay tacos.
+    desfile(z, d, t, k) {
+      if (k % 3 === 1) tacosEn(elegirDe(LANES), z, 4);
+    },
+    // ---- 15/11: Baltimore ----
+    // Los cangrejos: cada 21 m uno que va de lado de carril a carril. Ollas
+    // de cangrejos entre medias.
+    cangrejos(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 3 === 2 && obstaclePools.cangrejo) {
+        const o = spawnObstacle(elegirDe(LANES), "nada", z, "cangrejo");
+        if (o) o.cangrejo = { dir: Math.random() < 0.5 ? -1 : 1, vel: 1.4 + Math.random() * 0.8, agarrado: false };
+      } else if (k % 3 === 0 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["olla_cangrejos"]);
+      else if (k % 3 === 1) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // Las banderas de señales (momento estrella): cada 21 m una fila de tres
+    // banderas de colores; main.js dice el orden (que hay que memorizar).
+    banderas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || k % 3 !== 2) return;
+      filaSinObjeto = true;
+      const cols = [0, 1, 2].sort(() => Math.random() - 0.5);
+      for (const l of LANES) {
+        const o = spawnObstacle(l, "nada", z, "bandera_senal");
+        if (o) { o.bandera = { color: cols[l], pasado: false }; o.mesh.userData.mat.color.setHex(COLORES_SENAL[cols[l]]); }
+      }
+    },
     // ---- 15/11: Los Angeles ----
     // La siesta: cada 21 m una fila de gente durmiendo: hamacas (se pasan
     // agachado, sin ruido) y dormilones en el suelo (se saltan: hace ruido).
@@ -9842,6 +9981,9 @@ export function createWorld(scene) {
         else if (o.flor) moverFlor(o);
         else if (o.coco) caerCoco(o, dt);
         else if (o.trozo || o.entrega) moverCarbon(o);
+        else if (o.mina) moverMina(o);
+        else if (o.cangrejo) moverCangrejo(o, dt);
+        else if (o.bandera) moverBandera(o);
         else if (o.pool === "mozo") {
           // Echa a correr (delante de ti, mas despacio) solo a 30 m: si corriera
           // desde lejos llegaria a las filas de mas adelante.
@@ -10076,5 +10218,6 @@ export function createWorld(scene) {
     setPatata, hayPeriodista, darPatata, setHacha, troncoCerca,
     bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata,
     setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor,
-    setSaco, enAguja };
+    setSaco, enAguja,
+    setJugadorY, detectorMina, banderaCogida: () => ultimaBandera };
 }

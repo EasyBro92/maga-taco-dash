@@ -2637,3 +2637,49 @@ Los choques que quedan son del piloto: cambia tarde de carril junto a las
 hamacas y se lía con las furgonetas que cambian de carril.
 
 Falta el veredicto de Isidro.
+
+## 15/11/2026 (4): niveles 40 y 41, Richmond y Baltimore (v72)
+
+- **Richmond** (Broad Street en día de desfile; `blender/richmond.py`):
+  - Las minas de confeti: están escondidas en uno o dos carriles cada 42 m.
+    El DETECTOR (la barra y los pitidos, más seguidos cuanto más cerca) avisa
+    cuando hay una en tu carril. Al pisarla: ¡PUM! confeti y −8 tacos.
+    Saltando no se pisa.
+  - El momento estrella es el desfile por Monument Avenue al paso: suena el
+    tambor cada 0,6 s, con la música a 100. El aro se cierra en cada golpe y
+    hay que tocar a la vez (+2). Ocho seguidos: ¡desfile perfecto! (+20).
+  - Pancarta del Sentido Común: LOS TANQUES ROMPEN LA CALLE.
+  - Piezas: la estación de Main Street, el «Departamento de Guerra» (con
+    DEFENSA tachado), el teatro Byrd, los globos del 79 cumpleaños, el arco
+    ¡FELIZ CUMPLEAÑOS!, los tanques y la tarta.
+  - Final en el Capitolio de Virginia, el templo de Jefferson. Objeto:
+    tartas.
+- **Baltimore** (Pratt Street junto al Inner Harbor; `blender/baltimore.py`):
+  - Los cangrejos azules van de lado de carril a carril. Si te pillan, se te
+    agarran al tobillo: mientras los llevas no puedes saltar y pierdes tacos.
+    Para soltarlos, tres cambios de carril. Saltando por encima no te pillan.
+  - El momento estrella son las banderas de señales del muelle. Arriba se
+    ven cuatro colores un momento: hay que memorizarlos y pasar por las
+    banderas en ese orden (+3 cada una, +20 el mensaje completo). Un fallo, y
+    otra ronda.
+  - Pancarta del Sentido Común: LOS CANGREJOS PELLIZCAN.
+  - Piezas: la torre del reloj (BALTIMORE en las esferas), las casas con los
+    escalones de mármol, el acuario, los bancos de «la mejor ciudad de
+    América», el arco del Inner Harbor con el cangrejo y el camión de las
+    especias.
+  - Final en el fuerte McHenry con la bandera de quince estrellas. Objeto:
+    cangrejos.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles y salen
+los 10 objetos de cada uno:
+
+- **Minas:** pisó 1 haciendo caso al detector y 4 sin hacerle caso.
+- **Desfile:** 33 pasos a tiempo sin fallar ninguno.
+- **Cangrejos:** saltando, ninguno lo pilló; sin saltar, 9, y se los soltó
+  todos.
+- **Banderas:** 3 rondas completas sin fallo.
+
+Los choques que quedan son del piloto en los eslálones, cuando hacen falta
+dos cambios de carril seguidos.
+
+Falta el veredicto de Isidro.

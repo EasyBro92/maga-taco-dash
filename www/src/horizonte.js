@@ -394,6 +394,33 @@ const SITIOS = {
   },
   // 14/11: Denver: las Montanas Rocosas nevadas de punta a punta (el pico
   // Longs, el mas alto) y el centro de Denver delante.
+  // 15/11: Richmond: el rio James, las colinas bajas con arboles y el centro.
+  richmond(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 50; i++) { const u = i / 50; x.lineTo(u * ANCHO, SUELO - 35 - 15 * Math.sin(u * 7) - r() * 4); }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    for (let k = 0; k < 60; k++) { const px = r() * ANCHO, rr = 7 + r() * 8; x.fillStyle = c.arbol; x.beginPath(); x.ellipse(px, SUELO - 10 - r() * 18, rr * 1.2, rr, 0, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = c.lago; x.fillRect(0, SUELO - 5, ANCHO, 5);
+    for (const [x0, x1] of [[1500, 1900]]) {
+      let px = x0;
+      while (px < x1) { const w = 22 + r() * 22, h = 40 + r() * 80; torre(x, [px, 0], w, h, c.cerca, r, null); px += w * 0.95; }
+    }
+  },
+  // 15/11: Baltimore: el puerto con las gruas, el agua y las torres del centro.
+  baltimore(x, c, r) {
+    x.fillStyle = c.lago; x.fillRect(0, SUELO - 14, ANCHO, 14);
+    for (const [x0, x1] of [[1200, 1900]]) {
+      let px = x0;
+      while (px < x1) { const w = 20 + r() * 24, h = 40 + r() * 90; torre(x, [px, 0], w, h, c.cerca, r, null); px += w * 0.95; }
+    }
+    x.strokeStyle = c.lejos; x.lineWidth = 5;
+    for (const gx of [2600, 2780, 2960]) {
+      x.beginPath(); x.moveTo(gx, SUELO - 14); x.lineTo(gx, SUELO - 90); x.lineTo(gx + 90, SUELO - 90); x.moveTo(gx - 30, SUELO - 90); x.lineTo(gx, SUELO - 90); x.stroke();
+      x.beginPath(); x.moveTo(gx + 20, SUELO - 14); x.lineTo(gx + 20, SUELO - 90); x.stroke();
+    }
+    x.fillStyle = c.letrero; x.fillRect(800, SUELO - 40, 80, 26);
+  },
   // 15/11: Los Angeles: las colinas secas con las letras que ha puesto
   // España (LOS ANGELES), las palmeras altas y las torres del centro.
   losangeles(x, c, r) {
@@ -1024,7 +1051,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a, cheyenne: 0x8a8a6a, billings: 0x8a7a8a, boise: 0x9a8a6a, saltlake: 0x7a7a9a, seattle: 0x6a7a88, portland: 0x5a7a6a, anchorage: 0x6a7a9a, honolulu: 0x5a8a7a, losangeles: 0xa0806a, charlestonwv: 0x6a7a5a }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a, cheyenne: 0x8a8a6a, billings: 0x8a7a8a, boise: 0x9a8a6a, saltlake: 0x7a7a9a, seattle: 0x6a7a88, portland: 0x5a7a6a, anchorage: 0x6a7a9a, honolulu: 0x5a8a7a, losangeles: 0xa0806a, charlestonwv: 0x6a7a5a, richmond: 0x6a7a6a, baltimore: 0x6a7080 }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

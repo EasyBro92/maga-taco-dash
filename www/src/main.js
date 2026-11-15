@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -746,7 +746,9 @@ const NOMBRE_HITO = {
     teatro_4th: "El teatro de la 4th Avenue", cabana_troncos: "La cabaña de troncos", hotel_captain_cook: "El hotel Captain Cook",
     aloha_tower: "La torre Aloha", royal_hawaiian: "El palacio rosa", capitolio_hawaii: "El Capitolio de Hawái",
     capitol_records: "La torre de los discos", el_capitan: "El teatro El Capitan", hotel_roosevelt: "El hotel Roosevelt",
-    daniel_boone_hotel: "El hotel Daniel Boone", panaderia_pepperoni: "La panadería de los pepperoni rolls", tipple_carbon: "El cargadero de carbón" },
+    daniel_boone_hotel: "El hotel Daniel Boone", panaderia_pepperoni: "La panadería de los pepperoni rolls", tipple_carbon: "El cargadero de carbón",
+    estacion_main_st: "La estación de Main Street", departamento_guerra: "El Departamento de Guerra", teatro_byrd: "El teatro Byrd",
+    torre_reloj_bal: "La torre del reloj", casas_formstone: "Las casas de los escalones de mármol", acuario: "El acuario" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -800,7 +802,9 @@ const NOMBRE_HITO = {
     teatro_4th: "The 4th Avenue Theatre", cabana_troncos: "The log cabin", hotel_captain_cook: "The Hotel Captain Cook",
     aloha_tower: "Aloha Tower", royal_hawaiian: "The Pink Palace", capitolio_hawaii: "The Hawaii State Capitol",
     capitol_records: "The Capitol Records tower", el_capitan: "The El Capitan Theatre", hotel_roosevelt: "The Roosevelt Hotel",
-    daniel_boone_hotel: "The Daniel Boone Hotel", panaderia_pepperoni: "The pepperoni roll bakery", tipple_carbon: "The coal tipple" },
+    daniel_boone_hotel: "The Daniel Boone Hotel", panaderia_pepperoni: "The pepperoni roll bakery", tipple_carbon: "The coal tipple",
+    estacion_main_st: "Main Street Station", departamento_guerra: "The Department of War", teatro_byrd: "The Byrd Theatre",
+    torre_reloj_bal: "The clock tower", casas_formstone: "The marble-step rowhouses", acuario: "The aquarium" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1356,6 +1360,7 @@ function resetRun(desde = 0) {
   quitarRodeo(); quitarPatata(); quitarHacha(); quitarRecord(); quitarLluvia(); quitarPesca(); quitarRegata();
   quitarCheque(); quitarVuelo(); quitarLei(); quitarSurf();
   quitarSiesta(); quitarRodaje(); quitarCarbon();
+  quitarMinas(); quitarDesfile(); quitarPinza(); quitarSenales();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -2481,6 +2486,190 @@ function actualizarVias() {
     if (PRUEBA && window.__juego) window.__juego.descarriles = (window.__juego.descarriles || 0) + 1;
   }
 }
+// 15/11: Richmond: las minas de confeti. Estan escondidas; el detector
+// (la barra y los pitidos, mas seguidos cuanto mas cerca) avisa cuando hay
+// una en tu carril. Al pisarla: confeti y menos tacos. Saltando no se pisa.
+var minas = null;
+const MINA_MULTA = 8;
+function quitarMinas() {
+  minas = null;
+  const el = document.getElementById("minaBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarMinas(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "minas" && world.detectorMina;
+  if (!en) { if (minas) quitarMinas(); return; }
+  if (!minas) {
+    minas = { bip: 0 };
+    const el = barraJuego("minaBar");
+    el.querySelector(".rodeoTit").textContent = t("detectorHud");
+    el.querySelector(".rodeoPie").textContent = t("detectorPista");
+    el.classList.remove("hidden");
+  }
+  const p = world.detectorMina();
+  document.getElementById("minaBar").querySelector(".barraLleno").style.width = `${p * 100}%`;
+  minas.bip -= dt;
+  if (p > 0 && minas.bip <= 0) { sndBip(p); minas.bip = 0.55 - p * 0.45; }
+}
+function minaPisada() {
+  if (gameState !== "playing") return;
+  const multa = Math.min(tacosThisRun, MINA_MULTA);
+  tacosThisRun -= multa;
+  textoFlotante(`${t("pumConfeti")} -${multa}`); sndPum(); spawnConfetti(30); vibrate([30, 30, 30]); flashExpression("surprised", 1);
+  tropiezo = 0.5;
+  if (PRUEBA && window.__juego) window.__juego.minas = (window.__juego.minas || 0) + 1;
+}
+// 15/11: Richmond: el desfile al paso. Suena el tambor; el aro se cierra en
+// cada golpe: tocar a la vez. Ocho seguidos: ¡desfile perfecto!
+var desfile = null;
+const BEAT = 0.6, DESFILE_PREMIO = 20;
+function quitarDesfile() {
+  desfile = null;
+  const el = document.getElementById("desfileAro");
+  if (el) el.classList.add("hidden");
+}
+function aroDesfile() {
+  let el = document.getElementById("desfileAro");
+  if (!el) {
+    el = document.createElement("div"); el.id = "desfileAro"; el.className = "hidden";
+    el.innerHTML = '<div class="aroFijo"></div><div class="aroCae"></div><div class="aroPie"></div>';
+    document.getElementById("hud").appendChild(el);
+  }
+  return el;
+}
+function actualizarDesfile(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "desfile";
+  if (!en) { if (desfile) quitarDesfile(); return; }
+  if (!desfile) {
+    desfile = { t: 0, combo: 0, ultimo: -1 };
+    const el = aroDesfile();
+    el.querySelector(".aroPie").textContent = t("desfilePista");
+    el.classList.remove("hidden");
+  }
+  const antes = Math.floor(desfile.t / BEAT);
+  desfile.t += dt;
+  if (Math.floor(desfile.t / BEAT) !== antes) sndTambor();
+  const fase = (desfile.t % BEAT) / BEAT;
+  const el = aroDesfile();
+  el.querySelector(".aroCae").style.transform = `translate(-50%, -50%) scale(${(1 + 1.6 * (1 - fase)).toFixed(3)})`;
+  el.classList.toggle("ya", fase > 0.8 || fase < 0.1);
+  if (PRUEBA && window.__juego) window.__juego.faseDesfile = fase;
+}
+function pasoDesfile() {
+  if (!desfile) return false;
+  const golpe = Math.round(desfile.t / BEAT);
+  if (golpe === desfile.ultimo) return true;
+  desfile.ultimo = golpe;
+  const fuera = Math.abs(desfile.t - golpe * BEAT);
+  if (fuera < 0.13) {
+    desfile.combo++;
+    tacosThisRun += 2 * multiplier;
+    textoFlotante(`${t("paso")} +${2 * multiplier}`); vibrate(8);
+    if (desfile.combo % 8 === 0) {
+      const n = DESFILE_PREMIO * multiplier;
+      tacosThisRun += n;
+      showBubble(t("desfilePerfecto"), 1500, 2); avisoVerde(`+${n} ${TACO_IMG()}`); sndFanfarria();
+    }
+    if (PRUEBA && window.__juego) window.__juego.pasos = (window.__juego.pasos || 0) + 1;
+  } else {
+    desfile.combo = 0;
+    textoFlotante(t("pasoCambiado")); sndBogey();
+    if (PRUEBA && window.__juego) window.__juego.pasosMal = (window.__juego.pasosMal || 0) + 1;
+  }
+  return true;
+}
+// 15/11: Baltimore: el cangrejo que se agarra al tobillo. Mientras lo
+// llevas no puedes saltar y pierdes tacos; para soltarlo, tres cambios de
+// carril. (Saltando por encima no te pilla.)
+var pinza = null;
+function quitarPinza() {
+  pinza = null;
+  const el = document.getElementById("pinzaBar");
+  if (el) el.classList.add("hidden");
+}
+function agarrarCangrejo() {
+  if (gameState !== "playing") return;
+  if (!pinza) pinza = { n: 0, sacudidas: 0, gasto: 0 };
+  pinza.n++;
+  textoFlotante(t("pinzaTxt")); sndPinza(); vibrate([20, 20, 20]); flashExpression("surprised", 0.8);
+  if (PRUEBA && window.__juego) window.__juego.pinzas = (window.__juego.pinzas || 0) + 1;
+}
+function actualizarPinza(dt) {
+  if (!pinza) return;
+  if (gameState !== "playing" || pinza.n <= 0) { quitarPinza(); return; }
+  pinza.gasto += dt * 2;
+  if (pinza.gasto >= 1) { const q = Math.min(tacosThisRun, Math.floor(pinza.gasto)); tacosThisRun -= q; pinza.gasto -= Math.floor(pinza.gasto); }
+  const el = barraJuego("pinzaBar");
+  el.querySelector(".rodeoTit").textContent = t("pinzaHud").replace("{n}", pinza.n);
+  el.querySelector(".rodeoPie").textContent = t("pinzaPista");
+  el.querySelector(".barraLleno").style.width = `${pinza.sacudidas / 3 * 100}%`;
+  el.classList.remove("hidden");
+}
+function sacudir() {
+  if (!pinza || pinza.n <= 0) return;
+  pinza.sacudidas++;
+  if (pinza.sacudidas >= 3) {
+    pinza.sacudidas = 0; pinza.n--;
+    textoFlotante(t("fueraCangrejo")); sndPoint();
+    if (PRUEBA && window.__juego) window.__juego.sueltos = (window.__juego.sueltos || 0) + 1;
+  }
+}
+// 15/11: Baltimore: las banderas de señales. Arriba se ven cuatro colores un
+// momento: hay que memorizarlos y pasar por las banderas en ese orden (en
+// cada fila hay una de cada color). Un fallo y vuelta a empezar con otros.
+var senales = null;
+const SENAL_N = 4, SENAL_VER = 2.6, SENAL_PREMIO = 20, SENAL_CSS = ["#c8202a", "#f2c21a", "#2a5ad8"];
+function quitarSenales() {
+  senales = null;
+  const el = document.getElementById("senalBar");
+  if (el) el.classList.add("hidden");
+}
+function nuevaRonda() { senales.orden = Array.from({ length: SENAL_N }, () => Math.floor(Math.random() * 3)); senales.i = 0; senales.ver = SENAL_VER; pintarSenales(); }
+function pintarSenales() {
+  let el = document.getElementById("senalBar");
+  if (!el) {
+    el = document.createElement("div"); el.id = "senalBar"; el.className = "barraJuego hidden";
+    el.innerHTML = '<div class="rodeoTit"></div><div class="leiFlores"></div><div class="rodeoPie"></div>';
+    document.getElementById("hud").appendChild(el);
+  }
+  const ver = senales.ver > 0;
+  el.querySelector(".rodeoTit").textContent = t(ver ? "memoriza" : "enOrden");
+  el.querySelector(".rodeoPie").textContent = t("senalPista");
+  el.querySelector(".leiFlores").innerHTML = senales.orden.map((c, i) =>
+    `<span class="${i < senales.i ? "hecha" : i === senales.i && !ver ? "toca" : ""}" style="background:${ver || i < senales.i ? SENAL_CSS[c] : "#8a9098"}"></span>`).join("");
+  el.classList.remove("hidden");
+  if (PRUEBA && window.__juego) window.__juego.senalToca = ver ? -1 : senales.orden[senales.i];
+}
+function actualizarSenales(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "banderas";
+  if (!en) { if (senales) quitarSenales(); return; }
+  if (!senales) { senales = {}; nuevaRonda(); }
+  if (senales.ver > 0) { senales.ver -= dt; if (senales.ver <= 0) pintarSenales(); }
+}
+function banderaCogida() {
+  if (!senales || gameState !== "playing") return;
+  if (senales.ver > 0) { textoFlotante(t("aunMemoriza")); return; }
+  const c = world.banderaCogida();
+  if (c === senales.orden[senales.i]) {
+    senales.i++;
+    tacosThisRun += 3 * multiplier;
+    textoFlotante(`${t("senalBien")} +${3 * multiplier}`); sndPoint(); vibrate(10);
+    if (senales.i >= SENAL_N) {
+      const n = SENAL_PREMIO * multiplier;
+      tacosThisRun += n;
+      showBubble(t("senalesBien"), 1500, 2); avisoVerde(`+${n} ${TACO_IMG()}`); spawnConfetti(20); sndFanfarria();
+      if (PRUEBA && window.__juego) window.__juego.rondas = (window.__juego.rondas || 0) + 1;
+      nuevaRonda();
+      return;
+    }
+  } else {
+    textoFlotante(t("senalMal")); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.senalesMal = (window.__juego.senalesMal || 0) + 1;
+    nuevaRonda();
+    return;
+  }
+  pintarSenales();
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
@@ -2492,6 +2681,10 @@ function accionJugador(action, pos) {
     return;
   }
   ruido(action);          // (15/11: Los Angeles: la siesta)
+  if (pinza && pinza.n > 0) {   // (15/11: Baltimore: con el cangrejo agarrado no se salta)
+    if (action === "jump") { textoFlotante(t("noSaltas")); return; }
+    if (action === "left" || action === "right") sacudir();
+  }
   ordenRodaje(action);    // (15/11: Los Angeles: el rodaje)
   if (surf && montado && ["left", "right", "jump", "slide"].includes(action)) { truco(action); return; }   // (15/11: Honolulu)
   if (vuelo && montado && ["jump", "frase", "lanzar"].includes(action)) { aletear(); return; }   // (15/11: Anchorage)
@@ -2504,6 +2697,7 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && (hachazo() || cambiarMarcha())) return;
   if ((action === "frase" || action === "lanzar") && (pescaToque() || tocarRanaToque(pos))) return;   // (15/11: Seattle y Portland)
   if ((action === "frase" || action === "lanzar") && voltearCheque()) return;   // (15/11: Anchorage)
+  if ((action === "frase" || action === "lanzar") && pasoDesfile()) return;   // (15/11: Richmond)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -3454,6 +3648,9 @@ world.onAvisoMapa((que) => {
   else if (que === "flor") florCogida();   // (15/11: Honolulu)
   else if (que === "carbon") cogerCarbon();   // (15/11: Charleston WV)
   else if (que === "entrega") vaciarCarbon();
+  else if (que === "mina") minaPisada();          // (15/11: Richmond)
+  else if (que === "pinza") agarrarCangrejo();    // (15/11: Baltimore)
+  else if (que === "bandera") banderaCogida();
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -3570,6 +3767,11 @@ function frame(dtFijo) {
     actualizarRodaje(dt);
     actualizarCarbon();
     actualizarVias();
+    world.setJugadorY(py);
+    actualizarMinas(dt);
+    actualizarDesfile(dt);
+    actualizarPinza(dt);
+    actualizarSenales(dt);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3628,7 +3830,8 @@ function frame(dtFijo) {
         patata: "patataAviso", aizkolari: "aizkolariAviso", espejismo: "espejismoAviso", record: "recordAviso",
         chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso",
         cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso",
-        siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso" };
+        siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso",
+        minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.

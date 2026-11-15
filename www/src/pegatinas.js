@@ -366,6 +366,37 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: el trozo de tarta de cumpleaños (Richmond).
+  tarta(x) {
+    x.save(); x.translate(128, 140);
+    const trozo = () => { x.beginPath(); x.moveTo(-90, 40); x.lineTo(90, 40); x.lineTo(90, -20); x.lineTo(-90, -60); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; trozo(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; trozo(); x.stroke();
+    x.fillStyle = "#f0d8a8"; trozo(); x.fill();
+    x.fillStyle = "#f08aa8"; x.beginPath(); x.moveTo(-90, -60); x.lineTo(90, -20); x.lineTo(90, -6); x.lineTo(-90, -42); x.closePath(); x.fill();
+    x.fillStyle = "#e85a8a"; x.fillRect(-90, 4, 180, 12);
+    x.fillStyle = "#f2c21a"; x.fillRect(28, -78, 10, 40);
+    x.fillStyle = "#ff8a2a"; x.beginPath(); x.ellipse(33, -86, 7, 11, 0, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 15/11: el cangrejo azul (Baltimore).
+  cangrejo(x) {
+    x.save(); x.translate(128, 140);
+    const cuerpo = () => { x.beginPath(); x.ellipse(0, 0, 86, 46, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cuerpo(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cuerpo(); x.stroke();
+    x.strokeStyle = "#3a6a98"; x.lineWidth = 10; x.lineCap = "round";
+    for (const s of [-1, 1]) {
+      for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(s * 60, 10 + i * 12); x.lineTo(s * 100, 30 + i * 18); x.stroke(); }
+      x.beginPath(); x.moveTo(s * 50, -30); x.lineTo(s * 80, -70); x.stroke();
+      x.fillStyle = "#c8202a"; x.beginPath(); x.ellipse(s * 86, -82, 18, 14, s * 0.5, 0, Math.PI * 2); x.fill();
+    }
+    x.fillStyle = "#4a7aa8"; cuerpo(); x.fill();
+    x.fillStyle = "#1c1c20"; x.beginPath(); x.arc(-18, -30, 6, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(18, -30, 6, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(255,255,255,0.4)"; x.beginPath(); x.ellipse(-30, -12, 22, 8, -0.2, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 15/11: la estrella del Paseo de la Fama (Los Angeles).
   estrella(x) {
     x.save(); x.translate(128, 132);
