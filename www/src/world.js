@@ -3143,6 +3143,24 @@ export function createWorld(scene) {
     carrito_raspado: { choque: "full", medio: 1.0, alto: 2.4, centro: -0.9 },
     trolley_waikiki: { choque: "full", medio: 4.5, alto: 3.0, centro: -4.5 },
     coco: { choque: "low", medio: 0.35, alto: 0.6, orilla: true },
+    // 15/11: Los Angeles (blender/losangeles.py): la hamaca de la siesta (se
+    // pasa agachado), el dormilon (se salta), el mozo de San Fermin (corre
+    // delante, mas despacio que tu), la camara de cine, el autobus de las
+    // estrellas y la pancarta LOS ANGELES ES ESPAÑOL.
+    hamaca: { choque: "high", medio: 0.5, alto: 2.4 },
+    dormilon: { choque: "low", medio: 0.5, alto: 0.6 },
+    mozo: { choque: "full", medio: 0.4, alto: 1.9 },
+    camara_cine: { choque: "full", medio: 0.8, alto: 2.4 },
+    autobus_estrellas: { choque: "full", medio: 4.5, alto: 2.8, centro: -4.5 },
+    cartel_la: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Charleston WV (blender/charlestonwv.py): la via cortada (en el
+    // patio de carbon la mira main.js: la vagoneta no la rompe), la aguja (va
+    // en el carril del medio y tapa los tres; sin sombra), el monton de
+    // carbon y la pancarta del Sentido Comun.
+    barrera_via: { choque: "full", medio: 0.6, alto: 2.2 },
+    aguja_via: { choque: "nada", medio: 3.2, alto: 0, orilla: true },
+    carbon_monton: { choque: "low", medio: 0.5, alto: 0.75 },
+    cartel_wv: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3634,6 +3652,32 @@ export function createWorld(scene) {
         aro.position.y = 0.06;
         g.add(aro);
         g.userData.nave = nave; g.userData.rayo = rayo; g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 15/11: Charleston WV: el trozo de carbon «limpio» que se recoge (negro y
+    // brillante, hecho aqui) y la vagoneta donde se vacia el saco (la del
+    // patio, con una flecha encima).
+    TIPOS.trozo_carbon = { choque: "nada", medio: 0.4, alto: 0 };
+    obstaclePools.trozo_carbon = makePool(() => {
+      const g = new THREE.Group();
+      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.42, 0), new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.25, metalness: 0.3 }));
+      m.position.y = 0.9; g.add(m);
+      const brillo = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      brillo.position.set(0.18, 1.12, 0.3); g.add(brillo);
+      g.userData.trozo = m;
+      return g;
+    });
+    if (hayModelo("obstaculos/vagoneta_carbon")) {
+      TIPOS.vagoneta_entrega = { choque: "nada", medio: 1.2, alto: 0 };
+      obstaclePools.vagoneta_entrega = makePool(() => {
+        const g = new THREE.Group();
+        const m = modeloConContorno("obstaculos/vagoneta_carbon");
+        m.rotation.y = Math.PI; m.position.z = -2.4;
+        g.add(m);
+        const f = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 16), new THREE.MeshBasicMaterial({ color: 0xffd23a }));
+        f.rotation.x = Math.PI; f.position.set(0, 2.6, -1.2);
+        g.add(f); g.userData.flecha = f;
         return g;
       });
     }
@@ -4241,6 +4285,39 @@ export function createWorld(scene) {
       c.fuera = alto > 0.3;
     }
   }
+  // ---- 15/11: Los Angeles ----
+  // Los mozos corren delante (botando); los que duermen la siesta, quietos.
+  // (La siesta y el rodaje los lleva main.js.)
+  // ---- 15/11: Charleston WV ----
+  // El saco de carbon a la espalda (crece con lo que llevas) y los trozos y
+  // las vagonetas que se cogen al pasar por su carril.
+  const saco = { mesh: null };
+  function setSaco(n, x, y) {
+    if (!saco.mesh) {
+      if (!n) return;
+      saco.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.4, 12, 8), new THREE.MeshLambertMaterial({ color: 0x3a3428 }));
+      group.add(saco.mesh);
+    }
+    saco.mesh.visible = n > 0;
+    if (!n) return;
+    const k = 0.7 + n * 0.12;
+    saco.mesh.scale.set(k, k * 1.1, k * 0.8);
+    saco.mesh.position.set(x - 0.15, 1.45 + y + n * 0.04, 0.42);
+  }
+  function moverCarbon(o) {
+    if (o.trozo) { o.mesh.userData.trozo.rotation.y = animClock * 2 + o.phase; o.mesh.userData.trozo.position.y = 0.9 + Math.sin(animClock * 3 + o.phase) * 0.1; }
+    if (o.entrega) o.mesh.userData.flecha.position.y = 2.6 + Math.sin(animClock * 4) * 0.2;
+    const c = o.trozo || o.entrega;
+    if (!c.pasado && o.z > -0.5) {
+      c.pasado = true;
+      if (o.lane === jugadorCarril) {
+        if (o.trozo) o.mesh.visible = false;
+        if (alAvisoMapa) alAvisoMapa(o.trozo ? "carbon" : "entrega");
+      }
+    }
+  }
+  // La vagoneta del patio: solo se cambia de via en las agujas.
+  function enAguja() { return obstacles.some((o) => o.aguja && o.z > -4.5 && o.z < 3.5); }
   // ---- 15/11: Anchorage ----
   // El cheque gigante (main.js lleva de que lado va y si choca): aqui se
   // pinta, se pone al lado del jugador y, si se rompe, cae dando vueltas.
@@ -7794,6 +7871,71 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Los Angeles ----
+    // La siesta: cada 21 m una fila de gente durmiendo: hamacas (se pasan
+    // agachado, sin ruido) y dormilones en el suelo (se saltan: hace ruido).
+    // Siempre hay un carril sin saltar. main.js lleva la barra del ruido.
+    siesta(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || k % 3 !== 2) return;
+      filaSinObjeto = true;
+      const filas = [["hamaca", "dormilon", "dormilon"], ["hamaca", "hamaca", "dormilon"], ["", "dormilon", "dormilon"], ["hamaca", "dormilon", ""]];
+      const f = elegirDe(filas);
+      const orden = [...LANES].sort(() => Math.random() - 0.5);
+      orden.forEach((l, i) => {
+        if (!f[i]) { tacosEn(l, z, 3); return; }
+        const o = spawnObstacle(l, f[i] === "hamaca" ? "high" : "low", z, f[i]);
+        if (o) o.dormido = true;
+      });
+    },
+    // El rodaje (momento estrella): en el plato no hay obstaculos (el director
+    // manda moverse: ver main.js); tacos por los carriles.
+    rodaje(z, d, t, k) {
+      if (k % 4 === 1) tacosEn(elegirDe(LANES), z, 4);
+    },
+    // ---- 15/11: Charleston WV ----
+    // El saco de carbon: trozos de carbon en los carriles (cada uno pesa: se va
+    // mas lento de un carril a otro) y cada 42 m una vagoneta donde vaciarlo.
+    carbon(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      const j = k % 6;
+      if (j >= 1 && j <= 3 && obstaclePools.trozo_carbon) {
+        const l = elegirDe(LANES);
+        const o = spawnObstacle(l, "nada", z, "trozo_carbon");
+        if (o) o.trozo = { pasado: false };
+        if (Math.random() < 0.45) obst(elegirDe(LANES.filter((x) => x !== l)), "low", z, d, ["carbon_monton"]);
+        filaSinObjeto = true;
+      } else if (j === 5 && obstaclePools.vagoneta_entrega) {
+        const o = spawnObstacle(elegirDe(LANES), "nada", z, "vagoneta_entrega");
+        if (o) o.entrega = { pasado: false };
+        filaSinObjeto = true;
+      } else if (j === 0 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["carbon_monton"]);
+    },
+    // Las vias del patio (momento estrella): la vagoneta espera al principio
+    // en la via del medio. Cada 42 m una aguja (solo ahi se cambia de via) y,
+    // 21 m despues, vias cortadas en una o dos vias (nunca en las tres).
+    vias(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 4) return;
+      const j = k % 6;
+      if (j === 0 && obstaclePools.aguja_via) {
+        const o = spawnObstacle(1, "nada", z, "aguja_via");
+        if (o) o.aguja = true;
+        filaSinObjeto = true;
+      } else if (j === 3 && k > 6 && obstaclePools.barrera_via) {
+        const orden = [...LANES].sort(() => Math.random() - 0.5);
+        const cortadas = orden.slice(0, Math.random() < 0.5 ? 1 : 2);
+        for (const l of cortadas) {
+          const o = spawnObstacle(l, "full", z, "barrera_via");
+          if (o) o.via = { pasado: false };
+        }
+        for (let i = 0; i < 4; i++) spawnTaco(orden[2], z + 3 - i * 1.4, 0.9);
+        filaSinObjeto = true;
+      }
+    },
     // ---- 15/11: Anchorage ----
     // El cheque: cada 14 m un coche (o dos en carriles de al lado, nunca en
     // los dos de las orillas: siempre hay un carril y un lado que valen). Los
@@ -8716,6 +8858,8 @@ export function createWorld(scene) {
     // setVuelo). Honolulu: de pie en la tabla de surf.
     hidroavion: { alto: 2.27, z: 4.9, gira: true },
     tabla_surf: { alto: 0.16, z: 2.5, gira: true },
+    // 15/11: Charleston WV: de pie dentro de la vagoneta del patio de carbon.
+    vagoneta_carbon: { alto: 0.45, z: 1.2, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -9697,6 +9841,13 @@ export function createWorld(scene) {
         else if (o.rana) moverRana(o, dt);
         else if (o.flor) moverFlor(o);
         else if (o.coco) caerCoco(o, dt);
+        else if (o.trozo || o.entrega) moverCarbon(o);
+        else if (o.pool === "mozo") {
+          // Echa a correr (delante de ti, mas despacio) solo a 30 m: si corriera
+          // desde lejos llegaria a las filas de mas adelante.
+          if (!o.corre && o.z > -30) { o.corre = true; o.mueve = -4; }
+          o.mesh.position.y = Math.abs(Math.sin((animClock + o.phase) * 9)) * 0.12; o.mesh.rotation.y = Math.PI;
+        }
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -9924,5 +10075,6 @@ export function createWorld(scene) {
     arreoCuenta: () => arreoCuenta,
     setPatata, hayPeriodista, darPatata, setHacha, troncoCerca,
     bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata,
-    setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor };
+    setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor,
+    setSaco, enAguja };
 }

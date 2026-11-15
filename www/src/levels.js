@@ -2324,6 +2324,124 @@ const CALLES = [
     acera: ["honolulu/palmera_cocos", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 15/11/2026: nivel 38: Los Angeles (blender/losangeles.py). Nivel con
+    // jefe: el Toro. «Encierro de San Fermin por Hollywood Boulevard: el Toro,
+    // paelleras y la siesta española, que lo deja todo congelado». Recomendado:
+    // Hollywood Boulevard al atardecer, las colinas con las letras LOS ANGELES
+    // (las ha cambiado España) y final en el teatro chino. Dinamicas propias:
+    // la siesta (la calle llena de gente durmiendo: la barra del ruido sube al
+    // saltar; si se llena, chanclazo), el momento estrella, el rodaje en el
+    // plato (hacer lo que grita el director a tiempo; cinco tomas seguidas, un
+    // Oscar) y el jefe, el Toro del encierro (con paelleras y capotes).
+    // Pancartas de España: LOS ANGELES ES ESPAÑOL (fin del acto).
+    id: "los_angeles", nombre: "Hollywood Boulevard", lugar: "Los Ángeles, California", listo: true,
+    zona: "city", carpeta: "losangeles", luz: "atardecer", semilla: 1841,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "losangeles" },
+    horizonte: "losangeles",
+    obstaculos: { low: ["dormilon", "barricada", "valla_metal"], high: ["cartel_la", "pancarta", "hamaca"],
+      full: ["autobus_estrellas", "camara_cine", "mozo", "pickup"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "ejecutivo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "los_angeles" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "hollywood_blvd" }],
+      [250, 610, "siesta", { titulo: "siesta" }],
+      [610, 690, "calma", { titulo: "capitol_records_t" }],
+      [690, 850, "slalom", { full: ["autobus_estrellas", "camara_cine", "mozo"], titulo: "mozos" }],
+      [850, 930, "calma", { titulo: "entrada_plato" }],
+      // El momento estrella: el rodaje en el plato (pieza de `fondo` e `interior`, al aire libre).
+      [930, 1350, "rodaje", { titulo: "rodaje" }],
+      [1350, 1430, "calma", { titulo: "rodaje_fin" }],
+      [1430, 1590, "premios", { titulo: "premios" }],
+      [1590, 1670, "calma"],
+      [1670, 2290, "jefe", { jefe: "toro", titulo: "encierro" }],
+      [2290, 2370, "calma"],
+      [2370, 2730, "siesta", { titulo: "siesta2" }],
+      [2730, 2810, "calma"],
+      [2810, 2970, "vallas", { low: ["dormilon", "valla_metal"], high: ["cartel_la", "hamaca"], titulo: "los_angeles_es" }],
+      [2970, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_chino" }],
+    ],
+    control: 1630, caja: 1510,
+    interior: { rango: [932, 1348], tipo: "rodaje", aire: true, sinEdificios: [920, 1360] },
+    sinEdificios: [3260, 4000],
+    chapas: [[160, "carril"], [3000, "carril"], [3100, "arco"]],
+    hitos: ["capitol_records", "el_capitan", "hotel_roosevelt"],
+    meta: "teatro_chino", metaNombre: { es: "el teatro chino", en: "the Chinese Theatre" },
+    izquierda: [
+      40, ["kit", 2], 14, ["capitol_records", 1], 14, ...cuadras(2), ["el_capitan", 1], 14, ...cuadras(3), ["hotel_roosevelt", 1], 14, ...cuadras(19),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ["hotel_roosevelt", 1], 14, ...cuadras(3), ["el_capitan", 1], 14, ...cuadras(3), ["capitol_records", 1], 14, ...cuadras(17),
+    ],
+    fondo: [{ pieza: "teatro_chino", d: 3330, centro: true },
+      { pieza: "arco_san_fermin", d: 120, cruza: true }, { pieza: "arco_san_fermin", d: 2330, cruza: true },
+      { pieza: "plato_cine", d: 930, cruza: true }],
+    final: "parada", parada: 4,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 12, -40] },
+    acera: ["losangeles/estrella_fama", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
+    // 15/11/2026: nivel 39: Charleston, Virginia Occidental
+    // (blender/charlestonwv.py). Empieza el acto del Sentido Comun. «Vagonetas
+    // de su "precioso carbon limpio"». Recomendado: Capitol Street una tarde de
+    // otoño, y final en el Capitolio con la cupula de oro. Dinamicas propias:
+    // el saco de carbon (cada trozo pesa: vas mas lento de un carril a otro;
+    // se vacia en las vagonetas) y el momento estrella, la vagoneta por las
+    // vias del patio de carbon (solo se cambia de via en las agujas; las vias
+    // cortadas cuestan tacos). Pancarta del Sentido Comun: EL CARBON MANCHA.
+    id: "charleston_wv", nombre: "Capitol Street", lugar: "Charleston, Virginia Occidental", listo: true,
+    zona: "city", carpeta: "charlestonwv", luz: "otono", semilla: 1842,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 4, estilo: "charlestonwv" },
+    horizonte: "charlestonwv",
+    obstaculos: { low: ["carbon_monton", "barricada", "valla_metal"], high: ["cartel_wv", "pancarta"],
+      full: ["pickup", "furgoneta", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "charleston_wv" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "capitol_st" }],
+      [250, 610, "carbon", { titulo: "carbon" }],
+      [610, 690, "calma", { titulo: "daniel_boone" }],
+      [690, 850, "slalom", { full: ["pickup", "furgoneta", "autocaravana"], titulo: "camiones_wv" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["carbon_monton", "valla_metal"], high: ["cartel_wv"], titulo: "sentido_carbon" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_patio" }],
+      // El momento estrella: la vagoneta por el patio de carbon (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "vias", { momento: "vehiculo", vehiculo: "vagoneta_carbon", titulo: "vias" }],
+      [1830, 1910, "calma", { titulo: "vias_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "carbon", { titulo: "carbon2" }],
+      [2430, 2510, "calma", { titulo: "tipple" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_wv" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "vias", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["daniel_boone_hotel", "panaderia_pepperoni", "tipple_carbon"],
+    meta: "capitolio_wv", metaNombre: { es: "el Capitolio de Virginia Occidental", en: "the West Virginia Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["daniel_boone_hotel", 1], 14, ...cuadras(3), ["panaderia_pepperoni", 1], 14, ...cuadras(5), ["tipple_carbon", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["tipple_carbon", 1], 14, ...cuadras(4), ["panaderia_pepperoni", 1], 14, ...cuadras(5), ["daniel_boone_hotel", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_wv", d: 3330, centro: true },
+      { pieza: "arco_wv", d: 120, cruza: true }, { pieza: "arco_wv", d: 2470, cruza: true },
+      { pieza: "patio_carbon", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["charlestonwv/carretilla_carbon", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2427,14 +2545,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2494,6 +2612,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  teatro_chino: 80, capitol_records: 22, el_capitan: 22, hotel_roosevelt: 32, arco_san_fermin: 2, plato_cine: 420,
+  capitolio_wv: 90, daniel_boone_hotel: 26, panaderia_pepperoni: 16, tipple_carbon: 24, arco_wv: 2, patio_carbon: 420,
   estacion_alaska: 80, teatro_4th: 22, cabana_troncos: 18, hotel_captain_cook: 30, arco_iditarod: 2, vuelo_chugach: 420,
   palacio_iolani: 80, aloha_tower: 18, royal_hawaiian: 44, capitolio_hawaii: 38, arco_aloha: 2, playa_waikiki: 420,
   space_needle: 80, mercado_pike: 32, smith_tower: 24, biblioteca_seattle: 36, monorail: 160, mercado_pescado: 420,
@@ -2719,7 +2839,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

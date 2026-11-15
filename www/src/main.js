@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -744,7 +744,9 @@ const NOMBRE_HITO = {
     mercado_pike: "El mercado de Pike Place", smith_tower: "La Smith Tower", biblioteca_seattle: "La biblioteca de cristal",
     powells: "La librería más grande del mundo", portland_building: "Portlandia", union_station_pdx: "La estación: GO BY TRAIN",
     teatro_4th: "El teatro de la 4th Avenue", cabana_troncos: "La cabaña de troncos", hotel_captain_cook: "El hotel Captain Cook",
-    aloha_tower: "La torre Aloha", royal_hawaiian: "El palacio rosa", capitolio_hawaii: "El Capitolio de Hawái" },
+    aloha_tower: "La torre Aloha", royal_hawaiian: "El palacio rosa", capitolio_hawaii: "El Capitolio de Hawái",
+    capitol_records: "La torre de los discos", el_capitan: "El teatro El Capitan", hotel_roosevelt: "El hotel Roosevelt",
+    daniel_boone_hotel: "El hotel Daniel Boone", panaderia_pepperoni: "La panadería de los pepperoni rolls", tipple_carbon: "El cargadero de carbón" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -796,7 +798,9 @@ const NOMBRE_HITO = {
     mercado_pike: "Pike Place Market", smith_tower: "The Smith Tower", biblioteca_seattle: "The glass library",
     powells: "Powell's City of Books", portland_building: "Portlandia", union_station_pdx: "Union Station: GO BY TRAIN",
     teatro_4th: "The 4th Avenue Theatre", cabana_troncos: "The log cabin", hotel_captain_cook: "The Hotel Captain Cook",
-    aloha_tower: "Aloha Tower", royal_hawaiian: "The Pink Palace", capitolio_hawaii: "The Hawaii State Capitol" },
+    aloha_tower: "Aloha Tower", royal_hawaiian: "The Pink Palace", capitolio_hawaii: "The Hawaii State Capitol",
+    capitol_records: "The Capitol Records tower", el_capitan: "The El Capitan Theatre", hotel_roosevelt: "The Roosevelt Hotel",
+    daniel_boone_hotel: "The Daniel Boone Hotel", panaderia_pepperoni: "The pepperoni roll bakery", tipple_carbon: "The coal tipple" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1351,6 +1355,7 @@ function resetRun(desde = 0) {
   document.getElementById("retoBar").classList.add("hidden");
   quitarRodeo(); quitarPatata(); quitarHacha(); quitarRecord(); quitarLluvia(); quitarPesca(); quitarRegata();
   quitarCheque(); quitarVuelo(); quitarLei(); quitarSurf();
+  quitarSiesta(); quitarRodaje(); quitarCarbon();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1771,7 +1776,7 @@ function otroToro() {
   if (!tramoMostrado || montado || rodeo || !world.vehiculoLibre) return;
   const nombre = tramoMostrado.tipo === "rodeo" ? "toro_rodeo" : tramoMostrado.tipo === "record" ? "bolido_sal" :
     tramoMostrado.tipo === "regata" ? "barco_dragon" : tramoMostrado.tipo === "vuelo" ? "hidroavion" :
-    tramoMostrado.tipo === "surf" ? "tabla_surf" : null;
+    tramoMostrado.tipo === "surf" ? "tabla_surf" : tramoMostrado.tipo === "vias" ? "vagoneta_carbon" : null;
   if (!nombre || tramoMostrado.hasta - distance < 260 || !world.vehiculoLibre()) return;
   world.aparcarVehiculo(nombre, 1, -75);
 }
@@ -2308,11 +2313,186 @@ function truco(action) {
   sndLaneSwitch();
   return true;
 }
+// 15/11: Los Angeles: la siesta. La calle esta llena de gente durmiendo; la
+// barra del ruido sube al saltar (mucho), al cambiar de carril (algo) y al
+// agacharse (casi nada), y baja sola. Si se llena, se despiertan: ¡chanclazo!
+// Si no se despierta nadie en todo el tramo, premio.
+var siesta = null;
+const RUIDO = { jump: 0.3, left: 0.1, right: 0.1, slide: 0.03 }, RUIDO_BAJA = 0.12, SIESTA_MULTA = 10, SIESTA_PREMIO = 30;
+function quitarSiesta() {
+  siesta = null;
+  const el = document.getElementById("siestaBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarSiesta(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "siesta";
+  if (!en) {
+    if (siesta) {
+      if (gameState === "playing" && !siesta.despertados) {
+        const n = SIESTA_PREMIO * multiplier;
+        tacosThisRun += n;
+        showBubble(t("siestaBuena"), 1600, 2); avisoVerde(`+${n} ${TACO_IMG()}`); sndPoint();
+      }
+      quitarSiesta();
+    }
+    return;
+  }
+  if (!siesta) {
+    siesta = { r: 0, despertados: 0 };
+    const el = barraJuego("siestaBar");
+    el.querySelector(".rodeoTit").textContent = t("siestaHud");
+    el.querySelector(".rodeoPie").textContent = t("siestaPista");
+    el.classList.remove("hidden");
+  }
+  siesta.r = Math.max(0, siesta.r - RUIDO_BAJA * dt);
+  document.getElementById("siestaBar").querySelector(".barraLleno").style.width = `${Math.min(1, siesta.r) * 100}%`;
+}
+function ruido(action) {
+  if (!siesta || !RUIDO[action]) return;
+  siesta.r += RUIDO[action];
+  if (siesta.r >= 1) {
+    siesta.r = 0.3; siesta.despertados++;
+    const multa = Math.min(tacosThisRun, SIESTA_MULTA);
+    tacosThisRun -= multa;
+    textoFlotante(`${t("chanclazo")} -${multa}`); sndBogey(); vibrate([30, 30, 30]); flashExpression("surprised", 1);
+    if (PRUEBA && window.__juego) window.__juego.despertados = (window.__juego.despertados || 0) + 1;
+  } else if (action === "jump") sndRonquido();
+}
+// 15/11: Los Angeles: el rodaje en el plato. El director grita una orden
+// (¡salta!, ¡agachate!, ¡a la izquierda!, ¡a la derecha!) y hay que hacerla
+// antes de que se acabe la barra: ¡toma buena! Cinco seguidas: ¡un Oscar!
+var rodaje = null;
+const RODAJE_T = 1.5, RODAJE_PREMIO = 6, OSCAR = 30;
+const ORDEN_DE = { left: "izq", right: "der", jump: "salta", slide: "agacha" };
+function quitarRodaje() {
+  rodaje = null;
+  const el = document.getElementById("rodajeBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarRodaje(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "rodaje";
+  if (!en) { if (rodaje) quitarRodaje(); return; }
+  if (!rodaje) rodaje = { espera: 1.5, orden: null, t: 0, racha: 0 };
+  const el = barraJuego("rodajeBar");
+  if (!rodaje.orden) {
+    rodaje.espera -= dt;
+    el.classList.add("hidden");
+    if (rodaje.espera <= 0) {
+      const ops = ["salta", "agacha"];
+      if (currentLane > 0) ops.push("izq");
+      if (currentLane < 2) ops.push("der");
+      rodaje.orden = ops[Math.floor(Math.random() * ops.length)];
+      rodaje.t = RODAJE_T;
+      el.querySelector(".rodeoTit").textContent = t("orden_" + rodaje.orden);
+      el.querySelector(".rodeoPie").textContent = t("rodajePista");
+      el.classList.remove("hidden");
+      sndClaqueta();
+      if (PRUEBA && window.__juego) window.__juego.ordenRodaje = rodaje.orden;
+    }
+    return;
+  }
+  rodaje.t -= dt;
+  el.querySelector(".barraLleno").style.width = `${Math.max(0, rodaje.t / RODAJE_T) * 100}%`;
+  if (rodaje.t <= 0) cortarToma(false);
+}
+function cortarToma(bien) {
+  if (bien) {
+    rodaje.racha++;
+    const n = RODAJE_PREMIO * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("tomaBuena")} +${n}`); sndPoint(); vibrate(12);
+    if (rodaje.racha % 5 === 0) {
+      const o = OSCAR * multiplier;
+      tacosThisRun += o;
+      showBubble(t("oscar"), 1600, 2); avisoVerde(`+${o} ${TACO_IMG()}`); spawnConfetti(24); sndFanfarria();
+    }
+    if (PRUEBA && window.__juego) window.__juego.tomas = (window.__juego.tomas || 0) + 1;
+  } else {
+    rodaje.racha = 0;
+    textoFlotante(t("corten")); sndBogey();
+    if (PRUEBA && window.__juego) window.__juego.cortes = (window.__juego.cortes || 0) + 1;
+  }
+  rodaje.orden = null; rodaje.espera = 1.0;
+  if (PRUEBA && window.__juego) window.__juego.ordenRodaje = null;
+  const el = document.getElementById("rodajeBar");
+  if (el) el.classList.add("hidden");
+}
+function ordenRodaje(action) {
+  if (!rodaje || !rodaje.orden || !ORDEN_DE[action]) return;
+  cortarToma(ORDEN_DE[action] === rodaje.orden);
+}
+// 15/11: Charleston WV: el saco de carbon. Cada trozo que coges pesa (vas mas
+// lento de un carril a otro y saltas algo menos); en las vagonetas se vacia
+// y da tacos por trozo.
+var carbon = null;
+const CARBON_MAX = 6, CARBON_PREMIO = 4;
+function quitarCarbon() {
+  carbon = null;
+  if (world.setSaco) world.setSaco(0, 0, 0);
+  const el = document.getElementById("carbonBar");
+  if (el) el.classList.add("hidden");
+}
+function pesoCarbon() { return carbon ? carbon.n : 0; }
+function actualizarCarbon() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "carbon";
+  if (!en) { if (carbon) quitarCarbon(); return; }
+  if (!carbon) {
+    carbon = { n: 0 };
+    const el = barraJuego("carbonBar");
+    el.querySelector(".rodeoPie").textContent = t("carbonPista");
+    el.classList.remove("hidden");
+  }
+  const el = document.getElementById("carbonBar");
+  el.querySelector(".rodeoTit").textContent = t("carbonHud").replace("{n}", carbon.n).replace("{m}", CARBON_MAX);
+  el.querySelector(".barraLleno").style.width = `${carbon.n / CARBON_MAX * 100}%`;
+  world.setSaco(carbon.n, playerX, py);
+}
+function cogerCarbon() {
+  if (!carbon || gameState !== "playing") return;
+  if (carbon.n >= CARBON_MAX) { textoFlotante(t("sacoLleno")); return; }
+  carbon.n++;
+  textoFlotante(t("carbonLimpio")); sndCarbon(); vibrate(8);
+  if (PRUEBA && window.__juego) window.__juego.trozos = (window.__juego.trozos || 0) + 1;
+}
+function vaciarCarbon() {
+  if (!carbon || gameState !== "playing" || !carbon.n) return;
+  const n = CARBON_PREMIO * carbon.n * multiplier;
+  tacosThisRun += n;
+  textoFlotante(`${t("vaciado").replace("{n}", carbon.n)} +${n}`); sndBirdie(); vibrate([15, 20, 15]);
+  if (PRUEBA && window.__juego) window.__juego.vaciados = (window.__juego.vaciados || 0) + carbon.n;
+  carbon.n = 0;
+}
+// 15/11: Charleston WV: la vagoneta del patio. Solo se cambia de via en las
+// agujas; las vias cortadas no las rompe la vagoneta: cuestan tacos.
+var avisoAguja = 0;
+function enVias() { return montado && tramoMostrado && tramoMostrado.tipo === "vias"; }
+function actualizarVias() {
+  if (!enVias()) return;
+  for (const o of world.obstacles) {
+    if (!o.via || o.via.pasado || o.smashed) continue;
+    const zc = o.z + (o.centro || 0);
+    if (zc < -0.7 || zc > 0.7) continue;
+    if (Math.abs(playerX - LANE_X[o.lane]) > 1.1) continue;
+    o.via.pasado = true;
+    world.smash(o);
+    const multa = Math.min(tacosThisRun, 10);
+    tacosThisRun -= multa;
+    textoFlotante(`${t("viaCortada")} -${multa}`); sndClank(); vibrate([30, 30, 30]); triggerCameraShake(0.02);
+    if (PRUEBA && window.__juego) window.__juego.descarriles = (window.__juego.descarriles || 0) + 1;
+  }
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
   if (alReves && (action === "left" || action === "right")) action = action === "left" ? "right" : "left";
   if (regata && montado && (action === "left" || action === "right")) { remar(action); return; }   // (15/11: Portland)
+  if (enVias() && (action === "left" || action === "right") && !world.enAguja()) {   // (15/11: Charleston WV)
+    const ahora = performance.now();
+    if (ahora - avisoAguja > 900) { avisoAguja = ahora; textoFlotante(t("soloAgujas")); sndClank(); }
+    return;
+  }
+  ruido(action);          // (15/11: Los Angeles: la siesta)
+  ordenRodaje(action);    // (15/11: Los Angeles: el rodaje)
   if (surf && montado && ["left", "right", "jump", "slide"].includes(action)) { truco(action); return; }   // (15/11: Honolulu)
   if (vuelo && montado && ["jump", "frase", "lanzar"].includes(action)) { aletear(); return; }   // (15/11: Anchorage)
   if (rodeo && montado && (action === "left" || action === "right")) {
@@ -2350,7 +2530,7 @@ function accionJugador(action, pos) {
   }
 }
 function saltar() {
-  vy = (botasTimeLeft > 0 ? V_SALTO_BOTAS : V_SALTO) * (enLuna ? LUNA_V : 1);
+  vy = (botasTimeLeft > 0 ? V_SALTO_BOTAS : V_SALTO) * (enLuna ? LUNA_V : 1) * (1 - 0.04 * pesoCarbon());
   enSuelo = false; isJumping = true; jumpElapsed = 0; coyote = 0;
   gestoGuardado = null; gestoReloj = 0;
   if (isSliding) { isSliding = false; character.setSlidePose(false); }
@@ -2441,7 +2621,7 @@ function checkCollisions(paso = 0) {
   if (montado) {
     // 06/11 (3): en el vehiculo, todo lo que pilla sale volando.
     for (const o of world.obstacles) {
-      if (o.smashed || o.type === "nada" || o.type === "rampa" || o.fuera || Math.abs(playerX - LANE_X[o.lane]) > 1.2) continue;
+      if (o.smashed || o.type === "nada" || o.type === "rampa" || o.fuera || o.via || Math.abs(playerX - LANE_X[o.lane]) > 1.2) continue;
       const zc = o.type === "bus" ? o.z - 1 : o.z + (o.centro || 0), medio = o.type === "bus" ? 1.2 : (o.medio || 0.7);
       if (zc < -medio - 1.6 || zc > medio) continue;
       world.smash(o);
@@ -2786,7 +2966,8 @@ function subirAlVehiculo() {
   const barco = world.vehiculoNombre && world.vehiculoNombre() === "barco_dragon";  // (15/11: Portland)
   const avion = world.vehiculoNombre && world.vehiculoNombre() === "hidroavion";    // (15/11: Anchorage)
   const tabla = world.vehiculoNombre && world.vehiculoNombre() === "tabla_surf";    // (15/11: Honolulu)
-  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : avion ? "vueloSube" : tabla ? "surfSube" : "subeAviso"), 1600, 2);
+  const vagon = world.vehiculoNombre && world.vehiculoNombre() === "vagoneta_carbon";  // (15/11: Charleston WV)
+  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : avion ? "vueloSube" : tabla ? "surfSube" : vagon ? "viasSube" : "subeAviso"), 1600, 2);
   if (avion) empezarVuelo();
   if (tabla) empezarSurf();
   if (toro) empezarRodeo();
@@ -3271,6 +3452,8 @@ world.onAvisoMapa((que) => {
   // se la queda) y el tronco partido de un hachazo.
   else if (que === "periodista") pasarPatata();
   else if (que === "flor") florCogida();   // (15/11: Honolulu)
+  else if (que === "carbon") cogerCarbon();   // (15/11: Charleston WV)
+  else if (que === "entrega") vaciarCarbon();
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -3358,7 +3541,7 @@ function frame(dtFijo) {
     // 12/11: Fargo: en las placas de hielo el cambio de carril va resbalando.
     const enHielo = world.hieloEn(currentLane) || world.hieloEn(carrilAntes);
     if (enHielo && !avisoHielo) { avisoHielo = true; showBubble(t("hieloAviso"), 1500, 1); }
-    playerX += (targetX - playerX) * Math.min(1, dt * (enHielo ? 2.6 : 10));
+    playerX += (targetX - playerX) * Math.min(1, dt * (enHielo ? 2.6 : 10) / (1 + 0.3 * pesoCarbon()));   // (15/11: el saco de carbon pesa)
     rafagas(dt);
     character.object3D.position.x = playerX;
     // Tropezon: un tambaleo corto.
@@ -3383,6 +3566,10 @@ function frame(dtFijo) {
     actualizarVuelo(dt);
     actualizarLei();
     actualizarSurf(dt);
+    actualizarSiesta(dt);
+    actualizarRodaje(dt);
+    actualizarCarbon();
+    actualizarVias();
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3440,7 +3627,8 @@ function frame(dtFijo) {
         estampida: "estampidaAviso", rodeo: "rodeoAviso", osos: "ososAviso", arreo: "arreoAviso",
         patata: "patataAviso", aizkolari: "aizkolariAviso", espejismo: "espejismoAviso", record: "recordAviso",
         chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso",
-        cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso" };
+        cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso",
+        siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.

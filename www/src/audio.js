@@ -213,6 +213,15 @@ export function sndCogerPez() {
 }
 export function sndDesinfla() { soplo(0.7, { desde: 2400, hasta: 500, tipo: "bandpass", vol: 0.16, q: 2.0 }); tono(300, 0.6, { tipo: "sine", vol: 0.05, glide: -180 }); }
 export function sndRemo() { soplo(0.18, { desde: 700, hasta: 300, tipo: "lowpass", vol: 0.16, q: 0.7 }); }
+// 15/11: Los Angeles: el ronquido (la siesta) y la claqueta; Charleston WV:
+// el trozo de carbon y el golpe de la via cortada.
+export function sndRonquido() { tono(110, 0.5, { tipo: "sawtooth", vol: 0.05, glide: -30, filtro: 400, ataque: 0.1 }); }
+export function sndClaqueta() { soplo(0.05, { desde: 2000, hasta: 1500, tipo: "highpass", vol: 0.3, q: 0.7 }); tono(1800, 0.04, { tipo: "square", vol: 0.05 }); }
+export function sndCarbon() { tono(520, 0.06, { tipo: "triangle", vol: 0.08 }); tono(390, 0.08, { tipo: "triangle", vol: 0.06, cuando: 0.05 }); }
+export function sndClank() {
+  tono(240, 0.25, { tipo: "square", vol: 0.06, glide: -60, filtro: 1200 });
+  tono(360, 0.2, { tipo: "square", vol: 0.04, glide: -80, filtro: 1500, cuando: 0.03 });
+}
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -393,6 +402,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Los Angeles: rock con cadencia andaluza para el encierro (melodia propia).
+  los_angeles: { bpm: 140, swing: 0, acordes: [Am, G, F, E7], bateria: "pop", bajo: "octavas",
+    melodia: [76, null, 76, 77, 76, 74, 72, null, 71, null, 72, 74, 72, 71, 69, null,
+      76, null, 79, 77, 76, 74, 72, 71, 72, null, 71, null, 69, null, null, null],
+    timbre: "metal" },
+  // 15/11: Charleston WV: bluegrass de los Apalaches, con banjo (melodia propia).
+  charleston_wv: { bpm: 150, swing: 0.5, acordes: [G, C, G, D], bateria: "country", bajo: "alterna",
+    melodia: [67, 71, 74, null, 74, 71, 67, null, 72, 76, 72, null, 74, null, null, null,
+      67, 71, 74, 79, 78, 76, 74, null, 72, null, 71, 69, 67, null, null, null],
+    timbre: "banjo" },
   // 15/11: Anchorage: aventura en la montaña, abierta (melodia propia).
   anchorage: { bpm: 132, swing: 0, acordes: [C, G, Am, F], bateria: "pop", bajo: "octavas",
     melodia: [67, null, 72, null, 74, 76, null, 74, 72, null, 67, null, 69, 72, null, null,

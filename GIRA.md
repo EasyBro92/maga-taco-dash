@@ -26,7 +26,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Alabama | Birmingham (capital: Montgomery) | la más grande (hecho el 14/11: el rotulador que pinta muros, la fundición Sloss y Vulcano) |
 | Alaska | Anchorage (capital: Juneau) | la más grande y conocida (hecho el 15/11: 4th Avenue, el cheque gigante que va por el carril de al lado y el hidroavión por las montañas) |
 | Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
-| California | Los Ángeles (capital: Sacramento) | Hollywood |
+| California | Los Ángeles (capital: Sacramento) | Hollywood (hecho el 15/11: la siesta sin hacer ruido, el rodaje en el plató y el Toro del encierro) |
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa (hecho el 14/11: East Bay Street, las calesas que dejan «regalitos», el campo de golf persiguiendo la bola y la fuente de la piña) |
 | Colorado | Denver | capital y la más famosa (hecho el 14/11: el 16th Street Mall, las bolas de nieve que crecen y el eslalon de las Rocosas) |
@@ -65,7 +65,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Utah | Salt Lake City | capital y la más famosa (hecho el 14/11: State Street con espejismos y el récord de velocidad en el salar de Bonneville) |
 | Vermont | Burlington (capital: Montpelier) | la más grande |
 | Virginia | Richmond | capital, la más histórica |
-| Virginia Occidental | Charleston | capital y la más grande |
+| Virginia Occidental | Charleston | capital y la más grande (hecho el 15/11: el saco de carbón que pesa y la vagoneta que solo cambia de vía en las agujas) |
 | Washington (estado) | Seattle (capital: Olympia) | la Space Needle (hecho el 15/11: 5th Avenue con lluvia, las marquesinas que salvan el tupé y los salmones de Pike Place) |
 | Wisconsin | Milwaukee (capital: Madison) | la más grande |
 | Wyoming | Cheyenne | capital y la más grande (hecho el 14/11: los Frontier Days, la estampida que se para con el lazo y aguantar 8 segundos en el toro) |

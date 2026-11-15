@@ -366,6 +366,34 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: la estrella del Paseo de la Fama (Los Angeles).
+  estrella(x) {
+    x.save(); x.translate(128, 132);
+    const pts = [];
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 42 : 100; pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+    const forma = () => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#e88aa8"; forma(); x.fill();
+    x.lineWidth = 7; x.strokeStyle = "#e8b840"; forma(); x.stroke();
+    x.fillStyle = "#e8b840"; x.beginPath(); x.arc(0, 4, 20, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "rgba(255,255,255,0.45)"; x.beginPath(); x.ellipse(-20, -36, 8, 18, 0.5, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 15/11: el pico de minero (Charleston WV).
+  pico(x) {
+    x.save(); x.translate(128, 132); x.rotate(-0.6);
+    const mango = () => { x.beginPath(); x.roundRect(-10, -20, 20, 130, 8); };
+    const hierro = () => { x.beginPath(); x.moveTo(-100, -10); x.quadraticCurveTo(0, -60, 100, -10); x.lineTo(96, 4); x.quadraticCurveTo(0, -36, -96, 4); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; mango(); x.stroke(); hierro(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; mango(); x.stroke(); hierro(); x.stroke();
+    x.fillStyle = "#a86a3a"; mango(); x.fill();
+    x.fillStyle = "#8a9098"; hierro(); x.fill();
+    x.fillStyle = "rgba(255,255,255,0.5)"; x.beginPath(); x.ellipse(-30, -30, 30, 5, -0.2, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 15/11: la pepita de oro (Anchorage).
   pepita(x) {
     x.save(); x.translate(128, 132);

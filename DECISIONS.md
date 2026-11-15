@@ -2586,3 +2586,54 @@ Los choques que quedan son del piloto en tramos normales: furgonetas que
 cambian de carril y un coco al que llegó tarde cambiando de carril.
 
 Falta el veredicto de Isidro.
+
+## 15/11/2026 (3): niveles 38 y 39, Los Ángeles y Charleston WV (v71)
+
+- **Los Ángeles** (Hollywood Boulevard al atardecer; nivel con jefe;
+  `blender/losangeles.py`):
+  - La siesta: la calle está llena de gente durmiendo. Hay hamacas (se pasan
+    agachado, sin ruido) y dormilones en el suelo (se saltan, y hace ruido).
+    La barra del ruido sube al saltar (mucho), al cambiar de carril (algo) y
+    al agacharse (casi nada), y baja sola. Si se llena, ¡chanclazo! (−10).
+    Si no se despierta nadie en todo el tramo, +30.
+  - El momento estrella es el rodaje en el plató, entre fachadas falsas,
+    grúas con cámara y claquetas gigantes. El director grita una orden
+    (¡SALTA!, ¡AGÁCHATE!, ¡A LA IZQUIERDA!, ¡A LA DERECHA!) y hay que hacerla
+    antes de que se acabe la barra: ¡TOMA BUENA! (+6). Cinco seguidas, ¡UN
+    ÓSCAR! (+30). En el plató no hay obstáculos.
+  - El jefe es el Toro del encierro, con sus paelleras y capotes; ya
+    existía.
+  - Los mozos de San Fermín echan a correr delante de ti solo a 30 m.
+  - En las colinas, España ha cambiado las letras: LOS ÁNGELES. Pancartas:
+    LOS ÁNGELES ES ESPAÑOL (fin del acto de la Armada).
+  - Piezas: la torre de Capitol Records, el teatro El Capitan, el hotel
+    Roosevelt, las estrellas del Paseo de la Fama (la de TRUMP), el arco de
+    San Fermín, la cámara de cine y el autobús de las estrellas.
+  - Final en el teatro chino. Objeto: estrellas.
+- **Charleston, Virginia Occidental** (Capitol Street en otoño; empieza el
+  acto del Sentido Común; `blender/charlestonwv.py`):
+  - El saco de carbón: cada trozo de carbón «limpio» pesa, así que vas más
+    lento de un carril a otro y saltas algo menos. Se vacía en las vagonetas
+    (+4 por trozo). Caben seis.
+  - El momento estrella es la vagoneta por las vías del patio de carbón.
+    Solo se cambia de vía en las AGUJAS. Las vías cortadas, en una o dos de
+    las tres, no las rompe la vagoneta: cuestan 10 tacos.
+  - Las pancartas del Sentido Común son azules con el cerebro rosa. Aquí
+    dicen EL CARBÓN MANCHA.
+  - Piezas: el hotel Daniel Boone, la panadería de los pepperoni rolls, el
+    cargadero de carbón, las vagonetas de las aceras y el arco WILD AND
+    WONDERFUL.
+  - Final en el Capitolio con la cúpula de oro. Objeto: picos de minero.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles y salen
+los 10 objetos de cada uno:
+
+- **Los Ángeles:** 15 tomas buenas sin un corte; en la siesta despertó a la
+  gente una vez.
+- **Charleston:** recogió y vació 23 trozos de carbón en el primer tramo. En
+  las vías no chocó con ninguna cortada; sin poder cambiar de vía, con 5.
+
+Los choques que quedan son del piloto: cambia tarde de carril junto a las
+hamacas y se lía con las furgonetas que cambian de carril.
+
+Falta el veredicto de Isidro.

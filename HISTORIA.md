@@ -101,7 +101,7 @@ Fermín.
 | 35 | Portland, Oregón | +8 | Manifestantes disfrazados de rana hinchable (pasó de verdad). *(hecho)* |
 | 36 | Anchorage, Alaska | +3 | Intenta comprar Alaska. Le recuerdan que ya es suya. «Pues compro Groenlandia». *(hecho)* |
 | 37 | Honolulu, Hawái | +4 | Surf, cocos que caen y golf otra vez. *(hecho)* |
-| 38 | Los Ángeles, California | +54 | **Jefe.** Encierro de San Fermín por Hollywood Boulevard: el Toro, paelleras y la siesta española, que lo deja todo congelado. |
+| 38 | Los Ángeles, California | +54 | **Jefe.** Encierro de San Fermín por Hollywood Boulevard: el Toro, paelleras y la siesta española, que lo deja todo congelado. *(hecho)* |
 
 ## Acto 5 — El sentido común (Noreste · 12 estados · 535 votos)
 
@@ -111,7 +111,7 @@ con gafas que lanza libros y datos.
 
 | # | Ciudad | Votos | Qué pasa |
 |---|---|---|---|
-| 39 | Charleston, Virginia Occidental | +4 | Vagonetas de su «precioso carbón limpio». |
+| 39 | Charleston, Virginia Occidental | +4 | Vagonetas de su «precioso carbón limpio». *(hecho)* |
 | 40 | Richmond, Virginia | +13 | Tanques del desfile de su cumpleaños. Ha rebautizado Defensa como «Departamento de Guerra». |
 | 41 | Baltimore, Maryland | +10 | Cangrejos que pellizcan los tobillos. |
 | 42 | Wilmington, Delaware | +3 | El pueblo de su rival dormilón: mecedoras y helados por la calle. |

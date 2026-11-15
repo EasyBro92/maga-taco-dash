@@ -1049,3 +1049,9 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #leiBar .leiFlores span { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--azul); opacity: 0.55; }
 #leiBar .leiFlores span.toca { opacity: 1; transform: scale(1.25); }
 #leiBar .leiFlores span.hecha { opacity: 1; box-shadow: 0 0 0 2px #5ac85a; }
+
+/* 15/11: Los Angeles (la siesta y el rodaje) y Charleston WV (el saco de carbon) */
+#siestaBar .barraLleno { background: linear-gradient(90deg, #5ac85a, #f2c21a, #e8402a); }
+#rodajeBar .barraLleno { background: #f2c21a; }
+#rodajeBar .rodeoTit { font-size: 30px; }
+#carbonBar .barraLleno { background: linear-gradient(90deg, #4a4a52, #1a1a1e); }
