@@ -2530,3 +2530,59 @@ objetos de cada uno:
 - **Portland:** 0 choques, 10 ranas deshinchadas y ganó la regata.
 
 Falta el veredicto de Isidro.
+
+## 15/11/2026 (2): niveles 36 y 37, Anchorage y Honolulu (v70)
+
+- **Anchorage** (4th Avenue en verano, con la luz dorada del sol de medianoche;
+  `blender/anchorage.py`):
+  - El cheque gigante de 7,2 millones, lo que costó Alaska en 1867. Va al
+    lado del jugador, por el carril de al lado. Si allí hay algo que no se
+    pasa por debajo, se rompe (−10). Tocando se cambia de lado.
+  - Los coches salen de uno en uno o de dos en carriles de al lado, nunca en
+    las dos orillas a la vez: siempre hay un carril y un lado que valen. Al
+    acabar: «Señor, Alaska YA ES SUYA. Desde 1867». La segunda vez, «Pues
+    compro GROENLANDIA».
+  - El robot, sin cambiar de lado, rompió 10 cheques; cambiándolo, 1.
+  - El momento estrella es el hidroavión desde el lago Hood por las montañas
+    Chugach. Encima, tocar le da impulso hacia arriba. Hay puertas que tapan
+    la calle: crestas nevadas (pasar por encima), nubes de tormenta (por
+    debajo) o las dos (por el hueco). La cámara se queda a una altura fija
+    para no marear.
+  - Primero las puertas venían cada 28 m, una por segundo a más de 30 m/s, y
+    no daba tiempo. Ahora salen cada 49 m, la altura del hueco cambia poco de
+    una a otra y el impulso es más suave.
+  - Pancartas: VALDEZ Y CÓRDOVA SON NOMBRES ESPAÑOLES.
+  - Piezas: el teatro de la 4th Avenue, la cabaña de troncos con el tejado de
+    hierba, el hotel Captain Cook, los alces pintados, el arco de la
+    Iditarod y la nasa de los cangrejos reales.
+  - Final en la estación del ferrocarril de Alaska, con el cartel SE VENDE
+    GROENLANDIA. Objeto: pepitas de oro.
+- **Honolulu** (Kalakaua Avenue, en Waikiki; `blender/honolulu.py`):
+  - El collar de flores: arriba salen cinco colores en orden. Cada fila trae
+    tres flores (roja, amarilla y morada) y hay que coger la que toca. Si
+    coges otra, el collar se deshace. Con las cinco, +25.
+  - Los cocos caen de las palmeras a lo lejos y se quedan en la calle (se
+    saltan).
+  - El golf ya estaba en Charleston: no se repite.
+  - El momento estrella es el surf. Encima de la tabla, la ola te levanta
+    cada poco. En el aire, deslizar hace una pirueta (izquierda o derecha, un
+    giro; arriba o abajo, una voltereta). Si aterrizas a mitad de pirueta,
+    ¡al agua!
+  - Pancartas: PANIOLO = ESPAÑOL (los vaqueros de Hawái).
+  - Piezas: la torre Aloha, el hotel rosa, el Capitolio con columnas de
+    palmera, el arco ALOHA, el trolley, el carrito del raspado y las tablas
+    en su caballete.
+  - Final en el palacio Iolani. Objeto: cocos.
+
+Probado con el piloto automático, que ahora cambia el cheque de lado, pilota
+el hidroavión, sigue el orden del collar y hace piruetas. Llega a la meta en
+los dos niveles y salen los 10 objetos de cada uno:
+
+- **Anchorage:** 5 puertas bien y 1 golpe en el vuelo.
+- **Honolulu:** 2 collares completos sin fallar una flor, 6 piruetas sin
+  caerse y, girando tarde, al agua.
+
+Los choques que quedan son del piloto en tramos normales: furgonetas que
+cambian de carril y un coco al que llegó tarde cambiando de carril.
+
+Falta el veredicto de Isidro.

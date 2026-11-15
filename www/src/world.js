@@ -3127,6 +3127,22 @@ export function createWorld(scene) {
     cartel_oregon: { choque: "high", medio: 0.3, alto: 2.5 },
     food_truck: { choque: "full", medio: 3.0, alto: 3.0, centro: -3.0 },
     bicis_aparcadas: { choque: "low", medio: 0.55, alto: 0.9 },
+    // 15/11: Anchorage (blender/anchorage.py): la pancarta VALDEZ Y CORDOVA, la
+    // nasa de los cangrejos reales y, en el vuelo del hidroavion, la cresta
+    // nevada (se estira hasta su alto) y la nube de tormenta (se sube hasta su
+    // base; sin sombra): las dos son «nada» y el choque lo mira main.js.
+    cartel_alaska: { choque: "high", medio: 0.3, alto: 2.5 },
+    nasa_cangrejo: { choque: "low", medio: 0.85, alto: 0.95 },
+    cresta_nevada: { choque: "nada", medio: 0.8, alto: 0 },
+    nube_tormenta: { choque: "nada", medio: 0.8, alto: 0, orilla: true },
+    // 15/11: Honolulu (blender/honolulu.py): la pancarta PANIOLO, las tablas
+    // en su caballete, el carrito del raspado, el trolley y el coco caido (cae
+    // de la palmera; sin sombra, que bajaria con el).
+    cartel_hawaii: { choque: "high", medio: 0.3, alto: 2.5 },
+    tablas_surf: { choque: "low", medio: 0.45, alto: 0.8 },
+    carrito_raspado: { choque: "full", medio: 1.0, alto: 2.4, centro: -0.9 },
+    trolley_waikiki: { choque: "full", medio: 4.5, alto: 3.0, centro: -4.5 },
+    coco: { choque: "low", medio: 0.35, alto: 0.6, orilla: true },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3621,6 +3637,28 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 15/11: Honolulu: la flor del collar (hibisco de cinco petalos, hecho
+    // aqui; el color lo pone el patron).
+    TIPOS.flor_lei = { choque: "nada", medio: 0.5, alto: 0 };
+    obstaclePools.flor_lei = makePool(() => {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshLambertMaterial({ color: 0xe8203a });
+      const flor = new THREE.Group();
+      const petalo = new THREE.SphereGeometry(0.34, 12, 8);
+      for (let i = 0; i < 5; i++) {
+        const p = new THREE.Mesh(petalo, mat);
+        const a = i * Math.PI * 2 / 5 + Math.PI / 2;
+        p.scale.set(1, 0.6, 0.25); p.position.set(Math.cos(a) * 0.36, Math.sin(a) * 0.36, 0); p.rotation.z = a;
+        flor.add(p);
+      }
+      const centro = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), new THREE.MeshLambertMaterial({ color: 0xffe066 }));
+      centro.position.z = 0.1; flor.add(centro);
+      const borde = new THREE.Mesh(new THREE.CircleGeometry(0.8, 20), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }));
+      borde.position.z = -0.1; flor.add(borde);
+      flor.position.y = 1.35; g.add(flor);
+      g.userData.flor = flor; g.userData.mat = mat;
+      return g;
+    });
     // 14/11: Boise: el tronco de los aizkolaris: entero y, al cortarlo, sus
     // dos mitades (el mismo tronco a lo estrecho) que caen a los lados.
     if (hayModelo("obstaculos/tronco_aizkolari")) {
@@ -4202,6 +4240,89 @@ export function createWorld(scene) {
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
     }
+  }
+  // ---- 15/11: Anchorage ----
+  // El cheque gigante (main.js lleva de que lado va y si choca): aqui se
+  // pinta, se pone al lado del jugador y, si se rompe, cae dando vueltas.
+  const cheque = { mesh: null, clave: "", cae: 0, lado: 1 };
+  function texturaCheque(clave) {
+    const cache = texturaCheque.cache || (texturaCheque.cache = {});
+    const k = clave + getLang();
+    if (cache[k]) return cache[k];
+    const c = document.createElement("canvas"); c.width = 512; c.height = 240;
+    const x = c.getContext("2d");
+    x.fillStyle = "#e4f2dc"; x.fillRect(0, 0, 512, 240);
+    x.strokeStyle = "#2a6a3a"; x.lineWidth = 10; x.strokeRect(8, 8, 496, 224);
+    x.lineWidth = 2; x.strokeRect(20, 20, 472, 200);
+    const [quien, cuanto] = tr(clave === "alaska" ? "chequeA" : "chequeG").split("|");
+    x.fillStyle = "#2a3a2a"; x.font = `700 22px Arial, sans-serif`; x.textAlign = "left";
+    x.fillText("PAY TO THE ORDER OF", 34, 56);
+    x.font = `900 54px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    x.fillStyle = "#1a2a6a"; x.fillText(quien, 34, 118);
+    x.textAlign = "right"; x.fillStyle = "#c8202a"; x.font = `900 44px Fredoka, Arial, sans-serif`;
+    x.fillText(cuanto, 478, 60);
+    x.strokeStyle = "#1a2a6a"; x.lineWidth = 4; x.beginPath(); x.moveTo(260, 196);
+    for (let i = 0; i < 12; i++) x.lineTo(270 + i * 18, 196 + (i % 2 ? -22 : 6));
+    x.stroke();
+    x.fillStyle = "#2a3a2a"; x.font = `700 18px Arial, sans-serif`; x.textAlign = "left"; x.fillText("USA · 1867", 34, 200);
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return (cache[k] = tx);
+  }
+  function setCheque(visible, x, y, lado, clave) {
+    if (!cheque.mesh) {
+      if (!visible) return;
+      cheque.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.03), new THREE.MeshBasicMaterial({ map: texturaCheque(clave), side: THREE.DoubleSide }));
+      group.add(cheque.mesh);
+    }
+    if (clave && (clave !== cheque.clave || cheque.mesh.userData.lang !== getLang())) {
+      cheque.clave = clave; cheque.mesh.userData.lang = getLang();
+      cheque.mesh.material.map = texturaCheque(clave); cheque.mesh.material.needsUpdate = true;
+    }
+    if (cheque.cae > 0) return;
+    cheque.mesh.visible = visible;
+    if (!visible) return;
+    cheque.lado += (lado - cheque.lado) * 0.3;
+    cheque.mesh.position.set(x + cheque.lado * 1.45, 1.6 + y, -0.15);
+    cheque.mesh.rotation.set(0, -cheque.lado * 0.15, 0);
+  }
+  function romperCheque() { if (cheque.mesh) { cheque.cae = 0.9; cheque.mesh.visible = true; } }
+  function moverCheque(dt) {
+    if (!cheque.mesh || cheque.cae <= 0) return;
+    cheque.cae -= dt;
+    const m = cheque.mesh;
+    m.position.y = Math.max(0.1, m.position.y - dt * 4);
+    m.position.z += dt * 12;
+    m.rotation.z += dt * 6; m.rotation.x += dt * 3;
+    if (cheque.cae <= 0) m.visible = false;
+  }
+  // El hidroavion: main.js dice a que altura vuela (el avion sube y baja con
+  // el jugador encima; ver surfaceAt).
+  let vueloY = 0;
+  function setVuelo(y) { vueloY = y; }
+  // ---- 15/11: Honolulu ----
+  // Las flores del collar: flotan y giran un poco; la que te llega por tu
+  // carril se coge (main.js mira si es el color que tocaba).
+  const COLORES_LEI = [0xe8203a, 0xf2c21a, 0x9a4ad8];
+  let ultimaFlor = -1;
+  function moverFlor(o) {
+    const f = o.flor, u = o.mesh.userData;
+    u.flor.position.y = 1.35 + Math.sin((animClock + o.phase) * 2.4) * 0.12;
+    u.flor.rotation.z = Math.sin((animClock + o.phase) * 1.3) * 0.3;
+    if (!f.pasado && o.z > -0.5) {
+      f.pasado = true;
+      if (o.lane === jugadorCarril) { ultimaFlor = f.color; o.mesh.visible = false; if (alAvisoMapa) alAvisoMapa("flor"); }
+    }
+  }
+  // El coco cae de la palmera a lo lejos y se queda en el suelo (se salta).
+  function caerCoco(o, dt) {
+    const c = o.coco, m = o.mesh;
+    if (c.y === undefined) { c.y = 7.5; c.vy = 0; }
+    if (o.z < -75) { m.visible = false; return; }
+    m.visible = true;
+    if (c.y > 0.3) { c.vy -= 22 * dt; c.y = Math.max(0.3, c.y + c.vy * dt); }
+    m.position.y = c.y;
+    if (c.y <= 0.3) m.rotation.x -= dt * 2;
   }
   // ---- 15/11: Seattle ----
   // El chaparron: ¿esta el jugador debajo de una marquesina?
@@ -5382,6 +5503,7 @@ export function createWorld(scene) {
   // autobus. `d` es cuanto se ha metido el jugador desde el pie de la rampa.
   function surfaceAt(x) {
     let h = vehiculo.fase === 2 || vehiculo.fase === 1 ? vehiculo.alto : 0;   // 06/11 (3): de pie en el vehiculo
+    if (vehiculo.fase === 2 && vehiculo.nombre === "hidroavion") h += vueloY;   // (15/11: Anchorage: volando)
     for (const o of obstacles) {
       if ((o.type !== "bus" && o.type !== "rampa") || o.smashed) continue;
       if (Math.abs(x - LANE_X[o.lane]) > (o.type === "rampa" ? 1.1 : 0.85)) continue;
@@ -6595,6 +6717,7 @@ export function createWorld(scene) {
   let estampidaFila = 0, osoAntes = "";                             // (14/11: Cheyenne y Billings)
   let periodistaAntes = -1;                                         // (14/11: Boise)
   let marqAntes = -1;                                               // (15/11: Seattle)
+  let vueloAntes = 2.5;                                             // (15/11: Anchorage)
   const PATRONES = {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
@@ -7671,6 +7794,76 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Anchorage ----
+    // El cheque: cada 14 m un coche (o dos en carriles de al lado, nunca en
+    // los dos de las orillas: siempre hay un carril y un lado que valen). Los
+    // coches no cambian de carril ni cruzan.
+    cheque(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 2 === 0) {
+        const lanes = Math.random() < 0.35 ? (Math.random() < 0.5 ? [0, 1] : [1, 2]) : [elegirDe(LANES)];
+        for (const l of lanes) {
+          const o = obst(l, "full", z, d, ["pickup", "furgoneta", "autocaravana"]);
+          if (o) { o.puedeCambiar = false; o.mueve = 0; o.cruce = null; }
+        }
+        filaSinObjeto = lanes.length > 1;
+      } else if (k % 6 === 3) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // El vuelo en hidroavion (momento estrella): el avion espera al principio
+    // en el carril del medio (ver VEHICULOS). Cada 28 m una puerta que tapa
+    // la calle: una cresta (pasar por encima), una nube (por debajo) o las dos
+    // (por el hueco). main.js mira la altura del avion al pasar.
+    vuelo(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 8 || k > n - 8 || k % 7 !== 0 || !obstaclePools.cresta_nevada || !obstaclePools.nube_tormenta) return;
+      filaSinObjeto = true;
+      // (cada 49 m, y la altura del hueco cambia poco de una puerta a la
+      // siguiente: a mas de 30 m/s, con puertas cada 28 m no daba tiempo)
+      const tipo = elegirDe(["cresta", "nube", "puerta", "puerta"]);
+      const centro = THREE.MathUtils.clamp(vueloAntes + (Math.random() - 0.5) * 3, 1.8, 4.6);
+      vueloAntes = centro;
+      let min = 0, max = 99;
+      if (tipo === "puerta") { const hueco = 2.4 + Math.random() * 0.5; min = centro - hueco / 2; max = centro + hueco / 2; }
+      else if (tipo === "cresta") min = centro - 0.8;
+      else max = centro + 0.8;
+      if (tipo !== "nube") {
+        const o = spawnObstacle(1, "nada", z, "cresta_nevada");
+        if (o) { o.mesh.scale.y = Math.max(0.3, min); o.vuelo = { min, premio: true }; }
+      }
+      if (tipo !== "cresta") {
+        const o = spawnObstacle(1, "nada", z, "nube_tormenta");
+        if (o) { o.mesh.position.y = max + 4.3; o.vuelo = { max, premio: tipo === "nube" }; }
+      }
+    },
+    // ---- 15/11: Honolulu ----
+    // El collar de flores: cada 28 m una fila de tres flores de colores
+    // distintos (rojo, amarillo, morado); main.js dice cual toca. Entre medias,
+    // cocos caidos y tablas de surf.
+    leis(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 4 === 2) {
+        filaSinObjeto = true;
+        const cols = [0, 1, 2].sort(() => Math.random() - 0.5);
+        for (const l of LANES) {
+          const o = spawnObstacle(l, "nada", z, "flor_lei");
+          if (o) { o.flor = { color: cols[l], pasado: false }; o.mesh.userData.mat.color.setHex(COLORES_LEI[cols[l]]); }
+        }
+        return;
+      }
+      if (k % 4 === 0 && obstaclePools.coco) {
+        const o = spawnObstacle(elegirDe(LANES), "low", z, "coco");
+        if (o) o.coco = {};
+      } else if (k % 4 === 3 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["tablas_surf"]);
+    },
+    // El surf (momento estrella): la tabla espera al principio (ver
+    // VEHICULOS); las olas y las piruetas las lleva main.js. Tacos en el medio.
+    surf(z, d, t, k) {
+      if (k % 3 === 1) for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
+    },
     // ---- 15/11: Seattle ----
     // El chaparron: cada 21 m una marquesina de cristal de 14 m (en el carril
     // de antes o en uno de al lado): debajo no se moja el tupe. A veces un
@@ -8519,6 +8712,10 @@ export function createWorld(scene) {
     // 15/11: Portland: de pie en la popa del barco dragon, llevando el timon
     // (hay que remar: ver main.js).
     barco_dragon: { alto: 0.6, z: 1.6, gira: true },
+    // 15/11: Anchorage: de pie encima del ala del hidroavion (vuela: ver
+    // setVuelo). Honolulu: de pie en la tabla de surf.
+    hidroavion: { alto: 2.27, z: 4.9, gira: true },
+    tabla_surf: { alto: 0.16, z: 2.5, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -8606,6 +8803,8 @@ export function createWorld(scene) {
     }
     if (vehiculo.fase !== 3) vehiculo.x = x;
     vehiculo.mesh.position.set(vehiculo.x, 0, vehiculo.z);
+    // 15/11: Anchorage: el hidroavion vuela a la altura que dice main.js.
+    if (vehiculo.nombre === "hidroavion") vehiculo.mesh.position.y = vehiculo.fase === 2 ? vueloY : 0;
     // 14/11: Cheyenne: el toro del rodeo corcovea (cabeza abajo, ancas
     // arriba) y se ladea hacia donde se va cayendo el jinete.
     if (vehiculo.nombre === "toro_rodeo") {
@@ -9431,6 +9630,7 @@ export function createWorld(scene) {
     actualizarFrases(dt);
     moverLazo(dt);
     moverPatataVis(dt);
+    moverCheque(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
       o.z += dz + o.mueve * dt;
@@ -9495,6 +9695,8 @@ export function createWorld(scene) {
         else if (o.tronco) moverTronco(o, dt);
         else if (o.espejismo) moverEspejismo(o, dt);
         else if (o.rana) moverRana(o, dt);
+        else if (o.flor) moverFlor(o);
+        else if (o.coco) caerCoco(o, dt);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -9721,5 +9923,6 @@ export function createWorld(scene) {
     echarLazo, hayEstampida, setToroEquilibrio, vehiculoNombre: () => vehiculo.nombre, vehiculoLibre: () => vehiculo.fase === 0,
     arreoCuenta: () => arreoCuenta,
     setPatata, hayPeriodista, darPatata, setHacha, troncoCerca,
-    bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata };
+    bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata,
+    setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor };
 }

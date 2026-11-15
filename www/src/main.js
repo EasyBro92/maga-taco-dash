@@ -742,7 +742,9 @@ const NOMBRE_HITO = {
     boise_depot: "La estación de Boise", egyptian_theatre: "El teatro egipcio", casa_vasca: "El barrio vasco",
     city_county_slc: "El ayuntamiento", depot_slc: "La estación de la Union Pacific", beehive_house: "La casa de la colmena",
     mercado_pike: "El mercado de Pike Place", smith_tower: "La Smith Tower", biblioteca_seattle: "La biblioteca de cristal",
-    powells: "La librería más grande del mundo", portland_building: "Portlandia", union_station_pdx: "La estación: GO BY TRAIN" },
+    powells: "La librería más grande del mundo", portland_building: "Portlandia", union_station_pdx: "La estación: GO BY TRAIN",
+    teatro_4th: "El teatro de la 4th Avenue", cabana_troncos: "La cabaña de troncos", hotel_captain_cook: "El hotel Captain Cook",
+    aloha_tower: "La torre Aloha", royal_hawaiian: "El palacio rosa", capitolio_hawaii: "El Capitolio de Hawái" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -792,7 +794,9 @@ const NOMBRE_HITO = {
     boise_depot: "The Boise Depot", egyptian_theatre: "The Egyptian Theatre", casa_vasca: "The Basque Block",
     city_county_slc: "City and County Building", depot_slc: "The Union Pacific depot", beehive_house: "The Beehive House",
     mercado_pike: "Pike Place Market", smith_tower: "The Smith Tower", biblioteca_seattle: "The glass library",
-    powells: "Powell's City of Books", portland_building: "Portlandia", union_station_pdx: "Union Station: GO BY TRAIN" },
+    powells: "Powell's City of Books", portland_building: "Portlandia", union_station_pdx: "Union Station: GO BY TRAIN",
+    teatro_4th: "The 4th Avenue Theatre", cabana_troncos: "The log cabin", hotel_captain_cook: "The Hotel Captain Cook",
+    aloha_tower: "Aloha Tower", royal_hawaiian: "The Pink Palace", capitolio_hawaii: "The Hawaii State Capitol" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1346,6 +1350,7 @@ function resetRun(desde = 0) {
   montado = false; superSalto = false; persigueMomento = false; dobleLeft = 0; reto = null;
   document.getElementById("retoBar").classList.add("hidden");
   quitarRodeo(); quitarPatata(); quitarHacha(); quitarRecord(); quitarLluvia(); quitarPesca(); quitarRegata();
+  quitarCheque(); quitarVuelo(); quitarLei(); quitarSurf();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1765,7 +1770,8 @@ function actualizarRodeo(dt) {
 function otroToro() {
   if (!tramoMostrado || montado || rodeo || !world.vehiculoLibre) return;
   const nombre = tramoMostrado.tipo === "rodeo" ? "toro_rodeo" : tramoMostrado.tipo === "record" ? "bolido_sal" :
-    tramoMostrado.tipo === "regata" ? "barco_dragon" : null;
+    tramoMostrado.tipo === "regata" ? "barco_dragon" : tramoMostrado.tipo === "vuelo" ? "hidroavion" :
+    tramoMostrado.tipo === "surf" ? "tabla_surf" : null;
   if (!nombre || tramoMostrado.hasta - distance < 260 || !world.vehiculoLibre()) return;
   world.aparcarVehiculo(nombre, 1, -75);
 }
@@ -2077,11 +2083,238 @@ function remar(action) {
   else regata.c = Math.max(0, regata.c - 0.04);
   regata.ultimo = action;
 }
+// 15/11: Anchorage: el cheque gigante de 7,2 millones (lo que costo Alaska).
+// Va al lado del jugador y ocupa el carril de al lado: si alli hay algo que
+// no se pasa por debajo, se rompe (y cuesta tacos). Tocando se cambia de
+// lado. Al acabar el tramo, premio si ha llegado entero.
+var cheque = null;
+const CHEQUE_MULTA = 10, CHEQUE_PREMIO = 30;
+function quitarCheque() {
+  cheque = null;
+  if (world.setCheque) world.setCheque(false);
+  const el = document.getElementById("chequeBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarCheque(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "cheque" && world.setCheque;
+  if (!en) {
+    if (cheque) {
+      if (gameState === "playing") {
+        const premio = Math.max(0, CHEQUE_PREMIO - 10 * cheque.roturas) * multiplier;
+        if (premio) { tacosThisRun += premio; avisoVerde(`+${premio} ${TACO_IMG()}`); sndFanfarria(); }
+        showBubble(t(cheque.clave === "alaska" ? "yaEsTuya" : "puesGroenlandia"), 1900, 2);
+      }
+      quitarCheque();
+    }
+    return;
+  }
+  if (!cheque) {
+    cheque = { lado: currentLane === 2 ? -1 : 1, roto: 0, roturas: 0, clave: tramoMostrado.titulo === "cheque2" ? "groenlandia" : "alaska" };
+    const el = barraJuego("chequeBar");
+    el.querySelector(".rodeoTit").textContent = t(cheque.clave === "alaska" ? "chequeTitA" : "chequeTitG");
+    el.querySelector(".rodeoPie").textContent = t("chequePista");
+    el.classList.remove("hidden");
+  }
+  if (cheque.roto > 0) {
+    cheque.roto -= dt;
+    if (cheque.roto <= 0) textoFlotante(t("otroCheque"));
+  } else {
+    const L = currentLane + cheque.lado;
+    if (L >= 0 && L <= 2) for (const o of world.obstacles) {
+      if (o.smashed || o.fuera || o.lane !== L || o.type === "nada" || o.type === "rampa" || o.type === "low" || o.type === "bus") continue;
+      const zc = o.z + (o.centro || 0), medio = o.medio || 0.7;
+      if (zc < -medio - 0.3 || zc > medio + 0.3) continue;
+      cheque.roto = 1.2; cheque.roturas++;
+      const multa = Math.min(tacosThisRun, CHEQUE_MULTA);
+      tacosThisRun -= multa;
+      textoFlotante(`${t("chequeRoto")} -${multa}`); sndBogey(); vibrate([30, 30, 30]);
+      world.romperCheque();
+      if (PRUEBA && window.__juego) window.__juego.cheques = (window.__juego.cheques || 0) + 1;
+      break;
+    }
+  }
+  world.setCheque(cheque.roto <= 0, playerX, py, cheque.lado, cheque.clave);
+  if (PRUEBA && window.__juego) window.__juego.ladoCheque = cheque.lado;
+  const el = document.getElementById("chequeBar");
+  if (el) el.querySelector(".barraLleno").style.width = `${Math.max(0, 3 - cheque.roturas) / 3 * 100}%`;
+}
+function voltearCheque() {
+  if (!cheque) return false;
+  if (cheque.roto <= 0) { cheque.lado = -cheque.lado; sndLaneSwitch(); vibrate(8); }
+  return true;
+}
+// 15/11: Anchorage: el hidroavion. Encima, tocar (o deslizar arriba) le da
+// impulso hacia arriba; si no, va bajando. Las puertas: por encima de las
+// crestas, por debajo de las nubes. La camara no sube ni baja con el avion
+// (marearia): se queda a una altura fija.
+var vuelo = null;
+const VUELO_ALETEO = 4.4, VUELO_G = 8, VUELO_TECHO = 6.2, VUELO_MULTA = 10;
+function empezarVuelo() {
+  vuelo = { y: 0, vy: 4.5 };
+  const el = barraJuego("vueloBar");
+  el.querySelector(".rodeoTit").textContent = t("vueloHud");
+  el.querySelector(".rodeoPie").textContent = t("vueloPista");
+  el.classList.remove("hidden");
+}
+function quitarVuelo() {
+  vuelo = null;
+  if (world.setVuelo) world.setVuelo(0);
+  const el = document.getElementById("vueloBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarVuelo(dt) {
+  if (!vuelo) return;
+  if (!montado || gameState !== "playing") { quitarVuelo(); return; }
+  vuelo.vy -= VUELO_G * dt;
+  vuelo.y += vuelo.vy * dt;
+  if (vuelo.y < 0) { vuelo.y = 0; vuelo.vy = Math.max(0, vuelo.vy); }
+  if (vuelo.y > VUELO_TECHO) { vuelo.y = VUELO_TECHO; vuelo.vy = Math.min(0, vuelo.vy); }
+  world.setVuelo(vuelo.y);
+  if (PRUEBA && window.__juego) { window.__juego.alturaVuelo = vuelo.y; window.__juego.vyVuelo = vuelo.vy; }
+  for (const o of world.obstacles) {
+    if (!o.vuelo || o.vuelo.pasado || o.z < -0.6) continue;
+    o.vuelo.pasado = true;
+    const mal = (o.vuelo.min !== undefined && vuelo.y < o.vuelo.min - 0.1) || (o.vuelo.max !== undefined && vuelo.y > o.vuelo.max + 0.1);
+    if (mal) {
+      const multa = Math.min(tacosThisRun, VUELO_MULTA);
+      tacosThisRun -= multa;
+      textoFlotante(`${t("turbulencias")} -${multa}`); sndBogey(); vibrate([30, 40, 30]); flashExpression("surprised", 0.8);
+      if (PRUEBA && window.__juego) window.__juego.golpesVuelo = (window.__juego.golpesVuelo || 0) + 1;
+    } else if (o.vuelo.premio) {
+      tacosThisRun += 4 * multiplier;
+      textoFlotante(`${t("bienPilotado")} +${4 * multiplier}`); sndPoint();
+      if (PRUEBA && window.__juego) window.__juego.puertasVuelo = (window.__juego.puertasVuelo || 0) + 1;
+    }
+  }
+  const el = document.getElementById("vueloBar");
+  if (el) el.querySelector(".barraLleno").style.width = `${vuelo.y / VUELO_TECHO * 100}%`;
+}
+function aletear() {
+  if (!vuelo || !montado) return false;
+  vuelo.vy = VUELO_ALETEO;
+  sndQuemador(); vibrate(6);
+  return true;
+}
+// 15/11: Honolulu: el collar de flores. Arriba salen cinco colores en orden;
+// hay que coger las flores en ese orden (la de cada fila esta en un carril).
+// Si coges otro color, el collar se deshace y vuelta a empezar.
+var lei = null;
+const LEI_N = 5, LEI_PREMIO = 25, LEI_CSS = ["#e8203a", "#f2c21a", "#9a4ad8"];
+function nuevoLei() { return Array.from({ length: LEI_N }, () => Math.floor(Math.random() * 3)); }
+function pintarLei() {
+  let el = document.getElementById("leiBar");
+  if (!el) {
+    el = document.createElement("div"); el.id = "leiBar"; el.className = "barraJuego hidden";
+    el.innerHTML = '<div class="rodeoTit"></div><div class="leiFlores"></div><div class="rodeoPie"></div>';
+    document.getElementById("hud").appendChild(el);
+  }
+  el.querySelector(".rodeoTit").textContent = t("leiHud").replace("{n}", lei.i);
+  el.querySelector(".rodeoPie").textContent = t("leiPista");
+  el.querySelector(".leiFlores").innerHTML = lei.orden.map((c, i) =>
+    `<span class="${i < lei.i ? "hecha" : i === lei.i ? "toca" : ""}" style="background:${LEI_CSS[c]}"></span>`).join("");
+  el.classList.remove("hidden");
+  if (PRUEBA && window.__juego) window.__juego.leiToca = lei.orden[lei.i];
+}
+function quitarLei() {
+  lei = null;
+  const el = document.getElementById("leiBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarLei() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "leis";
+  if (!en) { if (lei) quitarLei(); return; }
+  if (!lei) { lei = { orden: nuevoLei(), i: 0 }; pintarLei(); }
+}
+function florCogida() {
+  if (!lei || gameState !== "playing") return;
+  const c = world.florCogida();
+  if (c === lei.orden[lei.i]) {
+    lei.i++;
+    tacosThisRun += 2 * multiplier;
+    textoFlotante(`${t("florBien")} +${2 * multiplier}`); sndPoint(); vibrate(10);
+    if (lei.i >= LEI_N) {
+      const n = LEI_PREMIO * multiplier;
+      tacosThisRun += n;
+      showBubble(t("leiCompleto"), 1600, 2); avisoVerde(`+${n} ${TACO_IMG()}`); spawnConfetti(20); sndFanfarria();
+      if (PRUEBA && window.__juego) window.__juego.collares = (window.__juego.collares || 0) + 1;
+      lei.orden = nuevoLei(); lei.i = 0;
+    }
+  } else {
+    lei.i = 0;
+    textoFlotante(t("florMal")); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.floresMal = (window.__juego.floresMal || 0) + 1;
+  }
+  pintarLei();
+}
+// 15/11: Honolulu: el surf. Encima de la tabla, cada poco la ola te levanta;
+// en el aire, deslizar hace una pirueta (izquierda o derecha, un giro;
+// arriba o abajo, una voltereta). Si aterrizas a mitad de pirueta, al agua.
+var surf = null;
+const SURF_OLA = 2.1, SURF_SALTO = 14, SURF_GIRO = 0.32, SURF_MULTA = 10;
+function empezarSurf() {
+  surf = { ola: 1.0, trucos: 0, giro: 0, dir: 1, eje: "y", enAire: false };
+  const el = barraJuego("surfBar");
+  el.querySelector(".rodeoTit").textContent = t("surfHud");
+  el.querySelector(".rodeoPie").textContent = t("surfPista");
+  el.classList.remove("hidden");
+}
+function quitarSurf() {
+  if (surf) character.object3D.rotation.set(0, 0, 0);
+  surf = null;
+  const el = document.getElementById("surfBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarSurf(dt) {
+  if (!surf) return;
+  if (!montado || gameState !== "playing") { quitarSurf(); return; }
+  if (surf.giro > 0) {
+    surf.giro = Math.max(0, surf.giro - dt);
+    const a = surf.dir * (1 - surf.giro / SURF_GIRO) * Math.PI * 2;
+    if (surf.eje === "y") character.object3D.rotation.y = a; else character.object3D.rotation.x = a;
+    if (surf.giro === 0) character.object3D.rotation.set(0, 0, 0);
+  }
+  if (enSuelo) {
+    if (surf.enAire) {
+      surf.enAire = false;
+      if (surf.giro > 0) {
+        surf.giro = 0; character.object3D.rotation.set(0, 0, 0);
+        const multa = Math.min(tacosThisRun, SURF_MULTA);
+        tacosThisRun -= multa;
+        textoFlotante(`${t("alAgua")} -${multa}`); sndOla(); vibrate([30, 30, 30]); flashExpression("surprised", 1);
+        if (PRUEBA && window.__juego) window.__juego.wipeouts = (window.__juego.wipeouts || 0) + 1;
+      } else if (surf.trucos > 0) {
+        const n = 5 * surf.trucos * multiplier;
+        tacosThisRun += n;
+        textoFlotante(`${t("pirueta").replace("{n}", surf.trucos)} +${n}`); sndBirdie(); vibrate(15);
+        if (PRUEBA && window.__juego) window.__juego.trucos = (window.__juego.trucos || 0) + surf.trucos;
+      }
+      surf.trucos = 0;
+    }
+    surf.ola -= dt;
+    if (surf.ola <= 0) {
+      surf.ola = SURF_OLA;
+      vy = SURF_SALTO; enSuelo = false; isJumping = true; jumpElapsed = 0; surf.enAire = true;
+      sndOla();
+    }
+  }
+}
+function truco(action) {
+  if (!surf || !montado) return false;
+  if (enSuelo || surf.giro > 0) return true;
+  surf.giro = SURF_GIRO;
+  surf.eje = action === "left" || action === "right" ? "y" : "x";
+  surf.dir = action === "left" || action === "jump" ? -1 : 1;
+  surf.trucos++;
+  sndLaneSwitch();
+  return true;
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
   if (alReves && (action === "left" || action === "right")) action = action === "left" ? "right" : "left";
   if (regata && montado && (action === "left" || action === "right")) { remar(action); return; }   // (15/11: Portland)
+  if (surf && montado && ["left", "right", "jump", "slide"].includes(action)) { truco(action); return; }   // (15/11: Honolulu)
+  if (vuelo && montado && ["jump", "frase", "lanzar"].includes(action)) { aletear(); return; }   // (15/11: Anchorage)
   if (rodeo && montado && (action === "left" || action === "right")) {
     rodeo.e += action === "left" ? -0.42 : 0.42;
     sndLaneSwitch(); vibrate(8);
@@ -2090,6 +2323,7 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && lazoEstampida()) return;
   if ((action === "frase" || action === "lanzar") && (hachazo() || cambiarMarcha())) return;
   if ((action === "frase" || action === "lanzar") && (pescaToque() || tocarRanaToque(pos))) return;   // (15/11: Seattle y Portland)
+  if ((action === "frase" || action === "lanzar") && voltearCheque()) return;   // (15/11: Anchorage)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -2550,7 +2784,11 @@ function subirAlVehiculo() {
   const toro = world.vehiculoNombre && world.vehiculoNombre() === "toro_rodeo";
   const bolido = world.vehiculoNombre && world.vehiculoNombre() === "bolido_sal";   // (14/11: Salt Lake City)
   const barco = world.vehiculoNombre && world.vehiculoNombre() === "barco_dragon";  // (15/11: Portland)
-  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : "subeAviso"), 1600, 2);
+  const avion = world.vehiculoNombre && world.vehiculoNombre() === "hidroavion";    // (15/11: Anchorage)
+  const tabla = world.vehiculoNombre && world.vehiculoNombre() === "tabla_surf";    // (15/11: Honolulu)
+  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : avion ? "vueloSube" : tabla ? "surfSube" : "subeAviso"), 1600, 2);
+  if (avion) empezarVuelo();
+  if (tabla) empezarSurf();
   if (toro) empezarRodeo();
   if (bolido) empezarRecord();
   if (barco) empezarRegata();
@@ -3032,6 +3270,7 @@ world.onAvisoMapa((que) => {
   // 14/11: Boise: el periodista que llega por tu carril (si llevas la patata,
   // se la queda) y el tronco partido de un hachazo.
   else if (que === "periodista") pasarPatata();
+  else if (que === "flor") florCogida();   // (15/11: Honolulu)
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -3140,6 +3379,10 @@ function frame(dtFijo) {
     actualizarLluvia(dt);
     actualizarPesca(dt);
     actualizarRegata(dt);
+    actualizarCheque(dt);
+    actualizarVuelo(dt);
+    actualizarLei();
+    actualizarSurf(dt);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3196,7 +3439,8 @@ function frame(dtFijo) {
         platillo: "platilloAviso", globos: "globosAviso", bolas: "bolasAviso", esqui: "esquiAviso",
         estampida: "estampidaAviso", rodeo: "rodeoAviso", osos: "ososAviso", arreo: "arreoAviso",
         patata: "patataAviso", aizkolari: "aizkolariAviso", espejismo: "espejismoAviso", record: "recordAviso",
-        chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso" };
+        chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso",
+        cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.
@@ -3300,6 +3544,7 @@ function frame(dtFijo) {
       }
     }
     const suelo = world.surfaceAt(playerX);
+    if (vuelo && montado) { py = suelo; vy = 0; enSuelo = true; isJumping = false; }   // (15/11: Anchorage: en el hidroavion)
     if (enSuelo) {
       if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; coyote = COYOTE; } // se acabo el techo: a caer
       else py = suelo;                                                    // por la rampa se sube andando
@@ -3443,6 +3688,7 @@ function frame(dtFijo) {
     let alturaCam = rocketTimeLeft > 0 ? py : superSalto ? py * 0.85 : world.surfaceAt(playerX);
     if (tramoMostrado && tramoMostrado.tipo === "convoy") alturaCam = Math.max(alturaCam, 1.55);
     if (tramoMostrado && tramoMostrado.tipo === "metro_techo") alturaCam = Math.max(alturaCam, 2.2);
+    if (vuelo) alturaCam = 2.4;   // (15/11: Anchorage: en el hidroavion la camara se queda quieta)
     luzMetro();
     camY += ((alturaCam * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 2.5);
     camera.position.y = RACE_CAM.pos.y + camY + shakeY;

@@ -99,8 +99,8 @@ Fermín.
 | 33 | Salt Lake City, Utah | +6 | El desierto de sal: tramo de velocidad. *(hecho)* |
 | 34 | Seattle, Washington | +12 | Llueve sin parar: su pelo corre peligro. *(hecho)* |
 | 35 | Portland, Oregón | +8 | Manifestantes disfrazados de rana hinchable (pasó de verdad). *(hecho)* |
-| 36 | Anchorage, Alaska | +3 | Intenta comprar Alaska. Le recuerdan que ya es suya. «Pues compro Groenlandia». |
-| 37 | Honolulu, Hawái | +4 | Surf, cocos que caen y golf otra vez. |
+| 36 | Anchorage, Alaska | +3 | Intenta comprar Alaska. Le recuerdan que ya es suya. «Pues compro Groenlandia». *(hecho)* |
+| 37 | Honolulu, Hawái | +4 | Surf, cocos que caen y golf otra vez. *(hecho)* |
 | 38 | Los Ángeles, California | +54 | **Jefe.** Encierro de San Fermín por Hollywood Boulevard: el Toro, paelleras y la siesta española, que lo deja todo congelado. |
 
 ## Acto 5 — El sentido común (Noreste · 12 estados · 535 votos)

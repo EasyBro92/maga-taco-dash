@@ -2205,6 +2205,125 @@ const CALLES = [
     acera: ["portland/carrito_comida", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 15/11/2026: nivel 36: Anchorage (blender/anchorage.py). «Intenta comprar
+    // Alaska. Le recuerdan que ya es suya. "Pues compro Groenlandia"».
+    // Recomendado: 4th Avenue en verano (la luz dorada del sol de medianoche),
+    // y final en la estacion del ferrocarril de Alaska con el cartel SE VENDE
+    // GROENLANDIA. Dinamicas propias: el cheque gigante de 7,2 millones (va
+    // por el carril de al lado: se cambia de lado tocando) y el momento
+    // estrella, el hidroavion por las montañas Chugach (tocar para subir,
+    // entre crestas y nubes; la camara no se mueve). Pancartas de España:
+    // VALDEZ Y CORDOVA SON NOMBRES ESPAÑOLES.
+    id: "anchorage", nombre: "4th Avenue", lugar: "Anchorage, Alaska", listo: true,
+    zona: "city", carpeta: "anchorage", luz: "dorada", semilla: 1839,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 4, estilo: "anchorage" },
+    horizonte: "anchorage",
+    obstaculos: { low: ["nasa_cangrejo", "barricada", "valla_metal"], high: ["cartel_alaska", "pancarta"],
+      full: ["autocaravana", "pickup", "alce", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "anchorage" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "cuarta" }],
+      [250, 610, "cheque", { titulo: "cheque" }],
+      [610, 690, "calma", { titulo: "teatro_4th" }],
+      [690, 850, "slalom", { full: ["autocaravana", "pickup", "furgoneta"], titulo: "rv" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["nasa_cangrejo", "valla_metal"], high: ["cartel_alaska"], titulo: "valdez" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_lago" }],
+      // El momento estrella: el hidroavion (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "vuelo", { momento: "vehiculo", vehiculo: "hidroavion", titulo: "vuelo" }],
+      [1830, 1910, "calma", { titulo: "vuelo_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "cheque", { titulo: "cheque2" }],
+      [2430, 2510, "calma", { titulo: "iditarod" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_estacion" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "vuelo", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["teatro_4th", "cabana_troncos", "hotel_captain_cook"],
+    meta: "estacion_alaska", metaNombre: { es: "la estación de Alaska", en: "the Alaska Railroad depot" },
+    izquierda: [
+      40, ["kit", 2], 14, ["teatro_4th", 1], 14, ...cuadras(3), ["cabana_troncos", 1], 14, ...cuadras(5), ["hotel_captain_cook", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["hotel_captain_cook", 1], 14, ...cuadras(4), ["cabana_troncos", 1], 14, ...cuadras(5), ["teatro_4th", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "estacion_alaska", d: 3330, centro: true },
+      { pieza: "arco_iditarod", d: 120, cruza: true }, { pieza: "arco_iditarod", d: 2470, cruza: true },
+      { pieza: "vuelo_chugach", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 10, -40] },
+    acera: ["anchorage/alce_pintado", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
+    // 15/11/2026: nivel 37: Honolulu (blender/honolulu.py). «Surf, cocos que
+    // caen y golf otra vez». Recomendado: Kalakaua Avenue (Waikiki) una
+    // mañana de sol, y final en el palacio Iolani. Dinamicas propias: el
+    // collar de flores (coger las flores en el orden de colores de arriba; los
+    // cocos caen de las palmeras y se quedan en la calle) y el momento
+    // estrella, el surf (la ola te levanta: piruetas deslizando en el aire, y
+    // aterrizar sin girar). El golf ya estaba en Charleston: no se repite.
+    // Pancartas de España: PANIOLO = ESPAÑOL.
+    id: "honolulu", nombre: "Kalakaua Avenue", lugar: "Honolulu, Hawái", listo: true,
+    zona: "city", carpeta: "honolulu", luz: "manana", semilla: 1840,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 7, estilo: "honolulu" },
+    horizonte: "honolulu",
+    obstaculos: { low: ["tablas_surf", "barricada", "valla_metal"], high: ["cartel_hawaii", "pancarta"],
+      full: ["trolley_waikiki", "carrito_raspado", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "honolulu" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "kalakaua" }],
+      [250, 610, "leis", { titulo: "leis" }],
+      [610, 690, "calma", { titulo: "aloha_t" }],
+      [690, 850, "slalom", { full: ["trolley_waikiki", "carrito_raspado", "pickup"], titulo: "trolley" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["tablas_surf", "valla_metal"], high: ["cartel_hawaii"], titulo: "paniolo" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_playa" }],
+      // El momento estrella: el surf en Waikiki (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "surf", { momento: "vehiculo", vehiculo: "tabla_surf", titulo: "surf" }],
+      [1830, 1910, "calma", { titulo: "surf_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "leis", { titulo: "leis2" }],
+      [2430, 2510, "calma", { titulo: "rosa_hotel" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_iolani" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "surf", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["aloha_tower", "royal_hawaiian", "capitolio_hawaii"],
+    meta: "palacio_iolani", metaNombre: { es: "el palacio Iolani", en: "Iolani Palace" },
+    izquierda: [
+      40, ["kit", 2], 14, ["aloha_tower", 1], 14, ...cuadras(3), ["royal_hawaiian", 1], 14, ...cuadras(5), ["capitolio_hawaii", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["capitolio_hawaii", 1], 14, ...cuadras(4), ["royal_hawaiian", 1], 14, ...cuadras(5), ["aloha_tower", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "palacio_iolani", d: 3330, centro: true },
+      { pieza: "arco_aloha", d: 120, cruza: true }, { pieza: "arco_aloha", d: 2470, cruza: true },
+      { pieza: "playa_waikiki", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 12, -40] },
+    acera: ["honolulu/palmera_cocos", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2308,14 +2427,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2375,6 +2494,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  estacion_alaska: 80, teatro_4th: 22, cabana_troncos: 18, hotel_captain_cook: 30, arco_iditarod: 2, vuelo_chugach: 420,
+  palacio_iolani: 80, aloha_tower: 18, royal_hawaiian: 44, capitolio_hawaii: 38, arco_aloha: 2, playa_waikiki: 420,
   space_needle: 80, mercado_pike: 32, smith_tower: 24, biblioteca_seattle: 36, monorail: 160, mercado_pescado: 420,
   white_stag: 70, powells: 36, portland_building: 32, union_station_pdx: 40, arco_rosas: 2, rio_willamette: 420,
   capitolio_idaho: 90, boise_depot: 40, egyptian_theatre: 22, casa_vasca: 36, arco_vasco: 2, plaza_aizkolari: 420,
@@ -2598,7 +2719,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

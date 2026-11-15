@@ -1040,3 +1040,12 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #pezAro.ya .aroFijo, #pezAro.ya .aroCae { border-color: #5ac85a; }
 #pezAro .aroPie { position: absolute; left: 0; top: 56px; transform: translateX(-50%); white-space: nowrap;
   font-family: var(--letra-titulo); font-weight: 700; font-size: 14px; color: #fff; -webkit-text-stroke: 3px var(--azul); paint-order: stroke fill; }
+
+/* 15/11: Anchorage (el cheque y el vuelo) y Honolulu (el collar y el surf) */
+#chequeBar .barraLleno { background: linear-gradient(90deg, #2a8a4a, #8ad88a); }
+#vueloBar .barraLleno { background: linear-gradient(90deg, #8ac4f4, #ffffff); }
+#surfBar .barraPista { display: none; }
+#leiBar .leiFlores { display: flex; gap: 8px; justify-content: center; margin: 2px 0 4px; }
+#leiBar .leiFlores span { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--azul); opacity: 0.55; }
+#leiBar .leiFlores span.toca { opacity: 1; transform: scale(1.25); }
+#leiBar .leiFlores span.hecha { opacity: 1; box-shadow: 0 0 0 2px #5ac85a; }

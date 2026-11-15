@@ -393,6 +393,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Anchorage: aventura en la montaña, abierta (melodia propia).
+  anchorage: { bpm: 132, swing: 0, acordes: [C, G, Am, F], bateria: "pop", bajo: "octavas",
+    melodia: [67, null, 72, null, 74, 76, null, 74, 72, null, 67, null, 69, 72, null, null,
+      67, null, 72, 74, 76, null, 79, 77, 76, null, 74, 72, 72, null, null, null],
+    timbre: "pluck" },
+  // 15/11: Honolulu: ukelele tranquilo de playa (melodia propia).
+  honolulu: { bpm: 112, swing: 0.5, acordes: [C, F, G7, C], bateria: "swing", bajo: "alterna",
+    melodia: [76, 79, 81, null, 79, 76, 72, null, 74, 76, 77, null, 76, 74, null, null,
+      76, 79, 81, 84, 81, 79, 76, null, 74, null, 79, null, 72, null, null, null],
+    timbre: "pluck" },
   // 15/11: Seattle: rock de los noventa bajo la lluvia (melodia propia).
   seattle: { bpm: 118, swing: 0, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
     melodia: [69, null, 69, 72, null, 71, 69, null, 67, null, 64, null, 67, 69, null, null,

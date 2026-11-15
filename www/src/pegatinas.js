@@ -366,6 +366,36 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: la pepita de oro (Anchorage).
+  pepita(x) {
+    x.save(); x.translate(128, 132);
+    const forma = () => { x.beginPath(); x.moveTo(-90, 10); x.lineTo(-60, -50); x.lineTo(-10, -70); x.lineTo(50, -55); x.lineTo(92, -10); x.lineTo(70, 50); x.lineTo(10, 72); x.lineTo(-55, 55); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#e8b830"; forma(); x.fill();
+    x.fillStyle = "#c8901a";
+    x.beginPath(); x.moveTo(-10, 72); x.lineTo(70, 50); x.lineTo(92, -10); x.lineTo(30, 10); x.closePath(); x.fill();
+    x.fillStyle = "rgba(255,255,255,0.6)";
+    x.beginPath(); x.moveTo(-60, -40); x.lineTo(-20, -58); x.lineTo(-30, -20); x.closePath(); x.fill();
+    x.beginPath(); x.arc(40, -30, 7, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 15/11: el coco abierto (Honolulu).
+  coco(x) {
+    x.save(); x.translate(128, 136);
+    const fuera = () => { x.beginPath(); x.arc(0, 0, 92, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; fuera(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; fuera(); x.stroke();
+    x.fillStyle = "#6a4426"; fuera(); x.fill();
+    x.fillStyle = "#f6f2e8"; x.beginPath(); x.arc(0, 0, 72, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#e8e0cc"; x.beginPath(); x.arc(0, 0, 50, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = "#8a6a46"; x.lineWidth = 4;
+    for (let a = 0; a < 12; a++) { x.beginPath(); x.moveTo(Math.cos(a) * 76, Math.sin(a) * 76); x.lineTo(Math.cos(a) * 88, Math.sin(a) * 88); x.stroke(); }
+    x.fillStyle = "#2a8a4a"; x.fillRect(30, -120, 8, 60);
+    x.fillStyle = "#e84a7a"; x.beginPath(); x.arc(34, -122, 12, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 15/11: la taza de cafe (Seattle).
   cafe(x) {
     x.save(); x.translate(128, 136);

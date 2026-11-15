@@ -24,7 +24,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Estado | Ciudad | Por qué |
 |---|---|---|
 | Alabama | Birmingham (capital: Montgomery) | la más grande (hecho el 14/11: el rotulador que pinta muros, la fundición Sloss y Vulcano) |
-| Alaska | Anchorage (capital: Juneau) | la más grande y conocida |
+| Alaska | Anchorage (capital: Juneau) | la más grande y conocida (hecho el 15/11: 4th Avenue, el cheque gigante que va por el carril de al lado y el hidroavión por las montañas) |
 | Arkansas | Little Rock | capital y la más grande (hecho el 13/11: River Market, jabalíes en zigzag y la mina de diamantes) |
 | California | Los Ángeles (capital: Sacramento) | Hollywood |
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
@@ -36,7 +36,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Delaware | Wilmington (capital: Dover) | la más grande |
 | Florida | Miami (capital: Tallahassee) | la más famosa (hecho el 14/11: Ocean Drive con huracán, las olas que cruzan la calle, el baño dorado de Mar-a-Lago con lámparas que se balancean, el jefe de los papeles y Mar-a-Lago) |
 | Georgia | Atlanta | capital y la más famosa (hecho el 14/11: Peachtree Street, las papeletas que se escapan, el trile de las urnas del recuento y la marquesina «PRESIDENT ELECT») |
-| Hawái | Honolulu | capital y la más famosa |
+| Hawái | Honolulu | capital y la más famosa (hecho el 15/11: Waikiki, el collar de flores en orden y el surf con piruetas) |
 | Idaho | Boise | capital y la más grande (hecho el 14/11: Capitol Boulevard, la patata caliente que se pasa a los periodistas y los aizkolaris del barrio vasco) |
 | Illinois | Chicago (capital: Springfield) | la más famosa |
 | Indiana | Indianápolis | capital y la más famosa |
