@@ -1027,3 +1027,16 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
   background: #1c1c20; border: 2px solid #fff; border-radius: 5px; }
 .barraJuego .rodeoPie { margin-top: 5px; font-family: var(--letra-titulo); font-weight: 700; font-size: 13px; color: #fff;
   -webkit-text-stroke: 3px var(--azul); paint-order: stroke fill; }
+
+/* 15/11: Seattle (el tupe mojado y el aro del salmon) y Portland (la regata) */
+#lluviaBar .barraLleno { background: linear-gradient(90deg, #8ac4f4, #2a6ad8); }
+#regataBar .barraLleno { background: linear-gradient(90deg, #e8402a, #f2c21a, #5ac85a); }
+#pezAro { position: absolute; left: 50%; bottom: 30%; width: 0; height: 0; z-index: 5; pointer-events: none; }
+#pezAro.hidden { display: none; }
+#pezAro .aroFijo, #pezAro .aroCae { position: absolute; left: 0; top: 0; width: 84px; height: 84px; border-radius: 50%;
+  transform: translate(-50%, -50%); box-sizing: border-box; }
+#pezAro .aroFijo { border: 6px solid rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 3px var(--azul); }
+#pezAro .aroCae { border: 6px solid #f2a21a; }
+#pezAro.ya .aroFijo, #pezAro.ya .aroCae { border-color: #5ac85a; }
+#pezAro .aroPie { position: absolute; left: 0; top: 56px; transform: translateX(-50%); white-space: nowrap;
+  font-family: var(--letra-titulo); font-weight: 700; font-size: 14px; color: #fff; -webkit-text-stroke: 3px var(--azul); paint-order: stroke fill; }

@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 15/11: Seattle: cristal y hormigon, algo de ladrillo; cafes y marisco.
+  seattle: { plantas: ["planta_cristal", "planta_lisa", "planta_ladrillo", "planta_cristal", "planta_lisa"],
+    ladrillos: [0x9a5a44, 0xb8b4ac, 0x8a8a90, 0xc8c0b0, 0x6a7078], piedras: [0xd8d4cc, 0xc0bcb4], cristal: [0x3a5a70, 0x4a6a80],
+    cornisas: ["cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.1], toldos: [0x2a5a3a, 0x2a4a9a, 0x6a6a72, 0xc8202a],
+    rotulos: ["COFFEE", "ESPRESSO", "CLAM CHOWDER", "RECORDS", "OYSTERS", "UMBRELLAS", "BOOKS", "GRUNGE", "TEA", "SALMON"] },
+  // 15/11: Portland: ladrillo y madera, tiendas raras.
+  portland: { plantas: ["planta_ladrillo", "planta_balcones", "planta_lisa", "planta_ladrillo", "planta_cristal"],
+    ladrillos: [0xa85a3e, 0x8a4a34, 0xb8784e, 0x6a5a4a, 0xc8a078], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.06], toldos: [0x2a7a3a, 0xe84a7a, 0xf2c21a, 0x2a4a9a],
+    rotulos: ["DOUGHNUTS", "BIKES", "VINYL", "BOOKS", "KOMBUCHA", "VEGAN", "COFFEE", "ROSES", "WEIRD", "TACOS"] },
   // 14/11: Boise: ladrillo y piedra clara, algo de cristal; bares vascos.
   boise: { plantas: ["planta_ladrillo", "planta_lisa", "planta_cristal", "planta_ladrillo", "planta_balcones"],
     ladrillos: [0xa85a3e, 0xb8704a, 0x9a5038, 0xd8c4a0, 0x8a4a34], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],

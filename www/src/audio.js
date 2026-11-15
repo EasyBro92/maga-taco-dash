@@ -204,6 +204,15 @@ export function sndEspejismo() {
   tono(880, 0.4, { tipo: "sine", vol: 0.06, glide: 440, ataque: 0.05 });
   tono(1320, 0.35, { tipo: "sine", vol: 0.04, glide: -300, ataque: 0.05, cuando: 0.06 });
 }
+// 15/11: Seattle: el salmon que vuela y el que se coge; Portland: la rana que
+// se deshincha y la pala que entra en el agua.
+export function sndPez() { soplo(0.5, { desde: 400, hasta: 1800, tipo: "bandpass", vol: 0.12, q: 1.2 }); }
+export function sndCogerPez() {
+  soplo(0.12, { desde: 900, hasta: 500, tipo: "lowpass", vol: 0.25, q: 0.8 });
+  tono(660, 0.12, { tipo: "triangle", vol: 0.08, cuando: 0.05 }); tono(990, 0.16, { tipo: "triangle", vol: 0.07, cuando: 0.12 });
+}
+export function sndDesinfla() { soplo(0.7, { desde: 2400, hasta: 500, tipo: "bandpass", vol: 0.16, q: 2.0 }); tono(300, 0.6, { tipo: "sine", vol: 0.05, glide: -180 }); }
+export function sndRemo() { soplo(0.18, { desde: 700, hasta: 300, tipo: "lowpass", vol: 0.16, q: 0.7 }); }
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -384,6 +393,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Seattle: rock de los noventa bajo la lluvia (melodia propia).
+  seattle: { bpm: 118, swing: 0, acordes: [Am, F, C, G], bateria: "pop", bajo: "octavas",
+    melodia: [69, null, 69, 72, null, 71, 69, null, 67, null, 64, null, 67, 69, null, null,
+      69, null, 72, 76, null, 74, 72, null, 71, null, 67, 69, 69, null, null, null],
+    timbre: "metal" },
+  // 15/11: Portland: folk alegre con guitarra (melodia propia).
+  portland_or: { bpm: 124, swing: 0.5, acordes: [C, Am, F, G], bateria: "country", bajo: "alterna",
+    melodia: [72, 74, 76, null, 79, null, 76, 74, 72, null, 69, 72, 74, null, null, null,
+      72, 74, 76, 79, 81, null, 79, 76, 77, null, 74, null, 72, null, null, null],
+    timbre: "pluck" },
   // 14/11: Boise: fiesta vasca, el acordeon a la carrera (trikitixa; melodia propia).
   boise: { bpm: 150, swing: 0, acordes: [G, D, G, C], bateria: "marcha", bajo: "alterna",
     melodia: [74, 76, 79, null, 79, 81, 79, 76, 74, null, 71, 74, 76, null, null, null,

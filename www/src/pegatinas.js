@@ -366,6 +366,36 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: la taza de cafe (Seattle).
+  cafe(x) {
+    x.save(); x.translate(128, 136);
+    const vaso = () => { x.beginPath(); x.moveTo(-62, -70); x.lineTo(62, -70); x.lineTo(46, 92); x.lineTo(-46, 92); x.closePath(); };
+    const tapa = () => { x.beginPath(); x.roundRect(-72, -96, 144, 30, 12); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; vaso(); x.stroke(); tapa(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; vaso(); x.stroke(); tapa(); x.stroke();
+    x.fillStyle = "#f6f0e4"; vaso(); x.fill();
+    x.fillStyle = "#6a4426"; tapa(); x.fill();
+    x.fillStyle = "#b8823e"; x.fillRect(-55, -14, 107, 46);
+    x.fillStyle = "#2a6a3a"; x.beginPath(); x.arc(0, 9, 17, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = "rgba(255,255,255,0.7)"; x.lineWidth = 6; x.lineCap = "round";
+    for (const dx of [-20, 0, 20]) { x.beginPath(); x.moveTo(dx, -108); x.quadraticCurveTo(dx + 12, -122, dx, -136); x.stroke(); }
+    x.restore();
+  },
+  // 15/11: la rosa (Portland).
+  rosa(x) {
+    x.save(); x.translate(128, 120);
+    const flor = () => { x.beginPath(); x.arc(0, -10, 62, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; flor(); x.stroke();
+    x.beginPath(); x.moveTo(0, 50); x.lineTo(0, 120); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; flor(); x.stroke();
+    x.strokeStyle = "#2a7a3a"; x.lineWidth = 12; x.beginPath(); x.moveTo(0, 50); x.lineTo(0, 120); x.stroke();
+    x.fillStyle = "#3a9a4a"; x.beginPath(); x.ellipse(-24, 92, 22, 10, -0.5, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#e82a4a"; flor(); x.fill();
+    x.strokeStyle = "#a81a32"; x.lineWidth = 6;
+    for (const [r0, a0] of [[44, 0.3], [30, 2.1], [18, 4.0]]) { x.beginPath(); x.arc(0, -10, r0, a0, a0 + 4.2); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,0.4)"; x.beginPath(); x.ellipse(-28, -40, 14, 8, -0.6, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 14/11: la patata de Idaho (Boise).
   patata(x) {
     x.save(); x.translate(128, 132); x.rotate(-0.35);

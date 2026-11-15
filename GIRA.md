@@ -57,7 +57,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Nueva Jersey | Atlantic City (capital: Trenton) | los casinos del paseo marítimo |
 | Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos (hecho el 14/11: Central Avenue, el platillo que cambia los coches de carril y los globos que despegan) |
 | Oklahoma | Oklahoma City | capital y la más grande (hecho el 12/11: Bricktown, molinos en la calle y géiseres de petróleo) |
-| Oregón | Portland (capital: Salem) | la más famosa |
+| Oregón | Portland (capital: Salem) | la más famosa (hecho el 15/11: Burnside Street, las ranas hinchables que se deshinchan tocándolas y la regata de barcos dragón) |
 | Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad |
 | Rhode Island | Providence | capital y la más grande |
 | Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
@@ -66,6 +66,6 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Vermont | Burlington (capital: Montpelier) | la más grande |
 | Virginia | Richmond | capital, la más histórica |
 | Virginia Occidental | Charleston | capital y la más grande |
-| Washington (estado) | Seattle (capital: Olympia) | la Space Needle |
+| Washington (estado) | Seattle (capital: Olympia) | la Space Needle (hecho el 15/11: 5th Avenue con lluvia, las marquesinas que salvan el tupé y los salmones de Pike Place) |
 | Wisconsin | Milwaukee (capital: Madison) | la más grande |
 | Wyoming | Cheyenne | capital y la más grande (hecho el 14/11: los Frontier Days, la estampida que se para con el lazo y aguantar 8 segundos en el toro) |

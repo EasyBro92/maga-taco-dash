@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -398,6 +398,12 @@ function aplicarLuzNivel(luz) {
     sun.color.set(0xffaaa0); sun.intensity = 1.0; sun.position.set(-8, 4, -1);
     hemi.color.set(0xd0c4f6); hemi.groundColor.set(0x6a5878);
     fill.color.set(0xfff0e8); fill.intensity = 1.15; fill.position.set(1.5, 6, 10);
+  } else if (luz === "lluvia") {
+    // 15/11: Seattle: dia de lluvia: luz gris y suave, con la de relleno por
+    // detras para que los obstaculos se vean bien.
+    sun.color.set(0xdde4ec); sun.intensity = 0.8; sun.position.set(-3, 10, -4);
+    hemi.color.set(0xc8d2dc); hemi.groundColor.set(0x5a6068);
+    fill.color.set(0xf0f4f8); fill.intensity = 0.9; fill.position.set(1.5, 6, 10);
   } else if (luz === "tornado") {
     // 08/11: Wichita, cielo de tornado: luz verdosa y apagada, con la de
     // relleno por detras para que los obstaculos se vean bien (lo de Las Vegas).
@@ -734,7 +740,9 @@ const NOMBRE_HITO = {
     cheyenne_depot: "La estación de la Union Pacific", plains_hotel: "El hotel Plains", big_boy: "La locomotora Big Boy",
     billings_depot: "La estación del Northern Pacific", first_interstate: "La torre más alta de Montana", moss_mansion: "La mansión Moss",
     boise_depot: "La estación de Boise", egyptian_theatre: "El teatro egipcio", casa_vasca: "El barrio vasco",
-    city_county_slc: "El ayuntamiento", depot_slc: "La estación de la Union Pacific", beehive_house: "La casa de la colmena" },
+    city_county_slc: "El ayuntamiento", depot_slc: "La estación de la Union Pacific", beehive_house: "La casa de la colmena",
+    mercado_pike: "El mercado de Pike Place", smith_tower: "La Smith Tower", biblioteca_seattle: "La biblioteca de cristal",
+    powells: "La librería más grande del mundo", portland_building: "Portlandia", union_station_pdx: "La estación: GO BY TRAIN" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -782,7 +790,9 @@ const NOMBRE_HITO = {
     cheyenne_depot: "The Union Pacific depot", plains_hotel: "The Plains Hotel", big_boy: "The Big Boy locomotive",
     billings_depot: "The Northern Pacific depot", first_interstate: "Montana's tallest tower", moss_mansion: "The Moss Mansion",
     boise_depot: "The Boise Depot", egyptian_theatre: "The Egyptian Theatre", casa_vasca: "The Basque Block",
-    city_county_slc: "City and County Building", depot_slc: "The Union Pacific depot", beehive_house: "The Beehive House" },
+    city_county_slc: "City and County Building", depot_slc: "The Union Pacific depot", beehive_house: "The Beehive House",
+    mercado_pike: "Pike Place Market", smith_tower: "The Smith Tower", biblioteca_seattle: "The glass library",
+    powells: "Powell's City of Books", portland_building: "Portlandia", union_station_pdx: "Union Station: GO BY TRAIN" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1335,7 +1345,7 @@ function resetRun(desde = 0) {
   carrilAntes = 1; tropiezo = 0; persigueLeft = 0; world.perseguir(false, true);
   montado = false; superSalto = false; persigueMomento = false; dobleLeft = 0; reto = null;
   document.getElementById("retoBar").classList.add("hidden");
-  quitarRodeo(); quitarPatata(); quitarHacha(); quitarRecord();
+  quitarRodeo(); quitarPatata(); quitarHacha(); quitarRecord(); quitarLluvia(); quitarPesca(); quitarRegata();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1754,7 +1764,8 @@ function actualizarRodeo(dt) {
 // (14/11: y en el salar de Bonneville, otro bolido si no te subiste al primero.)
 function otroToro() {
   if (!tramoMostrado || montado || rodeo || !world.vehiculoLibre) return;
-  const nombre = tramoMostrado.tipo === "rodeo" ? "toro_rodeo" : tramoMostrado.tipo === "record" ? "bolido_sal" : null;
+  const nombre = tramoMostrado.tipo === "rodeo" ? "toro_rodeo" : tramoMostrado.tipo === "record" ? "bolido_sal" :
+    tramoMostrado.tipo === "regata" ? "barco_dragon" : null;
   if (!nombre || tramoMostrado.hasta - distance < 260 || !world.vehiculoLibre()) return;
   world.aparcarVehiculo(nombre, 1, -75);
 }
@@ -1922,10 +1933,155 @@ function cambiarMarcha() {
   } else { record.aguja = Math.max(0, a - 0.22); textoFlotante(t("muyPronto")); sndBogey(); vibrate(10); }
   return true;
 }
+// 15/11: Seattle: el chaparron. En su tramo el tupe se va mojando (la barra
+// sube) y debajo de las marquesinas de cristal se seca; si se llena, se
+// empapa y cuesta tacos de la partida.
+var lluvia = null;
+const LLUVIA_SUBE = 0.32, LLUVIA_BAJA = 0.55, LLUVIA_MULTA = 10;
+function quitarLluvia() {
+  lluvia = null;
+  const el = document.getElementById("lluviaBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarLluvia(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "chaparron" && world.bajoMarquesina;
+  if (!en) { if (lluvia) quitarLluvia(); return; }
+  if (!lluvia) lluvia = { h: 0, pintado: "" };
+  const techo = world.bajoMarquesina();
+  lluvia.h = Math.min(1, Math.max(0, lluvia.h + (techo ? -LLUVIA_BAJA : LLUVIA_SUBE) * dt));
+  if (lluvia.h >= 1) {
+    lluvia.h = 0.3;
+    const multa = Math.min(tacosThisRun, LLUVIA_MULTA);
+    tacosThisRun -= multa;
+    textoFlotante(`${t("tupeMojado")} -${multa}`); sndBogey(); vibrate([30, 30, 30]); flashExpression("surprised", 1);
+    if (PRUEBA && window.__juego) window.__juego.mojados = (window.__juego.mojados || 0) + 1;
+  }
+  const el = barraJuego("lluviaBar");
+  el.classList.remove("hidden");
+  const texto = t(techo ? "bajoTecho" : "teMojas");
+  if (texto !== lluvia.pintado) {
+    el.querySelector(".rodeoTit").textContent = texto; el.querySelector(".rodeoPie").textContent = t("lluviaPista");
+    lluvia.pintado = texto;
+  }
+  el.querySelector(".barraLleno").style.width = `${lluvia.h * 100}%`;
+}
+// 15/11: Seattle: los pescaderos de Pike Place lanzan salmones. Un aro se
+// va cerrando sobre el fijo: hay que tocar cuando se juntan (el salmon
+// llega a las manos). Antes de tiempo, «¡aun no!»; si no se toca, ¡plaf!
+var pesca = null;
+const PEZ_PREMIO = 8;
+function aroPez() {
+  let el = document.getElementById("pezAro");
+  if (!el) {
+    el = document.createElement("div"); el.id = "pezAro"; el.className = "hidden";
+    el.innerHTML = '<div class="aroFijo"></div><div class="aroCae"></div><div class="aroPie"></div>';
+    document.getElementById("hud").appendChild(el);
+  }
+  return el;
+}
+function quitarPesca() {
+  if (pesca && pesca.volando && world.fallarPez) world.fallarPez();
+  pesca = null;
+  const el = document.getElementById("pezAro");
+  if (el) el.classList.add("hidden");
+}
+function actualizarPesca(dt) {
+  if (world.moverPez) world.moverPez(dt, playerX, py);
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "pescado" && world.lanzarPez;
+  if (!en) { if (pesca) quitarPesca(); return; }
+  if (!pesca) pesca = { espera: 1.4, t: 0, dur: 0, volando: false, bloqueo: 0, pie: false };
+  pesca.bloqueo = Math.max(0, pesca.bloqueo - dt);
+  if (!pesca.volando) {
+    pesca.espera -= dt;
+    if (pesca.espera <= 0) {
+      const dur = world.lanzarPez();
+      if (dur) { pesca.volando = true; pesca.t = 0; pesca.dur = dur; sndPez(); } else pesca.espera = 1;
+    }
+  } else {
+    pesca.t += dt;
+    if (pesca.t > pesca.dur + 0.14) {
+      pesca.volando = false; pesca.espera = 1.0; world.fallarPez();
+      textoFlotante(t("plaf")); sndBogey(); vibrate([25, 30, 25]); flashExpression("surprised", 0.8);
+      streak = 0; multiplier = 1;
+    }
+  }
+  const el = aroPez();
+  el.classList.toggle("hidden", !pesca.volando);
+  if (pesca.volando) {
+    const falta = pesca.dur - pesca.t;
+    el.querySelector(".aroCae").style.transform = `translate(-50%, -50%) scale(${(1 + 2.4 * Math.max(0, falta / pesca.dur)).toFixed(3)})`;
+    el.classList.toggle("ya", falta <= 0.22);
+    if (!pesca.pie) { el.querySelector(".aroPie").textContent = t("pezPista"); pesca.pie = true; }
+  }
+}
+function pescaToque() {
+  if (!pesca) return false;
+  if (!pesca.volando || pesca.bloqueo > 0) return true;
+  const falta = pesca.dur - pesca.t;
+  if (falta <= 0.22 && falta >= -0.14) {
+    pesca.volando = false; pesca.espera = 0.8; world.cogerPez();
+    const n = PEZ_PREMIO * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("pescado")} +${n}`); sndCogerPez(); vibrate(20);
+    if (PRUEBA && window.__juego) window.__juego.peces = (window.__juego.peces || 0) + 1;
+  } else { pesca.bloqueo = 0.35; textoFlotante(t("aunNo")); }
+  return true;
+}
+// 15/11: Portland: las ranas hinchables se deshinchan tocandolas en la pantalla.
+function tocarRanaToque(pos) {
+  if (!tramoMostrado || tramoMostrado.tipo !== "ranas" || !world.tocarRana) return false;
+  return world.tocarRana(pos ? pos.x : null, pos ? pos.y : null, camera, window.innerWidth, window.innerHeight);
+}
+// 15/11: Portland: la regata de barcos dragon. Encima del barco se rema
+// deslizando a izquierda y derecha, alternando (dos veces al mismo lado no
+// cuenta): cuanto mas deprisa, mas se quedan atras los rivales. Al acabar el
+// rio, premio por el puesto.
+var regata = null;
+const REGATA_PREMIOS = [40, 15, 0];
+function empezarRegata() {
+  if (!world.empezarRegata || !world.empezarRegata()) return;
+  regata = { c: 0.5, ultimo: "", pintado: "" };
+  const el = barraJuego("regataBar");
+  el.querySelector(".rodeoPie").textContent = t("regataPista");
+  el.classList.remove("hidden");
+}
+function quitarRegata() {
+  if (regata && world.acabarRegata) world.acabarRegata();
+  regata = null;
+  const el = document.getElementById("regataBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarRegata(dt) {
+  if (!regata) return;
+  if (!montado || gameState !== "playing") {
+    const puesto = world.acabarRegata();
+    if (gameState === "playing") {
+      const premio = REGATA_PREMIOS[puesto - 1] * multiplier;
+      if (premio) { tacosThisRun += premio; avisoVerde(`+${premio} ${TACO_IMG()}`); spawnConfetti(puesto === 1 ? 24 : 10); sndFanfarria(); }
+      showBubble(t("regataPuesto" + puesto), 1700, 2);
+    }
+    if (PRUEBA && window.__juego) window.__juego.puestoRegata = puesto;
+    regata = null;
+    document.getElementById("regataBar").classList.add("hidden");
+    return;
+  }
+  regata.c = Math.max(0, regata.c - 0.25 * dt);
+  world.moverRegata(dt, (regata.c - 0.5) * 9);
+  const el = barraJuego("regataBar");
+  const texto = t("regataHud").replace("{p}", world.puestoRegata());
+  if (texto !== regata.pintado) { el.querySelector(".rodeoTit").textContent = texto; regata.pintado = texto; }
+  el.querySelector(".barraLleno").style.width = `${regata.c * 100}%`;
+}
+function remar(action) {
+  if (action !== regata.ultimo) { regata.c = Math.min(1, regata.c + 0.16); sndRemo(); vibrate(6); }
+  else regata.c = Math.max(0, regata.c - 0.04);
+  regata.ultimo = action;
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
   if (alReves && (action === "left" || action === "right")) action = action === "left" ? "right" : "left";
+  if (regata && montado && (action === "left" || action === "right")) { remar(action); return; }   // (15/11: Portland)
   if (rodeo && montado && (action === "left" || action === "right")) {
     rodeo.e += action === "left" ? -0.42 : 0.42;
     sndLaneSwitch(); vibrate(8);
@@ -1933,6 +2089,7 @@ function accionJugador(action, pos) {
   }
   if ((action === "frase" || action === "lanzar") && lazoEstampida()) return;
   if ((action === "frase" || action === "lanzar") && (hachazo() || cambiarMarcha())) return;
+  if ((action === "frase" || action === "lanzar") && (pescaToque() || tocarRanaToque(pos))) return;   // (15/11: Seattle y Portland)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -2392,9 +2549,11 @@ function subirAlVehiculo() {
   // 14/11: Cheyenne: el toro del rodeo: a aguantar 8 segundos.
   const toro = world.vehiculoNombre && world.vehiculoNombre() === "toro_rodeo";
   const bolido = world.vehiculoNombre && world.vehiculoNombre() === "bolido_sal";   // (14/11: Salt Lake City)
-  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : "subeAviso"), 1600, 2);
+  const barco = world.vehiculoNombre && world.vehiculoNombre() === "barco_dragon";  // (15/11: Portland)
+  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : "subeAviso"), 1600, 2);
   if (toro) empezarRodeo();
   if (bolido) empezarRecord();
+  if (barco) empezarRegata();
   // (09/11: en el camion de la basura se pone el chaleco al subir, y ya no se
   // lo quita hasta la meta.)
   if (tramoMostrado && tramoMostrado.tipo === "basura" && character.setChaleco) {
@@ -2873,6 +3032,12 @@ world.onAvisoMapa((que) => {
   // 14/11: Boise: el periodista que llega por tu carril (si llevas la patata,
   // se la queda) y el tronco partido de un hachazo.
   else if (que === "periodista") pasarPatata();
+  // 15/11: Portland: una rana deshinchada.
+  else if (que === "rana" && gameState === "playing") {
+    tacosThisRun += 5 * multiplier;
+    textoFlotante(`${t("pssst")} +${5 * multiplier}`); sndDesinfla(); vibrate(12);
+    if (PRUEBA && window.__juego) window.__juego.ranas = (window.__juego.ranas || 0) + 1;
+  }
   else if (que === "tronco") troncoCortado();
   // 14/11: Salt Lake City: has pasado por dentro de un espejismo.
   else if (que === "espejismo" && gameState === "playing") {
@@ -2972,6 +3137,9 @@ function frame(dtFijo) {
     actualizarPatata(dt);
     actualizarHacha(dt);
     actualizarRecord(dt);
+    actualizarLluvia(dt);
+    actualizarPesca(dt);
+    actualizarRegata(dt);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3027,7 +3195,8 @@ function frame(dtFijo) {
         calesas: "calesasAviso", golf: "golfAviso", marejada: "marejadaAviso", bano: "banoAviso",
         platillo: "platilloAviso", globos: "globosAviso", bolas: "bolasAviso", esqui: "esquiAviso",
         estampida: "estampidaAviso", rodeo: "rodeoAviso", osos: "ososAviso", arreo: "arreoAviso",
-        patata: "patataAviso", aizkolari: "aizkolariAviso", espejismo: "espejismoAviso", record: "recordAviso" };
+        patata: "patataAviso", aizkolari: "aizkolariAviso", espejismo: "espejismoAviso", record: "recordAviso",
+        chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.

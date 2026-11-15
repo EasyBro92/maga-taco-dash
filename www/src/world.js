@@ -1860,6 +1860,10 @@ export function createWorld(scene) {
       // intenso, todo nevado y el asfalto mojado.
       Object.assign(BIOME_COLORS.city, { sky: 0xa9d0f4, skyTop: 0x2460c8, fog: 0xc4dcf2, horizon: 0x8eaac8, ground: 0xf2f6fa, sidewalk: 0xe2e8ef, road: 0x4c515c });
     }
+    if (luz === "lluvia") {
+      // 15/11: Seattle: lluvia de verdad: cielo gris, bruma y el asfalto mojado.
+      Object.assign(BIOME_COLORS.city, { sky: 0xb8c0ca, skyTop: 0x6a7686, fog: 0xa8b2bc, horizon: 0x7a8694, road: 0x3e4249, sidewalk: 0x9a9ea4 });
+    }
     if (luz === "dorada") {
       // 09/11: Milwaukee, tarde dorada de otoño junto al lago.
       Object.assign(BIOME_COLORS.city, { sky: 0xf0cfa0, skyTop: 0x3f78c8, fog: 0xecd0aa, horizon: 0xb09a80 });
@@ -2412,7 +2416,7 @@ export function createWorld(scene) {
   let sombraCalleMat = null;
   function ponerSombra(p, linea) {
     const luz = nivel && nivel.luz;
-    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1, helada: -1, pradera: -1, tornado: -1 }[luz];
+    const lado = { manana: 1, tarde: -1, atardecer: -1, invierno: 1, otono: -1, dorada: 1, helada: -1, pradera: -1, tornado: -1, lluvia: 1 }[luz];
     const corta = luz === "mediodia";
     if (!corta && p.lado !== lado) return;
     if (!sombraCalleMat) {
@@ -3107,6 +3111,22 @@ export function createWorld(scene) {
     trax: { choque: "full", medio: 4.7, alto: 3.3, centro: -4.7 },
     hot_rod: { choque: "full", medio: 2.3, alto: 1.5, centro: -2.3 },
     baliza_sal: { choque: "low", medio: 0.25, alto: 0.75 },
+    // 15/11: Seattle (blender/seattle.py): la marquesina de cristal (no
+    // estorba: debajo no te mojas; 14 m, el frente en el origen), el cajon de
+    // pescado, la pancarta JUAN DE FUCA, el carrito del cafe y el tranvia. El
+    // salmon que lanzan los pescaderos va aparte (ver lanzarPez).
+    marquesina_lluvia: { choque: "nada", medio: 7, alto: 0, centro: -7 },
+    cajon_hielo: { choque: "low", medio: 0.4, alto: 0.75 },
+    cartel_seattle: { choque: "high", medio: 0.3, alto: 2.5 },
+    carrito_cafe: { choque: "full", medio: 1.0, alto: 2.4, centro: -0.9 },
+    tranvia_seattle: { choque: "full", medio: 4.8, alto: 3.2, centro: -4.8 },
+    // 15/11: Portland (blender/portland.py): la rana hinchable (se deshincha
+    // tocandola en la pantalla), la pancarta OREJON, el food truck y las bicis
+    // aparcadas. El barco dragon es un vehiculo (ver VEHICULOS).
+    rana_hinchable: { choque: "full", medio: 0.55, alto: 2.6 },
+    cartel_oregon: { choque: "high", medio: 0.3, alto: 2.5 },
+    food_truck: { choque: "full", medio: 3.0, alto: 3.0, centro: -3.0 },
+    bicis_aparcadas: { choque: "low", medio: 0.55, alto: 0.9 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4183,6 +4203,120 @@ export function createWorld(scene) {
       c.fuera = alto > 0.3;
     }
   }
+  // ---- 15/11: Seattle ----
+  // El chaparron: ¿esta el jugador debajo de una marquesina?
+  function bajoMarquesina() {
+    return obstacles.some((o) => o.marquesina && o.lane === jugadorCarril && o.z > -0.6 && o.z - 14 < 0.6);
+  }
+  // Los pescaderos de Pike Place: el salmon sale de un puesto de la acera y
+  // cae en tus manos en arco (main.js lleva el aro y si lo coges a tiempo).
+  const pez = { mesh: null, t: 0, dur: 1.1, lado: 1, estado: "", x: 0, y: 0, z: 0, vy: 0 };
+  function lanzarPez() {
+    if (!hayModelo("obstaculos/salmon")) return 0;
+    if (!pez.mesh) { pez.mesh = modeloConContorno("obstaculos/salmon"); group.add(pez.mesh); }
+    pez.lado = Math.random() < 0.5 ? -1 : 1;
+    pez.t = 0; pez.estado = "vuela"; pez.mesh.visible = true;
+    return pez.dur;
+  }
+  function cogerPez() { if (pez.estado === "vuela") { pez.estado = "cogido"; pez.t = 0; } }
+  function fallarPez() { if (pez.estado === "vuela") { pez.estado = "plaf"; pez.t = 0; pez.vy = 2; } }
+  function moverPez(dt, px, py) {
+    if (!pez.mesh || !pez.estado) return;
+    const m = pez.mesh;
+    pez.t += dt;
+    if (pez.estado === "vuela") {
+      const u = Math.min(1.15, pez.t / pez.dur);
+      const x0 = pez.lado * 6.5, y0 = 1.7, z0 = -24, x1 = px, y1 = 1.55 + py, z1 = -0.45;
+      pez.x = x0 + (x1 - x0) * u; pez.z = z0 + (z1 - z0) * u;
+      pez.y = y0 + (y1 - y0) * u + 3.4 * 4 * u * (1 - u);
+      m.position.set(pez.x, pez.y, pez.z);
+      m.rotation.set(0, 0, pez.t * 7);
+    } else if (pez.estado === "cogido") {
+      // En las manos, un momento, y fuera.
+      m.position.set(px + 0.1, 1.5 + py, -0.5);
+      m.rotation.set(0, 0, Math.PI / 2);
+      if (pez.t > 0.7) { pez.estado = ""; m.visible = false; }
+    } else if (pez.estado === "plaf") {
+      // Te da en la cara y cae al suelo.
+      pez.vy -= 14 * dt;
+      pez.y = Math.max(0.15, pez.y + pez.vy * dt);
+      pez.z += 4 * dt;
+      m.position.set(pez.x, pez.y, pez.z);
+      m.rotation.set(0, 0, Math.PI / 2);
+      if (pez.t > 0.9) { pez.estado = ""; m.visible = false; }
+    }
+  }
+  // ---- 15/11: Portland ----
+  // Las ranas hinchables: respiran (se hinchan un poco) y se balancean; al
+  // tocarlas en la pantalla se deshinchan y quedan planas en el suelo.
+  const _pr = new THREE.Vector3(), _ps = new THREE.Vector3();
+  function moverRana(o, dt) {
+    const r = o.rana, m = o.mesh;
+    if (r.hinchada) {
+      const t = animClock + o.phase;
+      m.scale.set(1, 1 + Math.sin(t * 2.2) * 0.03, 1);
+      m.rotation.z = Math.sin(t * 1.6) * 0.05;
+      return;
+    }
+    r.t += dt;
+    const f = Math.min(1, r.t / 0.45), sm = f * f * (3 - 2 * f);
+    m.scale.set(1 + 0.35 * sm, 1 - 0.88 * sm, 1 + 0.35 * sm);
+    m.rotation.z *= 1 - sm;
+  }
+  function desinflar(o) {
+    o.rana.hinchada = false; o.rana.t = 0; o.fuera = true;
+    if (alAvisoMapa) alAvisoMapa("rana");
+  }
+  // main.js: un toque en (cx, cy): ¿le ha dado a una rana? (sin posicion, la
+  // de tu carril). Deshincha la mas cercana al dedo.
+  function tocarRana(cx, cy, cam, ancho, alto) {
+    let mejor = null, dmin = 1e9;
+    for (const o of obstacles) {
+      if (!o.rana || !o.rana.hinchada || o.z < -50 || o.z > -1.2) continue;
+      if (cx === undefined || cx === null) {
+        if (o.lane !== jugadorCarril || o.z < -35) continue;
+        if (-o.z < dmin) { dmin = -o.z; mejor = o; }
+        continue;
+      }
+      _pr.set(o.mesh.position.x, 1.4, o.z); _ps.set(o.mesh.position.x + 0.9, 1.4, o.z);
+      _pr.project(cam); _ps.project(cam);
+      if (_pr.z > 1) continue;
+      const x = (_pr.x + 1) / 2 * ancho, y = (1 - _pr.y) / 2 * alto;
+      const rad = Math.max(70, Math.abs(_ps.x - _pr.x) / 2 * ancho * 1.6);
+      const dd = Math.hypot(cx - x, cy - y);
+      if (dd <= rad && dd < dmin) { dmin = dd; mejor = o; }
+    }
+    if (!mejor) return false;
+    desinflar(mejor);
+    return true;
+  }
+  // La regata de barcos dragon: los dos rivales van en los carriles de los
+  // lados; main.js dice lo deprisa que remas (vRel > 0: se quedan atras).
+  const regata = { barcos: [] };
+  function empezarRegata() {
+    if (!hayModelo("obstaculos/barco_dragon")) return false;
+    if (!regata.barcos.length) {
+      for (const l of [0, 2]) {
+        const g = new THREE.Group();
+        const m = modeloConContorno("obstaculos/barco_dragon");
+        m.rotation.y = Math.PI;
+        g.add(m); g.visible = false; group.add(g);
+        regata.barcos.push({ g, lane: l, z: 0, fase: Math.random() * 6 });
+      }
+    }
+    for (const b of regata.barcos) { b.z = -8.3 + (Math.random() - 0.5) * 2; b.g.visible = true; }
+    return true;
+  }
+  function moverRegata(dt, vRel) {
+    for (const b of regata.barcos) {
+      if (!b.g.visible) continue;
+      b.z = THREE.MathUtils.clamp(b.z + (vRel + Math.sin(animClock * 0.7 + b.fase) * 0.6) * dt, -45, 25);
+      b.g.position.set(LANE_X[b.lane], Math.sin(animClock * 3 + b.fase) * 0.04, b.z);
+    }
+  }
+  // Puesto: 1 + los rivales que llevan el morro por delante del tuyo.
+  function puestoRegata() { return 1 + regata.barcos.filter((b) => b.g.visible && b.z < -8.8).length; }
+  function acabarRegata() { const p = puestoRegata(); for (const b of regata.barcos) b.g.visible = false; return p; }
   // ---- 14/11: Boise ----
   // La patata caliente: main.js lleva la cuenta (quien la tiene y cuanto le
   // queda) y aqui se ve: la patata que salta de mano en mano encima de la
@@ -6460,6 +6594,7 @@ export function createWorld(scene) {
   let bolasAntes = [], eslalon = { lane: 1, sig: 0, color: 0 };   // (14/11: Denver)
   let estampidaFila = 0, osoAntes = "";                             // (14/11: Cheyenne y Billings)
   let periodistaAntes = -1;                                         // (14/11: Boise)
+  let marqAntes = -1;                                               // (15/11: Seattle)
   const PATRONES = {
     // Un respiro: una hilera de tacos que va culebreando de carril.
     calma(z, d, t, k) {
@@ -7536,6 +7671,63 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Seattle ----
+    // El chaparron: cada 21 m una marquesina de cristal de 14 m (en el carril
+    // de antes o en uno de al lado): debajo no se moja el tupe. A veces un
+    // cajon debajo (se salta) y algo en otro carril.
+    chaparron(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { if (k === 0) marqAntes = -1; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || k % 3 !== 2 || !obstaclePools.marquesina_lluvia) return;
+      const l = marqAntes < 0 ? 1 : elegirDe([marqAntes, Math.max(0, marqAntes - 1), Math.min(2, marqAntes + 1)]);
+      marqAntes = l;
+      const o = spawnObstacle(l, "nada", z, "marquesina_lluvia");
+      if (o) o.marquesina = true;
+      for (let i = 0; i < 4; i++) spawnTaco(l, z - 2 - i * 1.4, 0.9);
+      if (Math.random() < 0.3) obst(l, "low", z - 9, d, ["cajon_hielo"]);
+      if (Math.random() < 0.55) {
+        const otro = elegirDe(LANES.filter((x) => x !== l));
+        if (Math.random() < 0.5) obst(otro, "low", z - 5, d, ["cajon_hielo"]);
+        else obst(otro, "full", z - 5, d, ["carrito_cafe"]);
+      }
+      filaSinObjeto = true;
+    },
+    // Los pescaderos de Pike Place (momento estrella): los salmones los lanza
+    // main.js (ver lanzarPez). En la calle, algun cajon y tacos.
+    pescado(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 4 === 1) obst(elegirDe(LANES), "low", z, d, ["cajon_hielo"]);
+      else if (k % 4 === 3) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // ---- 15/11: Portland ----
+    // Las ranas hinchables: cada 28 m una fila de dos o tres ranas; cuando
+    // son tres hay que tocar una para deshincharla. Bicis aparcadas entre medias.
+    ranas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 4 === 2 && obstaclePools.rana_hinchable) {
+        filaSinObjeto = true;
+        const orden = [...LANES].sort(() => Math.random() - 0.5);
+        const cuantas = Math.random() < 0.45 ? 3 : 2;
+        for (let i = 0; i < cuantas; i++) {
+          const o = spawnObstacle(orden[i], "full", z - Math.random() * 0.8, "rana_hinchable");
+          if (o) o.rana = { hinchada: true, t: 0 };
+        }
+        if (cuantas === 2) tacosEn(orden[2], z, 3);
+        else for (let i = 0; i < 3; i++) spawnTaco(orden[0], z - 3 - i * 1.3, 0.9);
+        return;
+      }
+      if (k % 4 === 0 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["bicis_aparcadas"]);
+    },
+    // La regata (momento estrella): el barco dragon espera al principio en el
+    // carril del medio (ver VEHICULOS); los rivales los pone empezarRegata.
+    // En el rio solo hay tacos por el carril del medio.
+    regata(z, d, t, k) {
+      if (k % 3 === 1) for (let i = 0; i < 4; i++) spawnTaco(1, z - i * 1.4, 0.9);
+    },
     // ---- 14/11: Boise ----
     // La patata caliente: cada 28 m un periodista en un carril (main.js te da
     // la patata: hay que chocar con uno antes de que queme). Entre medias,
@@ -8324,6 +8516,9 @@ export function createWorld(scene) {
     // 14/11: Salt Lake City: de pie encima del bolido del record (detras de
     // la cabina): hay que cambiar de marcha a tiempo (ver main.js).
     bolido_sal: { alto: 1.24, z: 2.6, gira: true },
+    // 15/11: Portland: de pie en la popa del barco dragon, llevando el timon
+    // (hay que remar: ver main.js).
+    barco_dragon: { alto: 0.6, z: 1.6, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -9007,6 +9202,7 @@ export function createWorld(scene) {
     moverBandadas(dt, dz);
     moverHeli(dt);
     moverNieve(dt, dz);
+    moverLluvia(dt, dz);
   }
   // ---- Nieve que cae (Des Moines, 01/11/2026) ----
   // Copos grandes, blandos y lentos, y no muchos: sin brillos ni parpadeos
@@ -9050,6 +9246,37 @@ export function createWorld(scene) {
       if (a[i * 3 + 2] > NIEVE_DESDE) a[i * 3 + 2] -= NIEVE_LARGO;
     }
     nieveCae.p.geometry.attributes.position.needsUpdate = true;
+  }
+  // 15/11: Seattle: la lluvia (luz «lluvia»): rayitas finas que caen, suaves
+  // y transparentes (nada parpadea), alrededor del jugador.
+  let lluviaCae = null;
+  const LLUVIA_ALTO = 14, LLUVIA_DESDE = 8, LLUVIA_LARGO = 54;
+  function montarLluvia() {
+    const N = 320, pos = new Float32Array(N * 6);
+    for (let i = 0; i < N; i++) {
+      const x = (Math.random() - 0.5) * 30, y = Math.random() * LLUVIA_ALTO, z = LLUVIA_DESDE - Math.random() * LLUVIA_LARGO;
+      pos.set([x, y, z, x + 0.03, y - 0.5, z], i * 6);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const l = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xd8e4f0, transparent: true, opacity: 0.35, depthWrite: false }));
+    l.frustumCulled = false;
+    group.add(l);
+    lluviaCae = { l, pos, N };
+  }
+  function moverLluvia(dt, dz) {
+    if (!(nivel && nivel.luz === "lluvia")) { if (lluviaCae) lluviaCae.l.visible = false; return; }
+    if (!lluviaCae) montarLluvia();
+    lluviaCae.l.visible = true;
+    const a = lluviaCae.pos;
+    for (let i = 0; i < lluviaCae.N; i++) {
+      const j = i * 6;
+      let y = a[j + 1] - (11 + (i % 5)) * dt, z = a[j + 2] + dz;
+      if (y < 0) y += LLUVIA_ALTO;
+      if (z > LLUVIA_DESDE) z -= LLUVIA_LARGO;
+      a[j + 1] = y; a[j + 2] = z; a[j + 4] = y - 0.5; a[j + 5] = z;
+    }
+    lluviaCae.l.geometry.attributes.position.needsUpdate = true;
   }
   // Al empezar (o seguir desde el punto de control): fuera todo lo vivo.
   function reiniciarVida() {
@@ -9267,6 +9494,7 @@ export function createWorld(scene) {
         else if (o.periodista) moverPeriodista(o, dt);
         else if (o.tronco) moverTronco(o, dt);
         else if (o.espejismo) moverEspejismo(o, dt);
+        else if (o.rana) moverRana(o, dt);
         else if (o.bigone) trompoCoche(o, dt, dz);
         else if (o.pool === "votantes") {
           // Hace frio: dan saltitos en el sitio para entrar en calor.
@@ -9492,5 +9720,6 @@ export function createWorld(scene) {
     onAvisoMapa, hieloEn, carrilDespejado, cavar, pisarNota, cogerPapeleta, abrirUrna, enRebufo, jugarGolf, pasarPuerta,
     echarLazo, hayEstampida, setToroEquilibrio, vehiculoNombre: () => vehiculo.nombre, vehiculoLibre: () => vehiculo.fase === 0,
     arreoCuenta: () => arreoCuenta,
-    setPatata, hayPeriodista, darPatata, setHacha, troncoCerca };
+    setPatata, hayPeriodista, darPatata, setHacha, troncoCerca,
+    bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata };
 }

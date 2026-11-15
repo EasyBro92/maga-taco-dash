@@ -2087,6 +2087,124 @@ const CALLES = [
     acera: ["saltlake/colmena", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 15/11/2026: nivel 34: Seattle (blender/seattle.py). «Llueve sin parar:
+    // su pelo corre peligro». Recomendado: 5th Avenue bajo la lluvia (luz
+    // «lluvia», con su lluvia que cae), con el monorrail por encima de la
+    // acera, y final en la Space Needle. Dinamicas propias: el chaparron (el
+    // tupe se moja: hay que ir de marquesina en marquesina) y el momento
+    // estrella, los pescaderos de Pike Place que te lanzan salmones (tocar
+    // justo cuando el aro se junta). Pancartas de Espana: JUAN DE FUCA LLEGO
+    // EN 1592.
+    id: "seattle", nombre: "5th Avenue", lugar: "Seattle, Washington", listo: true,
+    zona: "city", carpeta: "seattle", luz: "lluvia", semilla: 1837,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 8, estilo: "seattle" },
+    horizonte: "seattle",
+    obstaculos: { low: ["cajon_hielo", "barricada", "valla_metal"], high: ["cartel_seattle", "pancarta"],
+      full: ["tranvia_seattle", "carrito_cafe", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "seattle" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "quinta_sea" }],
+      [250, 610, "chaparron", { titulo: "chaparron" }],
+      [610, 690, "calma", { titulo: "smith_tower" }],
+      [690, 850, "slalom", { full: ["tranvia_seattle", "carrito_cafe", "pickup"], titulo: "tranvia_slu" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["cajon_hielo", "valla_metal"], high: ["cartel_seattle"], titulo: "juan_de_fuca" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_pike" }],
+      // El momento estrella: los pescaderos de Pike Place (pieza de `fondo` e `interior`).
+      [1410, 1830, "pescado", { titulo: "pescado" }],
+      [1830, 1910, "calma", { titulo: "pescado_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "chaparron", { titulo: "chaparron2" }],
+      [2430, 2510, "calma", { titulo: "monorail_t" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_needle" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "pescado", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["mercado_pike", "smith_tower", "biblioteca_seattle"],
+    meta: "space_needle", metaNombre: { es: "la Space Needle", en: "the Space Needle" },
+    izquierda: [
+      40, ["kit", 2], 14, ["mercado_pike", 1], 14, ...cuadras(3), ["smith_tower", 1], 14, ...cuadras(5), ["biblioteca_seattle", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["biblioteca_seattle", 1], 14, ...cuadras(4), ["smith_tower", 1], 14, ...cuadras(5), ["mercado_pike", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "space_needle", d: 3330, centro: true },
+      { pieza: "monorail", d: 200, cruza: true }, { pieza: "monorail", d: 2560, cruza: true },
+      { pieza: "mercado_pescado", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 22, -40] },
+    acera: ["seattle/cerdita_rachel", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
+    // 15/11/2026: nivel 35: Portland, Oregon (blender/portland.py).
+    // «Manifestantes disfrazados de rana hinchable». Recomendado: Burnside
+    // Street una tarde de verano, y final en el letrero PORTLAND OREGON con
+    // el ciervo. Dinamicas propias: las ranas hinchables (cuando tapan la
+    // calle, se toca una en la pantalla para deshincharla) y el momento
+    // estrella, la regata de barcos dragon del Festival de las Rosas en el
+    // Willamette (remar deslizando a izquierda y derecha, alternando).
+    // Pancartas de Espana: ¿OREGON? ¡VIENE DE OREJON!
+    id: "portland_or", nombre: "Burnside Street", lugar: "Portland, Oregón", listo: true,
+    zona: "city", carpeta: "portland", luz: "tarde", semilla: 1838,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "portland" },
+    horizonte: "portland",
+    obstaculos: { low: ["bicis_aparcadas", "barricada", "valla_metal"], high: ["cartel_oregon", "pancarta"],
+      full: ["food_truck", "pickup", "furgoneta", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "portland_or" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "burnside" }],
+      [250, 610, "ranas", { titulo: "ranas" }],
+      [610, 690, "calma", { titulo: "powells_t" }],
+      [690, 850, "slalom", { full: ["food_truck", "pickup", "furgoneta"], titulo: "food_trucks" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["bicis_aparcadas", "valla_metal"], high: ["cartel_oregon"], titulo: "orejon" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_rio" }],
+      // El momento estrella: la regata en el Willamette (pieza de `fondo` e `interior`, al aire libre).
+      [1410, 1830, "regata", { momento: "vehiculo", vehiculo: "barco_dragon", titulo: "regata" }],
+      [1830, 1910, "calma", { titulo: "regata_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "ranas", { titulo: "ranas2" }],
+      [2430, 2510, "calma", { titulo: "rosas" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_stag" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "regata", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["powells", "portland_building", "union_station_pdx"],
+    meta: "white_stag", metaNombre: { es: "el letrero de Portland", en: "the Portland sign" },
+    izquierda: [
+      40, ["kit", 2], 14, ["powells", 1], 14, ...cuadras(3), ["portland_building", 1], 14, ...cuadras(5), ["union_station_pdx", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["union_station_pdx", 1], 14, ...cuadras(4), ["portland_building", 1], 14, ...cuadras(5), ["powells", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "white_stag", d: 3330, centro: true },
+      { pieza: "arco_rosas", d: 120, cruza: true }, { pieza: "arco_rosas", d: 2470, cruza: true },
+      { pieza: "rio_willamette", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 18, -40] },
+    acera: ["portland/carrito_comida", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2190,14 +2308,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2257,6 +2375,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  space_needle: 80, mercado_pike: 32, smith_tower: 24, biblioteca_seattle: 36, monorail: 160, mercado_pescado: 420,
+  white_stag: 70, powells: 36, portland_building: 32, union_station_pdx: 40, arco_rosas: 2, rio_willamette: 420,
   capitolio_idaho: 90, boise_depot: 40, egyptian_theatre: 22, casa_vasca: 36, arco_vasco: 2, plaza_aizkolari: 420,
   capitolio_utah: 96, city_county_slc: 44, depot_slc: 46, beehive_house: 24, eagle_gate: 2, salar_bonneville: 420,
   capitolio_wyoming: 80, cheyenne_depot: 44, plains_hotel: 26, big_boy: 46, arco_cheyenne: 2, arena_rodeo: 420,
@@ -2478,7 +2598,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

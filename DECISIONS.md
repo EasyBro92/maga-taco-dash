@@ -2479,3 +2479,54 @@ niveles sin chocar y salen los 10 objetos de cada uno:
   Batió el récord a 41 m/s.
 
 Falta el veredicto de Isidro.
+
+## 15/11/2026: niveles 34 y 35, Seattle y Portland (v69)
+
+«¿Cuántos niveles quedan? Acábalos». Quedaban 17, del 34 (Seattle) al 50
+(Boston). Van de dos en dos y se publica cada pareja.
+
+- **Seattle** (5th Avenue bajo la lluvia, con el monorraíl por encima de la
+  acera; `blender/seattle.py`):
+  - Luz nueva, «lluvia»: cielo gris, el asfalto mojado y rayitas de lluvia
+    finas y transparentes que caen (nada parpadea).
+  - El chaparrón: el tupé se va mojando (la barra sube). Debajo de las
+    marquesinas de cristal se seca. Cada 21 m hay una de 14 m, en el mismo
+    carril o en uno de al lado. Si la barra se llena, el tupé se empapa y
+    cuesta 10 tacos de la partida.
+  - El momento estrella son los pescaderos de Pike Place, que te lanzan
+    salmones. Un aro naranja se va cerrando sobre el blanco y hay que tocar
+    cuando se juntan (+8). Si tocas antes de tiempo sale «¡Aún no!». Si no lo
+    coges, ¡PLAF! y pierdes la racha.
+  - El mercado por dentro salía con 170.000 triángulos. Se dejó en 37.000
+    con salmones sencillos y menos puestos.
+  - Pancartas: JUAN DE FUCA LLEGÓ EN 1592.
+  - Piezas: el mercado con su reloj y su letrero rojo, la Smith Tower, la
+    biblioteca de cristal, la cerdita Rachel en la acera, el monorraíl, el
+    carrito del café y el tranvía.
+  - Final en la Space Needle. Objeto: cafés. Música: rock de los noventa.
+- **Portland** (Burnside Street por la tarde; `blender/portland.py`):
+  - Las ranas hinchables: filas de dos o tres ranas. Cuando son tres, se
+    toca una en la pantalla, en su sitio, para deshincharla (+5). Es la
+    primera mecánica en la que importa dónde se toca.
+  - El momento estrella es la regata de barcos dragón en el Willamette. Vas
+    de pie en la popa y se rema deslizando a izquierda y derecha, alternando.
+    Cuanto más deprisa, más se quedan atrás los dos rivales. Al acabar: 1º
+    +40, 2º +15.
+  - Con el primer ajuste remar 2 veces por segundo no bastaba. Ahora a 2,5
+    se gana y a 1,5 se queda tercero.
+  - Pancartas: ¿OREGÓN? ¡VIENE DE OREJÓN! (una de las teorías del nombre).
+  - Piezas: Powell's, el Portland Building con Portlandia, la estación GO BY
+    TRAIN, el arco de rosas, los carritos de comida, el food truck y las
+    bicis aparcadas.
+  - Final en el letrero PORTLAND OREGON con el ciervo. Objeto: rosas. Música:
+    folk.
+
+Probado con el piloto automático. Llega a la meta en los dos y salen los 10
+objetos de cada uno:
+
+- **Seattle:** cogió 11 de 11 salmones. Sin buscar las marquesinas, el tupé
+  se empapó 2 veces. Hubo 2 choques del piloto en tramos normales: una fila
+  de vallas bajas y una pancarta.
+- **Portland:** 0 choques, 10 ranas deshinchadas y ganó la regata.
+
+Falta el veredicto de Isidro.
