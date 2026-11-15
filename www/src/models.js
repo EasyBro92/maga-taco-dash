@@ -123,7 +123,11 @@ const LISTA = {
     // 15/11: Richmond (blender/richmond.py)
     "tanque", "tarta_cumple", "placa_mina", "cartel_va",
     // 15/11: Baltimore (blender/baltimore.py)
-    "cangrejo", "olla_cangrejos", "camion_especias", "cartel_md"],
+    "cangrejo", "olla_cangrejos", "camion_especias", "cartel_md",
+    // 15/11: Wilmington (blender/wilmington.py)
+    "gallina_azul", "cucurucho_caido", "mecedora_obst", "camion_helados", "cartel_de",
+    // 15/11: Filadelfia (blender/filadelfia.py)
+    "prensa_marco", "prensa_martillo", "pretzel_gigante", "autobus_septa", "cartel_pa"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -146,7 +150,7 @@ function materialDe(original, shininess, specular) {
 // Donde brilla cada pieza (neones y bombillas): lo apunta Blender en
 // models/<carpeta>/luces.json ({ pieza: [[x, y, z, radio, color], ...] }).
 // Solo las carpetas que lo tienen (las demas darian un error 404).
-const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita", "san_luis", "nuevaorleans", "birmingham", "nashville", "louisville", "atlanta", "charlotte", "miami", "albuquerque", "denver", "billings", "boise", "saltlake", "seattle", "portland", "anchorage", "honolulu", "losangeles", "richmond"]);   // (07/11: las lamparas del metro)
+const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita", "san_luis", "nuevaorleans", "birmingham", "nashville", "louisville", "atlanta", "charlotte", "miami", "albuquerque", "denver", "billings", "boise", "saltlake", "seattle", "portland", "anchorage", "honolulu", "losangeles", "richmond"]);   // (y obstaculos: los faros de los camiones)   // (07/11: las lamparas del metro)
 const luces = {};
 async function cargarLuces(carpeta) {
   if (!CON_LUCES.has(carpeta) || luces[carpeta]) return;

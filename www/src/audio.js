@@ -228,6 +228,10 @@ export function sndBip(p = 0.5) { tono(700 + p * 700, 0.06, { tipo: "sine", vol:
 export function sndTambor() { tono(120, 0.16, { tipo: "sine", vol: 0.25, glide: -50 }); soplo(0.07, { desde: 900, hasta: 400, tipo: "bandpass", vol: 0.1, q: 1 }); }
 export function sndPum() { soplo(0.4, { desde: 2500, hasta: 300, tipo: "bandpass", vol: 0.22, q: 0.8 }); tono(160, 0.2, { tipo: "sine", vol: 0.2, glide: -80 }); }
 export function sndPinza() { tono(1600, 0.05, { tipo: "square", vol: 0.06 }); tono(1300, 0.05, { tipo: "square", vol: 0.06, cuando: 0.06 }); }
+// 15/11: Wilmington: la gallina, la bola de helado y la torre que se cae.
+export function sndCacareo() { tono(900, 0.08, { tipo: "square", vol: 0.05, glide: 300, filtro: 2200 }); tono(700, 0.12, { tipo: "square", vol: 0.05, glide: -200, filtro: 2000, cuando: 0.1 }); }
+export function sndBola() { tono(520, 0.1, { tipo: "sine", vol: 0.12, glide: -200 }); }
+export function sndTorreCae() { soplo(0.5, { desde: 1200, hasta: 200, tipo: "lowpass", vol: 0.2, q: 0.8 }); tono(300, 0.5, { tipo: "sine", vol: 0.1, glide: -220 }); }
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -408,6 +412,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Wilmington: swing tranquilo de pueblo, para mecerse (melodia propia).
+  wilmington: { bpm: 112, swing: 0.6, acordes: [C, Am, F, G], bateria: "swing", bajo: "camina",
+    melodia: [72, null, 76, 79, null, 76, 72, null, 74, null, 77, 81, null, 77, 74, null,
+      72, null, 76, 79, 81, 79, 76, null, 74, null, 71, 74, 72, null, null, null],
+    timbre: "pluck" },
+  // 15/11: Filadelfia: soul de Filadelfia, con mucho ritmo (melodia propia).
+  filadelfia: { bpm: 126, swing: 0, acordes: [F, C, Dm, Bb], bateria: "pop", bajo: "octavas",
+    melodia: [77, null, 77, 79, 81, null, 79, 77, 74, null, 72, 74, 77, null, null, null,
+      77, null, 81, 84, 82, 81, 79, null, 77, null, 74, 72, 77, null, null, null],
+    timbre: "metal" },
   // 15/11: Richmond: marcha militar de desfile, a 100 (el tambor del desfile va a 0,6 s) (melodia propia).
   richmond: { bpm: 100, swing: 0, acordes: [C, G, C, G7], bateria: "marcha", bajo: "alterna",
     melodia: [72, null, 72, 74, 76, null, 72, null, 79, null, 77, 76, 74, null, null, null,

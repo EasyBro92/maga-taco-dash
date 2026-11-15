@@ -33,7 +33,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Connecticut | Hartford | capital |
 | Dakota del Norte | Fargo (capital: Bismarck) | la más conocida (hecho el 12/11: Broadway hasta el teatro, con el Rey Pingüino) |
 | Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
-| Delaware | Wilmington (capital: Dover) | la más grande |
+| Delaware | Wilmington (capital: Dover) | la más grande (hecho el 15/11: las gallinas azules que se apartan y la torre de helado que se tambalea) |
 | Florida | Miami (capital: Tallahassee) | la más famosa (hecho el 14/11: Ocean Drive con huracán, las olas que cruzan la calle, el baño dorado de Mar-a-Lago con lámparas que se balancean, el jefe de los papeles y Mar-a-Lago) |
 | Georgia | Atlanta | capital y la más famosa (hecho el 14/11: Peachtree Street, las papeletas que se escapan, el trile de las urnas del recuento y la marquesina «PRESIDENT ELECT») |
 | Hawái | Honolulu | capital y la más famosa (hecho el 15/11: Waikiki, el collar de flores en orden y el surf con piruetas) |
@@ -58,7 +58,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos (hecho el 14/11: Central Avenue, el platillo que cambia los coches de carril y los globos que despegan) |
 | Oklahoma | Oklahoma City | capital y la más grande (hecho el 12/11: Bricktown, molinos en la calle y géiseres de petróleo) |
 | Oregón | Portland (capital: Salem) | la más famosa (hecho el 15/11: Burnside Street, las ranas hinchables que se deshinchan tocándolas y la regata de barcos dragón) |
-| Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad |
+| Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad (hecho el 15/11: la freidora de cestas que se doran y las prensas de la Casa de la Moneda) |
 | Rhode Island | Providence | capital y la más grande |
 | Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
 | Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |

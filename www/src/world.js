@@ -3174,6 +3174,20 @@ export function createWorld(scene) {
     olla_cangrejos: { choque: "low", medio: 0.55, alto: 0.85 },
     camion_especias: { choque: "full", medio: 3.6, alto: 3.3, centro: -3.6 },
     cartel_md: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Wilmington (blender/wilmington.py): la gallina azul (se coge: se
+    // aparta si la ves venir por su carril), el cucurucho caido, la mecedora,
+    // el camion de los helados y la pancarta.
+    gallina_azul: { choque: "nada", medio: 0.4, alto: 0 },
+    cucurucho_caido: { choque: "low", medio: 0.7, alto: 0.7 },
+    mecedora_obst: { choque: "low", medio: 0.45, alto: 1.1 },
+    camion_helados: { choque: "full", medio: 3.3, alto: 3.4, centro: -3.3 },
+    cartel_de: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Filadelfia (blender/filadelfia.py): el pretzel gigante, el
+    // autobus y la pancarta. La prensa de monedas y la cesta de la freidora
+    // son piezas compuestas.
+    pretzel_gigante: { choque: "low", medio: 0.6, alto: 0.5 },
+    autobus_septa: { choque: "full", medio: 5.2, alto: 3.2, centro: -5.2 },
+    cartel_pa: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3668,6 +3682,49 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 15/11: Filadelfia: la prensa de monedas (el marco y el martillo, que
+    // sube y baja: abajo, el carril esta cerrado) y la cesta de la freidora
+    // (las patatas cambian de color: crudas, doradas, quemadas).
+    if (hayModelo("obstaculos/prensa_marco") && hayModelo("obstaculos/prensa_martillo")) {
+      TIPOS.prensa = { choque: "nada", medio: 0.45, alto: 3.6 };
+      obstaclePools.prensa = makePool(() => {
+        const g = new THREE.Group();
+        g.add(modeloConContorno("obstaculos/prensa_marco"));
+        const m = modeloConContorno("obstaculos/prensa_martillo");
+        m.position.y = 3.6; g.add(m);
+        g.userData.martillo = m;
+        return g;
+      });
+    }
+    TIPOS.cesta_patatas = { choque: "nada", medio: 0.5, alto: 0 };
+    obstaclePools.cesta_patatas = makePool(() => {
+      const g = new THREE.Group();
+      const rej = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.45, 0.8), new THREE.MeshLambertMaterial({ color: 0x8a9098, wireframe: true }));
+      rej.position.y = 1.0; g.add(rej);
+      const asa = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6), new THREE.MeshLambertMaterial({ color: 0x2a2c30 }));
+      asa.rotation.z = Math.PI / 2; asa.position.set(0.9, 1.15, 0); g.add(asa);
+      const mat = new THREE.MeshLambertMaterial({ color: 0xf0e0a0 });
+      const palo = new THREE.BoxGeometry(0.08, 0.5, 0.08);
+      for (let i = 0; i < 14; i++) {
+        const f = new THREE.Mesh(palo, mat);
+        f.position.set(-0.4 + (i % 7) * 0.13, 1.25 + (i % 3) * 0.06, -0.2 + Math.floor(i / 7) * 0.35);
+        f.rotation.z = (i % 5 - 2) * 0.12;
+        g.add(f);
+      }
+      g.userData.mat = mat;
+      return g;
+    });
+    // 15/11: Wilmington: la bola de helado que se recoge (hecha aqui; el
+    // color lo pone el patron).
+    TIPOS.bola_helado = { choque: "nada", medio: 0.4, alto: 0 };
+    obstaclePools.bola_helado = makePool(() => {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshLambertMaterial({ color: 0xf08aa8 });
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), mat);
+      b.position.y = 1.0; g.add(b);
+      g.userData.mat = mat; g.userData.bola = b;
+      return g;
+    });
     // 15/11: Richmond: la mina de confeti: la placa esta escondida hasta que
     // se pisa.
     if (hayModelo("obstaculos/placa_mina")) {
@@ -4323,6 +4380,90 @@ export function createWorld(scene) {
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
     }
+  }
+  // ---- 15/11: Wilmington ----
+  // La gallina azul: si la ves venir por su carril (de 14 a 6 m) da un salto
+  // a otro carril; para cogerla hay que meterse en su carril en el ultimo
+  // momento.
+  function moverGallina(o, dt) {
+    const g = o.gallina, m = o.mesh;
+    if (g.cogida) { m.visible = false; return; }
+    m.position.y = Math.abs(Math.sin((animClock + o.phase) * 7)) * 0.08;
+    if (!g.huye && o.z > -14 && o.z < -6 && o.lane === jugadorCarril) {
+      g.huye = true; g.t = 0; g.x0 = m.position.x;
+      const ops = LANES.filter((l) => Math.abs(l - o.lane) === 1);
+      g.destino = ops[Math.floor(Math.random() * ops.length)];
+      if (alAvisoMapa) alAvisoMapa("cacareo");
+    }
+    if (g.huye && g.t < 1) {
+      g.t = Math.min(1, g.t + dt / 0.4);
+      m.position.x = g.x0 + (LANE_X[g.destino] - g.x0) * g.t;
+      m.position.y = Math.sin(g.t * Math.PI) * 1.0;
+      if (g.t >= 1) o.lane = g.destino;
+    }
+    if (!g.cogida && o.z > -0.5 && o.z < 0.8 && o.lane === jugadorCarril && (!g.huye || g.t >= 1)) {
+      g.cogida = true;
+      if (alAvisoMapa) alAvisoMapa("gallina");
+    }
+  }
+  // La torre de helado: se ve encima de la mano y se ladea con el tambaleo.
+  const torre = { g: null, bolas: [] };
+  const COLORES_BOLA = [0xf08aa8, 0x6a3a22, 0x9ae0c0, 0xf6f0d8, 0xf2c21a];
+  function setTorre(n, x, y, ladeo) {
+    if (!torre.g) {
+      if (!n) return;
+      torre.g = new THREE.Group();
+      const cono = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 12), new THREE.MeshLambertMaterial({ color: 0xd8a050 }));
+      cono.rotation.x = Math.PI; cono.position.y = 0.3; torre.g.add(cono);
+      for (let i = 0; i < 12; i++) {
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), new THREE.MeshLambertMaterial({ color: COLORES_BOLA[i % 5] }));
+        b.position.y = 0.72 + i * 0.36; b.visible = false; torre.g.add(b); torre.bolas.push(b);
+      }
+      group.add(torre.g);
+    }
+    torre.g.visible = n > 0;
+    if (!n) return;
+    torre.bolas.forEach((b, i) => { b.visible = i < n; b.position.x = Math.sin(i * 0.9) * ladeo * 0.12 * i; });
+    torre.g.position.set(x + 0.45, 1.25 + y, -0.35);
+    torre.g.rotation.z = -ladeo * 0.35;
+  }
+  // Las bolas de helado del paseo: flotan; la de tu carril se coge.
+  function moverBola(o) {
+    const b = o.bolaH;
+    o.mesh.userData.bola.position.y = 1.0 + Math.sin((animClock + o.phase) * 3) * 0.12;
+    if (!b.pasado && o.z > -0.5) {
+      b.pasado = true;
+      if (o.lane === jugadorCarril) { o.mesh.visible = false; if (alAvisoMapa) alAvisoMapa("bolaHelado"); }
+    }
+  }
+  // ---- 15/11: Filadelfia ----
+  // La cesta de la freidora: se cocina desde que esta a 45 m (cada una a su
+  // ritmo): cruda, dorada y al final quemada.
+  let ultimaCesta = 0;
+  function moverCesta(o, dt) {
+    const c = o.cesta;
+    if (o.z > -45) c.coccion = Math.min(1.2, c.coccion + c.vel * dt);
+    const k = c.coccion;
+    const col = k < 0.6 ? new THREE.Color(0xf0e6b0).lerp(new THREE.Color(0xf2a82a), k / 0.6) : new THREE.Color(0xf2a82a).lerp(new THREE.Color(0x3a2210), Math.min(1, (k - 0.6) / 0.4));
+    o.mesh.userData.mat.color.copy(col);
+    if (!c.pasado && o.z > -0.5) {
+      c.pasado = true;
+      if (o.lane === jugadorCarril) { ultimaCesta = k; o.mesh.visible = false; if (alAvisoMapa) alAvisoMapa("cesta"); }
+    }
+  }
+  // La prensa de monedas: el martillo baja de golpe y sube despacio; las de
+  // una fila van en cadena (izquierda, medio, derecha). Abajo, el carril se
+  // cierra (choque «full»).
+  function moverPrensa(o) {
+    const p = o.prensa;
+    const T = 1.8, u = ((animClock + p.fase) % T) / T;
+    let baja;
+    if (u < 0.5) baja = 0;
+    else if (u < 0.58) baja = (u - 0.5) / 0.08;
+    else if (u < 0.8) baja = 1;
+    else baja = 1 - (u - 0.8) / 0.2;
+    o.mesh.userData.martillo.position.y = 3.6 - baja * 1.75;
+    o.type = baja > 0.6 ? "full" : "nada";   // (solo cierra con el martillo bien abajo: un tercio del ciclo)
   }
   // ---- 15/11: Richmond ----
   // La altura del jugador (las minas no se pisan saltando ni los cangrejos
@@ -7961,6 +8102,62 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Wilmington ----
+    // Las gallinas azules: cada 21 m una en un carril (huye si la ves venir).
+    // Entre medias, cucuruchos caidos y mecedoras.
+    gallinas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 3 === 2 && obstaclePools.gallina_azul) {
+        const o = spawnObstacle(elegirDe(LANES), "nada", z, "gallina_azul");
+        if (o) o.gallina = { huye: false, cogida: false, t: 0 };
+        filaSinObjeto = true;
+      } else if (k % 3 === 0 && Math.random() < 0.55) obst(elegirDe(LANES), "low", z, d, ["cucurucho_caido", "mecedora_obst"]);
+    },
+    // La torre de helado (momento estrella): bolas de helado en los carriles
+    // del paseo (cada una se apila: main.js lleva el tambaleo) y algo que
+    // saltar de vez en cuando.
+    helados(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2 || k > n - 3) return;
+      if (k % 2 === 0 && obstaclePools.bola_helado) {
+        const o = spawnObstacle(elegirDe(LANES), "nada", z, "bola_helado");
+        if (o) { o.bolaH = { pasado: false }; o.mesh.userData.mat.color.setHex(COLORES_BOLA[k % 5]); }
+        filaSinObjeto = true;
+      } else if (k % 6 === 3 && Math.random() < 0.6) obst(elegirDe(LANES), "low", z, d, ["cucurucho_caido"]);
+    },
+    // ---- 15/11: Filadelfia ----
+    // La freidora: cada 21 m dos o tres cestas, cada una con su ritmo: hay
+    // que coger la que vaya a estar dorada al llegar. Pretzels entre medias.
+    freidora(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 3 === 2) {
+        const orden = [...LANES].sort(() => Math.random() - 0.5);
+        const cuantas = Math.random() < 0.5 ? 3 : 2;
+        for (let i = 0; i < cuantas; i++) {
+          const o = spawnObstacle(orden[i], "nada", z, "cesta_patatas");
+          if (o) o.cesta = { coccion: Math.random() * 0.3, vel: 0.1 + Math.random() * 0.25, pasado: false };
+        }
+        filaSinObjeto = true;
+      } else if (k % 3 === 0 && Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["pretzel_gigante"]);
+    },
+    // Las prensas de la Casa de la Moneda (momento estrella): cada 35 m una
+    // fila de tres prensas que golpean en cadena; monedas (tacos) entre medias.
+    prensas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 3 || k > n - 3) return;
+      if (k % 5 === 0 && obstaclePools.prensa) {
+        const base = Math.random() * 1.8, dir = Math.random() < 0.5 ? 1 : -1;
+        for (const l of LANES) {
+          const o = spawnObstacle(l, "nada", z, "prensa");
+          if (o) o.prensa = { fase: base + (dir > 0 ? l : 2 - l) * 0.6 };
+        }
+        filaSinObjeto = true;
+      } else if (k % 5 === 2) tacosEn(elegirDe(LANES), z, 4);
+    },
     // ---- 15/11: Richmond ----
     // Las minas de confeti: cada 42 m, escondidas en uno o dos carriles (el
     // detector de main.js avisa cuando hay una en el tuyo). Tartas entre medias.
@@ -9984,6 +10181,10 @@ export function createWorld(scene) {
         else if (o.mina) moverMina(o);
         else if (o.cangrejo) moverCangrejo(o, dt);
         else if (o.bandera) moverBandera(o);
+        else if (o.gallina) moverGallina(o, dt);
+        else if (o.bolaH) moverBola(o);
+        else if (o.cesta) moverCesta(o, dt);
+        else if (o.prensa) moverPrensa(o);
         else if (o.pool === "mozo") {
           // Echa a correr (delante de ti, mas despacio) solo a 30 m: si corriera
           // desde lejos llegaria a las filas de mas adelante.
@@ -10219,5 +10420,6 @@ export function createWorld(scene) {
     bajoMarquesina, lanzarPez, cogerPez, fallarPez, moverPez, tocarRana, empezarRegata, moverRegata, puestoRegata, acabarRegata,
     setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor,
     setSaco, enAguja,
-    setJugadorY, detectorMina, banderaCogida: () => ultimaBandera };
+    setJugadorY, detectorMina, banderaCogida: () => ultimaBandera,
+    setTorre, cestaCogida: () => ultimaCesta };
 }

@@ -114,8 +114,8 @@ con gafas que lanza libros y datos.
 | 39 | Charleston, Virginia Occidental | +4 | Vagonetas de su «precioso carbón limpio». *(hecho)* |
 | 40 | Richmond, Virginia | +13 | Tanques del desfile de su cumpleaños. Ha rebautizado Defensa como «Departamento de Guerra». *(hecho)* |
 | 41 | Baltimore, Maryland | +10 | Cangrejos que pellizcan los tobillos. *(hecho)* |
-| 42 | Wilmington, Delaware | +3 | El pueblo de su rival dormilón: mecedoras y helados por la calle. |
-| 43 | Filadelfia, Pensilvania | +19 | La Campana de la Libertad. Se pone en la freidora de un McDonald's, como hizo de verdad. |
+| 42 | Wilmington, Delaware | +3 | El pueblo de su rival dormilón: mecedoras y helados por la calle. *(hecho)* |
+| 43 | Filadelfia, Pensilvania | +19 | La Campana de la Libertad. Se pone en la freidora de un McDonald's, como hizo de verdad. *(hecho)* |
 | 44 | Atlantic City, Nueva Jersey | +14 | Sus casinos arruinados: con él hasta la banca pierde. Fichas rodando. |
 | 45 | Hartford, Connecticut | +7 | La capital de los seguros: ninguno le cubre los tropezones. |
 | 46 | Burlington, Vermont | +3 | Helados y un senador con guantes de lana que lo critica todo. |

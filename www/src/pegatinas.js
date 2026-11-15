@@ -366,6 +366,34 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: el cucurucho de helado (Wilmington).
+  helado(x) {
+    x.save(); x.translate(128, 132);
+    const cono = () => { x.beginPath(); x.moveTo(-50, -10); x.lineTo(50, -10); x.lineTo(0, 112); x.closePath(); };
+    const bolas = () => { x.beginPath(); x.arc(-26, -30, 36, 0, Math.PI * 2); x.moveTo(62, -30); x.arc(26, -30, 36, 0, Math.PI * 2); x.moveTo(36, -80); x.arc(0, -80, 36, 0, Math.PI * 2); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cono(); x.stroke(); bolas(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cono(); x.stroke(); bolas(); x.stroke();
+    x.fillStyle = "#d8a050"; cono(); x.fill();
+    x.fillStyle = "#f08aa8"; x.beginPath(); x.arc(-26, -30, 36, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#9ae0c0"; x.beginPath(); x.arc(26, -30, 36, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#6a3a22"; x.beginPath(); x.arc(0, -80, 36, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#c8202a"; x.beginPath(); x.arc(0, -120, 10, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 15/11: la Campana de la Libertad (Filadelfia).
+  campana(x) {
+    x.save(); x.translate(128, 128);
+    const forma = () => { x.beginPath(); x.moveTo(-40, -70); x.quadraticCurveTo(-46, 10, -86, 64); x.lineTo(86, 64); x.quadraticCurveTo(46, 10, 40, -70); x.quadraticCurveTo(0, -96, -40, -70); x.closePath(); };
+    x.lineJoin = "round";
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#8a6a3a"; forma(); x.fill();
+    x.fillStyle = "#6a4a26"; x.fillRect(-90, 56, 180, 14);
+    x.strokeStyle = "#1c1c20"; x.lineWidth = 5; x.beginPath(); x.moveTo(-6, 60); x.lineTo(4, 30); x.lineTo(-8, 10); x.lineTo(2, -20); x.stroke();
+    x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.ellipse(-24, -20, 8, 28, 0.1, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
   // 15/11: el trozo de tarta de cumpleaños (Richmond).
   tarta(x) {
     x.save(); x.translate(128, 140);

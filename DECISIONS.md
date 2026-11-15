@@ -2683,3 +2683,48 @@ Los choques que quedan son del piloto en los eslálones, cuando hacen falta
 dos cambios de carril seguidos.
 
 Falta el veredicto de Isidro.
+
+## 15/11/2026 (5): niveles 42 y 43, Wilmington y Filadelfia (v73)
+
+- **Wilmington** (Market Street por la mañana, con mecedoras en las aceras;
+  `blender/wilmington.py`):
+  - Las gallinas azules de Delaware (la Blue Hen): si las ves venir por su
+    carril, de 14 a 6 m, dan un salto a otro carril. Para cogerlas (+5) hay
+    que meterse en su carril en el último momento.
+  - El momento estrella es la torre de helado en el paseo de Rehoboth. Cada
+    bola se apila en el cucurucho. Cambiar de carril y saltar la tambalean,
+    más cuanto más alta, y se calma sola. Si se tambalea demasiado, se cae.
+    Al acabar el paseo, +5 por bola.
+  - El aviso de la bola se llamaba «bola», como el de la bola de nieve de
+    Denver, y nunca llegaba. Ahora se llama «bolaHelado».
+  - Pancarta del Sentido Común: EL HELADO SE DERRITE.
+  - Piezas: el teatro de la ópera, la heladería con el cucurucho gigante, la
+    casa del porche lleno de mecedoras, el arco THE FIRST STATE con la
+    gallina, el camión de los helados y el cucurucho caído.
+  - Final en la estación de Wilmington. Objeto: helados.
+- **Filadelfia** (Market Street por la tarde; `blender/filadelfia.py`):
+  - La freidora: filas de dos o tres cestas de patatas que se doran desde
+    los 45 m, cada una a su ritmo. Hay que coger la que llegue DORADA (+6).
+    Cruda no da nada; quemada, −5.
+  - El momento estrella es la Casa de la Moneda por dentro. Hay filas de
+    tres prensas que golpean en cadena (izquierda, medio, derecha, o al
+    revés). Con el martillo bien abajo, el carril está cerrado; siempre queda
+    uno abierto.
+  - Pancarta del Sentido Común: LA CAMPANA YA ESTÁ ROTA.
+  - Piezas: el ayuntamiento con William Penn en lo alto, el museo de arte con
+    sus escaleras, la freiduría, los carritos de pretzels, el arco CIUDAD DEL
+    AMOR FRATERNAL con campanas y el autobús.
+  - Final en el Salón de la Independencia, con la Campana de la Libertad y
+    su grieta. Objeto: campanas.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles y salen
+los 10 objetos de cada uno:
+
+- **Gallinas:** 13 cogidas.
+- **Torre de helado:** con cuidado acaba con 12 bolas (se le cayó una vez);
+  cambiando de carril sin parar, se le cae 11 veces.
+- **Freidora:** 8 cestas doradas, 2 crudas y 4 quemadas.
+- **Prensas:** ningún choque después del ajuste. Antes cerraban el carril
+  más de un tercio del ciclo.
+
+Falta el veredicto de Isidro.

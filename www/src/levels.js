@@ -2558,6 +2558,122 @@ const CALLES = [
     acera: ["baltimore/banco_baltimore", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 15/11/2026: nivel 42: Wilmington (blender/wilmington.py). Acto del
+    // Sentido Comun. «El pueblo de su rival dormilon: mecedoras y helados por
+    // la calle». Recomendado: Market Street por la mañana, mecedoras en las
+    // aceras, y final en la estacion de Wilmington. Dinamicas propias: las
+    // gallinas azules de Delaware (se apartan si las ves venir por su carril:
+    // hay que meterse en el ultimo momento) y el momento estrella, la torre
+    // de helado en el paseo de Rehoboth (cada bola se apila y la torre se
+    // tambalea al cambiar de carril y al saltar). Pancarta: EL HELADO SE DERRITE.
+    id: "wilmington", nombre: "Market Street", lugar: "Wilmington, Delaware", listo: true,
+    zona: "city", carpeta: "wilmington", luz: "manana", semilla: 1845,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 1, maxPlantas: 4, estilo: "wilmington" },
+    horizonte: "wilmington",
+    obstaculos: { low: ["cucurucho_caido", "mecedora_obst", "valla_metal"], high: ["cartel_de", "pancarta"],
+      full: ["camion_helados", "pickup", "furgoneta", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "wilmington" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "market_wil" }],
+      [250, 610, "gallinas", { titulo: "gallinas" }],
+      [610, 690, "calma", { titulo: "opera" }],
+      [690, 850, "slalom", { full: ["camion_helados", "pickup", "furgoneta"], titulo: "helados_camion" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["cucurucho_caido", "mecedora_obst"], high: ["cartel_de"], titulo: "derrite" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_paseo" }],
+      [1410, 1830, "helados", { titulo: "helados" }],
+      [1830, 1910, "calma", { titulo: "helados_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "gallinas", { titulo: "gallinas2" }],
+      [2430, 2510, "calma", { titulo: "mecedoras" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_estacion_wil" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "helados", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["opera_wilmington", "heladeria", "casa_mecedoras"],
+    meta: "estacion_wilmington", metaNombre: { es: "la estación de Wilmington", en: "Wilmington Station" },
+    izquierda: [
+      40, ["kit", 2], 14, ["opera_wilmington", 1], 14, ...cuadras(3), ["heladeria", 1], 14, ...cuadras(5), ["casa_mecedoras", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["casa_mecedoras", 1], 14, ...cuadras(4), ["heladeria", 1], 14, ...cuadras(5), ["opera_wilmington", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "estacion_wilmington", d: 3330, centro: true },
+      { pieza: "arco_first_state", d: 120, cruza: true }, { pieza: "arco_first_state", d: 2470, cruza: true },
+      { pieza: "paseo_rehoboth", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["wilmington/mecedora", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "wilmington/mecedora"],
+  },
+  {
+    // 15/11/2026: nivel 43: Filadelfia (blender/filadelfia.py). Acto del
+    // Sentido Comun. «La Campana de la Libertad. Se pone en la freidora de un
+    // McDonald's, como hizo de verdad». Recomendado: Market Street por la
+    // tarde, y final en el Salon de la Independencia con la Campana. Dinamicas
+    // propias: la freidora (las cestas se doran al acercarse, cada una a su
+    // ritmo: coger la que llegue dorada) y el momento estrella, la Casa de la
+    // Moneda por dentro (las prensas golpean en cadena: pasar por el carril
+    // que este arriba). Pancarta: LA CAMPANA YA ESTA ROTA.
+    id: "filadelfia", nombre: "Market Street", lugar: "Filadelfia, Pensilvania", listo: true,
+    zona: "city", carpeta: "filadelfia", luz: "tarde", semilla: 1846,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 6, estilo: "filadelfia" },
+    horizonte: "filadelfia",
+    obstaculos: { low: ["pretzel_gigante", "barricada", "valla_metal"], high: ["cartel_pa", "pancarta"],
+      full: ["autobus_septa", "pickup", "furgoneta", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "filadelfia" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "market_phl" }],
+      [250, 610, "freidora", { titulo: "freidora" }],
+      [610, 690, "calma", { titulo: "ayuntamiento_phl" }],
+      [690, 850, "slalom", { full: ["autobus_septa", "pickup", "furgoneta"], titulo: "autobuses_phl" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["pretzel_gigante", "valla_metal"], high: ["cartel_pa"], titulo: "campana_rota" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_moneda" }],
+      [1410, 1830, "prensas", { titulo: "prensas" }],
+      [1830, 1910, "calma", { titulo: "prensas_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "freidora", { titulo: "freidora2" }],
+      [2430, 2510, "calma", { titulo: "rocky" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_independencia" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "prensas", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["ayuntamiento_philly", "museo_arte", "freiduria"],
+    meta: "salon_independencia", metaNombre: { es: "el Salón de la Independencia", en: "Independence Hall" },
+    izquierda: [
+      40, ["kit", 2], 14, ["ayuntamiento_philly", 1], 14, ...cuadras(3), ["museo_arte", 1], 14, ...cuadras(5), ["freiduria", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["freiduria", 1], 14, ...cuadras(4), ["museo_arte", 1], 14, ...cuadras(5), ["ayuntamiento_philly", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "salon_independencia", d: 3330, centro: true },
+      { pieza: "arco_philly", d: 120, cruza: true }, { pieza: "arco_philly", d: 2470, cruza: true },
+      { pieza: "casa_moneda_int", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["filadelfia/carrito_pretzel", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2661,14 +2777,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { filadelfia: "campana", wilmington: "helado", baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2728,6 +2844,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  estacion_wilmington: 80, opera_wilmington: 24, heladeria: 16, casa_mecedoras: 18, arco_first_state: 2, paseo_rehoboth: 420,
+  salon_independencia: 80, ayuntamiento_philly: 42, museo_arte: 40, freiduria: 16, arco_philly: 2, casa_moneda_int: 420,
   capitolio_va: 90, estacion_main_st: 38, departamento_guerra: 36, teatro_byrd: 20, arco_desfile: 2, desfile_monument: 420,
   fuerte_mchenry: 90, torre_reloj_bal: 16, casas_formstone: 26, acuario: 34, arco_harbor: 2, muelle_harbor: 420,
   teatro_chino: 80, capitol_records: 22, el_capitan: 22, hotel_roosevelt: 32, arco_san_fermin: 2, plato_cine: 420,
@@ -2957,7 +3075,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], wilmington: ["King St", "French St"], filadelfia: ["Broad St", "Chestnut St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

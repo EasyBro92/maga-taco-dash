@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, sndCacareo, sndBola, sndTorreCae, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -748,7 +748,9 @@ const NOMBRE_HITO = {
     capitol_records: "La torre de los discos", el_capitan: "El teatro El Capitan", hotel_roosevelt: "El hotel Roosevelt",
     daniel_boone_hotel: "El hotel Daniel Boone", panaderia_pepperoni: "La panadería de los pepperoni rolls", tipple_carbon: "El cargadero de carbón",
     estacion_main_st: "La estación de Main Street", departamento_guerra: "El Departamento de Guerra", teatro_byrd: "El teatro Byrd",
-    torre_reloj_bal: "La torre del reloj", casas_formstone: "Las casas de los escalones de mármol", acuario: "El acuario" },
+    torre_reloj_bal: "La torre del reloj", casas_formstone: "Las casas de los escalones de mármol", acuario: "El acuario",
+    opera_wilmington: "El teatro de la ópera", heladeria: "La heladería", casa_mecedoras: "La casa de las mecedoras",
+    ayuntamiento_philly: "El ayuntamiento de William Penn", museo_arte: "El museo de las escaleras", freiduria: "La freiduría" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -804,7 +806,9 @@ const NOMBRE_HITO = {
     capitol_records: "The Capitol Records tower", el_capitan: "The El Capitan Theatre", hotel_roosevelt: "The Roosevelt Hotel",
     daniel_boone_hotel: "The Daniel Boone Hotel", panaderia_pepperoni: "The pepperoni roll bakery", tipple_carbon: "The coal tipple",
     estacion_main_st: "Main Street Station", departamento_guerra: "The Department of War", teatro_byrd: "The Byrd Theatre",
-    torre_reloj_bal: "The clock tower", casas_formstone: "The marble-step rowhouses", acuario: "The aquarium" },
+    torre_reloj_bal: "The clock tower", casas_formstone: "The marble-step rowhouses", acuario: "The aquarium",
+    opera_wilmington: "The Grand Opera House", heladeria: "The ice cream parlor", casa_mecedoras: "The rocking chair house",
+    ayuntamiento_philly: "City Hall and William Penn", museo_arte: "The art museum steps", freiduria: "The fry shop" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1361,6 +1365,7 @@ function resetRun(desde = 0) {
   quitarCheque(); quitarVuelo(); quitarLei(); quitarSurf();
   quitarSiesta(); quitarRodaje(); quitarCarbon();
   quitarMinas(); quitarDesfile(); quitarPinza(); quitarSenales();
+  quitarTorre();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -2670,6 +2675,75 @@ function banderaCogida() {
   }
   pintarSenales();
 }
+// 15/11: Wilmington: la torre de helado del paseo de Rehoboth. Cada bola se
+// apila en el cucurucho; la torre se tambalea al cambiar de carril y al
+// saltar (mas cuanto mas alta) y se calma sola. Si se tambalea demasiado,
+// se cae. Al acabar el paseo, tacos por cada bola.
+var torreH = null;
+const TORRE_BAJA = 0.55, TORRE_PREMIO = 5;
+function quitarTorre() {
+  torreH = null;
+  if (world.setTorre) world.setTorre(0, 0, 0, 0);
+  const el = document.getElementById("torreBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarTorre(dt) {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "helados" && world.setTorre;
+  if (!en) {
+    if (torreH) {
+      if (gameState === "playing" && torreH.n > 0) {
+        const n = TORRE_PREMIO * torreH.n * multiplier;
+        tacosThisRun += n;
+        showBubble(t("torreFin").replace("{n}", torreH.n), 1600, 2); avisoVerde(`+${n} ${TACO_IMG()}`); sndFanfarria();
+        if (PRUEBA && window.__juego) window.__juego.bolasFinal = torreH.n;
+      }
+      quitarTorre();
+    }
+    return;
+  }
+  if (!torreH) torreH = { n: 0, w: 0, lado: 1 };
+  torreH.w = Math.max(0, torreH.w - TORRE_BAJA * dt);
+  const el = barraJuego("torreBar");
+  el.querySelector(".rodeoTit").textContent = t("torreHud").replace("{n}", torreH.n);
+  el.querySelector(".rodeoPie").textContent = t("torrePista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, torreH.w) * 100}%`;
+  el.classList.remove("hidden");
+  world.setTorre(torreH.n, playerX, py, torreH.w * torreH.lado);
+}
+function tambalear(action) {
+  if (!torreH || !torreH.n) return;
+  const k = 1 + 0.12 * torreH.n;
+  if (action === "left" || action === "right") { torreH.w += 0.3 * k; torreH.lado = action === "left" ? 1 : -1; }
+  else if (action === "jump") torreH.w += 0.2 * k;
+  if (torreH.w >= 1) {
+    textoFlotante(t("torreCae").replace("{n}", torreH.n)); sndTorreCae(); vibrate([30, 30, 30]); flashExpression("surprised", 1);
+    if (PRUEBA && window.__juego) window.__juego.torresCaidas = (window.__juego.torresCaidas || 0) + 1;
+    torreH.n = 0; torreH.w = 0;
+  }
+}
+function cogerBola() {
+  if (!torreH || gameState !== "playing") return;
+  torreH.n = Math.min(12, torreH.n + 1);
+  textoFlotante(t("bolaMas")); sndBola(); vibrate(8);
+}
+// 15/11: Filadelfia: la cesta de la freidora que coges, segun este.
+function cestaCogida() {
+  if (gameState !== "playing") return;
+  const k = world.cestaCogida();
+  if (k >= 0.45 && k <= 0.8) {
+    tacosThisRun += 6 * multiplier;
+    textoFlotante(`${t("doradas")} +${6 * multiplier}`); sndBirdie(); vibrate(10);
+    if (PRUEBA && window.__juego) window.__juego.doradas = (window.__juego.doradas || 0) + 1;
+  } else if (k < 0.45) {
+    textoFlotante(t("crudas")); sndBogey();
+    if (PRUEBA && window.__juego) window.__juego.crudas = (window.__juego.crudas || 0) + 1;
+  } else {
+    const multa = Math.min(tacosThisRun, 5);
+    tacosThisRun -= multa;
+    textoFlotante(`${t("quemadas")} -${multa}`); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.quemadas = (window.__juego.quemadas || 0) + 1;
+  }
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
@@ -2681,6 +2755,7 @@ function accionJugador(action, pos) {
     return;
   }
   ruido(action);          // (15/11: Los Angeles: la siesta)
+  tambalear(action);      // (15/11: Wilmington: la torre de helado)
   if (pinza && pinza.n > 0) {   // (15/11: Baltimore: con el cangrejo agarrado no se salta)
     if (action === "jump") { textoFlotante(t("noSaltas")); return; }
     if (action === "left" || action === "right") sacudir();
@@ -3651,6 +3726,15 @@ world.onAvisoMapa((que) => {
   else if (que === "mina") minaPisada();          // (15/11: Richmond)
   else if (que === "pinza") agarrarCangrejo();    // (15/11: Baltimore)
   else if (que === "bandera") banderaCogida();
+  // 15/11: Wilmington y Filadelfia.
+  else if (que === "cacareo") sndCacareo();
+  else if (que === "gallina" && gameState === "playing") {
+    tacosThisRun += 5 * multiplier;
+    textoFlotante(`${t("gallinaCogida")} +${5 * multiplier}`); sndCacareo(); vibrate(12);
+    if (PRUEBA && window.__juego) window.__juego.gallinas = (window.__juego.gallinas || 0) + 1;
+  }
+  else if (que === "bolaHelado") cogerBola();   // («bola» ya era la bola de nieve de Denver)
+  else if (que === "cesta") cestaCogida();
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -3772,6 +3856,7 @@ function frame(dtFijo) {
     actualizarDesfile(dt);
     actualizarPinza(dt);
     actualizarSenales(dt);
+    actualizarTorre(dt);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3831,7 +3916,8 @@ function frame(dtFijo) {
         chaparron: "chaparronAviso", pescado: "pescadoAviso", ranas: "ranasAviso", regata: "regataAviso",
         cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso",
         siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso",
-        minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso" };
+        minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso",
+        gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.
