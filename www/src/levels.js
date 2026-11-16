@@ -2907,6 +2907,119 @@ const CALLES = [
     acera: ["portlandme/nasas_apiladas", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
   },
   {
+    // 16/11/2026: nivel 48: Manchester (blender/manchester.py). Acto del
+    // Sentido Comun. «La primera nevada. El lema del estado: Vive libre o
+    // muere». Recomendado: Elm Street con la primera nevada (luz de
+    // invierno), y final en los molinos de Amoskeag. Dinamicas propias: la
+    // guerra de bolas de nieve (los niños asoman de sus fuertes y tiran: la
+    // sombra dice donde cae; tocando a tiempo les das tu primero) y el
+    // momento estrella, las promesas imposibles de las primarias (el otro
+    // candidato las lanza desde su atril; tocar justo al llegar la devuelve).
+    // Pancarta: ABRÍGATE, QUE NIEVA.
+    id: "manchester", nombre: "Elm Street", lugar: "Manchester, Nuevo Hampshire", listo: true,
+    zona: "city", carpeta: "manchester", luz: "invierno", semilla: 1846,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "manchester" },
+    horizonte: "manchester",
+    obstaculos: { low: ["monton_nieve", "barricada", "valla_metal"], high: ["cartel_nh", "pancarta"],
+      full: ["quitanieves", "munieco_nieve", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "manchester" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "elm_st" }],
+      [250, 610, "guerra", { titulo: "bolas_nieve" }],
+      [610, 690, "calma", { titulo: "palace" }],
+      [690, 850, "slalom", { full: ["quitanieves", "pickup", "furgoneta"], titulo: "quitanieves_mht" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["monton_nieve", "valla_metal"], high: ["cartel_nh"], titulo: "abrigate" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_promesas" }],
+      [1410, 1830, "promesas", { titulo: "promesas" }],
+      [1830, 1910, "calma", { titulo: "promesas_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "guerra", { titulo: "bolas_nieve2" }],
+      [2430, 2510, "calma", { titulo: "diner" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_molinos" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "plato", sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["teatro_palace", "city_hall_mht", "diner_flecha"],
+    meta: "molinos_amoskeag", metaNombre: { es: "los molinos de Amoskeag", en: "the Amoskeag Mills" },
+    izquierda: [
+      40, ["kit", 2], 14, ["teatro_palace", 1], 14, ...cuadras(3), ["city_hall_mht", 1], 14, ...cuadras(5), ["diner_flecha", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["diner_flecha", 1], 14, ...cuadras(4), ["city_hall_mht", 1], 14, ...cuadras(5), ["teatro_palace", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "molinos_amoskeag", d: 3330, centro: true },
+      { pieza: "arco_libre", d: 120, cruza: true }, { pieza: "arco_libre", d: 2470, cruza: true },
+      { pieza: "estudio_debate", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["manchester/muneco_acera", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 16/11/2026: nivel 49: Providence (blender/providence.py). Acto del
+    // Sentido Comun. «El estado mas pequeño y el nivel mas corto. El dice que
+    // es enorme, tremendo». Recomendado: Westminster Street al atardecer (los
+    // braseros de WaterFire en la acera) y final en el Capitolio de marmol con
+    // el Hombre Independiente. El nivel mas corto: 2300 m. Dinamicas propias:
+    // encogido (por debajo de las pancartas se pasa solo y, deslizandote, por
+    // debajo de los coches; el bicho azul no) y el momento estrella, el examen
+    // de la Universidad de Brown (preguntas sobre Rhode Island: se contesta
+    // pasando bajo la pizarra buena). Pancarta: LO PEQUEÑO TAMBIÉN VALE.
+    id: "providence", nombre: "Westminster Street", lugar: "Providence, Rhode Island", listo: true,
+    zona: "city", carpeta: "providence", luz: "atardecer", semilla: 1636,
+    largo: 2300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 5, estilo: "providence" },
+    horizonte: "providence",
+    obstaculos: { low: ["barricada", "valla_metal"], high: ["cartel_ri", "pancarta"],
+      full: ["bicho_azul", "pickup", "taxi"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "providence" }],
+      [70, 220, "mixto", { densidad: 0.45, titulo: "westminster" }],
+      [220, 520, "mini", { titulo: "mini" }],
+      [520, 600, "calma", { titulo: "arcade" }],
+      [600, 740, "vallas", { low: ["barricada", "valla_metal"], high: ["cartel_ri"], titulo: "pequeno" }],
+      [740, 820, "calma", { titulo: "entrada_brown" }],
+      [820, 1180, "examen", { titulo: "examen" }],
+      [1180, 1260, "calma", { titulo: "examen_fin" }],
+      [1260, 1400, "premios", { titulo: "premios" }],
+      [1400, 1700, "mini", { titulo: "mini2" }],
+      [1700, 1780, "calma", { titulo: "superman" }],
+      [1780, 1940, "rampa", { titulo: "rampa" }],
+      [1940, 2140, "mixto", { densidad: 0.55, titulo: "" }],
+      [2140, 2290, "sprint", { titulo: "sprint_capitolio_ri" }],
+    ],
+    control: 1240, caja: 1300,
+    interior: { rango: [822, 1178], tipo: "brown", aire: true, sinEdificios: [810, 1190] },
+    sinEdificios: [2260, 3100],
+    chapas: [[150, "carril"], [1300, "carril"], [2000, "arco"]],
+    hitos: ["bicho_azul_edificio", "arcade_ri", "torre_superman"],
+    meta: "capitolio_ri", metaNombre: { es: "el Capitolio de Rhode Island", en: "the Rhode Island State House" },
+    izquierda: [
+      40, ["kit", 2], 14, ["bicho_azul_edificio", 1], 14, ...cuadras(3), ["arcade_ri", 1], 14, ...cuadras(5), ["torre_superman", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["torre_superman", 1], 14, ...cuadras(4), ["arcade_ri", 1], 14, ...cuadras(5), ["bicho_azul_edificio", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_ri", d: 2330, centro: true },
+      { pieza: "arco_federal_hill", d: 120, cruza: true }, { pieza: "arco_federal_hill", d: 1480, cruza: true },
+      { pieza: "patio_brown", d: 820, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["providence/brasero_acera", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -3010,14 +3123,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { portland_me: "langosta", burlington: "manopla", hartford: "brocha", atlantic_city: "dado", filadelfia: "campana", wilmington: "helado", baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { providence: "bicho", manchester: "gorro", portland_me: "langosta", burlington: "manopla", hartford: "brocha", atlantic_city: "dado", filadelfia: "campana", wilmington: "helado", baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas", "tragaperras", "blackjack", "valla", "carrusel", "hojas", "champ", "medida", "faro"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas", "tragaperras", "blackjack", "valla", "carrusel", "hojas", "champ", "medida", "faro", "guerra", "promesas", "mini", "examen"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -3077,6 +3190,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  molinos_amoskeag: 90, teatro_palace: 20, city_hall_mht: 22, diner_flecha: 20, arco_libre: 2, estudio_debate: 420,
+  capitolio_ri: 90, bicho_azul_edificio: 18, arcade_ri: 22, torre_superman: 22, arco_federal_hill: 2, patio_brown: 360,
   iglesia_unitaria: 90, ayuntamiento_btv: 28, heladeria_vaca: 14, granero_rojo: 26, puente_cubierto: 12, senador_manoplas: 2, causeway_champlain: 420,
   faro_portland: 90, observatorio_portland: 12, almacen_old_port: 26, casa_langostas: 14, arco_old_port: 2, costa_niebla: 420,
   casino_arruinado: 80, boardwalk_hall: 46, steel_pier: 18, lucy_elefanta: 30, arco_boardwalk: 2, casino_floor: 420,
@@ -3312,7 +3427,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], wilmington: ["King St", "French St"], atlantic_city: ["Pacific Ave", "Atlantic Ave"], burlington: ["Main St", "Pearl St"], portland_me: ["Fore St", "Exchange St"], hartford: ["Asylum St", "Pearl St"], filadelfia: ["Broad St", "Chestnut St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], wilmington: ["King St", "French St"], atlantic_city: ["Pacific Ave", "Atlantic Ave"], burlington: ["Main St", "Pearl St"], manchester: ["Hanover St", "Merrimack St"], providence: ["Dorrance St", "Mathewson St"], portland_me: ["Fore St", "Exchange St"], hartford: ["Asylum St", "Pearl St"], filadelfia: ["Broad St", "Chestnut St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

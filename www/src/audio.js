@@ -418,6 +418,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 16/11: Manchester: cancion de la primera nevada, con campanillas (melodia propia).
+  manchester: { bpm: 116, swing: 0, acordes: [C, F, G, C], bateria: "pop", bajo: "octavas",
+    melodia: [76, 76, 79, null, 76, 74, 72, null, 74, 76, 77, null, 76, 74, 72, null,
+      76, 76, 79, 81, 79, 77, 76, null, 74, 72, 74, 76, 72, null, null, null],
+    timbre: "pluck" },
+  // 16/11: Providence: jazz tranquilo de atardecer junto al rio (melodia propia).
+  providence: { bpm: 104, swing: 0.5, acordes: [F, Dm, Bb, C], bateria: "swing", bajo: "camina",
+    melodia: [72, null, 77, 76, 74, null, 72, null, 69, 72, 74, null, 70, null, 72, null,
+      72, null, 77, 79, 81, null, 79, 77, 74, 72, 70, 69, 65, null, null, null],
+    timbre: "metal" },
   // 16/11: Burlington: folk de Vermont con banjo (melodia propia).
   burlington: { bpm: 112, swing: 0.2, acordes: [G, C, G, D], bateria: "country", bajo: "alterna",
     melodia: [67, null, 71, 74, 76, 74, 71, null, 72, null, 76, 72, 71, null, 69, null,

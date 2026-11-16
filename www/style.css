@@ -1081,3 +1081,8 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 /* 16/11: Burlington (las fotos a Champ) y Portland, Maine (la medida de la langosta) */
 #champBar .barraLleno { background: linear-gradient(90deg, #3a8a5a, #9ad0a0); }
 #medidaBar .barraLleno { background: linear-gradient(90deg, #d0301e, #f08a5a); }
+
+/* 16/11: Manchester (las promesas) y Providence (el examen) */
+#promesasBar .barraLleno { background: linear-gradient(90deg, #1e4a9a, #c8302a); }
+#examenBar .barraLleno { background: linear-gradient(90deg, #5a2a1a, #e8b840); }
+#examenBar .rodeoTit { font-size: 0.95em; }

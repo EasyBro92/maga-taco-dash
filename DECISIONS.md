@@ -2818,3 +2818,57 @@ los 10 objetos de cada uno:
 - **Niebla:** 29 de 32 obstáculos marcados antes de los 20 m.
 
 Falta el veredicto de Isidro.
+
+## 16/11/2026 (3): niveles 48 y 49, Manchester y Providence (v76)
+
+- **Manchester** (Elm Street con la primera nevada; `blender/manchester.py`):
+  - La guerra de bolas de nieve: cada 21 m hay un fuerte en una acera con su
+    niño. El niño asoma a unos 58 m, apunta a tu carril y tira; la sombra de
+    la bola marca dónde cae, así que hay que cambiarse de carril (si te da,
+    −3). Tocando mientras asoma, le das tú primero (+4) y ya no tira.
+  - El momento estrella son las promesas imposibles de las primarias, en un
+    plató de televisión. El otro candidato (sin nombre), en su atril, lanza
+    promesas (¡TODO GRATIS!, ¡UN PONI PARA TODOS!...), casi siempre a tu
+    carril. Tocando justo cuando llega, la devuelves (¡FAKE NEWS!, +5); si
+    te llega sin tocar, −2.
+  - Primero se pensó en un trineo con puertas de eslalon, pero las puertas
+    ya existían (los esquís). También se cambió el nombre de «debate» a
+    «promesas» porque Las Vegas ya tiene su debate de jefe.
+  - Pancarta del Sentido Común: ABRÍGATE, QUE NIEVA.
+  - Piezas: el teatro Palace, el ayuntamiento gótico, el diner de las
+    primarias, la matrícula gigante VIVE LIBRE O MUERE que cruza la calle y
+    los muñecos de nieve de la acera.
+  - Final en los molinos de Amoskeag. Objeto: gorros.
+- **Providence** (Westminster Street al atardecer; `blender/providence.py`):
+  - Es el nivel más corto: 2300 m.
+  - Encogido: el jugador se queda a la mitad. Las pancartas las pasa solo y
+    los coches deslizándose; una vez debajo, cuenta el coche entero. Por
+    debajo del bicho azul no se puede pasar.
+  - El momento estrella es el examen sorpresa en el patio de la Universidad
+    de Brown. Cada 42 m hay un arco con una pregunta sobre Rhode Island (sale
+    arriba) y dos pizarras: se contesta pasando por debajo de la buena (+6;
+    mal, −2; por el medio no se contesta). Son 10 preguntas, por ejemplo
+    «¿Rhode Island es una isla?» o «¿Es enorme, tremendo?» → «NO, ES
+    PEQUEÑITO».
+  - Pancarta del Sentido Común: LO PEQUEÑO TAMBIÉN VALE.
+  - Piezas: el edificio del bicho azul gigante, la galería comercial más
+    antigua del país, el rascacielos «de Superman», los braseros de
+    WaterFire en la acera y el arco de la piña de Federal Hill.
+  - Final en el Capitolio de mármol con el Hombre Independiente. Objeto:
+    bichos azules.
+
+De paso se arregló una cosa de Hartford: la cuenta de la valla no se ponía
+a cero en el segundo tramo, porque la fila 0 no siempre pasa por el patrón.
+Las preguntas del examen tenían el mismo fallo.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles y salen
+los 10 objetos de cada uno:
+
+- **Bolas de nieve:** 26 niños tocados y 1 bolazo.
+- **Promesas:** 10 devueltas.
+- **Examen:** 8 de 8.
+- **Por debajo de los coches:** sí funciona. Al piloto se le escapa alguna
+  fila de coches que tapa los tres carriles, porque ya iba agachado por una
+  pancarta.
+
+Falta el veredicto de Isidro.

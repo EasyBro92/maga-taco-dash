@@ -3217,6 +3217,13 @@ export function createWorld(scene) {
     camion_langostas: { choque: "full", medio: 3.35, alto: 3.4, centro: -3.35 },
     boya_suelta: { choque: "low", medio: 0.5, alto: 0.8 },
     cartel_me: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 16/11: Manchester (blender/manchester.py): la pancarta. El fuerte de
+    // nieve con su niño y el otro candidato del debate son piezas compuestas.
+    cartel_nh: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 16/11: Providence (blender/providence.py): el bicho azul (no se pasa ni
+    // encogido por debajo) y la pancarta. El arco del examen es compuesto.
+    bicho_azul: { choque: "full", medio: 1.8, alto: 2.0, centro: -1.0 },
+    cartel_ri: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3708,6 +3715,35 @@ export function createWorld(scene) {
         aro.position.y = 0.06;
         g.add(aro);
         g.userData.nave = nave; g.userData.rayo = rayo; g.userData.aro = aro;
+        return g;
+      });
+    }
+    // 16/11: Manchester: el fuerte de nieve con el niño que asoma (detras).
+    if (hayModelo("obstaculos/fuerte_nieve") && hayModelo("obstaculos/nino_nieve")) {
+      TIPOS.fuerte_nino = { choque: "nada", medio: 1, alto: 0 };
+      obstaclePools.fuerte_nino = makePool(() => {
+        const g = new THREE.Group();
+        g.add(modeloConContorno("obstaculos/fuerte_nieve"));
+        const nino = modeloConContorno("obstaculos/nino_nieve");
+        nino.position.set(0, -1, -0.45);
+        g.add(nino);
+        g.userData.nino = nino;
+        return g;
+      });
+    }
+    // 16/11: Providence: el arco del examen con sus dos pizarras (el juego
+    // escribe las respuestas).
+    if (hayModelo("obstaculos/arco_examen")) {
+      TIPOS.examen = { choque: "nada", medio: 0.4, alto: 0 };
+      obstaclePools.examen = makePool(() => {
+        const g = new THREE.Group();
+        g.add(modeloConContorno("obstaculos/arco_examen"));
+        g.userData.pizarras = [-2.2, 2.2].map((x) => {
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.45), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          m.position.set(x, 4.575, 0.08);
+          g.add(m);
+          return m;
+        });
         return g;
       });
     }
@@ -4459,6 +4495,154 @@ export function createWorld(scene) {
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
     }
+  }
+  // ---- 16/11: Manchester ----
+  // La guerra de bolas de nieve: el niño asoma detras de su fuerte (en la
+  // acera) a 58 m, apunta a tu carril y tira; la bola vuela 1,1 s y su sombra
+  // marca donde cae (cambia de carril). Si le das tu antes (toca), no tira.
+  const T_BOLA = 1.1;
+  const bolasNieve = [], bolasLibres = [];
+  let bolaGeo = null, bolaMat = null, sombraBolaGeo = null, sombraBolaMat = null;
+  function crearBolaNieve() {
+    if (!bolaGeo) {
+      bolaGeo = new THREE.SphereGeometry(0.24, 12, 8);
+      bolaMat = new THREE.MeshLambertMaterial({ color: 0xf6f8fc });
+      sombraBolaGeo = new THREE.CircleGeometry(0.6, 18); sombraBolaGeo.rotateX(-Math.PI / 2);
+      sombraBolaMat = sobreCalzada(new THREE.MeshBasicMaterial({ color: 0x1a2a4a, transparent: true, opacity: 0.35, depthWrite: false }));
+    }
+    const b = new THREE.Mesh(bolaGeo, bolaMat), s = new THREE.Mesh(sombraBolaGeo, sombraBolaMat);
+    group.add(b); group.add(s);
+    return { b, s };
+  }
+  function lanzarBola(datos) {
+    const r = bolasLibres.pop() || crearBolaNieve();
+    r.b.visible = true; r.s.visible = !datos.mia;
+    bolasNieve.push({ ...r, ...datos, t: 0 });
+  }
+  function moverFuerte(o, dt) {
+    const f = o.fuerte, nino = o.mesh.userData.nino;
+    if (f.fase === 0 && o.z > -58) f.fase = 1;
+    if (f.fase === 1) { f.h = Math.min(1, f.h + dt / 0.4); if (f.h >= 1) { f.fase = 2; f.t = 0; } }
+    else if (f.fase === 2) {
+      f.t += dt;
+      if (f.t > 0.9 && !f.golpeado) {
+        f.fase = 3; f.t = 0;
+        lanzarBola({ lane: jugadorCarril, x0: o.mesh.position.x, y0: 1.3, z0: o.z, zLand: -velMundo * T_BOLA, T: T_BOLA });
+        if (alAvisoMapa) alAvisoMapa("tiraBola");
+      }
+    }
+    else if (f.fase === 3) { f.t += dt; if (f.t > 0.4) f.fase = 4; }
+    else if (f.fase === 4 || f.fase === 5) f.h = Math.max(0, f.h - dt / (f.fase === 5 ? 0.7 : 0.4));
+    nino.position.y = -1.0 + 1.0 * f.h;
+    nino.rotation.z = f.fase === 5 ? -0.5 * o.fuerte.lado : 0;
+  }
+  // Tocar: la bola sale hacia el niño que esta asomado mas cerca (si no ha
+  // tirado ya); al llegar, se cae detras del fuerte.
+  function darNino() {
+    let mejor = null;
+    for (const o of obstacles) { const f = o.fuerte; if (!f || f.golpeado || (f.fase !== 1 && f.fase !== 2) || o.z < -58 || o.z > -6) continue; if (!mejor || o.z > mejor.z) mejor = o; }
+    if (!mejor) return false;
+    mejor.fuerte.golpeado = true;
+    lanzarBola({ mia: true, objetivo: mejor, lane: jugadorCarril, x0: LANE_X[jugadorCarril], y0: 1.5, z0: 0, T: 0.35 });
+    return true;
+  }
+  function actualizarBolasNieve(dt, dz) {
+    for (let i = bolasNieve.length - 1; i >= 0; i--) {
+      const B = bolasNieve[i];
+      B.t += dt; B.z0 += B.mia ? 0 : dz;
+      const u = Math.min(1, B.t / B.T);
+      if (B.mia) {
+        const o = B.objetivo;
+        B.b.position.set(B.x0 + (o.mesh.position.x - B.x0) * u, B.y0 + (1.2 - B.y0) * u + 3 * u * (1 - u), B.z0 + (o.z - B.z0) * u);
+        if (u >= 1) { o.fuerte.fase = 5; if (alAvisoMapa) alAvisoMapa("leDiste"); }
+      } else {
+        B.zLand += dz;
+        const xL = LANE_X[B.lane];
+        B.b.position.set(B.x0 + (xL - B.x0) * u, B.y0 + (0.5 - B.y0) * u + 4 * 2.6 * u * (1 - u), B.z0 + (B.zLand - B.z0) * u);
+        B.s.position.set(xL, 0.03, B.zLand);
+        B.s.scale.setScalar(0.5 + 0.7 * u);
+        if (u >= 1 && B.lane === jugadorCarril && jugadorY < 1.6 && alAvisoMapa) alAvisoMapa("bolazo");
+      }
+      if (u >= 1) { B.b.visible = false; B.s.visible = false; bolasLibres.push({ b: B.b, s: B.s }); bolasNieve.splice(i, 1); }
+    }
+  }
+  // El debate de las primarias: el otro candidato va 34 m por delante (en
+  // su atril, sobre la calle) y cada 1,7 s lanza una promesa a un carril;
+  // viene hacia ti y main.js mira si la devuelves tocando justo al llegar.
+  let rival = null, debateOn = false;
+  const promesas = [], promesasLibres = [];
+  const TEXTOS_PROMESA = ["promesa1", "promesa2", "promesa3", "promesa4", "promesa5", "promesa6"];
+  function texturaPromesa(txt) {
+    const cache = texturaPromesa.cache || (texturaPromesa.cache = {});
+    if (cache[txt]) return cache[txt];
+    const c = document.createElement("canvas"); c.width = 512; c.height = 256;
+    const x = c.getContext("2d");
+    x.fillStyle = "#ffffff"; x.strokeStyle = "#1c1c20"; x.lineWidth = 10;
+    x.beginPath(); x.roundRect(10, 10, 492, 190, 60); x.moveTo(200, 196); x.lineTo(250, 250); x.lineTo(290, 196); x.fill(); x.stroke();
+    x.fillStyle = "#1e4a9a"; x.textAlign = "center"; x.textBaseline = "middle";
+    x.font = `900 ${txt.length > 12 ? 52 : 70}px Fredoka, Arial, sans-serif`;
+    x.fillText(txt, 256, 106);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+    return (cache[txt] = tx);
+  }
+  function setDebate(on) {
+    debateOn = on;
+    if (on && !rival && hayModelo("obstaculos/rival_debate")) { rival = modeloConContorno("obstaculos/rival_debate"); group.add(rival); rival.userData.t = 0; rival.userData.k = 0; }
+    if (rival) rival.visible = on;
+    if (!on) for (const p of promesas) { p.mesh.visible = false; promesasLibres.push(p.mesh); }
+    if (!on) promesas.length = 0;
+  }
+  function actualizarDebate(dt, dz) {
+    if (!debateOn || !rival) return;
+    rival.position.set(0, 0, -34);
+    rival.userData.t += dt;
+    if (rival.userData.t > 1.7) {
+      rival.userData.t = 0;
+      const mesh = promesasLibres.pop() || (() => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide })); group.add(m); return m; })();
+      mesh.material.map = texturaPromesa(tr(TEXTOS_PROMESA[rival.userData.k++ % TEXTOS_PROMESA.length]));
+      mesh.material.needsUpdate = true;
+      mesh.visible = true;
+      promesas.push({ mesh, lane: Math.random() < 0.7 ? jugadorCarril : Math.floor(Math.random() * 3), z: -33, vuelta: false, resuelta: false });
+    }
+    for (let i = promesas.length - 1; i >= 0; i--) {
+      const p = promesas[i];
+      if (p.vuelta) p.z -= dt * 40; else p.z += dt * (velMundo * 0.35 + 20);
+      p.mesh.position.set(LANE_X[p.lane], 1.9 + Math.sin(animClock * 3 + i) * 0.1, p.z);
+      if (!p.vuelta && !p.resuelta && p.z > -0.4) { p.resuelta = true; ultimaPromesa = p; if (alAvisoMapa) alAvisoMapa("promesa"); }
+      if (p.z > 4 || p.z < -34) { if (p.vuelta && p.z < -34 && alAvisoMapa) alAvisoMapa("promesaVuelve"); p.mesh.visible = false; promesasLibres.push(p.mesh); promesas.splice(i, 1); }
+    }
+  }
+  let ultimaPromesa = null;
+  // ---- 16/11: Providence ----
+  // El examen de Brown: preguntas sobre Rhode Island; la respuesta A va sobre
+  // el carril de la izquierda y la B sobre el de la derecha (el medio, sin
+  // contestar). EXAMEN_BUENA: 0 la A, 1 la B.
+  const EXAMEN_BUENA = [1, 0, 0, 1, 0, 0, 0, 1, 1, 1];
+  let examenOrden = [], examenI = 0, ultimaRespuesta = null;
+  function texturaRespuesta(txt) {
+    const cache = texturaRespuesta.cache || (texturaRespuesta.cache = {});
+    if (cache[txt]) return cache[txt];
+    const c = document.createElement("canvas"); c.width = 512; c.height = 220;
+    const x = c.getContext("2d");
+    x.fillStyle = "#1e3a2a"; x.fillRect(0, 0, 512, 220);
+    x.strokeStyle = "#8a6a3a"; x.lineWidth = 14; x.strokeRect(7, 7, 498, 206);
+    x.fillStyle = "#f6f4ee"; x.textAlign = "center"; x.textBaseline = "middle";
+    x.font = `700 ${txt.length > 14 ? 46 : txt.length > 8 ? 62 : 90}px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+    x.fillText(txt, 256, 112);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+    return (cache[txt] = tx);
+  }
+  function moverExamen(o) {
+    if (!o.examen.pasado && o.z > -0.3) {
+      o.examen.pasado = true;
+      ultimaRespuesta = { q: o.examen.q, carril: jugadorCarril };
+      if (alAvisoMapa) alAvisoMapa("respuesta");
+    }
+  }
+  function preguntaActual() {
+    let mejor = null;
+    for (const o of obstacles) if (o.examen && !o.examen.pasado && o.z > -150 && (!mejor || o.z > mejor.z)) mejor = o;
+    return mejor ? mejor.examen.q : -1;
   }
   // ---- 16/11: Burlington ----
   // Los montones de hojas: cayendo ENCIMA de uno se rebota (main.js). Los de
@@ -8420,6 +8604,64 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 16/11: Manchester ----
+    // La guerra de bolas: cada 21 m un fuerte en una acera (alternando) con su
+    // niño; entre medias, montones de nieve y muñecos.
+    guerra(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 4) return;
+      if (k % 3 === 0 && obstaclePools.fuerte_nino) {
+        const lado = Math.random() < 0.5 ? -1 : 1;
+        const o = spawnObstacle(lado < 0 ? 0 : 2, "nada", z, "fuerte_nino");
+        if (o) {
+          o.mesh.position.x = lado * 6.4; o.mesh.rotation.y = -lado * 0.45;
+          o.mesh.userData.nino.position.y = -1; o.mesh.userData.nino.rotation.z = 0;
+          o.fuerte = { lado, fase: 0, h: 0, t: 0, golpeado: false };
+        }
+      } else if (k % 3 === 1 && Math.random() < 0.6) {
+        const r = Math.random();
+        obst(elegirDe(LANES), r < 0.6 ? "low" : "full", z, d, r < 0.6 ? ["monton_nieve"] : ["munieco_nieve"]);
+      } else if (k % 3 === 2) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // Las promesas imposibles (momento estrella): solo tacos por la calle (las promesas
+    // las lanza el rival: ver actualizarDebate).
+    promesas(z, d, t, k) {
+      if (k % 4 === 2) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // ---- 16/11: Providence ----
+    // Lo pequeño: coches (encogido se pasa por debajo deslizandote) y el bicho
+    // azul (ese no); siempre queda un carril sin bicho.
+    mini(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 2 === 0) {
+        const bicho = Math.random() < 0.35 ? elegirDe(LANES) : -1;
+        for (const l of LANES) {
+          if (l === bicho) obst(l, "full", z, d, ["bicho_azul"]);
+          else if (Math.random() < 0.45) obst(l, "full", z, d, ["pickup", "taxi"]);
+        }
+      } else if (k % 4 === 1) obst(elegirDe(LANES), "high", z, d, ["cartel_ri"]);
+      else if (k % 4 === 3) tacosEn(elegirDe(LANES), z, 3);
+    },
+    // El examen de Brown (momento estrella): cada 42 m un arco con una
+    // pregunta; tacos por el carril del medio (el de no contestar).
+    examen(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      // (barajadas antes del primer arco: la fila 0 no siempre pasa por aqui)
+      if (k < 3 || !examenOrden.length) { examenOrden = [...EXAMEN_BUENA.keys()].sort(() => Math.random() - 0.5); examenI = 0; }
+      if (k < 3 || k > n - 3) return;
+      if (k % 6 === 3 && obstaclePools.examen) {
+        const q = examenOrden[examenI++ % examenOrden.length];
+        const o = spawnObstacle(1, "nada", z, "examen");
+        if (o) {
+          o.examen = { q, pasado: false };
+          o.mesh.userData.pizarras.forEach((m, i) => { m.material.map = texturaRespuesta(tr(`ex${q + 1}${i ? "b" : "a"}`)); m.material.needsUpdate = true; });
+        }
+        filaSinObjeto = true;
+      } else if (k % 6 === 0) tacosEn(1, z, 3);
+    },
     // ---- 16/11: Burlington ----
     // Los montones de hojas: cada 49 m una cadena de 3 o 4 montones, cada uno
     // a lo que dura un rebote del anterior (y a veces un carril al lado:
@@ -8521,7 +8763,7 @@ export function createWorld(scene) {
     // carriles de las orillas de vez en cuando, para hacerte salir.
     valla(z, d, t, k) {
       const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
-      if (k < 2) { if (k === 0) { vallaCuenta.pintado = 0; vallaCuenta.total = 0; } for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k < 2) { vallaCuenta.pintado = 0; vallaCuenta.total = 0; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }   // (16/11: la fila 0 no siempre pasa)
       if (k > n - 3 || !obstaclePools.valla_pintar) return;
       const lado = Math.floor(k / 7) % 2 ? 1 : -1;
       const o = spawnObstacle(lado < 0 ? 0 : 2, "nada", z, "valla_pintar");
@@ -9485,6 +9727,8 @@ export function createWorld(scene) {
     // 16/11: la costa de Portland (Maine) en la niebla: gris y muy cerrada
     // (lo de lejos solo se ve por las luces que pone el faro).
     faro: { color: new THREE.Color(0x8e9aa2), near: 6, far: 44 },
+    // 16/11: el plató de las primarias de Manchester: azul oscuro de tele.
+    plato: { color: new THREE.Color(0x101a34), near: 60, far: 220 },
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
     // 14/11: el bano dorado de Mar-a-Lago (Miami): calido, dorado.
@@ -10447,6 +10691,8 @@ export function createWorld(scene) {
     group.position.x = curveX;
 
     actualizarFaro();   // (16/11: Portland, Maine: el haz del faro en la niebla)
+    actualizarBolasNieve(dt, dz);   // (16/11: Manchester: la guerra de bolas)
+    actualizarDebate(dt, dz);       // (16/11: Manchester: el debate)
     // ---- Bioma: transicion suave de color de suelo/cielo/niebla ----
     const blend = biomeBlendAt(totalScrolled);
     const cFrom = BIOME_COLORS[blend.from], cTo = BIOME_COLORS[blend.to];
@@ -10641,6 +10887,8 @@ export function createWorld(scene) {
         else if (o.prensa) moverPrensa(o);
         else if (o.slot) moverTragaperras(o, dt);
         else if (o.hojas) moverHojas(o, dt);
+        else if (o.fuerte) moverFuerte(o, dt);
+        else if (o.examen) moverExamen(o);
         else if (o.champ) moverChamp(o, dt);
         else if (o.langosta) moverLangosta(o);
         else if (o.cartaBJ) moverCarta(o);
@@ -10883,6 +11131,8 @@ export function createWorld(scene) {
     setSaco, enAguja,
     setJugadorY, detectorMina, banderaCogida: () => ultimaBandera,
     setTorre, cestaCogida: () => ultimaCesta,
+    darNino, bolasNieve, promesasLista: () => promesas, setDebate, promesaUltima: () => ultimaPromesa, devolverPromesa: (p) => { p.vuelta = true; },
+    preguntaActual, respuestaUltima: () => ultimaRespuesta, examenBuena: (q) => EXAMEN_BUENA[q],
     setVelocidad, montonBajo, fotoChamp, langostaUltima: () => ultimaLangosta,
     pararRodillo, hayTragaperras, cartaCogida: () => ultimaCarta, vallaCuenta: () => vallaCuenta, anillaUltima: () => ultimaAnilla };
 }

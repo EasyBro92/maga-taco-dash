@@ -366,6 +366,29 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 16/11: el gorro de lana con pompon (Manchester).
+  gorro(x) {
+    x.save(); x.translate(128, 140);
+    const forma = () => { x.beginPath(); x.moveTo(-86, 50); x.quadraticCurveTo(-90, -80, 0, -84); x.quadraticCurveTo(90, -80, 86, 50); x.closePath(); x.moveTo(30, -100); x.arc(0, -100, 30, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#c8302a"; forma(); x.fill();
+    x.fillStyle = "#f6f4ee"; x.fillRect(-88, 20, 176, 34); for (const xx of [-50, 0, 50]) { x.beginPath(); x.arc(xx, -30, 12, 0, Math.PI * 2); x.fill(); }
+    x.beginPath(); x.arc(0, -100, 30, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 16/11: el bicho azul (Providence).
+  bicho(x) {
+    x.save(); x.translate(128, 136);
+    const forma = () => { x.beginPath(); x.ellipse(0, 30, 50, 66, 0, 0, Math.PI * 2); x.moveTo(44, -50); x.ellipse(0, -50, 44, 38, 0, 0, Math.PI * 2); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#2a7ad8"; forma(); x.fill();
+    x.strokeStyle = "#2a7ad8"; x.lineWidth = 9; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 18, -82); x.lineTo(s * 40, -116); x.stroke(); for (const yy of [0, 30, 60]) { x.beginPath(); x.moveTo(s * 44, yy); x.lineTo(s * 84, yy + 12); x.stroke(); } }
+    x.fillStyle = "#fff"; for (const s of [-1, 1]) { x.beginPath(); x.arc(s * 17, -56, 14, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "#1c1c20"; for (const s of [-1, 1]) { x.beginPath(); x.arc(s * 17, -54, 7, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+  },
   // 16/11: la manopla de lana (Burlington).
   manopla(x) {
     x.save(); x.translate(128, 136); x.rotate(-0.15);

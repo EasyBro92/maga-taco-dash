@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 16/11: Manchester: ladrillo de los molinos y nieve en las cornisas.
+  manchester: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_lisa", "planta_balcones"],
+    ladrillos: [0xa04a32, 0x8a3a2a, 0x7a3426, 0xc8b898, 0xe8e4dc], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.05], toldos: [0x1e6a3a, 0xc8302a, 0x1e4a9a, 0xf2c21a],
+    rotulos: ["DINER", "VOTE", "SKI SHOP", "HOT COCOA", "BOOTS", "HARDWARE", "PIZZA", "MITTENS", "BAKERY", "PRIMARY HQ"] },
+  // 16/11: Providence: ladrillo, piedra clara y art deco del centro.
+  providence: { plantas: ["planta_ladrillo", "planta_lisa", "planta_cristal", "planta_ladrillo", "planta_balcones"],
+    ladrillos: [0xa04a32, 0xd8ccb0, 0xb8b4aa, 0x8a5a3e, 0xe8e0d0], piedras: [0xd8ccb0, 0xc8c0b0], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_antena", 0.05], toldos: [0x1e4a9a, 0xc8302a, 0x2a6a3a, 0xe8b840],
+    rotulos: ["COFFEE MILK", "DEL'S", "WIENERS", "JEWELRY", "ART SCHOOL", "BOOKS", "PASTA", "CANNOLI", "BAR", "GALLERY"] },
   // 16/11: Burlington: ladrillo rojo y madera blanca, tiendas de Church Street.
   burlington: { plantas: ["planta_ladrillo", "planta_lisa", "planta_ladrillo", "planta_balcones"],
     ladrillos: [0xa04a32, 0x8a3a2a, 0xf0ece0, 0xc8b898, 0x6a4a3a], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],

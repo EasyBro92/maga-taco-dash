@@ -754,7 +754,9 @@ const NOMBRE_HITO = {
     boardwalk_hall: "El gran salón del Boardwalk", steel_pier: "El muelle de la noria", lucy_elefanta: "Lucy, la elefanta",
     torre_seguros: "La torre de los seguros", casa_mark_twain: "La casa de Mark Twain", old_state_house: "El antiguo Capitolio",
     ayuntamiento_btv: "El ayuntamiento de Burlington", heladeria_vaca: "La heladería de las vacas", granero_rojo: "El granero rojo",
-    observatorio_portland: "El observatorio de 1807", almacen_old_port: "Los almacenes del Old Port", casa_langostas: "La casa de las langostas" },
+    observatorio_portland: "El observatorio de 1807", almacen_old_port: "Los almacenes del Old Port", casa_langostas: "La casa de las langostas",
+    teatro_palace: "El teatro Palace", city_hall_mht: "El ayuntamiento de Manchester", diner_flecha: "El diner de las primarias",
+    bicho_azul_edificio: "El bicho azul gigante", arcade_ri: "La galería más antigua del país", torre_superman: "El rascacielos de Superman" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -816,7 +818,9 @@ const NOMBRE_HITO = {
     boardwalk_hall: "Boardwalk Hall", steel_pier: "The Steel Pier", lucy_elefanta: "Lucy the Elephant",
     torre_seguros: "The insurance tower", casa_mark_twain: "Mark Twain's house", old_state_house: "The Old State House",
     ayuntamiento_btv: "Burlington City Hall", heladeria_vaca: "The cow ice cream shop", granero_rojo: "The red barn",
-    observatorio_portland: "The 1807 Observatory", almacen_old_port: "The Old Port warehouses", casa_langostas: "The lobster shack" },
+    observatorio_portland: "The 1807 Observatory", almacen_old_port: "The Old Port warehouses", casa_langostas: "The lobster shack",
+    teatro_palace: "The Palace Theatre", city_hall_mht: "Manchester City Hall", diner_flecha: "The primary diner",
+    bicho_azul_edificio: "The Big Blue Bug", arcade_ri: "The oldest mall in America", torre_superman: "The Superman Building" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1375,6 +1379,7 @@ function resetRun(desde = 0) {
   quitarMinas(); quitarDesfile(); quitarPinza(); quitarSenales();
   quitarTorre(); quitarBlackjack(); quitarValla(); quitarCarrusel();
   quitarChamp(); quitarMedida(); hojasCombo = 0;
+  quitarPromesas(); quitarExamen(true); miniF = 0;
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -2963,6 +2968,101 @@ function langostaCogida() {
     if (PRUEBA && window.__juego) window.__juego.multas = (window.__juego.multas || 0) + 1;
   }
 }
+// 16/11: Manchester: el debate de las primarias. El otro candidato lanza
+// promesas; tocar justo cuando llega la de tu carril la devuelve (¡FAKE NEWS!).
+var promesasH = null;
+function quitarPromesas() {
+  promesasH = null;
+  if (world.setDebate) world.setDebate(false);
+  const el = document.getElementById("promesasBar");
+  if (el) el.classList.add("hidden");
+}
+function pintarPromesas() {
+  const el = barraJuego("promesasBar");
+  el.querySelector(".rodeoTit").textContent = t("promesasHud").replace("{n}", promesasH.n);
+  el.querySelector(".rodeoPie").textContent = t("promesasPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, promesasH.n / 10) * 100}%`;
+  el.classList.remove("hidden");
+}
+function actualizarPromesas() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "promesas";
+  if (!en) { if (promesasH) quitarPromesas(); return; }
+  if (!promesasH) { promesasH = { n: 0, toque: -9 }; world.setDebate(true); pintarPromesas(); }
+}
+function promesaLlega() {
+  const p = world.promesaUltima && world.promesaUltima();
+  if (!promesasH || !p || gameState !== "playing" || p.lane !== currentLane) return;
+  if (elapsed - promesasH.toque < 0.3) {
+    world.devolverPromesa(p);
+    promesasH.n++;
+    const n = 5 * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("fakeNews")} +${n}`); sndSwing(); vibrate(12);
+    if (PRUEBA && window.__juego) window.__juego.devueltas = (window.__juego.devueltas || 0) + 1;
+    pintarPromesas();
+  } else {
+    tacosThisRun = Math.max(0, tacosThisRun - 2);
+    textoFlotante(`${t("teLia")} -2`); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.liado = (window.__juego.liado || 0) + 1;
+  }
+}
+// 16/11: Providence: encogido (el estado mas pequeño). Por debajo de las
+// pancartas se pasa solo, y deslizandote, por debajo de los coches.
+var miniF = 0;
+function actualizarMini(dt) {
+  const objetivo = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "mini" ? 1 : 0;
+  if (objetivo === 0 && miniF === 0) return;
+  miniF = objetivo ? Math.min(1, miniF + dt * 2) : Math.max(0, miniF - dt * 2);
+  character.object3D.scale.setScalar(1 - 0.5 * miniF);
+  if (PRUEBA && window.__juego) window.__juego.mini = miniF;
+}
+function pasaDebajo() {
+  const n = 2 * multiplier;
+  tacosThisRun += n;
+  textoFlotante(`${t("porDebajo")} +${n}`); sndPoint();
+  if (PRUEBA && window.__juego) window.__juego.debajos = (window.__juego.debajos || 0) + 1;
+}
+// 16/11: Providence: el examen de Brown. La pregunta, arriba; se contesta
+// pasando bajo la pizarra de la respuesta (izquierda A, derecha B).
+var examenH = null;
+function quitarExamen(sinNota) {
+  if (examenH && !sinNota && gameState === "playing" && examenH.total) showBubble(t("notaExamen").replace("{n}", examenH.ok).replace("{t}", examenH.total), 1800, 2);
+  examenH = null;
+  const el = document.getElementById("examenBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarExamen() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "examen";
+  if (!en) { if (examenH) quitarExamen(); return; }
+  if (!examenH) examenH = { ok: 0, total: 0, q: -2 };
+  const q = world.preguntaActual ? world.preguntaActual() : -1;
+  if (q === examenH.q) return;
+  examenH.q = q;
+  const el = barraJuego("examenBar");
+  el.querySelector(".rodeoTit").textContent = q >= 0 ? t(`ex${q + 1}`) : t("examenHud");
+  el.querySelector(".rodeoPie").textContent = t("examenPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, examenH.ok / 10) * 100}%`;
+  el.classList.remove("hidden");
+}
+function respuestaDada() {
+  const r = world.respuestaUltima && world.respuestaUltima();
+  if (!r || !examenH || gameState !== "playing") return;
+  examenH.total++;
+  examenH.q = -2;
+  if (r.carril === 1) { textoFlotante(t("sinContestar")); sndBogey(); return; }
+  const buena = world.examenBuena(r.q);
+  if ((r.carril === 0 ? 0 : 1) === buena) {
+    examenH.ok++;
+    const n = 6 * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("correcto")} +${n}`); sndBirdie(); vibrate(10);
+    if (PRUEBA && window.__juego) window.__juego.aciertos = (window.__juego.aciertos || 0) + 1;
+  } else {
+    tacosThisRun = Math.max(0, tacosThisRun - 2);
+    textoFlotante(`${t("incorrecto")} ${t(`ex${r.q + 1}${buena ? "b" : "a"}`)}`); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.fallos = (window.__juego.fallos || 0) + 1;
+  }
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
@@ -2996,6 +3096,8 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && plantarse()) return;
   if ((action === "frase" || action === "lanzar") && carrusel && montado) { carrusel.toque = elapsed; return; }   // (15/11: Hartford)
   if ((action === "frase" || action === "lanzar") && hacerFoto()) return;   // (16/11: Burlington: la foto a Champ)
+  if ((action === "frase" || action === "lanzar") && promesasH) { promesasH.toque = elapsed; return; }   // (16/11: Manchester: devolver la promesa)
+  if ((action === "frase" || action === "lanzar") && world.darNino && tramoMostrado && tramoMostrado.tipo === "guerra" && world.darNino()) { sndSwing(); return; }   // (16/11: Manchester)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -3154,6 +3256,13 @@ function checkCollisions(paso = 0) {
       }
       if (o.type === "high" && isSliding) {
         if (!o.contado) { o.contado = true; avisarMisiones(misiones.evento("deslizar")); }
+        continue;
+      }
+      // 16/11: Providence: encogido, por debajo de las pancartas se pasa solo y,
+      // deslizandote, por debajo de los coches (del bicho azul, no).
+      if (o.type === "high" && miniF > 0.5) continue;
+      if (o.type === "full" && (isSliding || o.debajo) && miniF > 0.5 && /^(pickup|taxi|furgoneta|descapotable)$/.test(o.pool)) {
+        if (!o.debajo) { o.debajo = true; pasaDebajo(); }
         continue;
       }
       if (o.alto !== undefined && py > base + o.alto - 0.1) continue;   // le pasas por encima
@@ -3972,6 +4081,22 @@ world.onAvisoMapa((que) => {
   else if (que === "carta") cartaBJ();
   else if (que === "anilla") anillaPasa();
   else if (que === "langosta") langostaCogida();   // (16/11: Portland, Maine)
+  // 16/11: Manchester y Providence.
+  else if (que === "tiraBola") sndSwing();
+  else if (que === "bolazo" && gameState === "playing") {
+    tacosThisRun = Math.max(0, tacosThisRun - 3);
+    textoFlotante(`${t("bolazo")} -3`); sndPum(); vibrate(20);
+    if (PRUEBA && window.__juego) window.__juego.bolazos = (window.__juego.bolazos || 0) + 1;
+  }
+  else if (que === "leDiste" && gameState === "playing") {
+    const n = 4 * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t("leDiste")} +${n}`); sndPoint();
+    if (PRUEBA && window.__juego) window.__juego.ninos = (window.__juego.ninos || 0) + 1;
+  }
+  else if (que === "promesa") promesaLlega();
+  else if (que === "promesaVuelve") sndPum();
+  else if (que === "respuesta") respuestaDada();
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -4099,6 +4224,9 @@ function frame(dtFijo) {
     actualizarCarrusel(dt);
     actualizarChamp();
     actualizarMedida();
+    actualizarPromesas();
+    actualizarMini(dt);
+    actualizarExamen();
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -4161,7 +4289,8 @@ function frame(dtFijo) {
         minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso",
         gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso",
         tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso",
-        hojas: "hojasAviso", champ: "champAviso", medida: "medidaAviso", faro: "faroAviso" };
+        hojas: "hojasAviso", champ: "champAviso", medida: "medidaAviso", faro: "faroAviso",
+        guerra: "guerraAviso", promesas: "promesasAviso", mini: "miniAviso", examen: "examenAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.

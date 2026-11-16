@@ -53,13 +53,13 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Misuri | San Luis (capital: Jefferson City) | el arco Gateway |
 | Montana | Billings (capital: Helena) | la más grande (hecho el 14/11: Montana Avenue, los osos que se van a tu carril y el Gran Arreo hasta el corral) |
 | Nebraska | Omaha (capital: Lincoln) | la más grande |
-| Nuevo Hampshire | Manchester (capital: Concord) | las primarias |
+| Nuevo Hampshire | Manchester (capital: Concord) | las primarias (hecho el 16/11: la guerra de bolas de nieve y las promesas imposibles) |
 | Nueva Jersey | Atlantic City (capital: Trenton) | los casinos del paseo marítimo (hecho el 16/11: tragaperras sobre la calle y blackjack en el casino) |
 | Nuevo México | Albuquerque (capital: Santa Fe) | la más grande, los globos (hecho el 14/11: Central Avenue, el platillo que cambia los coches de carril y los globos que despegan) |
 | Oklahoma | Oklahoma City | capital y la más grande (hecho el 12/11: Bricktown, molinos en la calle y géiseres de petróleo) |
 | Oregón | Portland (capital: Salem) | la más famosa (hecho el 15/11: Burnside Street, las ranas hinchables que se deshinchan tocándolas y la regata de barcos dragón) |
 | Pensilvania | Filadelfia (capital: Harrisburg) | la Campana de la Libertad (hecho el 15/11: la freidora de cestas que se doran y las prensas de la Casa de la Moneda) |
-| Rhode Island | Providence | capital y la más grande |
+| Rhode Island | Providence | capital y la más grande (hecho el 16/11: encogido bajo los coches y el examen de Brown) |
 | Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
 | Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |
 | Utah | Salt Lake City | capital y la más famosa (hecho el 14/11: State Street con espejismos y el récord de velocidad en el salar de Bonneville) |
