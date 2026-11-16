@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Esquí en Denver · prueba</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<style>
+  @font-face { font-family: "Fredoka"; font-weight: 300 700; font-display: swap; src: url(fonts/fredoka.woff2) format("woff2"); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #8ec8ec; font-family: Fredoka, "Arial Rounded MT Bold", Arial, sans-serif; touch-action: none; }
+  /* 16/11/2026: el esquí se ve de lado y pide el móvil en horizontal. Si el
+     móvil está en vertical (la app de Android no gira), se gira la imagen:
+     se juega tocando en cualquier sitio, así que el giro no estorba. */
+  #juego { position: fixed; left: 0; top: 0; overflow: hidden; }
+  #juego.girado { transform-origin: top left; transform: rotate(90deg) translateY(-100%); }
+  canvas { display: block; }
+  .hud { position: absolute; color: #fff; text-shadow: 0 2px 0 #1c2a4a, 0 0 6px #1c2a4a; pointer-events: none; }
+  #dist { left: 16px; top: 10px; font-size: 26px; font-weight: 700; }
+  #dist small { font-size: 15px; opacity: 0.9; display: block; }
+  #tacos { right: 16px; top: 10px; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  #tacos img { width: 34px; height: 34px; }
+  #bola { left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; font-weight: 700; color: #fff; background: rgba(200,48,42,0.85);
+    padding: 6px 12px; border-radius: 14px; text-shadow: none; display: none; }
+  #msg { left: 0; right: 0; top: 24%; text-align: center; font-size: 40px; font-weight: 700; color: #ffd84a; opacity: 0; transition: opacity 0.25s; }
+  #msg small { display: block; font-size: 22px; color: #fff; }
+  .capa { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background: rgba(20,40,80,0.55); color: #fff; padding: 20px; }
+  .capa h1 { margin: 0 0 6px; font-size: 40px; color: #ffd84a; text-shadow: 0 3px 0 #1c2a4a; }
+  .capa p { margin: 6px 0; font-size: 20px; line-height: 1.35; }
+  .capa .boton { margin-top: 14px; background: #c8302a; border-radius: 18px; padding: 10px 26px; font-size: 24px; font-weight: 700; box-shadow: 0 4px 0 #7a1a16; }
+  .oculto { display: none !important; }
+  #carga { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; background: #8ec8ec; }
+</style>
+</head>
+<body>
+<div id="juego">
+  <div id="carga">Cargando la montaña…</div>
+  <div class="hud" id="dist">0 m<small>récord 0 m</small></div>
+  <div class="hud" id="tacos"><img id="tacoImg" alt="" /><span id="nTacos">0</span></div>
+  <div class="hud" id="bola">⚪ ¡La bola! 0 m</div>
+  <div class="hud" id="msg"></div>
+  <div class="capa oculto" id="inicio">
+    <h1>Esquí en Denver</h1>
+    <p>Toca para <b>saltar</b>.<br>Mantén el dedo en el aire para dar una <b>voltereta</b>.<br>Aterriza con los esquís <b>rectos</b> sobre la nieve.</p>
+    <p>¡Que no te pille la bola de nieve gigante!</p>
+    <div class="boton">TOCA PARA EMPEZAR</div>
+  </div>
+  <div class="capa oculto" id="fin">
+    <h1>¡Te pilló la bola!</h1>
+    <p id="finTexto"></p>
+    <div class="boton">OTRA VEZ</div>
+  </div>
+</div>
+<script type="module" src="src/esqui2d.js"></script>
+</body>
+</html>
