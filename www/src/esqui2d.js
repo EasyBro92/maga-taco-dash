@@ -26,6 +26,7 @@ import { cargarPersonaje, cargarCarpeta, modeloConContorno, hayModelo } from "./
 import { createCharacter } from "./character.js";
 import { lienzo, urlPegatina } from "./pegatinas.js";
 import { sndJump, sndHit, sndPoint, sndFanfarria, unlockAudio } from "./audio.js";
+import { crearHorizonte } from "./horizonte.js";
 
 // ---------------------------------------------------------------- ajustes
 // (16/11: «se siente pesado»: gravedad baja, volteretas rápidas y
@@ -79,9 +80,31 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // (más 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 cont.prepend(renderer.domElement);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8ec8ec);
-scene.fog = new THREE.Fog(0xc8e2f4, 110, 340);
+scene.fog = new THREE.Fog(0xd4e6f4, 110, 340);
 const camera = new THREE.PerspectiveCamera(55, 0.5, 0.5, 700);
+scene.add(camera);
+renderer.autoClear = false;
+// 16/11 (3): Isidro: «le falta calidad visual, el fondo». El fondo es el
+// mismo horizonte de Denver que pinta el juego (las Rocosas con nieve, los
+// edificios y las nubes), en su propia escena con su camara quieta, sobre un
+// cielo degradado. Al bajar, gira muy despacio: de las montañas a la ciudad.
+const fondo = new THREE.Scene();
+fondo.background = (() => {
+  const c = document.createElement("canvas"); c.width = 4; c.height = 256;
+  const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, "#3a80d2"); g.addColorStop(0.5, "#8ec8ec"); g.addColorStop(1, "#e6f1fa");
+  x.fillStyle = g; x.fillRect(0, 0, 4, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+const camFondo = new THREE.PerspectiveCamera(55, 0.5, 1, 1200);
+camFondo.position.set(0, 7, 10);
+camFondo.rotation.order = "YXZ";
+const horizonte = crearHorizonte(fondo);
+horizonte.pintar("denver", 0x8ec8ec, 0xd4e6f4);
+// (en vertical las nubes del juego salian enormes y tapaban las montañas)
+fondo.traverse((o) => { if (o.isSprite) { o.scale.multiplyScalar(0.5); o.position.y += 14; } });
 scene.add(new THREE.HemisphereLight(0xeaf4ff, 0x8a9ab0, 1.6));
 const sol = new THREE.DirectionalLight(0xfff4e0, 1.6);
 sol.position.set(-20, 40, 30);
@@ -95,8 +118,8 @@ function medir() {
   cont.style.width = W + "px"; cont.style.height = H + "px";
   cont.style.left = Math.round((w - W) / 2) + "px";
   renderer.setSize(W, H);
-  camera.aspect = W / H;
-  camera.updateProjectionMatrix();
+  camera.aspect = camFondo.aspect = W / H;
+  camera.updateProjectionMatrix(); camFondo.updateProjectionMatrix();
 }
 window.addEventListener("resize", medir);
 medir();
@@ -123,26 +146,67 @@ function crearMontes(P, z, alto, colorBajo, colorAlto, nieve, armonicos) {
   scene.add(m);
   return m;
 }
-const montesLejos = crearMontes(900, -260, 30, 0x9ab4cc, 0xb8cce0, 46, [[3, 18, 0], [7, 10, 1], [13, 5, 2], [23, 2.5, 0.5]]);
-const montesCerca = crearMontes(500, -130, 8, 0x3a6a5a, 0x5a8a7a, 99, [[4, 6, 0.3], [9, 3, 1.7], [19, 1.5, 0.9]]);
+// Dos filas de bosque delante de las montañas (mas azuladas cuanto mas
+// lejos): la loma y sus pinos con la punta nevada.
+function crearBosque(P, z, colLoma, colPino, nPinos, armonicos, f, dy, relleno = 0, hondo = 0) {
+  const pos = [], col = [];
+  const cL = new THREE.Color(colLoma), cP = new THREE.Color(colPino), cN = new THREE.Color(0xf2f6fb).lerp(new THREE.Color(colLoma), 0.25);
+  const y = (x) => armonicos.reduce((s, [k, a, fa]) => s + a * Math.sin(2 * Math.PI * k * x / P + fa), 0);
+  const tri = (a, b, c, color) => { pos.push(...a, ...b, ...c); for (let i = 0; i < 3; i++) col.push(color.r, color.g, color.b); };
+  const N = 200;
+  for (let i = 0; i < N; i++) {
+    const xa = -P + (2 * P * i) / N, xb = -P + (2 * P * (i + 1)) / N;
+    tri([xa, -200, 0], [xb, -200, 0], [xb, y(xb), 0], cL);
+    tri([xa, -200, 0], [xb, y(xb), 0], [xa, y(xa), 0], cL);
+  }
+  let q = 99;
+  const r = () => { q = (q * 16807) % 2147483647; return q / 2147483647; };
+  // (los de la loma y, si hay relleno, más pinos ladera abajo: un bosque)
+  const sitios = [];
+  for (let i = 0; i < nPinos; i++) sitios.push([r() * P, 1.5 + r() * 3]);
+  for (let i = 0; i < relleno; i++) sitios.push([r() * P, 4 + r() * hondo]);
+  for (const [x0, baja] of sitios) for (const off of [-P, 0]) {
+    const x = x0 + off, h = 5 + r() * 6, w = h * 0.32, base = y(x) - baja;
+    tri([x - w, base, 0.1], [x + w, base, 0.1], [x, base + h, 0.1], cP);
+    tri([x - w * 0.3, base + h * 0.7, 0.12], [x + w * 0.3, base + h * 0.7, 0.12], [x, base + h, 0.12], cN);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }));
+  m.position.z = z;
+  Object.assign(m.userData, { P, f, dy });
+  scene.add(m);
+  return m;
+}
+const bosques = [
+  crearBosque(700, -210, 0x9cb4cc, 0x7f98b4, 160, [[3, 5, 0], [8, 2.5, 1], [17, 1.2, 2]], 0.16, 22, 120, 22),
+  crearBosque(400, -125, 0x6d9488, 0x3f6e5c, 110, [[4, 4, 0.3], [9, 2, 1.7], [19, 1, 0.9]], 0.3, 6, 260, 45),
+];
 
 // La nieve: trozos de 50 m con la cara de delante (azulada, más oscura
 // abajo), la parte de arriba (blanca) y un filo para que se lea bien.
 const TROZO = 50, PASO = 0.5;
 const matNieve = new THREE.MeshBasicMaterial({ vertexColors: true });
+const geoRocaCara = new THREE.DodecahedronGeometry(1, 0);
+const matRocaCara = new THREE.MeshLambertMaterial({ color: 0x7c8898, flatShading: true });
+const matNieveCap = new THREE.MeshBasicMaterial({ color: 0xf6f9fd });
 const matFilo = new THREE.MeshBasicMaterial({ color: 0x7a9cc8 });
 const trozos = new Map();
 function crearTrozo(i) {
   const x0 = i * TROZO, pos = [], col = [], filo = [];
-  const arriba = new THREE.Color(0xfafcff), cara = new THREE.Color(0xe8f0fa), fondoC = new THREE.Color(0xb8cce4);
+  const arriba = new THREE.Color(0xfbfdff), detras = new THREE.Color(0xd9e5f3);
+  const cara = new THREE.Color(0xf0f6fc), medio = new THREE.Color(0xd0e0f0), fondoC = new THREE.Color(0xa4bcda);
   const n = TROZO / PASO;
   let ya = suelo(x0);
+  const quad = (a, b, c, d, ca, cb, cc, cd) => { pos.push(...a, ...b, ...c, ...a, ...c, ...d); for (const q of [ca, cb, cc, ca, cc, cd]) col.push(q.r, q.g, q.b); };
   for (let k = 0; k < n; k++) {
     const xa = x0 + k * PASO, xb = xa + PASO, yb = suelo(xb);
-    pos.push(xa, ya, 2, xa, ya - 60, 2, xb, yb - 60, 2, xa, ya, 2, xb, yb - 60, 2, xb, yb, 2);
-    for (const c of [cara, fondoC, fondoC, cara, fondoC, cara]) col.push(c.r, c.g, c.b);
-    pos.push(xa, ya, 2, xb, yb, 2, xb, yb, -10, xa, ya, 2, xb, yb, -10, xa, ya, -10);
-    for (let j = 0; j < 6; j++) col.push(arriba.r, arriba.g, arriba.b);
+    // la cara de delante: blanca arriba y azulandose hacia abajo
+    quad([xa, ya, 2], [xa, ya - 5, 2], [xb, yb - 5, 2], [xb, yb, 2], cara, medio, medio, cara);
+    quad([xa, ya - 5, 2], [xa, ya - 60, 2], [xb, yb - 60, 2], [xb, yb - 5, 2], medio, fondoC, fondoC, medio);
+    // la parte de arriba: blanca delante y algo azulada al fondo
+    quad([xa, ya, 2], [xb, yb, 2], [xb, yb, -10], [xa, ya, -10], arriba, arriba, detras, detras);
     filo.push(xa, ya, 2.02, xa, ya - 0.22, 2.02, xb, yb - 0.22, 2.02, xa, ya, 2.02, xb, yb - 0.22, 2.02, xb, yb, 2.02);
     ya = yb;
   }
@@ -155,6 +219,20 @@ function crearTrozo(i) {
   const grupo = new THREE.Group();
   grupo.add(new THREE.Mesh(g, matNieve));
   grupo.add(new THREE.Mesh(gf, matFilo));
+  // Rocas asomando en la cara de la nieve y en los cortados de los trampolines.
+  const roca = (x, y, r) => {
+    const m = new THREE.Mesh(geoRocaCara, matRocaCara);
+    m.position.set(x, y, 2.15); m.scale.set(r * (1 + azar() * 0.6), r, 0.35); m.rotation.z = azar() * 3;
+    grupo.add(m);
+    const cap = new THREE.Mesh(geoRocaCara, matNieveCap);
+    cap.position.set(x, y + r * 0.62, 2.3); cap.scale.set(r * 1.1, r * 0.25, 0.3);
+    grupo.add(cap);
+  };
+  for (let k = 0; k < 4; k++) { const x = x0 + azar() * TROZO; roca(x, suelo(x) - 3 - azar() * 14, 0.7 + azar() * 1.1); }
+  for (const f of rasgos) if (f.x0 >= x0 && f.x0 < x0 + TROZO) {
+    const alto = f.alto + f.caida;
+    for (let k = 0; k < 4; k++) roca(f.x0 + 0.4 + azar() * 0.6, suelo(f.x0 + 1) + alto * (0.15 + 0.22 * k), 0.8 + azar() * 0.6);
+  }
   // Pinos y algún muñeco de nieve detrás de la pista.
   let x = x0 + 3 + azar() * 6;
   while (x < x0 + TROZO) {
@@ -183,12 +261,51 @@ const texTaco = new THREE.CanvasTexture(lienzo("taco"));
 texTaco.colorSpace = THREE.SRGBColorSpace;
 const matTaco = new THREE.SpriteMaterial({ map: texTaco });
 let tacos = [], obstaculos = [];
-function ponerTaco(x, y) {
+function ponerTaco(x, y, grupo = null) {
   const s = new THREE.Sprite(matTaco);
   s.scale.setScalar(1.3);
   s.position.set(x, y, 0.4);
   scene.add(s);
-  tacos.push({ x, y, s, cogido: false, pop: 0 });
+  tacos.push({ x, y, s, cogido: false, pop: 0, grupo, dest: null });
+}
+// 16/11 (3): Isidro: «los tacos a la hora de saltar no se pueden coger porque
+// salta más alto que la línea de tacos». Al despegar, los tacos del
+// trampolín (o del montón) que viene se van, deslizándose, al camino del
+// vuelo de verdad: siempre se pueden coger.
+function trayectoria() {
+  const pts = [];
+  let x = E.x, y = E.y, vx = E.vx, vy = E.vy;
+  for (let k = 1; k < 600; k++) {
+    vy -= G / 120; x += vx / 120; y += vy / 120;
+    if (y <= suelo(x)) break;
+    if (k % 3 === 0) pts.push({ x, y });
+  }
+  return pts;
+}
+function recolocarTacos() {
+  const pts = trayectoria();
+  if (pts.length < 4) return;
+  const grupos = new Map();
+  for (const t of tacos) {
+    if (t.cogido || !t.grupo) continue;
+    const g = t.grupo, tramp = g.x0 !== undefined, gx = tramp ? g.x0 : g.x;
+    if (tramp ? (gx < E.x - 3 || gx > E.x + 14) : (gx < E.x || gx > E.x + 22)) continue;
+    if (!grupos.has(g)) grupos.set(g, []);
+    grupos.get(g).push(t);
+  }
+  for (const [g, lista] of grupos) {
+    lista.sort((a, b) => a.x - b.x);
+    if (g.x0 !== undefined) {
+      const n = lista.length;
+      lista.forEach((t, i) => { const p = pts[Math.min(pts.length - 1, Math.floor((0.1 + 0.78 * (i + 0.5) / n) * pts.length))]; t.dest = { x: p.x, y: p.y + 1.4 }; });
+    } else {
+      for (const t of lista) {
+        let mejor = null;
+        for (const p of pts) if (!mejor || Math.abs(p.x - t.x) < Math.abs(mejor.x - t.x)) mejor = p;
+        if (mejor && Math.abs(mejor.x - t.x) < 1.5) t.dest = { x: t.x, y: mejor.y + 1.4 };
+      }
+    }
+  }
 }
 const matRoca = new THREE.MeshLambertMaterial({ color: 0x7a7a84, flatShading: true });
 const matRocaNieve = new THREE.MeshLambertMaterial({ color: 0xf4f8fc, flatShading: true });
@@ -212,7 +329,7 @@ function ponerCosas(x0) {
     const ang = Math.atan(pendiente(f.x0 - 0.3)), v = 19;
     for (let t = 0.2; t < 1.8; t += 0.2) {
       const x = f.x0 + v * Math.cos(ang) * t, y = suelo(f.x0) + v * Math.sin(ang) * t - G * t * t / 2 + 1.3;
-      if (y > suelo(x) + 1.4) ponerTaco(x, y);
+      if (y > suelo(x) + 1.4) ponerTaco(x, y, f);
     }
   }
   let x = x0 + 6 + azar() * 8;
@@ -228,8 +345,9 @@ function ponerCosas(x0) {
           m.position.set(x, suelo(x) - 0.05, 0);
           m.rotation.z = Math.atan(pendiente(x));
           scene.add(m);
-          obstaculos.push({ x, alto: roca ? 1.2 : 1.05, m, tocado: false });
-          for (let k = -1; k <= 1; k++) ponerTaco(x + k * 1.8, suelo(x + k * 1.8) + 3.2 - Math.abs(k) * 0.6);
+          const ob = { x, alto: roca ? 1.2 : 1.05, m, tocado: false };
+          obstaculos.push(ob);
+          for (let k = -1; k <= 1; k++) ponerTaco(x + k * 1.8, suelo(x + k * 1.8) + 3.2 - Math.abs(k) * 0.6, ob);
         }
       } else {
         for (let k = 0; k < 4; k++) ponerTaco(x + k * 2.2, suelo(x + k * 2.2) + 1.3);
@@ -311,6 +429,26 @@ sombra.add(sombraM);
 sombra.visible = false;
 scene.add(sombra);
 
+// Las huellas de los esquis (dos rayitas que se quedan en la nieve).
+const MAXH = 260;
+const huellaPos = new Float32Array(MAXH * 4 * 3);
+const huellaGeo = new THREE.BufferGeometry();
+huellaGeo.setAttribute("position", new THREE.BufferAttribute(huellaPos, 3));
+huellaGeo.setDrawRange(0, 0);
+scene.add(new THREE.LineSegments(huellaGeo, new THREE.LineBasicMaterial({ color: 0xa6bad6 })));
+let huellaPts = [], huellaCorte = true;
+// Copos que caen (pegados a la camara, por delante de todo).
+const copos = [];
+for (let i = 0; i < 55; i++) {
+  const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: texCopo, transparent: true, depthWrite: false, opacity: 0.75, fog: false }));
+  const t = 0.12 + Math.random() * 0.22;
+  c.scale.set(t, t, 1);
+  c.position.set((Math.random() - 0.5) * 22, (Math.random() - 0.5) * 52, -20);
+  c.userData.v = 1.2 + Math.random() * 1.8; c.userData.f = Math.random() * 6;
+  camera.add(c);
+  copos.push(c);
+}
+
 // La bola de nieve gigante que baja detrás.
 const bola = new THREE.Group();
 scene.add(bola);
@@ -343,6 +481,7 @@ function reiniciar() {
   tacos = []; obstaculos = [];
   for (const i of [...trozos.keys()]) quitarTrozo(i);
   for (const p of particulas) p.s.visible = false;
+  huellaPts = []; huellaCorte = true;
   semilla = 7 + Math.floor(Math.random() * 100000);
   rasgos = []; rasgosHasta = 60;
   Object.assign(E, {
@@ -366,6 +505,7 @@ function saltar() {
   E.vx = E.s * Math.cos(a) - IMPULSO * Math.sin(a);
   E.vy = E.s * Math.sin(a) + IMPULSO * Math.cos(a);
   E.suelo = false; E.giroAcum = 0; E.salto = 0; E.desdeTrampolin = false;
+  recolocarTacos();
   sndJump();
   return true;
 }
@@ -426,6 +566,7 @@ function paso(dt) {
       // El suelo se va (un trampolín o un cortado): a volar.
       E.suelo = false; E.vx = E.s * tx; E.vy = E.s * ty; E.y = yBal; E.giroAcum = 0; E.salto = 0;
       E.desdeTrampolin = rasgos.some((f) => Math.abs(f.x0 - E.x) < 3);
+      recolocarTacos();
     } else {
       E.y = yS;
       E.ang += (Math.atan(p) - E.ang) * Math.min(1, dt * 14);
@@ -444,10 +585,12 @@ function paso(dt) {
     if (m.tocado || Math.abs(m.x - E.x) > 0.9) continue;
     if (E.y - suelo(m.x) < m.alto * 0.8) { m.tocado = true; chocar("¡TORTAZO!<small>TOCA para saltar</small>"); }
   }
-  // Los tacos.
+  // Los tacos (los que van al camino del vuelo, deslizándose).
   for (const t of tacos) {
-    if (t.cogido || Math.abs(t.x - E.x) > 1.5) continue;
-    if (Math.abs(t.y - (E.y + 1.3)) < 1.6) { t.cogido = true; t.pop = 0.001; E.tacos++; sndPoint(); }
+    if (t.cogido) continue;
+    if (t.dest) { const k = Math.min(1, dt * 9); t.x += (t.dest.x - t.x) * k; t.y += (t.dest.y - t.y) * k; }
+    if (Math.abs(t.x - E.x) > 1.6) continue;
+    if (Math.abs(t.y - (E.y + 1.4)) < (E.suelo ? 1.6 : 2.0)) { t.cogido = true; t.pop = 0.001; E.tacos++; sndPoint(); }
   }
   // La bola: va cogiendo velocidad; si te alcanza, se acabó.
   E.bv = 12 + E.t * 0.04;
@@ -476,7 +619,7 @@ function dibujar(dt) {
       t.s.scale.setScalar(1.3 * (1 + u * 0.9));
       t.s.material.opacity = 1 - u;
       if (u >= 1) { t.s.visible = false; t.pop = 0; }
-    } else if (!t.cogido) t.s.position.y = t.y + 0.18 * Math.sin(reloj * 3 + t.x * 0.7);
+    } else if (!t.cogido) { t.s.position.x = t.x; t.s.position.y = t.y + (t.dest ? 0 : 0.18 * Math.sin(reloj * 3 + t.x * 0.7)); }
   }
   // El esquiador.
   esquiador.position.set(E.x, E.y, 0);
@@ -499,9 +642,29 @@ function dibujar(dt) {
     sombra.rotation.z = aL;
     const bien = Math.abs(envolver(E.ang - aL)) < TOLERANCIA - 0.1;
     matEsqui.color.copy(bien ? VERDE : E.giroAcum > 0.5 ? NARANJA : ROJO);
+    sombraM.scale.set(1.6, 0.6, 1);
   } else {
-    sombra.visible = false;
+    // en el suelo, una sombrita bajo los esquis
+    sombra.visible = true;
+    sombra.position.set(E.x, E.y, 0); sombra.rotation.z = E.ang;
+    sombraM.scale.set(1.3, 0.42, 1);
     matEsqui.color.copy(ROJO);
+  }
+  // Las huellas de los esquis en la nieve.
+  if (E.fase === "juego") {
+    const ult = huellaPts[huellaPts.length - 1];
+    if (E.suelo && E.tumbo <= 0) {
+      if (!ult || E.x - ult.x > 0.6) { huellaPts.push({ x: E.x, y: E.y, corte: !ult || huellaCorte }); huellaCorte = false; }
+    } else huellaCorte = true;
+    if (huellaPts.length > MAXH) huellaPts.splice(0, huellaPts.length - MAXH);
+    let v = 0;
+    for (let i = 1; i < huellaPts.length; i++) {
+      const a = huellaPts[i - 1], b = huellaPts[i];
+      if (b.corte) continue;
+      for (const z of [-0.3, 0.3]) { huellaPos.set([a.x, a.y + 0.04, z, b.x, b.y + 0.04, z], v * 3); v += 2; }
+    }
+    huellaGeo.setDrawRange(0, v);
+    huellaGeo.attributes.position.needsUpdate = true;
   }
   moverNieve(dt);
   // La bola (y la nieve que levanta).
@@ -533,10 +696,20 @@ function dibujar(dt) {
   const d = ANCHO_VISTO / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect) + E.camD;
   camera.position.set(E.camX, E.camY + 2, d);
   camera.lookAt(E.camX, E.camY, 0);
-  for (const m of [montesLejos, montesCerca]) {
-    const P = m.userData.P, f = m === montesLejos ? 0.1 : 0.3;
+  for (const m of bosques) {
+    const { P, f, dy } = m.userData;
     m.position.x = E.camX - (((E.camX * f) % P) + P) % P;
-    m.position.y = E.camY + (m === montesLejos ? -8 : -22);
+    m.position.y = E.camY + dy;
+  }
+  // (mirando un poco hacia abajo: el horizonte queda en el tercio de arriba,
+  // con las montañas por encima de los bosques)
+  camFondo.rotation.set(-0.12, 0.32 - Math.min(1, Math.max(0, E.x) / 2500) * 0.64, 0);
+  horizonte.animar(dt);
+  // Copos que caen despacio por delante (van con la camara: no marean).
+  for (const c of copos) {
+    c.position.y -= c.userData.v * dt;
+    c.position.x += Math.sin(reloj * 0.8 + c.userData.f) * 0.3 * dt;
+    if (c.position.y < -26) { c.position.y += 52; c.position.x = (Math.random() - 0.5) * 22; }
   }
   // Marcadores.
   const dm = Math.max(0, Math.floor(E.x));
@@ -546,6 +719,9 @@ function dibujar(dt) {
   if (hueco > 14 && E.fase === "juego") { elBola.style.display = "block"; elBola.textContent = `⚪ ¡La bola! ${Math.floor(hueco)} m`; }
   else elBola.style.display = "none";
   if (msgHasta && performance.now() > msgHasta) { elMsg.style.opacity = 0; msgHasta = 0; }
+  renderer.clear();
+  renderer.render(fondo, camFondo);
+  renderer.clearDepth();
   renderer.render(scene, camera);
 }
 
