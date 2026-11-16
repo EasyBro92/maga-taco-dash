@@ -333,6 +333,30 @@ export function crearPresidente(gltf, lider = null, altoRef = null) {
       apuntar("Head", "head_end", 0, 1, -0.6, k);
     },
 
+    // 16/11/2026: el esquí de Denver (esqui2d.js): postura fija de esquiar,
+    // sin animar (Isidro: «que quede fijo en posición de esquiar»). Piernas
+    // juntas con las rodillas dobladas, el cuerpo echado adelante y los brazos
+    // por delante como con los bastones. Se llama una vez, con el muñeco sin
+    // girar (las direcciones son las del mundo: se corre hacia -Z).
+    setEsquiPose() {
+      base = null;
+      mezclar(1, 0);
+      correr.timeScale = 0;
+      mixer.update(0);
+      pose.rotation.set(0.3, 0, 0);
+      pose.position.set(0, -0.18, 0);
+      root.scale.set(mega, mega, mega);
+      root.updateMatrixWorld(true);
+      for (const s of [1, -1]) {
+        const L = s > 0 ? "Right" : "Left";
+        apuntar(L + "UpLeg", L + "Leg", 0.06 * s, -1, -0.55, 1);
+        apuntar(L + "Leg", L + "Foot", 0.04 * s, -1, 0.35, 1);
+        apuntar(L + "Arm", L + "ForeArm", 0.3 * s, -0.55, -0.8, 1);
+        apuntar(L + "ForeArm", L + "Hand", 0.12 * s, -0.25, -1, 1);
+      }
+      apuntar("Head", "head_end", 0, 1, -0.25, 1);
+    },
+
     setLean(amount) {
       root.rotation.z = -amount * 0.35;
       root.rotation.y = amount * 0.25;

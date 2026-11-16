@@ -20,11 +20,14 @@ import { lienzo, urlPegatina } from "./pegatinas.js";
 import { sndJump, sndHit, sndPoint, sndFanfarria, unlockAudio } from "./audio.js";
 
 // ---------------------------------------------------------------- ajustes
-const G = 22;              // gravedad (algo más fuerte que la real: saltos con chispa)
-const V_MIN = 9, V_MAX = 34;
-const IMPULSO = 9.5;       // el salto, hacia fuera de la ladera
-const GIRO = 7.6;          // volteretas: radianes por segundo con el dedo puesto
-const TOLERANCIA = 0.75;   // aterrizaje bueno si los esquís no se desvían más (rad)
+// (16/11: Isidro: «se siente pesado, ¿puedes hacerlo más ligero?». Menos
+// gravedad: se sube más y se cae más despacio; volteretas más rápidas y
+// aterrizajes algo más perdonados.)
+const G = 16;              // gravedad
+const V_MIN = 11, V_MAX = 34;
+const IMPULSO = 9.2;       // el salto, hacia fuera de la ladera
+const GIRO = 8.6;          // volteretas: radianes por segundo con el dedo puesto
+const TOLERANCIA = 0.85;   // aterrizaje bueno si los esquís no se desvían más (rad)
 const PERFECTO = 0.22;
 const BOLA_R = 3.2;
 
@@ -60,8 +63,8 @@ const envolver = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 // ---------------------------------------------------------------- escena
 const cont = document.getElementById("juego");
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 2, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // (16/11: más ligero en el móvil)
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 cont.prepend(renderer.domElement);
 const scene = new THREE.Scene();
@@ -215,6 +218,9 @@ scene.add(esquiador);
 let personaje = null;
 function vestir() {
   personaje = createCharacter(null);
+  // Postura fija de esquiar (Isidro: sin animar). Se pone con el muñeco sin
+  // girar y ya no se toca.
+  if (personaje.setEsquiPose) personaje.setEsquiPose(); else if (personaje.setJumpPose) personaje.setJumpPose(0.5);
   personaje.object3D.rotation.y = -Math.PI / 2;    // mira hacia donde baja (+x)
   esquiador.add(personaje.object3D);
   const matEsqui = new THREE.MeshLambertMaterial({ color: 0xc8302a });
@@ -262,7 +268,7 @@ function reiniciar() {
   semilla = 7 + Math.floor(Math.random() * 100000);
   rasgos = []; rasgosHasta = 70;
   Object.assign(E, {
-    fase: "inicio", x: 0, y: suelo(0), s: 12, vx: 12, vy: 0, ang: Math.atan(pendiente(0)), suelo: true,
+    fase: "inicio", x: 0, y: suelo(0), s: 14, vx: 14, vy: 0, ang: Math.atan(pendiente(0)), suelo: true,
     dedo: false, giroAcum: 0, tumbo: 0, intocable: 0, salto: 0, buffer: 0,
     tacos: 0, vueltasTot: 0, choques: 0, perfectos: 0, t: 0,
     bx: -45, bv: 14, camY: suelo(0), camZ: 17,
@@ -319,7 +325,7 @@ function paso(dt) {
     const p = pendiente(E.x), n = Math.hypot(1, p);
     const tx = 1 / n, ty = p / n;
     if (E.tumbo > 0) { E.tumbo -= dt; E.s = Math.max(V_MIN * 0.6, E.s - 6 * dt); }
-    else E.s += (G * 0.55 * (-ty) - 0.4 - 0.004 * E.s * E.s) * dt;
+    else E.s += (G * 0.75 * (-ty) - 0.4 - 0.004 * E.s * E.s) * dt;
     E.s = Math.min(V_MAX, Math.max(E.tumbo > 0 ? 4 : V_MIN, E.s));
     const nx = E.x + E.s * tx * dt, yBal = E.y + E.s * ty * dt, yS = suelo(nx);
     E.x = nx;
@@ -368,10 +374,6 @@ function dibujar(dt) {
   // El esquiador.
   esquiador.position.set(E.x, E.y, 0);
   esquiador.rotation.z = E.tumbo > 0 ? E.ang + (0.7 - E.tumbo) * 9 : E.ang;
-  if (personaje) {
-    if (E.suelo && E.tumbo <= 0) personaje.setJumpPose(0.5);
-    else personaje.setJumpPose(E.dedo ? 0.5 : 0.35);
-  }
   // La bola.
   bola.position.set(E.bx, suelo(E.bx) + BOLA_R * 0.92, 0.5);
   bola.userData.giro.rotation.z -= (E.bv * dt) / BOLA_R;
