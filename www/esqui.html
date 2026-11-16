@@ -8,26 +8,24 @@
 <style>
   @font-face { font-family: "Fredoka"; font-weight: 300 700; font-display: swap; src: url(fonts/fredoka.woff2) format("woff2"); }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #8ec8ec; font-family: Fredoka, "Arial Rounded MT Bold", Arial, sans-serif; touch-action: none; }
-  /* 16/11/2026: el esquí se ve de lado y pide el móvil en horizontal. Si el
-     móvil está en vertical (la app de Android no gira), se gira la imagen:
-     se juega tocando en cualquier sitio, así que el giro no estorba. */
-  #juego { position: fixed; left: 0; top: 0; overflow: hidden; }
-  #juego.girado { transform-origin: top left; transform: rotate(90deg) translateY(-100%); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1c2a4a; font-family: Fredoka, "Arial Rounded MT Bold", Arial, sans-serif; touch-action: none; }
+  /* 16/11/2026: en vertical, como el juego (en el PC, una columna en el centro). */
+  #juego { position: fixed; left: 0; top: 0; overflow: hidden; background: #8ec8ec; }
   canvas { display: block; }
   .hud { position: absolute; color: #fff; text-shadow: 0 2px 0 #1c2a4a, 0 0 6px #1c2a4a; pointer-events: none; }
-  #dist { left: 16px; top: 10px; font-size: 26px; font-weight: 700; }
+  #dist { left: 14px; top: calc(10px + env(safe-area-inset-top)); font-size: 26px; font-weight: 700; }
   #dist small { font-size: 15px; opacity: 0.9; display: block; }
-  #tacos { right: 16px; top: 10px; font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  #tacos { right: 14px; top: calc(10px + env(safe-area-inset-top)); font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   #tacos img { width: 34px; height: 34px; }
-  #bola { left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; font-weight: 700; color: #fff; background: rgba(200,48,42,0.85);
+  #bola { left: 50%; top: calc(64px + env(safe-area-inset-top)); transform: translateX(-50%); white-space: nowrap; font-size: 18px; font-weight: 700; color: #fff; background: rgba(200,48,42,0.85);
     padding: 6px 12px; border-radius: 14px; text-shadow: none; display: none; }
-  #msg { left: 0; right: 0; top: 24%; text-align: center; font-size: 40px; font-weight: 700; color: #ffd84a; opacity: 0; transition: opacity 0.25s; }
-  #msg small { display: block; font-size: 22px; color: #fff; }
+  #msg { left: 8px; right: 8px; top: 30%; text-align: center; font-size: 34px; line-height: 1.15; font-weight: 700; color: #ffd84a; opacity: 0; transition: opacity 0.25s;
+    text-shadow: 0 3px 0 #1c2a4a, 0 0 10px #1c2a4a, 0 0 18px rgba(28,42,74,0.8); }
+  #msg small { display: block; font-size: 19px; color: #fff; margin-top: 4px; }
   .capa { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
     background: rgba(20,40,80,0.55); color: #fff; padding: 20px; }
-  .capa h1 { margin: 0 0 6px; font-size: 40px; color: #ffd84a; text-shadow: 0 3px 0 #1c2a4a; }
-  .capa p { margin: 6px 0; font-size: 20px; line-height: 1.35; }
+  .capa h1 { margin: 0 0 6px; font-size: 36px; color: #ffd84a; text-shadow: 0 3px 0 #1c2a4a; }
+  .capa p { margin: 8px 0; font-size: 19px; line-height: 1.35; }
   .capa .boton { margin-top: 14px; background: #c8302a; border-radius: 18px; padding: 10px 26px; font-size: 24px; font-weight: 700; box-shadow: 0 4px 0 #7a1a16; }
   .oculto { display: none !important; }
   #carga { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; background: #8ec8ec; }
@@ -42,7 +40,9 @@
   <div class="hud" id="msg"></div>
   <div class="capa oculto" id="inicio">
     <h1>Esquí en Denver</h1>
-    <p>Toca para <b>saltar</b>.<br>Mantén el dedo en el aire para dar una <b>voltereta</b>.<br>Aterriza con los esquís <b>rectos</b> sobre la nieve.</p>
+    <p>Toca para <b>saltar</b> los montones y las rocas.</p>
+    <p>En el aire, <b>mantén el dedo</b> para dar volteretas y <b>suelta</b> cuando los esquís se pongan <b style="color:#5af07a">VERDES</b>.</p>
+    <p>La sombra azul te dice dónde vas a caer.</p>
     <p>¡Que no te pille la bola de nieve gigante!</p>
     <div class="boton">TOCA PARA EMPEZAR</div>
   </div>
