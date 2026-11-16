@@ -232,6 +232,9 @@ export function sndPinza() { tono(1600, 0.05, { tipo: "square", vol: 0.06 }); to
 export function sndCacareo() { tono(900, 0.08, { tipo: "square", vol: 0.05, glide: 300, filtro: 2200 }); tono(700, 0.12, { tipo: "square", vol: 0.05, glide: -200, filtro: 2000, cuando: 0.1 }); }
 export function sndBola() { tono(520, 0.1, { tipo: "sine", vol: 0.12, glide: -200 }); }
 export function sndTorreCae() { soplo(0.5, { desde: 1200, hasta: 200, tipo: "lowpass", vol: 0.2, q: 0.8 }); tono(300, 0.5, { tipo: "sine", vol: 0.1, glide: -220 }); }
+// 15/11: Atlantic City: el rodillo que se para; Hartford: la anilla cogida.
+export function sndRodillo() { tono(420, 0.08, { tipo: "square", vol: 0.06, filtro: 1500 }); tono(300, 0.06, { tipo: "square", vol: 0.05, filtro: 1200, cuando: 0.06 }); }
+export function sndAnilla() { [1318, 1760, 2093].forEach((f, i) => tono(f, 0.2, { tipo: "triangle", vol: 0.08, cuando: i * 0.05 })); }
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -412,6 +415,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 15/11: Atlantic City: swing de casino, con metales (melodia propia).
+  atlantic_city: { bpm: 132, swing: 0.6, acordes: [C, Am, Dm, G7], bateria: "swing", bajo: "camina",
+    melodia: [76, null, 79, 76, 72, null, 74, 76, 77, null, 74, null, 71, null, null, null,
+      76, null, 79, 81, 84, 81, 79, null, 77, 76, 74, 71, 72, null, null, null],
+    timbre: "metal" },
+  // 15/11: Hartford: vals de tiovivo, con organo (melodia propia).
+  hartford: { bpm: 138, swing: 0, acordes: [F, C, C7, F], bateria: "marcha", bajo: "alterna",
+    melodia: [72, 77, 81, 81, null, 79, 77, 76, 74, 76, 79, 79, null, 77, 76, null,
+      72, 77, 81, 84, null, 81, 79, 77, 76, 74, 72, 77, null, null, null, null],
+    timbre: "organo" },
   // 15/11: Wilmington: swing tranquilo de pueblo, para mecerse (melodia propia).
   wilmington: { bpm: 112, swing: 0.6, acordes: [C, Am, F, G], bateria: "swing", bajo: "camina",
     melodia: [72, null, 76, 79, null, 76, 72, null, 74, null, 77, 81, null, 77, 74, null,

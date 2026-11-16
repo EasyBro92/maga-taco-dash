@@ -2674,6 +2674,122 @@ const CALLES = [
     acera: ["filadelfia/carrito_pretzel", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
   },
   {
+    // 15/11/2026: nivel 44: Atlantic City (blender/atlanticcity.py). Acto del
+    // Sentido Comun. «Sus casinos arruinados: con el hasta la banca pierde.
+    // Fichas rodando». Recomendado: el Boardwalk al atardecer, y final en el
+    // casino arruinado de las cupulas (CERRADO). Dinamicas propias: las
+    // tragaperras sobre la calle (tocar para parar los tres rodillos: BOOM
+    // pone fichas en ese carril, TACO pone tacos, tres iguales premio) y el
+    // momento estrella, el blackjack en el casino (coger cartas por carril y
+    // plantarse antes de pasarse de 21). Pancarta: LA BANCA SIEMPRE GANA.
+    id: "atlantic_city", nombre: "El Boardwalk", lugar: "Atlantic City, Nueva Jersey", listo: true,
+    zona: "city", carpeta: "atlanticcity", luz: "atardecer", semilla: 1847,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 3, maxPlantas: 7, estilo: "atlanticcity" },
+    horizonte: "atlanticcity",
+    obstaculos: { low: ["ficha_gigante", "barricada", "valla_metal"], high: ["cartel_nj", "pancarta"],
+      full: ["jitney", "pila_fichas", "pickup", "furgoneta"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "atlantic_city" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "boardwalk" }],
+      [250, 610, "tragaperras", { titulo: "tragaperras" }],
+      [610, 690, "calma", { titulo: "boardwalk_hall" }],
+      [690, 850, "slalom", { full: ["jitney", "pila_fichas", "pickup"], titulo: "jitneys" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["ficha_gigante", "valla_metal"], high: ["cartel_nj"], titulo: "banca" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_casino" }],
+      [1410, 1830, "blackjack", { titulo: "blackjack" }],
+      [1830, 1910, "calma", { titulo: "blackjack_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "tragaperras", { titulo: "tragaperras2" }],
+      [2430, 2510, "calma", { titulo: "lucy" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_casino" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "blackjack", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["boardwalk_hall", "steel_pier", "lucy_elefanta"],
+    meta: "casino_arruinado", metaNombre: { es: "el casino arruinado", en: "the bankrupt casino" },
+    izquierda: [
+      40, ["kit", 2], 14, ["boardwalk_hall", 1], 14, ...cuadras(3), ["steel_pier", 1], 14, ...cuadras(5), ["lucy_elefanta", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["lucy_elefanta", 1], 14, ...cuadras(4), ["steel_pier", 1], 14, ...cuadras(5), ["boardwalk_hall", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "casino_arruinado", d: 3330, centro: true },
+      { pieza: "arco_boardwalk", d: 120, cruza: true }, { pieza: "arco_boardwalk", d: 2470, cruza: true },
+      { pieza: "casino_floor", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["atlanticcity/tragaperras_acera", "ciudad/farola_ciudad", "ciudad/banco", "ciudad/farola_ciudad"],
+  },
+  {
+    // 15/11/2026: nivel 45: Hartford (blender/hartford.py). Acto del Sentido
+    // Comun. «La capital de los seguros: ninguno le cubre los tropezones».
+    // Recomendado: Main Street en otoño, y final en el Capitolio de
+    // Connecticut con la cupula de oro. Dinamicas propias: la valla de Tom
+    // Sawyer (por el carril de la orilla se pinta la valla; al final, tacos
+    // segun lo pintado) y el momento estrella, el tiovivo del parque Bushnell
+    // (en el caballito, que sube y baja, tocar cuando pasa la anilla dorada a
+    // la altura de la mano). Pancarta: LEE LA LETRA PEQUEÑA.
+    id: "hartford", nombre: "Main Street", lugar: "Hartford, Connecticut", listo: true,
+    zona: "city", carpeta: "hartford", luz: "otono", semilla: 1848,
+    largo: 3300, linea: 11.5, velMax: 25,
+    potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
+    kit: { minPlantas: 2, maxPlantas: 6, estilo: "hartford" },
+    horizonte: "hartford",
+    obstaculos: { low: ["cubo_volcado", "barricada", "valla_metal"], high: ["cartel_ct", "pancarta"],
+      full: ["furgon_seguros", "pickup", "furgoneta", "autocaravana"] },
+    publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
+    tramos: [
+      [0, 70, "calma", { titulo: "hartford" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "main_hfd" }],
+      [250, 610, "valla", { titulo: "valla" }],
+      [610, 690, "calma", { titulo: "torre_seguros" }],
+      [690, 850, "slalom", { full: ["furgon_seguros", "pickup", "furgoneta"], titulo: "seguros" }],
+      [850, 930, "calma"],
+      [930, 1090, "vallas", { low: ["cubo_volcado", "valla_metal"], high: ["cartel_ct"], titulo: "letra_pequena" }],
+      [1090, 1170, "calma"],
+      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1330, 1410, "calma", { titulo: "entrada_carrusel" }],
+      [1410, 1830, "carrusel", { momento: "vehiculo", vehiculo: "caballito", titulo: "carrusel" }],
+      [1830, 1910, "calma", { titulo: "carrusel_fin" }],
+      [1910, 2070, "premios", { titulo: "premios" }],
+      [2070, 2430, "valla", { titulo: "valla2" }],
+      [2430, 2510, "calma", { titulo: "twain" }],
+      [2510, 2650, "mixto", { densidad: 0.5 }],
+      [2650, 2810, "rampa", { titulo: "rampa" }],
+      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
+      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ct" }],
+    ],
+    control: 1870, caja: 1990,
+    interior: { rango: [1412, 1828], tipo: "carrusel", aire: true, sinEdificios: [1400, 1840] },
+    sinEdificios: [3260, 4000],
+    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
+    hitos: ["torre_seguros", "casa_mark_twain", "old_state_house"],
+    meta: "capitolio_ct", metaNombre: { es: "el Capitolio de Connecticut", en: "the Connecticut Capitol" },
+    izquierda: [
+      40, ["kit", 2], 14, ["torre_seguros", 1], 14, ...cuadras(3), ["casa_mark_twain", 1], 14, ...cuadras(5), ["old_state_house", 1], 14, ...cuadras(14),
+    ],
+    derecha: [
+      40, ["kit", 3], 14, ...cuadras(2), ["old_state_house", 1], 14, ...cuadras(4), ["casa_mark_twain", 1], 14, ...cuadras(5), ["torre_seguros", 1], 14, ...cuadras(12),
+    ],
+    fondo: [{ pieza: "capitolio_ct", d: 3330, centro: true },
+      { pieza: "arco_soldados", d: 120, cruza: true }, { pieza: "arco_soldados", d: 2470, cruza: true },
+      { pieza: "carrusel_bushnell", d: 1410, cruza: true }],
+    final: "parada", parada: 6,
+    camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
+    acera: ["hartford/cubo_pintura", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
+  },
+  {
     id: "washington", nombre: "Pennsylvania Avenue", lugar: "Washington D.C.", listo: true,
     zona: "dc",
     carpeta: "washington",
@@ -2777,14 +2893,14 @@ const CALLES = [
 
 // 05/11: el objeto de cada ciudad (Isidro: «que no todo sean tacos»). Diez
 // por nivel, repartidos por la calle; cogerlos todos da un premio en tacos.
-export const OBJETOS = { filadelfia: "campana", wilmington: "helado", baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
+export const OBJETOS = { hartford: "brocha", atlantic_city: "dado", filadelfia: "campana", wilmington: "helado", baltimore: "cangrejo", richmond: "tarta", charleston_wv: "pico", los_angeles: "estrella", honolulu: "coco", anchorage: "pepita", portland_or: "rosa", seattle: "cafe", salt_lake: "gelatina", boise: "patata", billings: "huella", cheyenne: "sombrero", denver: "esquis", albuquerque: "globo", charleston_sc: "pina", miami: "flamenco", atlanta: "melocoton", charlotte: "rueda", nashville: "guitarra", louisville: "herradura", nueva_orleans: "collar", birmingham: "rotulador", little_rock: "diamante", jackson: "pajita", houston: "casco", oklahoma: "gota", rushmore: "cincel", fargo: "orejeras", nueva_york: "manzana", pueblo: "bandera", phoenix: "placa", vegas: "ficha", des_moines: "maiz", omaha: "filete", wichita: "zapato", san_luis: "etiqueta", indianapolis: "cuadros", detroit: "sirope", chicago: "laca", milwaukee: "queso", minneapolis: "patin", washington: "voto" };
 export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 // Los metros de cada uno: repartidos a partes iguales por los tramos que
 // valen (fuera del tutorial, del jefe, del festin y del sprint final).
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas", "tragaperras", "blackjack", "valla", "carrusel"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -2844,6 +2960,8 @@ export const ANCHO = {
   churchill_downs: 60, slugger_museum: 28, destileria: 26, pollo_frito: 18, arco_derby: 2, hipodromo: 420,
   fox_theatre: 48, capitolio_georgia: 46, torre_piramide: 26, westin_cilindro: 28, mural_ficha: 22, arco_melocoton: 2, recuento: 420,
   fuente_pina: 24, rainbow_row: 40, san_miguel: 22, mercado_charleston: 26, casa_battery: 30, arco_charleston: 2, campo_golf: 420,
+  casino_arruinado: 80, boardwalk_hall: 46, steel_pier: 18, lucy_elefanta: 30, arco_boardwalk: 2, casino_floor: 420,
+  capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 420,
   estacion_wilmington: 80, opera_wilmington: 24, heladeria: 16, casa_mecedoras: 18, arco_first_state: 2, paseo_rehoboth: 420,
   salon_independencia: 80, ayuntamiento_philly: 42, museo_arte: 40, freiduria: 16, arco_philly: 2, casa_moneda_int: 420,
   capitolio_va: 90, estacion_main_st: 38, departamento_guerra: 36, teatro_byrd: 20, arco_desfile: 2, desfile_monument: 420,
@@ -3075,7 +3193,7 @@ export const CALLES_GIRO = {
   nueva_york: ["W 42nd St", "Madison Ave"], pueblo: ["Sandusky St", "Main Cross St"], phoenix: ["Van Buren St", "Washington St"],
   vegas: ["Flamingo Rd", "Tropicana Ave"], des_moines: ["Grand Ave", "Court Ave"], omaha: ["Dodge St", "Harney St"],
   wichita: ["Broadway", "William St"], san_luis: ["Olive St", "Washington Ave"], indianapolis: ["Washington St", "Capitol Ave"],
-  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], wilmington: ["King St", "French St"], filadelfia: ["Broad St", "Chestnut St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
+  detroit: ["Michigan Ave", "Jefferson Ave"], chicago: ["Rush St", "Wabash Ave"], milwaukee: ["Water St", "Jefferson St"], minneapolis: ["7th St", "Hennepin Ave"], rushmore: ["Mt Rushmore Rd", "Needles Hwy"], fargo: ["NP Ave", "Main Ave"], houston: ["Texas Ave", "NASA Pkwy"], oklahoma: ["Sheridan Ave", "Lincoln Blvd"], little_rock: ["Cumberland St", "Main St"], jackson: ["Farish St", "State St"], nueva_orleans: ["Royal St", "Canal St"], birmingham: ["Morris Ave", "1st Ave N"], nashville: ["2nd Ave", "Printers Alley"], louisville: ["4th St", "Bardstown Rd"], atlanta: ["Auburn Ave", "Edgewood Ave"], charleston_sc: ["King St", "Broad St"], miami: ["Collins Ave", "Washington Ave"], albuquerque: ["4th St", "Rio Grande Blvd"], denver: ["Larimer St", "Colfax Ave"], cheyenne: ["Pioneer Ave", "Lincolnway"], billings: ["N 27th St", "Broadway"], boise: ["Main St", "Grove St"], seattle: ["Pike St", "Pine St"], anchorage: ["E St", "5th Ave"], los_angeles: ["Vine St", "Highland Ave"], richmond: ["Main St", "Cary St"], wilmington: ["King St", "French St"], atlantic_city: ["Pacific Ave", "Atlantic Ave"], hartford: ["Asylum St", "Pearl St"], filadelfia: ["Broad St", "Chestnut St"], baltimore: ["Light St", "Charles St"], charleston_wv: ["Quarrier St", "Lee St"], honolulu: ["Lewers St", "Seaside Ave"], portland_or: ["Broadway", "SW 10th Ave"], salt_lake: ["South Temple", "200 S"], charlotte: ["Trade St", "4th St"], washington: ["15th St NW", "Constitution Ave"],
 };
 function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);

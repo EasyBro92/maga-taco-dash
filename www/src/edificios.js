@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 15/11: Atlantic City: hoteles y casinos de colores, neones.
+  atlanticcity: { plantas: ["planta_cristal", "planta_lisa", "planta_balcones", "planta_cristal", "planta_lisa"],
+    ladrillos: [0xf0e6d8, 0xd8b0a0, 0xc8d0e0, 0xf0d8b8, 0xe0c8e0], piedras: [0xf6eedc, 0xe8dcc4], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_simple", "cornisa_clasica"], remate: ["remate_antena", 0.08], toldos: [0xc8202a, 0x6a2a8a, 0xf2c21a, 0x1e7a3e],
+    rotulos: ["CASINO", "SLOTS", "SALT WATER TAFFY", "POKER", "BUFFET", "PAWN SHOP", "FUDGE", "LUCKY 7", "BINGO", "HOTEL"] },
+  // 15/11: Hartford: piedra parda y ladrillo, oficinas de seguros.
+  hartford: { plantas: ["planta_ladrillo", "planta_lisa", "planta_cristal", "planta_ladrillo", "planta_balcones"],
+    ladrillos: [0x8a5a3e, 0xa85a3e, 0xb8b4aa, 0xd8c8a8, 0x6a4430], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.06], toldos: [0x1e4a9a, 0xc8202a, 0x2a6a3a, 0xf2c21a],
+    rotulos: ["INSURANCE", "SEGUROS", "POLICIES", "CLAIMS", "BOOKS", "TWAIN CAFE", "PAINT", "DINER", "FINE PRINT", "BANK"] },
   // 15/11: Wilmington: ladrillo y madera de pueblo, porches.
   wilmington: { plantas: ["planta_ladrillo", "planta_balcones", "planta_lisa", "planta_ladrillo", "planta_balcones"],
     ladrillos: [0xa85a3e, 0xe8e0cc, 0xb8784e, 0xd8c4a0, 0x9a5038], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],

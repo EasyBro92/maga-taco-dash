@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, sndCacareo, sndBola, sndTorreCae, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, sndCacareo, sndBola, sndTorreCae, sndRodillo, sndAnilla, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -750,7 +750,9 @@ const NOMBRE_HITO = {
     estacion_main_st: "La estación de Main Street", departamento_guerra: "El Departamento de Guerra", teatro_byrd: "El teatro Byrd",
     torre_reloj_bal: "La torre del reloj", casas_formstone: "Las casas de los escalones de mármol", acuario: "El acuario",
     opera_wilmington: "El teatro de la ópera", heladeria: "La heladería", casa_mecedoras: "La casa de las mecedoras",
-    ayuntamiento_philly: "El ayuntamiento de William Penn", museo_arte: "El museo de las escaleras", freiduria: "La freiduría" },
+    ayuntamiento_philly: "El ayuntamiento de William Penn", museo_arte: "El museo de las escaleras", freiduria: "La freiduría",
+    boardwalk_hall: "El gran salón del Boardwalk", steel_pier: "El muelle de la noria", lucy_elefanta: "Lucy, la elefanta",
+    torre_seguros: "La torre de los seguros", casa_mark_twain: "La casa de Mark Twain", old_state_house: "El antiguo Capitolio" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -808,7 +810,9 @@ const NOMBRE_HITO = {
     estacion_main_st: "Main Street Station", departamento_guerra: "The Department of War", teatro_byrd: "The Byrd Theatre",
     torre_reloj_bal: "The clock tower", casas_formstone: "The marble-step rowhouses", acuario: "The aquarium",
     opera_wilmington: "The Grand Opera House", heladeria: "The ice cream parlor", casa_mecedoras: "The rocking chair house",
-    ayuntamiento_philly: "City Hall and William Penn", museo_arte: "The art museum steps", freiduria: "The fry shop" },
+    ayuntamiento_philly: "City Hall and William Penn", museo_arte: "The art museum steps", freiduria: "The fry shop",
+    boardwalk_hall: "Boardwalk Hall", steel_pier: "The Steel Pier", lucy_elefanta: "Lucy the Elephant",
+    torre_seguros: "The insurance tower", casa_mark_twain: "Mark Twain's house", old_state_house: "The Old State House" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1365,7 +1369,7 @@ function resetRun(desde = 0) {
   quitarCheque(); quitarVuelo(); quitarLei(); quitarSurf();
   quitarSiesta(); quitarRodaje(); quitarCarbon();
   quitarMinas(); quitarDesfile(); quitarPinza(); quitarSenales();
-  quitarTorre();
+  quitarTorre(); quitarBlackjack(); quitarValla(); quitarCarrusel();
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -1786,7 +1790,8 @@ function otroToro() {
   if (!tramoMostrado || montado || rodeo || !world.vehiculoLibre) return;
   const nombre = tramoMostrado.tipo === "rodeo" ? "toro_rodeo" : tramoMostrado.tipo === "record" ? "bolido_sal" :
     tramoMostrado.tipo === "regata" ? "barco_dragon" : tramoMostrado.tipo === "vuelo" ? "hidroavion" :
-    tramoMostrado.tipo === "surf" ? "tabla_surf" : tramoMostrado.tipo === "vias" ? "vagoneta_carbon" : null;
+    tramoMostrado.tipo === "surf" ? "tabla_surf" : tramoMostrado.tipo === "vias" ? "vagoneta_carbon" :
+    tramoMostrado.tipo === "carrusel" ? "caballito" : null;
   if (!nombre || tramoMostrado.hasta - distance < 260 || !world.vehiculoLibre()) return;
   world.aparcarVehiculo(nombre, 1, -75);
 }
@@ -2744,6 +2749,129 @@ function cestaCogida() {
     if (PRUEBA && window.__juego) window.__juego.quemadas = (window.__juego.quemadas || 0) + 1;
   }
 }
+// 15/11: Atlantic City: el blackjack del casino. Cada carta que coges suma;
+// tocar es plantarse (y la banca, como siempre con el, se pasa: cobras
+// segun tu mano). A 21, ¡blackjack!; si te pasas, pierdes la mano.
+var bj = null;
+function quitarBlackjack() {
+  bj = null;
+  const el = document.getElementById("bjBar");
+  if (el) el.classList.add("hidden");
+}
+function pintarBJ() {
+  const el = barraJuego("bjBar");
+  el.querySelector(".rodeoTit").textContent = t("bjHud").replace("{s}", bj.suma);
+  el.querySelector(".rodeoPie").textContent = t("bjPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, bj.suma / 21) * 100}%`;
+  el.classList.remove("hidden");
+  if (PRUEBA && window.__juego) window.__juego.sumaBJ = bj.suma;
+}
+function actualizarBlackjack() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "blackjack";
+  if (!en) { if (bj) quitarBlackjack(); return; }
+  if (!bj) { bj = { suma: 0, ases: 0 }; pintarBJ(); }
+}
+function cartaBJ() {
+  if (!bj || gameState !== "playing") return;
+  const v = world.cartaCogida();
+  bj.suma += v; if (v === 11) bj.ases++;
+  while (bj.suma > 21 && bj.ases > 0) { bj.suma -= 10; bj.ases--; }
+  if (bj.suma > 21) {
+    textoFlotante(t("tePasas").replace("{s}", bj.suma)); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.pasados = (window.__juego.pasados || 0) + 1;
+    bj.suma = 0; bj.ases = 0;
+  } else if (bj.suma === 21) {
+    const n = 30 * multiplier;
+    tacosThisRun += n;
+    showBubble(t("blackjack"), 1500, 2); avisoVerde(`+${n} ${TACO_IMG()}`); spawnConfetti(20); sndFanfarria();
+    if (PRUEBA && window.__juego) window.__juego.blackjacks = (window.__juego.blackjacks || 0) + 1;
+    bj.suma = 0; bj.ases = 0;
+  } else { textoFlotante(`+${v}`); sndPoint(); }
+  pintarBJ();
+}
+function plantarse() {
+  if (!bj) return false;
+  if (bj.suma < 12) { textoFlotante(t("bjPoco")); return true; }
+  const n = Math.max(0, (bj.suma - 14) * 3) * multiplier;
+  tacosThisRun += n;
+  textoFlotante(`${t("mePlanto").replace("{s}", bj.suma)} +${n}`); sndBirdie(); vibrate(12);
+  if (PRUEBA && window.__juego) window.__juego.plantes = (window.__juego.plantes || 0) + 1;
+  bj.suma = 0; bj.ases = 0;
+  pintarBJ();
+  return true;
+}
+// 15/11: Hartford: la valla de Tom Sawyer: cuanto mas pintes, mas tacos al final.
+var vallaH = null;
+function quitarValla() {
+  vallaH = null;
+  const el = document.getElementById("vallaBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarValla() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "valla" && world.vallaCuenta;
+  if (!en) {
+    if (vallaH) {
+      const c = world.vallaCuenta();
+      const pct = c.total ? c.pintado / c.total : 0;
+      if (gameState === "playing") {
+        const n = Math.round(40 * pct) * multiplier;
+        if (n) { tacosThisRun += n; avisoVerde(`+${n} ${TACO_IMG()}`); }
+        showBubble(t("vallaFin").replace("{p}", Math.round(pct * 100)), 1600, 2);
+      }
+      if (PRUEBA && window.__juego) window.__juego.vallaPct = Math.round(pct * 100);
+      quitarValla();
+    }
+    return;
+  }
+  if (!vallaH) vallaH = {};
+  const c = world.vallaCuenta();
+  const pct = c.total ? c.pintado / c.total : 0;
+  const el = barraJuego("vallaBar");
+  el.querySelector(".rodeoTit").textContent = t("vallaHud").replace("{p}", Math.round(pct * 100));
+  el.querySelector(".rodeoPie").textContent = t("vallaPista");
+  el.querySelector(".barraLleno").style.width = `${pct * 100}%`;
+  el.classList.remove("hidden");
+}
+// 15/11: Hartford: el tiovivo del parque Bushnell. El caballito sube y baja;
+// hay que tocar justo cuando pasa la anilla dorada y la mano esta a su
+// altura. (La camara no sube ni baja.)
+var carrusel = null;
+function empezarCarrusel() {
+  carrusel = { t: 0, toque: -9 };
+  const el = barraJuego("carruselBar");
+  el.querySelector(".rodeoTit").textContent = t("carruselHud");
+  el.querySelector(".rodeoPie").textContent = t("carruselPista");
+  el.classList.remove("hidden");
+}
+function quitarCarrusel() {
+  carrusel = null;
+  if (world.setVuelo) world.setVuelo(0);
+  const el = document.getElementById("carruselBar");
+  if (el) el.classList.add("hidden");
+}
+function actualizarCarrusel(dt) {
+  if (!carrusel) return;
+  if (!montado || gameState !== "playing") { quitarCarrusel(); return; }
+  carrusel.t += dt;
+  const y = 0.6 + 0.6 * Math.sin(carrusel.t * Math.PI * 2 / 1.6);
+  world.setVuelo(y);
+  const el = document.getElementById("carruselBar");
+  if (el) el.querySelector(".barraLleno").style.width = `${y / 1.2 * 100}%`;
+  if (PRUEBA && window.__juego) window.__juego.manoCarrusel = py + 1.5;
+}
+function anillaPasa() {
+  if (!carrusel || gameState !== "playing") return;
+  const a = world.anillaUltima();
+  if (!a) return;
+  const mano = py + 1.5;
+  if (elapsed - carrusel.toque < 0.4 && Math.abs(mano - a.y) < (a.oro ? 0.35 : 0.7)) {
+    a.cogida = true;
+    const n = (a.oro ? 15 : 5) * multiplier;
+    tacosThisRun += n;
+    textoFlotante(`${t(a.oro ? "anillaOro" : "anilla")} +${n}`); sndAnilla(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.anillas = (window.__juego.anillas || 0) + 1;
+  } else if (elapsed - carrusel.toque < 0.4) textoFlotante(t("casiAnilla"));
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
@@ -2773,6 +2901,9 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && (pescaToque() || tocarRanaToque(pos))) return;   // (15/11: Seattle y Portland)
   if ((action === "frase" || action === "lanzar") && voltearCheque()) return;   // (15/11: Anchorage)
   if ((action === "frase" || action === "lanzar") && pasoDesfile()) return;   // (15/11: Richmond)
+  if ((action === "frase" || action === "lanzar") && world.hayTragaperras && world.hayTragaperras()) { if (world.pararRodillo()) { sndRodillo(); vibrate(8); } return; }   // (15/11: Atlantic City)
+  if ((action === "frase" || action === "lanzar") && plantarse()) return;
+  if ((action === "frase" || action === "lanzar") && carrusel && montado) { carrusel.toque = elapsed; return; }   // (15/11: Hartford)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -3236,7 +3367,9 @@ function subirAlVehiculo() {
   const avion = world.vehiculoNombre && world.vehiculoNombre() === "hidroavion";    // (15/11: Anchorage)
   const tabla = world.vehiculoNombre && world.vehiculoNombre() === "tabla_surf";    // (15/11: Honolulu)
   const vagon = world.vehiculoNombre && world.vehiculoNombre() === "vagoneta_carbon";  // (15/11: Charleston WV)
-  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : avion ? "vueloSube" : tabla ? "surfSube" : vagon ? "viasSube" : "subeAviso"), 1600, 2);
+  const caballo = world.vehiculoNombre && world.vehiculoNombre() === "caballito";       // (15/11: Hartford)
+  showBubble(t(toro ? "rodeoSube" : bolido ? "recordSube" : barco ? "regataSube" : avion ? "vueloSube" : tabla ? "surfSube" : vagon ? "viasSube" : caballo ? "carruselSube" : "subeAviso"), 1600, 2);
+  if (caballo) empezarCarrusel();
   if (avion) empezarVuelo();
   if (tabla) empezarSurf();
   if (toro) empezarRodeo();
@@ -3735,6 +3868,17 @@ world.onAvisoMapa((que) => {
   }
   else if (que === "bolaHelado") cogerBola();   // («bola» ya era la bola de nieve de Denver)
   else if (que === "cesta") cestaCogida();
+  // 15/11: Atlantic City y Hartford.
+  else if (que === "jackpot" && gameState === "playing") {
+    const n = 30 * multiplier;
+    tacosThisRun += n;
+    showBubble(t("jackpot"), 1500, 2); avisoVerde(`+${n} ${TACO_IMG()}`); spawnConfetti(24); sndFanfarria();
+    if (PRUEBA && window.__juego) window.__juego.jackpots = (window.__juego.jackpots || 0) + 1;
+  }
+  else if (que === "boom") { textoFlotante(t("boomFichas")); sndPum(); if (PRUEBA && window.__juego) window.__juego.booms = (window.__juego.booms || 0) + 1; }
+  else if (que === "tirada") sndPoint();
+  else if (que === "carta") cartaBJ();
+  else if (que === "anilla") anillaPasa();
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -3857,6 +4001,9 @@ function frame(dtFijo) {
     actualizarPinza(dt);
     actualizarSenales(dt);
     actualizarTorre(dt);
+    actualizarBlackjack();
+    actualizarValla();
+    actualizarCarrusel(dt);
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -3917,7 +4064,8 @@ function frame(dtFijo) {
         cheque: "chequeAviso", vuelo: "vueloAviso", leis: "leisAviso", surf: "surfAviso",
         siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso",
         minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso",
-        gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso" };
+        gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso",
+        tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.
@@ -4021,7 +4169,7 @@ function frame(dtFijo) {
       }
     }
     const suelo = world.surfaceAt(playerX);
-    if (vuelo && montado) { py = suelo; vy = 0; enSuelo = true; isJumping = false; }   // (15/11: Anchorage: en el hidroavion)
+    if ((vuelo || carrusel) && montado) { py = suelo; vy = 0; enSuelo = true; isJumping = false; }   // (15/11: en el hidroavion y en el caballito)
     if (enSuelo) {
       if (suelo < py - 0.05) { enSuelo = false; vy = 0; isJumping = true; jumpElapsed = JUMP_DURATION / 2; coyote = COYOTE; } // se acabo el techo: a caer
       else py = suelo;                                                    // por la rampa se sube andando
@@ -4165,7 +4313,7 @@ function frame(dtFijo) {
     let alturaCam = rocketTimeLeft > 0 ? py : superSalto ? py * 0.85 : world.surfaceAt(playerX);
     if (tramoMostrado && tramoMostrado.tipo === "convoy") alturaCam = Math.max(alturaCam, 1.55);
     if (tramoMostrado && tramoMostrado.tipo === "metro_techo") alturaCam = Math.max(alturaCam, 2.2);
-    if (vuelo) alturaCam = 2.4;   // (15/11: Anchorage: en el hidroavion la camara se queda quieta)
+    if (vuelo || carrusel) alturaCam = 2.4;   // (15/11: en el hidroavion y en el tiovivo la camara se queda quieta)
     luzMetro();
     camY += ((alturaCam * 0.75 + (megaTimeLeft > 0 ? 1.2 : 0)) - camY) * Math.min(1, dt * 2.5);
     camera.position.y = RACE_CAM.pos.y + camY + shakeY;

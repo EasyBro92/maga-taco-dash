@@ -366,6 +366,31 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 15/11: el dado (Atlantic City).
+  dado(x) {
+    x.save(); x.translate(128, 132); x.rotate(0.2);
+    const cara = () => { x.beginPath(); x.roundRect(-82, -82, 164, 164, 26); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cara(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cara(); x.stroke();
+    x.fillStyle = "#c8202a"; cara(); x.fill();
+    x.fillStyle = "#ffffff";
+    for (const [a, b] of [[-44, -44], [44, -44], [0, 0], [-44, 44], [44, 44]]) { x.beginPath(); x.arc(a, b, 15, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = "rgba(255,255,255,0.3)"; x.beginPath(); x.ellipse(-50, -60, 22, 8, -0.3, 0, Math.PI * 2); x.fill();
+    x.restore();
+  },
+  // 15/11: la brocha de pintar (Hartford).
+  brocha(x) {
+    x.save(); x.translate(128, 128); x.rotate(-0.7);
+    const mango = () => { x.beginPath(); x.roundRect(-14, 10, 28, 110, 12); };
+    const pelo = () => { x.beginPath(); x.roundRect(-44, -96, 88, 80, 10); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; mango(); x.stroke(); pelo(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; mango(); x.stroke(); pelo(); x.stroke();
+    x.fillStyle = "#a86a3a"; mango(); x.fill();
+    x.fillStyle = "#c8ccd0"; x.fillRect(-46, -20, 92, 30);
+    x.fillStyle = "#f6f4ee"; pelo(); x.fill();
+    x.fillStyle = "#d8d4cc"; for (let i = 0; i < 6; i++) x.fillRect(-38 + i * 14, -92, 4, 70);
+    x.restore();
+  },
   // 15/11: el cucurucho de helado (Wilmington).
   helado(x) {
     x.save(); x.translate(128, 132);

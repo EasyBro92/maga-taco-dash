@@ -1072,3 +1072,8 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 
 /* 15/11: Wilmington (la torre de helado) */
 #torreBar .barraLleno { background: linear-gradient(90deg, #9ae0c0, #f08aa8, #e8402a); }
+
+/* 15/11: Atlantic City (el blackjack) y Hartford (la valla y el tiovivo) */
+#bjBar .barraLleno { background: linear-gradient(90deg, #1e7a3e, #f2c21a, #e8402a); }
+#vallaBar .barraLleno { background: #f6f4ee; }
+#carruselBar .barraLleno { background: linear-gradient(90deg, #e8b840, #ffd84a); }

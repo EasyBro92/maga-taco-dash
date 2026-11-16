@@ -2728,3 +2728,41 @@ los 10 objetos de cada uno:
   más de un tercio del ciclo.
 
 Falta el veredicto de Isidro.
+
+## 16/11/2026: niveles 44 y 45, Atlantic City y Hartford (v74)
+
+- **Atlantic City** (el Boardwalk al atardecer; `blender/atlanticcity.py`):
+  - Las tragaperras: arcos sobre la calle con tres rodillos que giran (la
+    tira se desliza, sin parpadeos). Cada toque para el siguiente rodillo,
+    de izquierda a derecha; a 12 m se paran solos. BOOM pone una pila de
+    fichas en ese carril, TACO pone tacos y tres iguales es premio gordo.
+    (El arco se llama `arco_slot` porque «tragaperras» ya era la máquina de
+    Las Vegas.)
+  - El momento estrella es el blackjack en el casino: filas de tres cartas,
+    la de tu carril suma. Con 21 justo, +30; tocar para plantarse (con 12 o
+    más) da tacos según la mano; pasarse de 21 la vacía.
+  - Pancarta del Sentido Común: LA BANCA SIEMPRE GANA.
+  - Final en el casino arruinado de las cúpulas (CERRADO). Objeto: dados.
+- **Hartford** (Main Street en otoño; `blender/hartford.py`):
+  - La valla de Tom Sawyer: trozos de valla en una orilla y luego en la otra.
+    Yendo por el carril de su lado se pinta de blanco; al acabar el tramo,
+    hasta 40 tacos según lo pintado.
+  - El momento estrella es el tiovivo del parque Bushnell, montado en el
+    caballito que sube y baja (la cámara no se mueve). Tocar cuando pasa la
+    anilla: la normal siempre está al alcance (+5); la de oro cuelga más alta
+    y hay que tocar con el caballito arriba (+15). Al principio la altura
+    dependía de la suerte del sube y baja; se cambió para que dependa del
+    jugador.
+  - Pancarta del Sentido Común: LEE LA LETRA PEQUEÑA.
+  - Final en el Capitolio de Connecticut con la cúpula de oro. Objeto:
+    brochas.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles sin
+chocar y salen los 10 objetos de cada uno:
+
+- **Tragaperras:** se paran bien; salen BOOM con sus pilas de fichas.
+- **Blackjack:** 4 blackjacks y 2 plantadas, sin pasarse.
+- **Valla:** 74-76 % pintada.
+- **Tiovivo:** 13 anillas de 17 (las que fallan son casi todas de oro).
+
+Falta el veredicto de Isidro.

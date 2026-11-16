@@ -394,6 +394,31 @@ const SITIOS = {
   },
   // 14/11: Denver: las Montanas Rocosas nevadas de punta a punta (el pico
   // Longs, el mas alto) y el centro de Denver delante.
+  // 15/11: Atlantic City: el mar, la fila de casinos altos y la noria del muelle.
+  atlanticcity(x, c, r) {
+    x.fillStyle = c.lago; x.fillRect(0, SUELO - 12, ANCHO, 12);
+    for (const [x0, x1] of [[900, 2400]]) {
+      let px = x0;
+      while (px < x1) { const w = 26 + r() * 30, h = 50 + r() * 100; torre(x, [px, 0], w, h, c.cerca, r, null); px += w * 1.1; }
+    }
+    x.strokeStyle = c.lejos; x.lineWidth = 3;
+    x.beginPath(); x.arc(2700, SUELO - 60, 46, 0, Math.PI * 2); x.stroke();
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; x.beginPath(); x.moveTo(2700, SUELO - 60); x.lineTo(2700 + Math.cos(a) * 46, SUELO - 60 + Math.sin(a) * 46); x.stroke(); }
+  },
+  // 15/11: Hartford: el rio Connecticut, colinas con arboles y la torre de los seguros.
+  hartford(x, c, r) {
+    x.fillStyle = c.lejos;
+    x.beginPath(); x.moveTo(0, SUELO);
+    for (let i = 0; i <= 40; i++) { const u = i / 40; x.lineTo(u * ANCHO, SUELO - 40 - 18 * Math.sin(u * 5) - r() * 4); }
+    x.lineTo(ANCHO, SUELO); x.fill();
+    for (let k = 0; k < 50; k++) { const px = r() * ANCHO, rr = 7 + r() * 8; x.fillStyle = c.arbol; x.beginPath(); x.ellipse(px, SUELO - 12 - r() * 16, rr * 1.2, rr, 0, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = c.lago; x.fillRect(0, SUELO - 5, ANCHO, 5);
+    for (const [x0, x1] of [[1500, 1850]]) {
+      let px = x0;
+      while (px < x1) { const w = 22 + r() * 22, h = 40 + r() * 70; torre(x, [px, 0], w, h, c.cerca, r, null); px += w * 0.95; }
+    }
+    torre(x, [1650, 0], 26, 140, c.cerca, r, null);
+  },
   // 15/11: Wilmington: el rio Christina, colinas suaves y el centro pequeño.
   wilmington(x, c, r) {
     x.fillStyle = c.lejos;
@@ -1076,7 +1101,7 @@ const SITIOS = {
 
 // Colores de cada sitio a partir del cielo y la niebla del nivel.
 function colores(sitio, cielo, niebla) {
-  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a, cheyenne: 0x8a8a6a, billings: 0x8a7a8a, boise: 0x9a8a6a, saltlake: 0x7a7a9a, seattle: 0x6a7a88, portland: 0x5a7a6a, anchorage: 0x6a7a9a, honolulu: 0x5a8a7a, losangeles: 0xa0806a, charlestonwv: 0x6a7a5a, richmond: 0x6a7a6a, baltimore: 0x6a7080, wilmington: 0x6a7a70, filadelfia: 0x707888 }[sitio];
+  const base = { manhattan: 0x6f7f9c, ohio: 0x5f8a58, dc: 0x8592a6, desierto: 0xc07a4a, pueblo: 0x6f9a6a, phoenix: 0xa0644e, vegas: 0x5a4580, iowa: 0x8e9cb2, kansas: 0x5e6a5a, chicago: 0x66788f, milwaukee: 0x7a7f8f, minneapolis: 0x7a8aa0, rushmore: 0x2f4a36, fargo: 0x8a96a8, houston: 0x6a7a90, oklahoma: 0x8a7a5a, littlerock: 0x7a6a4a, jackson: 0x6a7a5a, nuevaorleans: 0x5a4a7a, birmingham: 0x7a6a5a, nashville: 0x7a5a6a, louisville: 0x6a7a8a, atlanta: 0x6a7a6a, charlotte: 0x5a6078, charleston: 0x7a8a9a, miami: 0x5a7a7a, albuquerque: 0xb07a7a, denver: 0x6a7a9a, cheyenne: 0x8a8a6a, billings: 0x8a7a8a, boise: 0x9a8a6a, saltlake: 0x7a7a9a, seattle: 0x6a7a88, portland: 0x5a7a6a, anchorage: 0x6a7a9a, honolulu: 0x5a8a7a, losangeles: 0xa0806a, charlestonwv: 0x6a7a5a, richmond: 0x6a7a6a, baltimore: 0x6a7080, wilmington: 0x6a7a70, filadelfia: 0x707888, atlanticcity: 0x6a7090, hartford: 0x6a7a6a }[sitio];
   return {
     lejos: mezcla(base, cielo, 0.55),
     cerca: mezcla(base, cielo, 0.3),

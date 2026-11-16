@@ -3188,6 +3188,19 @@ export function createWorld(scene) {
     pretzel_gigante: { choque: "low", medio: 0.6, alto: 0.5 },
     autobus_septa: { choque: "full", medio: 5.2, alto: 3.2, centro: -5.2 },
     cartel_pa: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Atlantic City (blender/atlanticcity.py): la pila de fichas (sale
+    // donde la tragaperras dice BOOM), la ficha tumbada, el jitney y la
+    // pancarta. El arco de la tragaperras y las cartas son piezas compuestas.
+    pila_fichas: { choque: "full", medio: 0.6, alto: 2.0 },
+    ficha_gigante: { choque: "low", medio: 0.75, alto: 0.2 },
+    jitney: { choque: "full", medio: 3.0, alto: 2.6, centro: -3.0 },
+    cartel_nj: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 15/11: Hartford (blender/hartford.py): el cubo de pintura volcado, la
+    // furgoneta de los seguros y la pancarta. La valla de Tom Sawyer es una
+    // pieza compuesta (cada trozo con su pintura) y el caballito, un vehiculo.
+    cubo_volcado: { choque: "low", medio: 0.6, alto: 0.5 },
+    furgon_seguros: { choque: "full", medio: 2.7, alto: 2.6, centro: -2.7 },
+    cartel_ct: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -3682,6 +3695,45 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 15/11: Atlantic City: el arco de la tragaperras con sus tres rodillos
+    // (una tira de cuatro simbolos que se desliza, sin parpadeos) y la carta
+    // del blackjack.
+    if (hayModelo("obstaculos/arco_tragaperras")) {
+      TIPOS.arco_slot = { choque: "nada", medio: 0.4, alto: 0, orilla: true };
+      obstaclePools.arco_slot = makePool(() => {
+        const g = new THREE.Group();
+        g.add(modeloConContorno("obstaculos/arco_tragaperras"));
+        const rodillos = [-2.2, 0, 2.2].map((x) => {
+          const tx = texturaRodillo().clone(); tx.needsUpdate = true;
+          tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(1, 0.25);
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.4), new THREE.MeshBasicMaterial({ map: tx }));
+          m.position.set(x, 5.95, 0.47); g.add(m);
+          return m;
+        });
+        g.userData.rodillos = rodillos;
+        return g;
+      });
+    }
+    TIPOS.carta = { choque: "nada", medio: 0.4, alto: 0 };
+    obstaclePools.carta = makePool(() => {
+      const g = new THREE.Group();
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.55), new THREE.MeshBasicMaterial({ map: texturaCarta(2), side: THREE.DoubleSide }));
+      m.position.y = 1.5; g.add(m);
+      g.userData.carta = m;
+      return g;
+    });
+    // 15/11: Hartford: el trozo de valla de Tom Sawyer (cada uno con su
+    // material: se pinta de blanco al pasar a su lado).
+    if (hayModelo("obstaculos/valla_tom")) {
+      TIPOS.valla_pintar = { choque: "nada", medio: 3.5, alto: 0, orilla: true };
+      obstaclePools.valla_pintar = makePool(() => {
+        const g = modeloConContorno("obstaculos/valla_tom");
+        const mats = [];
+        g.traverse((c) => { if (c.isMesh && c.material && c.material.color && !c.material.side) { c.material = c.material.clone(); mats.push(c.material); } });
+        g.userData.mats = mats;
+        return g;
+      });
+    }
     // 15/11: Filadelfia: la prensa de monedas (el marco y el martillo, que
     // sube y baja: abajo, el carril esta cerrado) y la cesta de la freidora
     // (las patatas cambian de color: crudas, doradas, quemadas).
@@ -3696,6 +3748,17 @@ export function createWorld(scene) {
         return g;
       });
     }
+    TIPOS.anilla = { choque: "nada", medio: 0.4, alto: 0 };
+    obstaclePools.anilla = makePool(() => {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xe8b840, metalness: 0.7, roughness: 0.25 });
+      const aro = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.07, 8, 20), mat);
+      g.add(aro);
+      const brazo = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 3, 6), new THREE.MeshLambertMaterial({ color: 0x2a2c30 }));
+      brazo.position.y = 1.85; g.add(brazo);
+      g.userData.aro = aro; g.userData.mat = mat;
+      return g;
+    });
     TIPOS.cesta_patatas = { choque: "nada", medio: 0.5, alto: 0 };
     obstaclePools.cesta_patatas = makePool(() => {
       const g = new THREE.Group();
@@ -4379,6 +4442,128 @@ export function createWorld(scene) {
       c.mesh.rotation.y = (sube - baja) * 0.6 * (p.a > p.de ? 1 : -1);
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
+    }
+  }
+  // ---- 15/11: Atlantic City ----
+  // La tira de los rodillos: 7, TACO, BAR y BOOM, uno encima de otro.
+  const SIMBOLOS = ["7", "TACO", "BAR", "BOOM"];
+  function texturaRodillo() {
+    if (texturaRodillo.cache) return texturaRodillo.cache;
+    const c = document.createElement("canvas"); c.width = 256; c.height = 1024;
+    const x = c.getContext("2d");
+    const cols = ["#c8202a", "#e8a020", "#1c1c20", "#6a2a8a"];
+    SIMBOLOS.forEach((sim, i) => {
+      x.fillStyle = "#f6f4ee"; x.fillRect(0, i * 256, 256, 256);
+      x.strokeStyle = "#c8c0b0"; x.lineWidth = 6; x.strokeRect(3, i * 256 + 3, 250, 250);
+      x.fillStyle = cols[i]; x.textAlign = "center"; x.textBaseline = "middle";
+      x.font = `900 ${sim.length > 2 ? 78 : 150}px Fredoka, "Arial Rounded MT Bold", Arial, sans-serif`;
+      x.fillText(sim, 128, i * 256 + 132);
+    });
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return (texturaRodillo.cache = tx);
+  }
+  function texturaCarta(v) {
+    const cache = texturaCarta.cache || (texturaCarta.cache = {});
+    if (cache[v]) return cache[v];
+    const c = document.createElement("canvas"); c.width = 160; c.height = 224;
+    const x = c.getContext("2d");
+    x.fillStyle = "#ffffff"; x.beginPath(); x.roundRect(4, 4, 152, 216, 16); x.fill();
+    x.strokeStyle = "#1c1c20"; x.lineWidth = 6; x.stroke();
+    const rojo = v % 2 === 0;
+    x.fillStyle = rojo ? "#c8202a" : "#1c1c20";
+    x.textAlign = "center"; x.textBaseline = "middle";
+    const txt = v === 11 ? "A" : String(v);
+    x.font = `900 92px Fredoka, Arial, sans-serif`; x.fillText(txt, 80, 100);
+    x.font = `900 52px Arial, sans-serif`; x.fillText(rojo ? "♥" : "♠", 80, 176);
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return (cache[v] = tx);
+  }
+  // La tragaperras: los rodillos giran desde 60 m; cada toque para el
+  // siguiente (de izquierda a derecha) en el simbolo que se ve; a 12 m se
+  // paran solos. Cuando estan los tres: BOOM pone una pila de fichas en ese
+  // carril, TACO pone tacos y tres iguales (que no sean BOOM), premio gordo.
+  function moverTragaperras(o, dt) {
+    const sl = o.slot, rs = o.mesh.userData.rodillos;
+    for (let i = 0; i < 3; i++) {
+      const tx = rs[i].material.map;
+      if (sl.parado[i]) {
+        const meta = (3 - sl.sim[i]) * 0.25;
+        tx.offset.y += (meta - tx.offset.y) * Math.min(1, dt * 12);
+      } else if (o.z > -60) {
+        sl.pos[i] = (sl.pos[i] + dt * (1.2 + i * 0.25)) % 1;
+        tx.offset.y = sl.pos[i];
+      }
+    }
+    if (o.z > -12) for (let i = 0; i < 3; i++) if (!sl.parado[i]) pararUno(o, i);
+    if (!sl.hecho && sl.parado.every(Boolean)) resolverTragaperras(o);
+  }
+  function simboloVisible(o, i) {
+    const p = o.slot.pos[i];
+    return (3 - Math.round(p / 0.25) % 4 + 4) % 4;
+  }
+  function pararUno(o, i) {
+    o.slot.parado[i] = true;
+    o.slot.sim[i] = simboloVisible(o, i);
+  }
+  function pararRodillo() {
+    let o = null;
+    for (const p of obstacles) if (p.slot && !p.slot.hecho && p.z > -60 && p.z < -12 && (!o || p.z > o.z)) o = p;
+    if (!o) return false;
+    const i = o.slot.parado.indexOf(false);
+    if (i < 0) return false;
+    pararUno(o, i);
+    return true;
+  }
+  function hayTragaperras() { return obstacles.some((p) => p.slot && !p.slot.hecho && p.z > -60 && p.z < -12); }
+  function resolverTragaperras(o) {
+    const sl = o.slot;
+    sl.hecho = true;
+    if (sl.sim.every((x) => x === 3)) sl.sim[1] = 1;
+    sl.sim.forEach((sim, l) => {
+      if (sim === 3) {
+        const p = spawnObstacle(l, "full", o.z - 3, "pila_fichas");
+        if (p) { p.mueve = 0; }
+      } else if (sim === 1) for (let i = 0; i < 4; i++) spawnTaco(l, o.z - 4 - i * 1.4, 0.9);
+    });
+    if (alAvisoMapa) alAvisoMapa(sl.sim[0] === sl.sim[1] && sl.sim[1] === sl.sim[2] ? "jackpot" : sl.sim.includes(3) ? "boom" : "tirada");
+  }
+  // La carta del blackjack: la de tu carril se coge.
+  let ultimaCarta = 0;
+  function moverCarta(o) {
+    const c = o.cartaBJ;
+    o.mesh.userData.carta.position.y = 1.5 + Math.sin((animClock + o.phase) * 2) * 0.08;
+    if (!c.pasado && o.z > -0.5) {
+      c.pasado = true;
+      if (o.lane === jugadorCarril) { ultimaCarta = c.valor; o.mesh.visible = false; if (alAvisoMapa) alAvisoMapa("carta"); }
+    }
+  }
+  // ---- 15/11: Hartford ----
+  // La valla de Tom Sawyer: el trozo se pinta mientras vas por el carril de
+  // su orilla a su lado (de gris a blanco).
+  const vallaCuenta = { pintado: 0, total: 0 };
+  function moverValla(o, dt, dz) {
+    const v = o.valla;
+    if (!v.contada) { v.contada = true; vallaCuenta.total++; }
+    const pegado = (v.lado < 0 ? 0 : 2) === jugadorCarril && o.z > -3.5 && o.z < 3.5;
+    if (pegado && v.p < 1) {
+      const antes = v.p;
+      v.p = Math.min(1, v.p + dz / 7);
+      vallaCuenta.pintado += v.p - antes;
+      const k = v.p;
+      for (const m of o.mesh.userData.mats) m.color.setRGB(1 + 0.38 * k, 1 + 0.42 * k, 1 + 0.5 * k);   // (la textura es gris: por encima de 1, aclara)
+    }
+  }
+  // El tiovivo: la anilla dorada que cuelga; al pasar por tu carril, main.js
+  // mira si tocaste a tiempo y si la mano estaba a su altura.
+  let ultimaAnilla = null;
+  function moverAnilla(o) {
+    const a = o.anilla;
+    o.mesh.rotation.y = animClock * 2;
+    if (!a.pasada && o.z > -0.3) {
+      a.pasada = true;
+      if (o.lane === jugadorCarril) { ultimaAnilla = a; if (alAvisoMapa) alAvisoMapa("anilla"); if (a.cogida) o.mesh.visible = false; }
     }
   }
   // ---- 15/11: Wilmington ----
@@ -5811,7 +5996,7 @@ export function createWorld(scene) {
   // autobus. `d` es cuanto se ha metido el jugador desde el pie de la rampa.
   function surfaceAt(x) {
     let h = vehiculo.fase === 2 || vehiculo.fase === 1 ? vehiculo.alto : 0;   // 06/11 (3): de pie en el vehiculo
-    if (vehiculo.fase === 2 && vehiculo.nombre === "hidroavion") h += vueloY;   // (15/11: Anchorage: volando)
+    if (vehiculo.fase === 2 && (vehiculo.nombre === "hidroavion" || vehiculo.nombre === "caballito")) h += vueloY;   // (15/11: volando; y el caballito del tiovivo)
     for (const o of obstacles) {
       if ((o.type !== "bus" && o.type !== "rampa") || o.smashed) continue;
       if (Math.abs(x - LANE_X[o.lane]) > (o.type === "rampa" ? 1.1 : 0.85)) continue;
@@ -8102,6 +8287,68 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 15/11: Atlantic City ----
+    // Las tragaperras: cada 63 m un arco con tres rodillos sobre la calle
+    // (toca para pararlos). Fichas tumbadas entre medias.
+    tragaperras(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 4) return;
+      if (k % 9 === 4 && obstaclePools.arco_slot) {
+        const o = spawnObstacle(1, "nada", z, "arco_slot");
+        if (o) o.slot = { pos: [Math.random(), Math.random(), Math.random()], parado: [false, false, false], sim: [0, 0, 0], hecho: false };
+        filaSinObjeto = true;
+      } else if (k % 9 === 7 || k % 9 === 1) { if (Math.random() < 0.5) obst(elegirDe(LANES), "low", z, d, ["ficha_gigante"]); }
+    },
+    // El blackjack (momento estrella): cada 28 m una fila de tres cartas
+    // (main.js lleva la mano y el plantarse).
+    blackjack(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2 || k > n - 3 || k % 4 !== 2) return;
+      filaSinObjeto = true;
+      for (const l of LANES) {
+        const o = spawnObstacle(l, "nada", z, "carta");
+        if (!o) continue;
+        const v = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 11][Math.floor(Math.random() * 12)];
+        o.cartaBJ = { valor: v, pasado: false };
+        o.mesh.userData.carta.material.map = texturaCarta(v);
+      }
+    },
+    // ---- 15/11: Hartford ----
+    // La valla de Tom Sawyer: tramos de valla en una orilla y luego en la
+    // otra (se pintan pasando por el carril de su lado); algo en los
+    // carriles de las orillas de vez en cuando, para hacerte salir.
+    valla(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { if (k === 0) { vallaCuenta.pintado = 0; vallaCuenta.total = 0; } for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || !obstaclePools.valla_pintar) return;
+      const lado = Math.floor(k / 7) % 2 ? 1 : -1;
+      const o = spawnObstacle(lado < 0 ? 0 : 2, "nada", z, "valla_pintar");
+      if (o) {
+        o.mesh.position.x = lado * 3.75;
+        o.valla = { lado, p: 0, contada: false };
+        for (const m of o.mesh.userData.mats) m.color.setRGB(1, 1, 1);
+      }
+      if (k % 4 === 0 && Math.random() < 0.6) obst(lado < 0 ? 0 : 2, Math.random() < 0.5 ? "low" : "full", z - 3, d, Math.random() < 0.5 ? ["cubo_volcado"] : ["furgon_seguros"]);
+      else if (k % 4 === 2) tacosEn(1, z, 3);
+    },
+    // El tiovivo (momento estrella): el caballito espera al principio (ver
+    // VEHICULOS); cada 21 m una anilla dorada colgada en un carril a una
+    // altura (la que coincide con la mano subiendo y bajando).
+    carrusel(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 4 || k % 3 !== 0 || !obstaclePools.anilla) return;
+      const o = spawnObstacle(elegirDe(LANES), "nada", z, "anilla");
+      if (o) {
+        // (16/11: la normal, siempre al alcance de la mano; la de oro, arriba:
+        // hay que tocar cuando el caballito esta subido)
+        const oro = Math.random() < 0.2, y = oro ? 4.5 : 3.85 + Math.random() * 0.3;
+        o.mesh.position.y = y; o.mesh.userData.aro.scale.setScalar(oro ? 1.3 : 1);
+        o.mesh.userData.mat.color.setHex(oro ? 0xffd84a : 0xc8a050);
+        o.anilla = { y, oro, pasada: false, cogida: false };
+      }
+      filaSinObjeto = true;
+    },
     // ---- 15/11: Wilmington ----
     // Las gallinas azules: cada 21 m una en un carril (huye si la ves venir).
     // Entre medias, cucuruchos caidos y mecedoras.
@@ -9196,6 +9443,8 @@ export function createWorld(scene) {
     tabla_surf: { alto: 0.16, z: 2.5, gira: true },
     // 15/11: Charleston WV: de pie dentro de la vagoneta del patio de carbon.
     vagoneta_carbon: { alto: 0.45, z: 1.2, gira: true },
+    // 15/11: Hartford: de pie en la silla del caballito del tiovivo (sube y baja).
+    caballito: { alto: 1.95, z: 1.3, gira: true },
   };
   // 09/11: Isidro: «a veces de golpe el personaje se sube a un coche, tractor o
   // limusina, pero lo hace sin activar nada; no seria mejor que ya este ahi,
@@ -9284,7 +9533,7 @@ export function createWorld(scene) {
     if (vehiculo.fase !== 3) vehiculo.x = x;
     vehiculo.mesh.position.set(vehiculo.x, 0, vehiculo.z);
     // 15/11: Anchorage: el hidroavion vuela a la altura que dice main.js.
-    if (vehiculo.nombre === "hidroavion") vehiculo.mesh.position.y = vehiculo.fase === 2 ? vueloY : 0;
+    if (vehiculo.nombre === "hidroavion" || vehiculo.nombre === "caballito") vehiculo.mesh.position.y = vehiculo.fase === 2 ? vueloY : 0;
     // 14/11: Cheyenne: el toro del rodeo corcovea (cabeza abajo, ancas
     // arriba) y se ladea hacia donde se va cayendo el jinete.
     if (vehiculo.nombre === "toro_rodeo") {
@@ -10185,6 +10434,10 @@ export function createWorld(scene) {
         else if (o.bolaH) moverBola(o);
         else if (o.cesta) moverCesta(o, dt);
         else if (o.prensa) moverPrensa(o);
+        else if (o.slot) moverTragaperras(o, dt);
+        else if (o.cartaBJ) moverCarta(o);
+        else if (o.valla) moverValla(o, dt, dz);
+        else if (o.anilla) moverAnilla(o);
         else if (o.pool === "mozo") {
           // Echa a correr (delante de ti, mas despacio) solo a 30 m: si corriera
           // desde lejos llegaria a las filas de mas adelante.
@@ -10421,5 +10674,6 @@ export function createWorld(scene) {
     setCheque, romperCheque, setVuelo, florCogida: () => ultimaFlor,
     setSaco, enAguja,
     setJugadorY, detectorMina, banderaCogida: () => ultimaBandera,
-    setTorre, cestaCogida: () => ultimaCesta };
+    setTorre, cestaCogida: () => ultimaCesta,
+    pararRodillo, hayTragaperras, cartaCogida: () => ultimaCarta, vallaCuenta: () => vallaCuenta, anillaUltima: () => ultimaAnilla };
 }

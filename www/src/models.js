@@ -127,7 +127,11 @@ const LISTA = {
     // 15/11: Wilmington (blender/wilmington.py)
     "gallina_azul", "cucurucho_caido", "mecedora_obst", "camion_helados", "cartel_de",
     // 15/11: Filadelfia (blender/filadelfia.py)
-    "prensa_marco", "prensa_martillo", "pretzel_gigante", "autobus_septa", "cartel_pa"],
+    "prensa_marco", "prensa_martillo", "pretzel_gigante", "autobus_septa", "cartel_pa",
+    // 15/11: Atlantic City (blender/atlanticcity.py)
+    "arco_tragaperras", "pila_fichas", "ficha_gigante", "jitney", "cartel_nj",
+    // 15/11: Hartford (blender/hartford.py)
+    "caballito", "valla_tom", "cubo_volcado", "furgon_seguros", "cartel_ct"],
   pueblo: ["vict_blanca", "vict_azul", "rancho", "colonial", "cabana_rosa", "iglesia", "roble", "arbusto",
     "buzon_pueblo", "farola_pueblo"],
 };
@@ -150,7 +154,7 @@ function materialDe(original, shininess, specular) {
 // Donde brilla cada pieza (neones y bombillas): lo apunta Blender en
 // models/<carpeta>/luces.json ({ pieza: [[x, y, z, radio, color], ...] }).
 // Solo las carpetas que lo tienen (las demas darian un error 404).
-const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita", "san_luis", "nuevaorleans", "birmingham", "nashville", "louisville", "atlanta", "charlotte", "miami", "albuquerque", "denver", "billings", "boise", "saltlake", "seattle", "portland", "anchorage", "honolulu", "losangeles", "richmond"]);   // (y obstaculos: los faros de los camiones)   // (07/11: las lamparas del metro)
+const CON_LUCES = new Set(["vegas", "obstaculos", "nueva_york", "washington", "omaha", "wichita", "san_luis", "nuevaorleans", "birmingham", "nashville", "louisville", "atlanta", "charlotte", "miami", "albuquerque", "denver", "billings", "boise", "saltlake", "seattle", "portland", "anchorage", "honolulu", "losangeles", "richmond", "atlanticcity", "hartford"]);   // (y obstaculos: los faros de los camiones)   // (07/11: las lamparas del metro)
 const luces = {};
 async function cargarLuces(carpeta) {
   if (!CON_LUCES.has(carpeta) || luces[carpeta]) return;
