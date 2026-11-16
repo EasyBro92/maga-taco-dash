@@ -118,8 +118,8 @@ con gafas que lanza libros y datos.
 | 43 | Filadelfia, Pensilvania | +19 | La Campana de la Libertad. Se pone en la freidora de un McDonald's, como hizo de verdad. *(hecho)* |
 | 44 | Atlantic City, Nueva Jersey | +14 | Sus casinos arruinados: con él hasta la banca pierde. Fichas rodando. *(hecho)* |
 | 45 | Hartford, Connecticut | +7 | La capital de los seguros: ninguno le cubre los tropezones. *(hecho)* |
-| 46 | Burlington, Vermont | +3 | Helados y un senador con guantes de lana que lo critica todo. |
-| 47 | Portland, Maine | +4 | Langostas. |
+| 46 | Burlington, Vermont | +3 | Helados y un senador con guantes de lana que lo critica todo. *(hecho)* |
+| 47 | Portland, Maine | +4 | Langostas. *(hecho)* |
 | 48 | Manchester, Nuevo Hampshire | +4 | La primera nevada. El lema del estado: «Vive libre o muere». |
 | 49 | Providence, Rhode Island | +4 | El estado más pequeño y el nivel más corto. Él dice que es «enorme, tremendo». |
 | 50 | Boston, Massachusetts | +11 | **Jefe.** El Sentido Común en Harvard, lanzando libros y datos. Cajas de té del Motín del Té, la primera protesta contra un impuesto. Él le grita «¡COVFEFE!» y lo deja tan confundido que se rinde. |

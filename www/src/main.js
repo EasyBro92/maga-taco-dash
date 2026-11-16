@@ -4,7 +4,7 @@ import { createWorld, LANE_X, CIELO_Y, RAMPA_LARGO, RAMPA_ALTO, SALTO_VY, SALTO_
 import { initControls, setSwipeThreshold } from "./controls.js";
 import {
   sndTaco, sndJump, sndSlide, sndLaneSwitch, sndHit, sndPoint, unlockAudio, vibrate, startMusic, stopMusic,
-  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, sndCacareo, sndBola, sndTorreCae, sndRodillo, sndAnilla, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
+  sndFanfarria, sndChapa, sndNota, sndGalope, sndPapeleta, sndUrna, sndBarajar, sndRebufo, sndFreno, sndTrompo, sndSwing, sndBirdie, sndBogey, sndOla, sndPlatillo, sndQuemador, sndPuerta, sndRodar, sndLazo, sndMugido, sndRugido, sndCoz, sndQuema, sndHachazo, sndTronco, sndCambio, sndEspejismo, sndPez, sndCogerPez, sndDesinfla, sndRemo, sndRonquido, sndClaqueta, sndCarbon, sndClank, sndBip, sndTambor, sndPinza, sndPum, sndCacareo, sndBola, sndTorreCae, sndRodillo, sndAnilla, sndHojas, sndFoto, pausarMusica, hablar, decir, precargarVoces, callarVoces, sndCaida, sirena, sndTropiezo, sndTic,
   setSfxVolume, setSfxMuted, setMusicVolume, setMusicMuted, setSoloTexto, setVibracion,
 } from "./audio.js";
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
@@ -752,7 +752,9 @@ const NOMBRE_HITO = {
     opera_wilmington: "El teatro de la ópera", heladeria: "La heladería", casa_mecedoras: "La casa de las mecedoras",
     ayuntamiento_philly: "El ayuntamiento de William Penn", museo_arte: "El museo de las escaleras", freiduria: "La freiduría",
     boardwalk_hall: "El gran salón del Boardwalk", steel_pier: "El muelle de la noria", lucy_elefanta: "Lucy, la elefanta",
-    torre_seguros: "La torre de los seguros", casa_mark_twain: "La casa de Mark Twain", old_state_house: "El antiguo Capitolio" },
+    torre_seguros: "La torre de los seguros", casa_mark_twain: "La casa de Mark Twain", old_state_house: "El antiguo Capitolio",
+    ayuntamiento_btv: "El ayuntamiento de Burlington", heladeria_vaca: "La heladería de las vacas", granero_rojo: "El granero rojo",
+    observatorio_portland: "El observatorio de 1807", almacen_old_port: "Los almacenes del Old Port", casa_langostas: "La casa de las langostas" },
   en: { catedral: "St. Patrick's Cathedral", biblioteca: "Public Library", deposito_agua: "The water tower", davis: "Davis Building",
     archivos_portico: "National Archives", fbi: "FBI Building", irs: "IRS Building", correos_torre: "Old Post Office",
     tesoro: "Treasury Department", biblioteca_barr: "Burton Barr Library", museo_arte: "Phoenix Art Museum", museo_heard: "Heard Museum",
@@ -812,7 +814,9 @@ const NOMBRE_HITO = {
     opera_wilmington: "The Grand Opera House", heladeria: "The ice cream parlor", casa_mecedoras: "The rocking chair house",
     ayuntamiento_philly: "City Hall and William Penn", museo_arte: "The art museum steps", freiduria: "The fry shop",
     boardwalk_hall: "Boardwalk Hall", steel_pier: "The Steel Pier", lucy_elefanta: "Lucy the Elephant",
-    torre_seguros: "The insurance tower", casa_mark_twain: "Mark Twain's house", old_state_house: "The Old State House" },
+    torre_seguros: "The insurance tower", casa_mark_twain: "Mark Twain's house", old_state_house: "The Old State House",
+    ayuntamiento_btv: "Burlington City Hall", heladeria_vaca: "The cow ice cream shop", granero_rojo: "The red barn",
+    observatorio_portland: "The 1807 Observatory", almacen_old_port: "The Old Port warehouses", casa_langostas: "The lobster shack" },
 };
 let hitosBarra = [], hitoAvisado = 0, mitadAvisada = false;
 const barras = [...document.querySelectorAll(".pgPista")];
@@ -1370,6 +1374,7 @@ function resetRun(desde = 0) {
   quitarSiesta(); quitarRodaje(); quitarCarbon();
   quitarMinas(); quitarDesfile(); quitarPinza(); quitarSenales();
   quitarTorre(); quitarBlackjack(); quitarValla(); quitarCarrusel();
+  quitarChamp(); quitarMedida(); hojasCombo = 0;
   lastTacoShown = Math.floor(tacosThisRun);
   shakeTimeLeft = 0;
   pausado = false; cuenta = 0; cayendo = 0; invulnerable = 0;
@@ -2872,6 +2877,92 @@ function anillaPasa() {
     if (PRUEBA && window.__juego) window.__juego.anillas = (window.__juego.anillas || 0) + 1;
   } else if (elapsed - carrusel.toque < 0.4) textoFlotante(t("casiAnilla"));
 }
+// 16/11: Burlington: los montones de hojas. Al caer encima de uno se rebota
+// (y en cadena: cada rebote seguido sin tocar la calle vale mas).
+var hojasCombo = 0;
+function rebotaEnHojas() {
+  if (!world.montonBajo || superSalto || montado || gameState !== "playing") return false;
+  if (!world.montonBajo(playerX)) return false;
+  hojasCombo++;
+  vy = V_SALTO * 1.15; enSuelo = false; isJumping = true; jumpElapsed = 0;
+  const n = Math.min(10, 2 * hojasCombo) * multiplier;
+  tacosThisRun += n;
+  textoFlotante(hojasCombo > 1 ? t("reboteCombo").replace("{c}", hojasCombo).replace("{n}", n) : t("rebote").replace("{n}", n));
+  sndHojas(); vibrate(12);
+  if (PRUEBA && window.__juego) { window.__juego.rebotes = (window.__juego.rebotes || 0) + 1; window.__juego.comboMax = Math.max(window.__juego.comboMax || 0, hojasCombo); }
+  return true;
+}
+// 16/11: Burlington: las fotos a Champ en el lago Champlain. Tocar hace la
+// foto: sale mejor desde el carril de su orilla.
+var champH = null;
+function quitarChamp() {
+  champH = null;
+  const el = document.getElementById("champBar");
+  if (el) el.classList.add("hidden");
+}
+function pintarChamp() {
+  const el = barraJuego("champBar");
+  el.querySelector(".rodeoTit").textContent = t("champHud").replace("{n}", champH.fotos);
+  el.querySelector(".rodeoPie").textContent = t("champPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, champH.fotos / 6) * 100}%`;
+  el.classList.remove("hidden");
+}
+function actualizarChamp() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "champ";
+  if (!en) { if (champH) quitarChamp(); return; }
+  if (!champH) { champH = { fotos: 0, ultima: -9 }; pintarChamp(); }
+}
+function hacerFoto() {
+  if (!champH || !world.fotoChamp) return false;
+  if (elapsed - champH.ultima < 0.6) return true;
+  champH.ultima = elapsed;
+  const c = world.fotoChamp();
+  sndFoto(); vibrate(8);
+  if (c === null) { textoFlotante(t("soloAgua")); return true; }
+  const n = [2, 5, 12][c] * multiplier;
+  tacosThisRun += n; champH.fotos++;
+  textoFlotante(`${t(["fotoPeque", "fotoLejos", "foton"][c])} +${n}`);
+  if (c === 2) { spawnConfetti(12); sndBirdie(); }
+  if (PRUEBA && window.__juego) { window.__juego.fotos = (window.__juego.fotos || 0) + 1; if (c === 2) window.__juego.fotones = (window.__juego.fotones || 0) + 1; }
+  pintarChamp();
+  return true;
+}
+// 16/11: Portland (Maine): la medida de la langosta. Solo valen las de ley
+// (las medianas) y la azul; las pequeñas y las gigantes, multa.
+var medidaH = null;
+function quitarMedida() {
+  medidaH = null;
+  const el = document.getElementById("medidaBar");
+  if (el) el.classList.add("hidden");
+}
+function pintarMedida() {
+  const el = barraJuego("medidaBar");
+  el.querySelector(".rodeoTit").textContent = t("medidaHud").replace("{n}", medidaH.n);
+  el.querySelector(".rodeoPie").textContent = t("medidaPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, medidaH.n / 12) * 100}%`;
+  el.classList.remove("hidden");
+}
+function actualizarMedida() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "medida";
+  if (!en) { if (medidaH) quitarMedida(); return; }
+  if (!medidaH) { medidaH = { n: 0 }; pintarMedida(); }
+}
+function langostaCogida() {
+  const l = world.langostaUltima && world.langostaUltima();
+  if (!l || gameState !== "playing") return;
+  if (l.azul || l.talla === 1) {
+    const n = (l.azul ? 20 : 5) * multiplier;
+    tacosThisRun += n;
+    if (l.azul) { showBubble(t("langostaAzul"), 1400, 2); avisoVerde(`+${n} ${TACO_IMG()}`); spawnConfetti(16); sndFanfarria(); }
+    else { textoFlotante(`${t("langostaBien")} +${n}`); sndPoint(); }
+    if (medidaH) { medidaH.n++; pintarMedida(); }
+    if (PRUEBA && window.__juego) window.__juego.langostas = (window.__juego.langostas || 0) + 1;
+  } else {
+    tacosThisRun = Math.max(0, tacosThisRun - 3);
+    textoFlotante(`${t(l.talla === 0 ? "multaPeque" : "multaGrande")} -3`); sndBogey(); vibrate(15);
+    if (PRUEBA && window.__juego) window.__juego.multas = (window.__juego.multas || 0) + 1;
+  }
+}
 function accionJugador(action, pos) {
   if (action === "pausa") { if (pausado) reanudar(); else pausar(); return; }
   if (gameState !== "playing" || pausado) return;
@@ -2904,6 +2995,7 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && world.hayTragaperras && world.hayTragaperras()) { if (world.pararRodillo()) { sndRodillo(); vibrate(8); } return; }   // (15/11: Atlantic City)
   if ((action === "frase" || action === "lanzar") && plantarse()) return;
   if ((action === "frase" || action === "lanzar") && carrusel && montado) { carrusel.toque = elapsed; return; }   // (15/11: Hartford)
+  if ((action === "frase" || action === "lanzar") && hacerFoto()) return;   // (16/11: Burlington: la foto a Champ)
   if (action === "left" && currentLane > 0) { carrilAntes = currentLane; currentLane--; sndLaneSwitch(); cambioCarril(); }
   else if (action === "right" && currentLane < 2) { carrilAntes = currentLane; currentLane++; sndLaneSwitch(); cambioCarril(); }
   else if (action === "frase") { if (!lanzarAlJefe(pos)) lanzarFrase(); }
@@ -3879,6 +3971,7 @@ world.onAvisoMapa((que) => {
   else if (que === "tirada") sndPoint();
   else if (que === "carta") cartaBJ();
   else if (que === "anilla") anillaPasa();
+  else if (que === "langosta") langostaCogida();   // (16/11: Portland, Maine)
   // 15/11: Portland: una rana deshinchada.
   else if (que === "rana" && gameState === "playing") {
     tacosThisRun += 5 * multiplier;
@@ -4004,6 +4097,8 @@ function frame(dtFijo) {
     actualizarBlackjack();
     actualizarValla();
     actualizarCarrusel(dt);
+    actualizarChamp();
+    actualizarMedida();
 
     if (megaTimeLeft > 0) {
       megaTimeLeft = Math.max(0, megaTimeLeft - dt);
@@ -4065,7 +4160,8 @@ function frame(dtFijo) {
         siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso",
         minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso",
         gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso",
-        tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso" };
+        tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso",
+        hojas: "hojasAviso", champ: "champAviso", medida: "medidaAviso", faro: "faroAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);
       if (tramo.tipo === "ventisca") { rafaga.t = 2.5; rafaga.avisada = false; }
       // 14/11: Billings: al acabar el arreo, si entraron todas las vacas, premio.
@@ -4179,8 +4275,9 @@ function frame(dtFijo) {
     if (!enSuelo && rocketTimeLeft === 0) {
       vy -= (superSalto ? SALTO_G : GRAVEDAD * (enLuna ? LUNA_G : 1)) * dt;
       py += vy * dt;
-      if (py <= suelo && vy <= 0) {
-        py = suelo; vy = 0; enSuelo = true; isJumping = false; superSalto = false;
+      if (py <= suelo && vy <= 0 && rebotaEnHojas()) py = suelo;   // (16/11: Burlington: rebote en las hojas)
+      else if (py <= suelo && vy <= 0) {
+        py = suelo; vy = 0; enSuelo = true; isJumping = false; superSalto = false; hojasCombo = 0;
         character.setJumpPose(1);
         // Aterrizaje con peso: nube de polvo a los pies + vibracion corta.
         for (let d = 0; d < 5; d++) spawnDust(character.object3D.position.x, character.object3D.position.z, py);
@@ -4211,6 +4308,7 @@ function frame(dtFijo) {
       character.updateRun(dt, speed / BASE_SPEED);
     }
 
+    if (world.setVelocidad) world.setVelocidad(frameSpeed);   // (16/11: Burlington: la distancia entre montones de hojas)
     const curveX = world.update(frameSpeed * dt, dtFijo !== undefined ? dt : undefined);
     // La pista curva: personaje/sombra se mueven con el mismo offset que el
     // grupo del mundo, asi que el carril relativo y las colisiones no cambian.

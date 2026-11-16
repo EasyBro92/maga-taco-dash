@@ -44,7 +44,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Kansas | Wichita (capital: Topeka) | la más grande |
 | Kentucky | Louisville (capital: Frankfort) | el Derby (hecho el 14/11: Main Street, los bates gigantes que caen y la pista de Churchill Downs con los caballos que adelantan) |
 | Luisiana | Nueva Orleans (capital: Baton Rouge) | la más famosa (hecho el 14/11: Bourbon Street, el desfile de carrozas y el golfo de América con los controles al revés) |
-| Maine | Portland (capital: Augusta) | la más grande |
+| Maine | Portland (capital: Augusta) | la más grande (hecho el 16/11: la medida de la langosta y el faro en la niebla) |
 | Maryland | Baltimore (capital: Annapolis) | la más grande (hecho el 15/11: los cangrejos que se agarran al tobillo y las banderas de señales de memoria) |
 | Massachusetts | Boston | capital y la más famosa |
 | Míchigan | Detroit (capital: Lansing) | la ciudad del motor |
@@ -63,7 +63,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Tennessee | Nashville | capital y la música country (hecho el 14/11: Broadway, el baile en línea, el mástil de guitarra del Opry y el YMCA ante el Partenón) |
 | Texas | Houston (capital: Austin) | la más grande, la NASA (hecho el 12/11: Main Street, la diana de Elon y el hangar de la Luna) |
 | Utah | Salt Lake City | capital y la más famosa (hecho el 14/11: State Street con espejismos y el récord de velocidad en el salar de Bonneville) |
-| Vermont | Burlington (capital: Montpelier) | la más grande |
+| Vermont | Burlington (capital: Montpelier) | la más grande (hecho el 16/11: rebotar en los montones de hojas y fotos a Champ en el lago) |
 | Virginia | Richmond | capital, la más histórica (hecho el 15/11: las minas de confeti con detector y el desfile al paso del tambor) |
 | Virginia Occidental | Charleston | capital y la más grande (hecho el 15/11: el saco de carbón que pesa y la vagoneta que solo cambia de vía en las agujas) |
 | Washington (estado) | Seattle (capital: Olympia) | la Space Needle (hecho el 15/11: 5th Avenue con lluvia, las marquesinas que salvan el tupé y los salmones de Pike Place) |

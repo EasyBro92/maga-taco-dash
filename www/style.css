@@ -1077,3 +1077,7 @@ svg.ico { width: 1.25em; height: 1.25em; vertical-align: -0.26em; flex: 0 0 auto
 #bjBar .barraLleno { background: linear-gradient(90deg, #1e7a3e, #f2c21a, #e8402a); }
 #vallaBar .barraLleno { background: #f6f4ee; }
 #carruselBar .barraLleno { background: linear-gradient(90deg, #e8b840, #ffd84a); }
+
+/* 16/11: Burlington (las fotos a Champ) y Portland, Maine (la medida de la langosta) */
+#champBar .barraLleno { background: linear-gradient(90deg, #3a8a5a, #9ad0a0); }
+#medidaBar .barraLleno { background: linear-gradient(90deg, #d0301e, #f08a5a); }

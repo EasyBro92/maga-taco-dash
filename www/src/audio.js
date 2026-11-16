@@ -235,6 +235,9 @@ export function sndTorreCae() { soplo(0.5, { desde: 1200, hasta: 200, tipo: "low
 // 15/11: Atlantic City: el rodillo que se para; Hartford: la anilla cogida.
 export function sndRodillo() { tono(420, 0.08, { tipo: "square", vol: 0.06, filtro: 1500 }); tono(300, 0.06, { tipo: "square", vol: 0.05, filtro: 1200, cuando: 0.06 }); }
 export function sndAnilla() { [1318, 1760, 2093].forEach((f, i) => tono(f, 0.2, { tipo: "triangle", vol: 0.08, cuando: i * 0.05 })); }
+// 16/11: Burlington: el crujido del montón de hojas y el disparo de la camara.
+export function sndHojas() { soplo(0.22, { desde: 3200, hasta: 1100, tipo: "bandpass", vol: 0.14, q: 0.9 }); tono(330, 0.12, { tipo: "triangle", vol: 0.06, glide: 120 }); }
+export function sndFoto() { soplo(0.05, { desde: 4000, hasta: 2500, tipo: "highpass", vol: 0.12 }); soplo(0.06, { desde: 3000, hasta: 1800, tipo: "highpass", vol: 0.1, cuando: 0.09 }); }
 export function sndRugido() {
   soplo(0.9, { desde: 140, hasta: 70, tipo: "lowpass", vol: 0.26, q: 2.2 });
   tono(82, 0.8, { tipo: "sawtooth", vol: 0.06, glide: -18, ataque: 0.06, filtro: 320 });
@@ -415,6 +418,16 @@ const CANCIONES = {
     timbre: "metal" },
   // 14/11: Albuquerque: empieza el acto de la Armada Espanola: pasodoble con
   // trompeta y la cadencia andaluza (melodia propia).
+  // 16/11: Burlington: folk de Vermont con banjo (melodia propia).
+  burlington: { bpm: 112, swing: 0.2, acordes: [G, C, G, D], bateria: "country", bajo: "alterna",
+    melodia: [67, null, 71, 74, 76, 74, 71, null, 72, null, 76, 72, 71, null, 69, null,
+      67, null, 71, 74, 79, 76, 74, null, 72, 71, 69, 71, 67, null, null, null],
+    timbre: "banjo" },
+  // 16/11: Portland (Maine): cancion de marineros con acordeon (melodia propia).
+  portland_me: { bpm: 120, swing: 0, acordes: [Am, G, Am, E7], bateria: "marcha", bajo: "alterna",
+    melodia: [69, null, 69, 72, 76, null, 74, 72, 71, null, 67, null, 74, null, 71, null,
+      69, null, 69, 72, 76, 79, 76, 74, 72, 71, 69, 64, 69, null, null, null],
+    timbre: "acordeon" },
   // 15/11: Atlantic City: swing de casino, con metales (melodia propia).
   atlantic_city: { bpm: 132, swing: 0.6, acordes: [C, Am, Dm, G7], bateria: "swing", bajo: "camina",
     melodia: [76, null, 79, 76, 72, null, 74, 76, 77, null, 74, null, 71, null, null, null,

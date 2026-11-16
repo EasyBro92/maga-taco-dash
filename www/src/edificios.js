@@ -110,6 +110,16 @@ const ESTILOS = {
     cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.1], toldos: [0x2a3a30, 0x1a3a6a, 0xc8282c, 0xf6f2ea],
     rotulos: ["PRALINES", "SHRIMP & GRITS", "SWEETGRASS", "ANTIQUES", "OYSTERS", "GOLF", "SWEET TEA", "BBQ", "PALMETTO", "GALLERY"] },
   // 14/11: Denver: el 16th Street Mall: ladrillo rojo de LoDo y torres de cristal.
+  // 16/11: Burlington: ladrillo rojo y madera blanca, tiendas de Church Street.
+  burlington: { plantas: ["planta_ladrillo", "planta_lisa", "planta_ladrillo", "planta_balcones"],
+    ladrillos: [0xa04a32, 0x8a3a2a, 0xf0ece0, 0xc8b898, 0x6a4a3a], piedras: [0xe0d6c0, 0xd0c4a8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.05], toldos: [0x2a6a3a, 0xc8302a, 0xe8782a, 0x1e4a9a],
+    rotulos: ["MAPLE SYRUP", "SIROPE", "CHEDDAR", "BOOKS", "BIKES", "FOLK MUSIC", "CAFE", "HELADOS", "OUTDOOR", "YARN"] },
+  // 16/11: Portland (Maine): ladrillo del Old Port y casas de tablillas.
+  portlandme: { plantas: ["planta_ladrillo", "planta_ladrillo", "planta_lisa", "planta_balcones"],
+    ladrillos: [0x9a4a32, 0x7a3a2a, 0xb8b4aa, 0x9aa0a4, 0x6a4430], piedras: [0xb0aca4, 0xd0c8b8], cristal: [0x3a5a70, 0x4a6a8a],
+    cornisas: ["cornisa_clasica", "cornisa_simple"], remate: ["remate_atico", 0.05], toldos: [0x1e4a6a, 0xc8302a, 0x2a5a3a, 0xf2c21a],
+    rotulos: ["LOBSTER", "LANGOSTAS", "OYSTERS", "CHOWDER", "SAIL", "BOOKS", "CAFE", "TAFFY", "BAIT", "PUB"] },
   // 15/11: Atlantic City: hoteles y casinos de colores, neones.
   atlanticcity: { plantas: ["planta_cristal", "planta_lisa", "planta_balcones", "planta_cristal", "planta_lisa"],
     ladrillos: [0xf0e6d8, 0xd8b0a0, 0xc8d0e0, 0xf0d8b8, 0xe0c8e0], piedras: [0xf6eedc, 0xe8dcc4], cristal: [0x3a5a70, 0x4a6a8a],

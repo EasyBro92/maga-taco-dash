@@ -2766,3 +2766,55 @@ chocar y salen los 10 objetos de cada uno:
 - **Tiovivo:** 13 anillas de 17 (las que fallan son casi todas de oro).
 
 Falta el veredicto de Isidro.
+
+## 16/11/2026 (2): niveles 46 y 47, Burlington y Portland, Maine (v75)
+
+- **Burlington** (Church Street en otoño; `blender/burlington.py`):
+  - Los montones de hojas: cadenas de 3 o 4 montones. Saltando y cayendo
+    ENCIMA de uno se rebota hasta el siguiente (se puede cambiar de carril
+    en el aire); cada rebote seguido vale más (+2, +4, +6...). Los montones
+    de una cadena se colocan a lo que dura un rebote y se reajustan si
+    cambia la velocidad.
+  - El momento estrella es el paseo sobre el lago Champlain, con agua a los
+    dos lados. Champ, el monstruo del lago, asoma a un lado cada 63 m: tocar
+    hace la foto. Desde el carril de su lado, +12; desde el medio, +5; desde
+    la otra orilla, +2. Si no está asomado, «Solo agua…».
+  - En la acera, el senador gruñón (sin nombre) sentado con sus manoplas y
+    su cartel ¡TODO MAL!.
+  - Pancarta del Sentido Común: NADA ES GRATIS.
+  - Piezas: el ayuntamiento, la heladería con manchas de vaca y el
+    cucurucho en el tejado (CONO GRATIS* *mañana), el granero rojo con su
+    silo y el puente cubierto que cruza la calle.
+  - Final en la iglesia de ladrillo de lo alto de Church Street. Objeto:
+    manoplas.
+- **Portland, Maine** (el Old Port por la mañana; `blender/portlandme.py`):
+  - La medida de la langosta: filas de dos o tres langostas de tallas
+    distintas. Solo valen las medianas (+5); las pequeñas y las gigantes
+    son multa (−3: hay que saltarlas o cambiar de carril). La azul, una
+    entre un millón, vale siempre (+20).
+  - El momento estrella es la costa en la niebla, que es muy cerrada. El haz
+    del faro barre la calle de un lado a otro (despacio y sin apuntar nunca
+    a la cámara) y lo que toca queda marcado con una luz que se ve en la
+    niebla: ROJO esquiva, AMARILLO salta, AZUL agáchate.
+  - Pancarta del Sentido Común: SI HAY NIEBLA, VE DESPACIO.
+  - Piezas: el observatorio octogonal de 1807, los almacenes del Old Port,
+    la casa de las langostas con la pared llena de boyas y el arco de
+    pilotes del muelle.
+  - Final en el faro de Portland Head. Objeto: langostas.
+
+Dos cosas que se aprendieron:
+
+- El juego quita los obstáculos que bajan de 6 m bajo el suelo, así que
+  Champ espera escondido a 5,8 m.
+- En los tramos de dentro el juego quita su calle: la pieza tiene que
+  traer su propio suelo.
+
+Probado con el piloto automático. Llega a la meta en los dos niveles y salen
+los 10 objetos de cada uno:
+
+- **Hojas:** 29 rebotes, cadenas de hasta 5.
+- **Champ:** 6 fotos de 6, todas buenas.
+- **Langostas:** 31 de ley y 8 multas.
+- **Niebla:** 29 de 32 obstáculos marcados antes de los 20 m.
+
+Falta el veredicto de Isidro.

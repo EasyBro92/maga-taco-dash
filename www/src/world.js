@@ -3201,6 +3201,22 @@ export function createWorld(scene) {
     cubo_volcado: { choque: "low", medio: 0.6, alto: 0.5 },
     furgon_seguros: { choque: "full", medio: 2.7, alto: 2.6, centro: -2.7 },
     cartel_ct: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 16/11: Burlington (blender/burlington.py): el montón de hojas (se salta
+    // ENCIMA para rebotar), Champ (asoma en el lago), el camión de la leche,
+    // la garrafa de sirope de arce y la pancarta.
+    monton_hojas: { choque: "nada", medio: 1.5, alto: 0 },
+    champ: { choque: "nada", medio: 0.5, alto: 0 },
+    camion_leche: { choque: "full", medio: 3.65, alto: 2.9, centro: -3.65 },
+    garrafa_arce: { choque: "low", medio: 0.75, alto: 0.85 },
+    cartel_vt: { choque: "high", medio: 0.3, alto: 2.5 },
+    // 16/11: Portland, Maine (blender/portlandme.py): la langosta (roja y azul:
+    // el juego la escala segun su talla), el camion de las langostas, la boya
+    // caida y la pancarta.
+    langosta: { choque: "nada", medio: 0.6, alto: 0 },
+    langosta_azul: { choque: "nada", medio: 0.6, alto: 0 },
+    camion_langostas: { choque: "full", medio: 3.35, alto: 3.4, centro: -3.35 },
+    boya_suelta: { choque: "low", medio: 0.5, alto: 0.8 },
+    cartel_me: { choque: "high", medio: 0.3, alto: 2.5 },
   };
   const DE_TIPO = { low: ["barricada", "conos"], high: ["pancarta", "globos"], full: ["guardaespaldas", "furgoneta"] };
   const BUS_RAMPA = 2.2, BUS_LARGO = 10.2, BUS_TECHO = 1.55;
@@ -4442,6 +4458,123 @@ export function createWorld(scene) {
       c.mesh.rotation.y = (sube - baja) * 0.6 * (p.a > p.de ? 1 : -1);
       c.lane = baja > 0.5 ? p.a : p.de;
       c.fuera = alto > 0.3;
+    }
+  }
+  // ---- 16/11: Burlington ----
+  // Los montones de hojas: cayendo ENCIMA de uno se rebota (main.js). Los de
+  // una cadena van a lo que dura un rebote, y se reajustan si cambia la
+  // velocidad, para que cada rebote caiga en el siguiente.
+  const T_REBOTE = 0.62 * 1.15;   // (JUMP_DURATION de main.js por lo que sube el rebote)
+  let velMundo = 20;
+  function setVelocidad(v) { if (v > 1) velMundo = v; }
+  function moverHojas(o, dt) {
+    const h = o.hojas;
+    if (h.prev && !h.usado && o.z < -2.5 && obstacles.includes(h.prev)) o.z = h.prev.z - velMundo * T_REBOTE;
+    if (!h.usado && !h.aplasta && o.z > -0.6 && o.lane === jugadorCarril) h.aplasta = 0.001;
+    if (h.aplasta && h.aplasta < 1) {
+      h.aplasta = Math.min(1, h.aplasta + dt * 6);
+      const a = h.aplasta;
+      o.mesh.scale.set(1 + 0.25 * a, 1 - 0.55 * a, 1 + 0.25 * a);
+    }
+  }
+  function montonBajo(x) {
+    for (const o of obstacles) {
+      const h = o.hojas;
+      if (!h || h.usado || Math.abs(o.z) > 2.0 || Math.abs(o.mesh.position.x - x) > 1.2) continue;
+      h.usado = true; if (!h.aplasta) h.aplasta = 0.001;
+      return o;
+    }
+    return null;
+  }
+  // Champ, el monstruo del lago: asoma a un lado (en el agua) entre 62 y 72 m,
+  // se queda arriba 2,6 s mirando a la calle y se vuelve a meter. La foto la
+  // hace main.js (fotoChamp dice si salio bien: 2 de cerca, 1 desde el medio,
+  // 0 desde la otra orilla).
+  function moverChamp(o, dt) {
+    const c = o.champ;
+    if (c.fase === 0 && o.z > c.zSube) c.fase = 1;
+    if (c.fase === 1) { c.h = Math.min(1, c.h + dt / 0.9); if (c.h >= 1) { c.fase = 2; c.t = 0; } }
+    else if (c.fase === 2) { c.t += dt; if (c.t > 2.6) c.fase = 3; }
+    else if (c.fase === 3) c.h = Math.max(0, c.h - dt / 1.1);
+    const s = c.h * c.h * (3 - 2 * c.h);
+    o.mesh.position.y = -5.8 + 5.8 * s;   // (no mas abajo de -6: el bucle quita lo que cae por debajo)
+    o.mesh.rotation.y = -c.lado * (0.55 + 0.08 * Math.sin(animClock * 0.8 + o.phase));
+  }
+  function fotoChamp() {
+    let mejor = null;
+    for (const o of obstacles) { const c = o.champ; if (!c || c.foto || c.h < 0.75 || o.z < -75 || o.z > -4) continue; if (!mejor || o.z > mejor.z) mejor = o; }
+    if (!mejor) return null;
+    const c = mejor.champ;
+    c.foto = true;
+    const cerca = c.lado < 0 ? 0 : 2;
+    return jugadorCarril === cerca ? 2 : jugadorCarril === 1 ? 1 : 0;
+  }
+  // ---- 16/11: Portland (Maine) ----
+  // La medida de la langosta: pequeñas, de ley y gigantes (y alguna azul, que
+  // vale siempre). La que pasa por tu carril, si no vas saltando, se coge.
+  let ultimaLangosta = null;
+  function moverLangosta(o) {
+    const l = o.langosta;
+    o.mesh.rotation.y = Math.sin(animClock * 1.5 + o.phase) * 0.15;
+    if (!l.pasada && o.z > -0.4) {
+      l.pasada = true;
+      if (o.lane === jugadorCarril && jugadorY < 0.8) { ultimaLangosta = l; o.mesh.visible = false; if (alAvisoMapa) alAvisoMapa("langosta"); }
+    }
+  }
+  // La costa en la niebla: el haz del faro barre la calle de un lado a otro
+  // (despacio, sin apuntar nunca a la camara) y lo que toca queda marcado con
+  // una luz de color que se ve a traves de la niebla: ROJO esquiva, AMARILLO
+  // salta, AZUL agachate.
+  let haz = null;
+  const marcasFaro = [], marcasFaroLibres = [];
+  const COLOR_MARCA = { full: 0xff4a32, low: 0xffd23a, high: 0x4a9aff };
+  const FARO = { x: -45, y: 8, z: -95 };
+  function crearHaz() {
+    const geo = new THREE.ConeGeometry(6, 130, 20, 1, true);
+    geo.translate(0, -65, 0); geo.rotateZ(Math.PI / 2);
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xfff4c8, transparent: true, opacity: 0.14,
+      depthWrite: false, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    m.position.set(FARO.x, FARO.y, FARO.z);
+    m.rotation.order = "YXZ";
+    group.add(m);
+    return m;
+  }
+  function crearMarca() {
+    const g = new THREE.Group();
+    const bola = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }));
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, transparent: true, opacity: 0.3, depthWrite: false }));
+    g.add(bola); g.add(halo);
+    g.userData.mats = [bola.material, halo.material];
+    group.add(g);
+    return g;
+  }
+  function soltarMarcas() {
+    for (const m of marcasFaro) { m.mesh.visible = false; marcasFaroLibres.push(m.mesh); }
+    marcasFaro.length = 0;
+  }
+  function actualizarFaro() {
+    const fm = tipoInterior() === "faro" ? factorMetro() : 0;
+    if (fm <= 0.02) { if (haz) haz.visible = false; if (marcasFaro.length) soltarMarcas(); return; }
+    if (!haz) haz = crearHaz();
+    haz.visible = true;
+    haz.material.opacity = 0.14 * fm;
+    const phi = THREE.MathUtils.degToRad(-2.5 + 47.5 * Math.sin(animClock * Math.PI * 2 / 3.6));
+    haz.rotation.set(0, phi, -0.05);
+    const zc = FARO.z - (0 - FARO.x) * Math.tan(phi);
+    if (fm > 0.3) for (const o of obstacles) {
+      if (o.marcaFaro || o.smashed || o.fuera || !COLOR_MARCA[o.type]) continue;
+      const zo = o.z + (o.centro || 0);
+      if (Math.abs(zo - zc) > 3.5 || zo > -20) continue;
+      o.marcaFaro = true;
+      const mesh = marcasFaroLibres.pop() || crearMarca();
+      mesh.visible = true;
+      for (const mt of mesh.userData.mats) mt.color.setHex(COLOR_MARCA[o.type]);
+      marcasFaro.push({ o, mesh });
+    }
+    for (let i = marcasFaro.length - 1; i >= 0; i--) {
+      const m = marcasFaro[i], o = m.o;
+      if (o.z > 2 || o.smashed || !obstacles.includes(o)) { m.mesh.visible = false; marcasFaroLibres.push(m.mesh); marcasFaro.splice(i, 1); continue; }
+      m.mesh.position.set(o.mesh.position.x, o.type === "high" ? 3.9 : 3.4, o.z + (o.centro || 0));
     }
   }
   // ---- 15/11: Atlantic City ----
@@ -8287,6 +8420,74 @@ export function createWorld(scene) {
         arcoDeTacos(l, z);
       }
     },
+    // ---- 16/11: Burlington ----
+    // Los montones de hojas: cada 49 m una cadena de 3 o 4 montones, cada uno
+    // a lo que dura un rebote del anterior (y a veces un carril al lado:
+    // se cambia en el aire). Alguna garrafa entre medias.
+    hojas(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 7) return;
+      if (k % 7 === 3 && obstaclePools.monton_hojas) {
+        const S = velMundo * T_REBOTE, largo = 3 + (Math.random() < 0.5 ? 1 : 0);
+        let lane = elegirDe(LANES), prev = null;
+        for (let i = 0; i < largo; i++) {
+          const o = spawnObstacle(lane, "nada", z - i * S, "monton_hojas");
+          if (!o) break;
+          o.mesh.scale.set(1, 1, 1);
+          o.hojas = { i, prev, usado: false, aplasta: 0 };
+          prev = o;
+          if (Math.random() < 0.45) lane = Math.max(0, Math.min(2, lane + (Math.random() < 0.5 ? -1 : 1)));
+        }
+        filaSinObjeto = true;
+      } else if (k % 7 === 0 && Math.random() < 0.7) obst(elegirDe(LANES), "low", z, d, ["garrafa_arce"]);
+    },
+    // Champ (momento estrella): en el paseo sobre el lago, cada 63 m asoma a
+    // un lado; entre medias, bicis y garrafas por la grava.
+    champ(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > n - 4) return;
+      if (k % 9 === 3 && obstaclePools.champ) {
+        const lado = Math.random() < 0.5 ? -1 : 1;
+        const o = spawnObstacle(lado < 0 ? 0 : 2, "nada", z, "champ");
+        if (o) { o.mesh.position.x = lado * 13; o.mesh.position.y = -5.8; o.champ = { lado, fase: 0, h: 0, t: 0, foto: false, zSube: -62 - Math.random() * 10 }; }
+        filaSinObjeto = true;
+      } else if (k % 3 === 1 && k > 2) obst(elegirDe(LANES), Math.random() < 0.5 ? "low" : "full", z, d, Math.random() < 0.5 ? ["garrafa_arce"] : ["bici"]);
+    },
+    // ---- 16/11: Portland (Maine) ----
+    // La medida: cada 14 m una fila de dos o tres langostas de tallas
+    // distintas (al menos una de ley); entre medias, algo que esquivar.
+    medida(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      if (k % 2 === 0 && obstaclePools.langosta) {
+        const ls = [...LANES].sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.5 ? 2 : 3);
+        ls.forEach((l, i) => {
+          const azul = Math.random() < 0.06 && obstaclePools.langosta_azul;
+          const o = spawnObstacle(l, "nada", z, azul ? "langosta_azul" : "langosta");
+          if (!o) return;
+          const talla = azul || i === 0 ? 1 : (Math.random() < 0.5 ? 0 : 2);
+          o.mesh.scale.setScalar([0.55, 1, 1.7][talla]);
+          o.mesh.visible = true;
+          o.langosta = { talla, azul: !!azul, pasada: false };
+        });
+        filaSinObjeto = true;
+      } else if (k % 4 === 1 && Math.random() < 0.75) obst(elegirDe(LANES), Math.random() < 0.5 ? "low" : "full", z, d, Math.random() < 0.5 ? ["boya_suelta"] : ["camion_langostas"]);
+    },
+    // La costa en la niebla (momento estrella): obstaculos de siempre (el
+    // faro los va marcando; ver actualizarFaro), con un carril libre siempre.
+    faro(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 3 || k > n - 3) return;
+      if (k % 2 === 1) {
+        const libre = elegirDe(LANES);
+        for (const l of LANES) if (l !== libre && Math.random() < 0.55) {
+          const r = Math.random();
+          obst(l, r < 0.4 ? "full" : r < 0.7 ? "low" : "high", z, d, r < 0.4 ? ["camion_langostas", "furgoneta"] : r < 0.7 ? ["boya_suelta"] : ["cartel_me"]);
+        }
+      } else if (k % 4 === 0) tacosEn(elegirDe(LANES), z, 3);
+    },
     // ---- 15/11: Atlantic City ----
     // Las tragaperras: cada 63 m un arco con tres rodillos sobre la calle
     // (toca para pararlos). Fichas tumbadas entre medias.
@@ -9281,6 +9482,9 @@ export function createWorld(scene) {
   // (aceras, gente, banderas, arboles, el horizonte...) y la luz y la niebla
   // pasan poco a poco a las de dentro (la luz la pone main.js). --
   const NIEBLA_INTERIOR = {
+    // 16/11: la costa de Portland (Maine) en la niebla: gris y muy cerrada
+    // (lo de lejos solo se ve por las luces que pone el faro).
+    faro: { color: new THREE.Color(0x8e9aa2), near: 6, far: 44 },
     // 13/11: la mina de Little Rock: casi a oscuras (se ve poco: ahi esta la gracia).
     mina: { color: new THREE.Color(0x140e0a), near: 10, far: 50 },
     // 14/11: el bano dorado de Mar-a-Lago (Miami): calido, dorado.
@@ -10242,6 +10446,7 @@ export function createWorld(scene) {
       + Math.sin(totalScrolled * CURVE_FREQ2 + 1.3) * CURVE_AMPLITUDE2;
     group.position.x = curveX;
 
+    actualizarFaro();   // (16/11: Portland, Maine: el haz del faro en la niebla)
     // ---- Bioma: transicion suave de color de suelo/cielo/niebla ----
     const blend = biomeBlendAt(totalScrolled);
     const cFrom = BIOME_COLORS[blend.from], cTo = BIOME_COLORS[blend.to];
@@ -10435,6 +10640,9 @@ export function createWorld(scene) {
         else if (o.cesta) moverCesta(o, dt);
         else if (o.prensa) moverPrensa(o);
         else if (o.slot) moverTragaperras(o, dt);
+        else if (o.hojas) moverHojas(o, dt);
+        else if (o.champ) moverChamp(o, dt);
+        else if (o.langosta) moverLangosta(o);
         else if (o.cartaBJ) moverCarta(o);
         else if (o.valla) moverValla(o, dt, dz);
         else if (o.anilla) moverAnilla(o);
@@ -10675,5 +10883,6 @@ export function createWorld(scene) {
     setSaco, enAguja,
     setJugadorY, detectorMina, banderaCogida: () => ultimaBandera,
     setTorre, cestaCogida: () => ultimaCesta,
+    setVelocidad, montonBajo, fotoChamp, langostaUltima: () => ultimaLangosta,
     pararRodillo, hayTragaperras, cartaCogida: () => ultimaCarta, vallaCuenta: () => vallaCuenta, anillaUltima: () => ultimaAnilla };
 }

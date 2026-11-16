@@ -366,6 +366,31 @@ const DIBUJOS = {
     x.restore();
   },
   // 14/11: los esquís cruzados con los bastones (Denver).
+  // 16/11: la manopla de lana (Burlington).
+  manopla(x) {
+    x.save(); x.translate(128, 136); x.rotate(-0.15);
+    const forma = () => { x.beginPath(); x.moveTo(-60, 90); x.lineTo(-62, -20); x.quadraticCurveTo(-60, -100, 5, -100); x.quadraticCurveTo(66, -100, 64, -20);
+      x.lineTo(62, 90); x.closePath(); x.moveTo(-62, 0); x.quadraticCurveTo(-110, -10, -100, -60); x.quadraticCurveTo(-90, -80, -62, -40); };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; forma(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; forma(); x.stroke();
+    x.fillStyle = "#e8e0d0"; forma(); x.fill();
+    x.fillStyle = "#7a3a5a"; for (const yy of [-50, 0, 50]) x.fillRect(-60, yy, 122, 14);
+    x.fillStyle = "#c8302a"; x.fillRect(-64, 70, 130, 24);
+    x.restore();
+  },
+  // 16/11: la langosta (Portland, Maine).
+  langosta(x) {
+    x.save(); x.translate(128, 128);
+    const cuerpo = () => { x.beginPath(); x.ellipse(0, 10, 34, 70, 0, 0, Math.PI * 2);
+      for (const s of [-1, 1]) { x.moveTo(s * 70, -70); x.ellipse(s * 62, -78, 26, 38, s * 0.4, 0, Math.PI * 2); } };
+    x.lineWidth = 26; x.strokeStyle = "#fff"; cuerpo(); x.stroke();
+    x.lineWidth = 8; x.strokeStyle = CONTORNO; cuerpo(); x.stroke();
+    x.fillStyle = "#d0301e"; cuerpo(); x.fill();
+    x.strokeStyle = "#d0301e"; x.lineWidth = 12; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 20, -40); x.lineTo(s * 50, -55); x.stroke(); }
+    x.strokeStyle = "#a01e12"; x.lineWidth = 5; for (const yy of [20, 40, 60]) { x.beginPath(); x.moveTo(-30, yy); x.lineTo(30, yy); x.stroke(); }
+    x.fillStyle = "#1c1c20"; for (const s of [-1, 1]) { x.beginPath(); x.arc(s * 13, -48, 6, 0, Math.PI * 2); x.fill(); }
+    x.restore();
+  },
   // 15/11: el dado (Atlantic City).
   dado(x) {
     x.save(); x.translate(128, 132); x.rotate(0.2);
