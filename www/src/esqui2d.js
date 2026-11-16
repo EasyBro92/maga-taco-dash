@@ -40,6 +40,13 @@ const PERFECTO = 0.22;
 const BOLA_R = 3.6;
 const ESCALA = 1.8;        // el esquiador, más grande para que se vea bien en vertical
 const ANCHO_VISTO = 23;    // metros que se ven de lado a lado
+// 16/11 (4): Isidro: «parece que no hay forma de perder» (sin tocar nada se
+// aguantaban más de 2 minutos). La bola, en 50 s, llega a tu paso (18 m/s);
+// luego sigue acelerando despacio hasta 21, y nunca se queda más de 35 m
+// atrás: cada tortazo se nota.
+const BOLA_V0 = 12, BOLA_HUECO = 35;
+const velBola = (t) => Math.min(21, BOLA_V0 + 6 * Math.min(1, t / 50) + 0.02 * Math.max(0, t - 50));
+const V_TACOS = 25;        // la velocidad de un salto bueno (lo normal al llegar al trampolín): con ella se dibujan los arcos de tacos
 
 // ---------------------------------------------------------------- la ladera
 // La altura del suelo en cada x: una bajada empinada (tramos más y menos
@@ -50,9 +57,9 @@ const azar = () => { semilla = (semilla * 16807) % 2147483647; return (semilla -
 let rasgos = [], rasgosHasta = 60;
 function prepararRasgos(hasta) {
   while (rasgosHasta < hasta) {
-    const x0 = rasgosHasta + 70 + azar() * 60;
+    const x0 = rasgosHasta + 110 + azar() * 60;
     const mas = Math.min(1.2, x0 / 2500);    // (cada vez más grandes)
-    rasgos.push({ x0, alto: 3.0 + azar() * 1.2 + mas, largo: 5.5 + azar() * 1.5, caida: 4 + azar() * 7 + mas * 3 });
+    rasgos.push({ x0, alto: 2.6 + azar() * 1.0 + mas, largo: 5.5 + azar() * 1.5, caida: 4 + azar() * 6 + mas * 3 });
     rasgosHasta = x0;
   }
 }
@@ -261,51 +268,30 @@ const texTaco = new THREE.CanvasTexture(lienzo("taco"));
 texTaco.colorSpace = THREE.SRGBColorSpace;
 const matTaco = new THREE.SpriteMaterial({ map: texTaco });
 let tacos = [], obstaculos = [];
-function ponerTaco(x, y, grupo = null) {
+function ponerTaco(x, y, de = "") {
   const s = new THREE.Sprite(matTaco);
   s.scale.setScalar(1.3);
   s.position.set(x, y, 0.4);
   scene.add(s);
-  tacos.push({ x, y, s, cogido: false, pop: 0, grupo, dest: null });
+  tacos.push({ x, y, s, cogido: false, pop: 0, de });
 }
-// 16/11 (3): Isidro: «los tacos a la hora de saltar no se pueden coger porque
-// salta más alto que la línea de tacos». Al despegar, los tacos del
-// trampolín (o del montón) que viene se van, deslizándose, al camino del
-// vuelo de verdad: siempre se pueden coger.
-function trayectoria() {
+// 16/11 (4): Isidro: «los tacos se alinean y se mueven según el salto que he
+// hecho; tienen que estar fijos, pero acordes con el salto». Ya no se mueven
+// nunca: cada arco se dibuja de antemano con el vuelo de un salto bueno (a
+// V_TACOS). Si vas lento o muy rápido, o saltas a destiempo, se te escapan.
+function arco(x, y, vx, vy, hastaX) {
   const pts = [];
-  let x = E.x, y = E.y, vx = E.vx, vy = E.vy;
   for (let k = 1; k < 600; k++) {
     vy -= G / 120; x += vx / 120; y += vy / 120;
-    if (y <= suelo(x)) break;
-    if (k % 3 === 0) pts.push({ x, y });
+    if (y <= suelo(x) || x > hastaX) break;
+    pts.push({ x, y });
   }
   return pts;
 }
-function recolocarTacos() {
-  const pts = trayectoria();
-  if (pts.length < 4) return;
-  const grupos = new Map();
-  for (const t of tacos) {
-    if (t.cogido || !t.grupo) continue;
-    const g = t.grupo, tramp = g.x0 !== undefined, gx = tramp ? g.x0 : g.x;
-    if (tramp ? (gx < E.x - 3 || gx > E.x + 14) : (gx < E.x || gx > E.x + 22)) continue;
-    if (!grupos.has(g)) grupos.set(g, []);
-    grupos.get(g).push(t);
-  }
-  for (const [g, lista] of grupos) {
-    lista.sort((a, b) => a.x - b.x);
-    if (g.x0 !== undefined) {
-      const n = lista.length;
-      lista.forEach((t, i) => { const p = pts[Math.min(pts.length - 1, Math.floor((0.1 + 0.78 * (i + 0.5) / n) * pts.length))]; t.dest = { x: p.x, y: p.y + 1.4 }; });
-    } else {
-      for (const t of lista) {
-        let mejor = null;
-        for (const p of pts) if (!mejor || Math.abs(p.x - t.x) < Math.abs(mejor.x - t.x)) mejor = p;
-        if (mejor && Math.abs(mejor.x - t.x) < 1.5) t.dest = { x: t.x, y: mejor.y + 1.4 };
-      }
-    }
-  }
+function alturaEn(pts, x) {
+  let m = null;
+  for (const p of pts) if (!m || Math.abs(p.x - x) < Math.abs(m.x - x)) m = p;
+  return m && Math.abs(m.x - x) < 0.5 ? m.y : null;
 }
 const matRoca = new THREE.MeshLambertMaterial({ color: 0x7a7a84, flatShading: true });
 const matRocaNieve = new THREE.MeshLambertMaterial({ color: 0xf4f8fc, flatShading: true });
@@ -319,25 +305,35 @@ function hacerRoca() {
   g.add(n);
   return g;
 }
-function cercaDeTrampolin(x) { return rasgos.some((f) => x > f.x0 - f.largo - 12 && x < f.x0 + 30); }
+// (nada de montones en los 40 m antes de un trampolín, que saltarlos te haría
+// pasar el trampolín por encima, ni debajo de su vuelo, donde no se tocan)
+function finVuelo(f) {
+  if (f.fin === undefined) {
+    const a = Math.atan(pendiente(f.x0 - 0.12));
+    const pts = arco(f.x0, suelo(f.x0), V_TACOS * Math.cos(a), V_TACOS * Math.sin(a), f.x0 + 200);
+    f.fin = pts.length ? pts[pts.length - 1].x : f.x0 + 30;
+  }
+  return f.fin;
+}
+function cercaDeTrampolin(x) { return rasgos.some((f) => x > f.x0 - f.largo - 30 && x < finVuelo(f) - 6); }
 function ponerCosas(x0) {
   if (x0 < 40) return;
   // Un arco de tacos por el vuelo de cada trampolín y, por la nieve, filas
   // de tacos, montones y rocas (con tacos encima: el premio por saltarlos).
   for (const f of rasgos) {
     if (f.x0 < x0 || f.x0 >= x0 + TROZO) continue;
-    const ang = Math.atan(pendiente(f.x0 - 0.3)), v = 19;
-    for (let t = 0.2; t < 1.8; t += 0.2) {
-      const x = f.x0 + v * Math.cos(ang) * t, y = suelo(f.x0) + v * Math.sin(ang) * t - G * t * t / 2 + 1.3;
-      if (y > suelo(x) + 1.4) ponerTaco(x, y, f);
-    }
+    // (el vuelo del trampolín sin tocar nada: te lanza él)
+    // (el primer segundo y medio del vuelo: más allá, cada velocidad cae en un sitio)
+    const a = Math.atan(pendiente(f.x0 - 0.12));
+    const pts = arco(f.x0, suelo(f.x0), V_TACOS * Math.cos(a), V_TACOS * Math.sin(a), f.x0 + 60);
+    for (let i = 12; i < Math.min(pts.length, 190); i += 20) if (pts[i].y > suelo(pts[i].x) + 1.6) ponerTaco(pts[i].x, pts[i].y + 1.4, "trampolin");
   }
   let x = x0 + 6 + azar() * 8;
   while (x < x0 + TROZO) {
     if (!cercaDeTrampolin(x)) {
       const r = azar();
-      if (r < 0.5) {
-        const roca = r < 0.2;
+      if (r < 0.7) {
+        const roca = r < 0.25;
         let m = null;
         if (roca) m = hacerRoca();
         else if (hayModelo("obstaculos/monton_nieve")) { m = modeloConContorno("obstaculos/monton_nieve"); m.scale.setScalar(1.3); }
@@ -347,13 +343,16 @@ function ponerCosas(x0) {
           scene.add(m);
           const ob = { x, alto: roca ? 1.2 : 1.05, m, tocado: false };
           obstaculos.push(ob);
-          for (let k = -1; k <= 1; k++) ponerTaco(x + k * 1.8, suelo(x + k * 1.8) + 3.2 - Math.abs(k) * 0.6, ob);
+          // (el vuelo de un salto dado 0,3 s antes del montón)
+          const xj = x - 0.3 * V_TACOS * Math.cos(Math.atan(pendiente(x))), aj = Math.atan(pendiente(xj));
+          const pts = arco(xj, suelo(xj), V_TACOS * Math.cos(aj) - IMPULSO * Math.sin(aj), V_TACOS * Math.sin(aj) + IMPULSO * Math.cos(aj), x + 6);
+          for (let k = -1; k <= 3; k += 2) { const y = alturaEn(pts, x + k); if (y !== null) ponerTaco(x + k, y + 1.4, "monton"); }
         }
       } else {
         for (let k = 0; k < 4; k++) ponerTaco(x + k * 2.2, suelo(x + k * 2.2) + 1.3);
       }
     }
-    x += 13 + azar() * 17;
+    x += 11 + azar() * 13;
   }
 }
 
@@ -488,7 +487,7 @@ function reiniciar() {
     fase: "inicio", x: 0, y: suelo(0), s: 14, vx: 14, vy: 0, ang: Math.atan(pendiente(0)), suelo: true,
     dedo: false, giroAcum: 0, tumbo: 0, intocable: 0, salto: 0, buffer: 0, desdeTrampolin: false,
     tacos: 0, vueltasTot: 0, choques: 0, perfectos: 0, combo: 0, comboMax: 0, t: 0,
-    bx: -45, bv: 12, camX: 0, camY: suelo(0), camD: 0, rastro: 0, rastroBola: 0, aterriza: null,
+    bx: -BOLA_HUECO, bv: BOLA_V0, camX: 0, camY: suelo(0), camD: 0, rastro: 0, rastroBola: 0, aterriza: null,
     ayudaSalto: false, ayudaVuelta: false,
   });
 }
@@ -501,17 +500,19 @@ function aviso(texto, sub = "", ms = 1100) { elMsg.innerHTML = texto + (sub ? `<
 // ---------------------------------------------------------------- física
 function saltar() {
   if (!E.suelo || E.tumbo > 0) return false;
+  // En el trampolín no se salta: te lanza él (y el vuelo sigue la línea de
+  // tacos). El dedo puesto sirve para empezar la voltereta al despegar.
+  if (rasgos.some((f) => E.x > f.x0 - f.largo - 1 && E.x < f.x0 + 0.5)) return false;
   const a = Math.atan(pendiente(E.x));
   E.vx = E.s * Math.cos(a) - IMPULSO * Math.sin(a);
   E.vy = E.s * Math.sin(a) + IMPULSO * Math.cos(a);
   E.suelo = false; E.giroAcum = 0; E.salto = 0; E.desdeTrampolin = false;
-  recolocarTacos();
   sndJump();
   return true;
 }
 function chocar(texto) {
-  E.tumbo = 0.7; E.intocable = 1.5; E.choques++; E.combo = 0;
-  E.s = Math.max(V_MIN, E.s * 0.5);
+  E.tumbo = 0.7; E.intocable = 1.0; E.choques++; E.combo = 0;
+  E.s = Math.max(V_MIN + 1, E.s * 0.55);
   nubeNieve(E.x, E.y + 0.6, 18, 4, 1.4);
   sndHit();
   aviso(texto);
@@ -540,8 +541,11 @@ function aterrizar() {
     const n = 5 * vueltas * E.combo;
     E.tacos += n; E.vueltasTot += vueltas;
     E.s = Math.min(V_MAX, E.s + 4 * vueltas);
+    // (y la bola se queda atrás: las volteretas son la forma de escaparse)
+    const atras = Math.min(8 * vueltas, BOLA_HUECO - (E.x - E.bx));
+    if (atras > 0) E.bx -= atras;
     const titulo = vueltas === 1 ? "¡VOLTERETA!" : `¡${vueltas} VOLTERETAS!`;
-    aviso(E.combo > 1 ? `${titulo}<br>COMBO x${E.combo}` : titulo, `+${n} tacos`);
+    aviso(E.combo > 1 ? `${titulo}<br>COMBO x${E.combo}` : titulo, `+${n} tacos` + (atras >= 1 ? ` · la bola, ${Math.round(atras)} m atrás` : ""));
     sndFanfarria(true);
   } else if (desvio < PERFECTO && E.salto > 0.5) {
     E.tacos += 2; E.perfectos++; E.s = Math.min(V_MAX, E.s + 1.5);
@@ -555,9 +559,12 @@ function paso(dt) {
   E.intocable = Math.max(0, E.intocable - dt);
   E.buffer = Math.max(0, E.buffer - dt);
   if (E.suelo) {
-    const p = pendiente(E.x), n = Math.hypot(1, p);
+    // (en el borde de un cortado manda la cuesta de detrás: así se sale
+    // volando y no se «esquía» por el cortado abajo)
+    const pA = (suelo(E.x) - suelo(E.x - 0.1)) / 0.1, pD = (suelo(E.x + 0.1) - suelo(E.x)) / 0.1;
+    const p = pD < pA - 1.5 ? pA : (pA + pD) / 2, n = Math.hypot(1, p);
     const tx = 1 / n, ty = p / n;
-    if (E.tumbo > 0) { E.tumbo -= dt; E.s = Math.max(V_MIN * 0.6, E.s - 6 * dt); }
+    if (E.tumbo > 0) { E.tumbo -= dt; E.s = Math.max(V_MIN * 0.7, E.s - 4 * dt); }
     else E.s += (G * 0.75 * (-ty) - 0.4 - 0.014 * E.s * E.s) * dt;
     E.s = Math.min(V_MAX, Math.max(E.tumbo > 0 ? 4 : V_MIN, E.s));
     const nx = E.x + E.s * tx * dt, yBal = E.y + E.s * ty * dt, yS = suelo(nx);
@@ -566,7 +573,6 @@ function paso(dt) {
       // El suelo se va (un trampolín o un cortado): a volar.
       E.suelo = false; E.vx = E.s * tx; E.vy = E.s * ty; E.y = yBal; E.giroAcum = 0; E.salto = 0;
       E.desdeTrampolin = rasgos.some((f) => Math.abs(f.x0 - E.x) < 3);
-      recolocarTacos();
     } else {
       E.y = yS;
       E.ang += (Math.atan(p) - E.ang) * Math.min(1, dt * 14);
@@ -585,17 +591,17 @@ function paso(dt) {
     if (m.tocado || Math.abs(m.x - E.x) > 0.9) continue;
     if (E.y - suelo(m.x) < m.alto * 0.8) { m.tocado = true; chocar("¡TORTAZO!<small>TOCA para saltar</small>"); }
   }
-  // Los tacos (los que van al camino del vuelo, deslizándose).
+  // Los tacos (quietos: hay que pasar por ellos).
   for (const t of tacos) {
-    if (t.cogido) continue;
-    if (t.dest) { const k = Math.min(1, dt * 9); t.x += (t.dest.x - t.x) * k; t.y += (t.dest.y - t.y) * k; }
-    if (Math.abs(t.x - E.x) > 1.6) continue;
-    if (Math.abs(t.y - (E.y + 1.4)) < (E.suelo ? 1.6 : 2.0)) { t.cogido = true; t.pop = 0.001; E.tacos++; sndPoint(); }
+    // (un círculo alrededor del cuerpo: con la cuesta, una caja dejaba coger
+    // tacos altos sin saltar)
+    if (t.cogido || Math.abs(t.x - E.x) > 1.6) continue;
+    if (Math.hypot(t.x - E.x, t.y - (E.y + 1.4)) < 1.3) { t.cogido = true; t.pop = 0.001; E.tacos++; sndPoint(); }
   }
   // La bola: va cogiendo velocidad; si te alcanza, se acabó.
-  E.bv = 12 + E.t * 0.04;
+  E.bv = velBola(E.t);
   E.bx += E.bv * dt;
-  if (E.bx < E.x - 70) E.bx = E.x - 70;   // (no se queda demasiado atrás: siempre aprieta)
+  if (E.bx < E.x - BOLA_HUECO) E.bx = E.x - BOLA_HUECO;   // (no se queda atrás: siempre aprieta)
   if (E.bx + BOLA_R * 0.7 >= E.x) acabar();
 }
 
@@ -610,16 +616,16 @@ function dibujar(dt) {
   for (const i of [...trozos.keys()]) if (i < i0 - 1) quitarTrozo(i);
   tacos = tacos.filter((t) => { if (t.x < E.x - 60) { scene.remove(t.s); return false; } return true; });
   obstaculos = obstaculos.filter((m) => { if (m.x < E.x - 60) { scene.remove(m.m); return false; } return true; });
-  // Los tacos flotan un poco; los cogidos crecen y se deshacen.
+  // Los tacos están quietos (16/11: nada de moverse sin motivo); los cogidos
+  // crecen y se deshacen.
   for (const t of tacos) {
-    if (t.pop) {
-      t.pop += dt;
-      if (!t.clonado) { t.clonado = true; t.s.material = matTaco.clone(); }
-      const u = Math.min(1, t.pop / 0.28);
-      t.s.scale.setScalar(1.3 * (1 + u * 0.9));
-      t.s.material.opacity = 1 - u;
-      if (u >= 1) { t.s.visible = false; t.pop = 0; }
-    } else if (!t.cogido) { t.s.position.x = t.x; t.s.position.y = t.y + (t.dest ? 0 : 0.18 * Math.sin(reloj * 3 + t.x * 0.7)); }
+    if (!t.pop) continue;
+    t.pop += dt;
+    if (!t.clonado) { t.clonado = true; t.s.material = matTaco.clone(); }
+    const u = Math.min(1, t.pop / 0.28);
+    t.s.scale.setScalar(1.3 * (1 + u * 0.9));
+    t.s.material.opacity = 1 - u;
+    if (u >= 1) { t.s.visible = false; t.pop = 0; }
   }
   // El esquiador.
   esquiador.position.set(E.x, E.y, 0);
@@ -779,6 +785,7 @@ window.__esqui = {
   avanzar: (seg, cada) => { for (let k = 0; k < seg * 120; k++) { if (cada) cada(); if (E.fase !== "juego") break; paso(1 / 120); } return window.__esqui.estado(); },
   sinDibujar: (v) => { sinDibujar = v; }, dibujar: (dt = 1 / 60) => dibujar(dt), suelo, pendiente, rasgos: () => rasgos, montones: () => obstaculos,
   verde: () => matEsqui.color.getHex() === VERDE.getHex(),
+  tacos: () => tacos,
 };
 
 // ---------------------------------------------------------------- arranque
