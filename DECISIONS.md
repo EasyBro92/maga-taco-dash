@@ -2872,3 +2872,38 @@ los 10 objetos de cada uno:
   pancarta.
 
 Falta el veredicto de Isidro.
+
+## 25/11/2026: Denver se juega esquiando, de lado (v77)
+
+Isidro quería cambiar «entero» algunos niveles: los mismos objetos y la misma
+estética, pero otra forma de correr. El primero es Denver, una bajada en 2D de
+lado del género de Ski Safari, pero original. Se probó aparte en `esqui.html`
+(16/11). Tras sus cambios dijo «bien, mételo», y ahora el nivel 29 es la
+bajada (`modo: "esqui"` en levels.js, el juego en `src/esqui2d.js`).
+
+- **La bajada:** es la misma ladera en cada intento (semilla 1832). Mide
+  2.400 m, con el punto de control a la mitad, y acaba en la plaza del
+  Capitolio de Colorado. En la plaza están el arco de Denver, la bandera de
+  cuadros, el oso azul, la Union Station y la torre del reloj.
+- **Los premios:**
+  - Los 10 esquís de Denver van al principio del vuelo de los trampolines.
+  - Las 3 chapas van a casi un segundo de vuelo: solo llega quien va a buena
+    velocidad.
+  - Los obstáculos son los de la calle: montones de nieve, trineos y rocas.
+    Los carteles de COLORADO = ROJO van detrás de la pista.
+- **Lo del juego de siempre:** los tacos, el premio por estrellas, el voto
+  del estado, la caja, las misiones, el pase, la pausa y la pantalla de
+  choque. Esa pantalla tiene «seguir aquí» pagando tacos (la bola vuelve a
+  35 m) y «desde el punto de control». El muñeco es el que se lleve: el
+  líder y la ropa de la tienda.
+- **Cómo se monta:** el esquí lleva su propio lienzo encima del de la calle.
+  Mientras se esquía, la calle no se dibuja. Lo de la calle de Denver se
+  queda en levels.js por si se quiere volver a ella.
+
+Probado con el piloto automático en tamaño móvil:
+
+- Llega a la meta y se guarda superado.
+- Funcionan el punto de control, «seguir aquí», repetir y la pausa.
+- Coge 6-8 de los 10 esquís y 0-1 de las 3 chapas.
+
+Falta el veredicto de Isidro, en un móvil de verdad.

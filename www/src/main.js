@@ -611,6 +611,19 @@ document.getElementById("mapaHistoria").addEventListener("click", mostrarPrologo
 let cargaNivel = 0;
 async function empezarNivel(n, boton = document.getElementById("mapaJugar")) {
   if (!nivelAbierto(n, getNiveles()) && !PRUEBA) return;
+  if (n.modo === "esqui") {
+    const yo = ++cargaNivel;
+    document.body.classList.add("cargandoNivel");
+    if (boton) boton.textContent = "…";
+    try {
+      nivelActual = n;
+      unlockAudio();
+      intento = nuevoIntento();
+      await empezarEsqui(n);
+      startMusic(n.id);
+    } finally { if (yo === cargaNivel) document.body.classList.remove("cargandoNivel"); }
+    return;
+  }
   // Bajar los edificios del nivel la primera vez (se quedan para la siguiente).
   // 13/11 (auditoria): mientras baja, el menu y el mapa no responden, y si se
   // pide otro nivel a la vez solo arranca el ultimo.
@@ -630,6 +643,66 @@ async function empezarNivel(n, boton = document.getElementById("mapaJugar")) {
   resetRun();
   arrancar();
 }
+// ---- 24/11/2026: Denver se juega esquiando, de lado (esqui2d.js) ----
+// Isidro, tras probar la pagina de prueba: «bien, mételo». El nivel 29 ya no
+// es la calle: es la bajada de las Rocosas hasta el Capitolio de Colorado,
+// con su propio lienzo encima del de la calle (que mientras no se dibuja).
+// Los premios, el voto del estado, las estrellas, las chapas, los esquis de
+// Denver, el punto de control, la pausa y la pantalla de choque son los de
+// siempre.
+let esqui = null;
+const enEsqui = () => !!(nivelActual && nivelActual.modo === "esqui");
+async function empezarEsqui(n, desde = 0) {
+  const { montarEsqui } = await import("./esqui2d.js");
+  esqui = await montarEsqui(document.getElementById("stage"), {
+    nivel: {
+      largo: n.largo, control: n.control, semilla: n.semilla, objeto: n.objeto, lang: getLang(),
+      titulo: `${t("nivelN").replace("{n}", n.numero)} · ${n.nombre} · ${n.lugar}`,
+      metaNombre: n.metaNombre ? (n.metaNombre[getLang()] || n.metaNombre.es) : "",
+      chapasAntes: (getNiveles()[n.id] || {}).chapas || [],
+      yaObjeto: (i) => !!(intento && intento.objetos[i]),
+      yaChapa: (i) => !!(intento && intento.chapas[i]),
+      alObjeto: (i) => cogerObjeto(i),
+      alChapa: (i) => {
+        if (!intento || intento.chapas[i]) return;
+        intento.chapas[i] = true;
+        pintarChapas(); sndChapa(); vibrate([20, 30, 20]);
+      },
+      alControl: (r) => {
+        if (!intento || intento.control) return;
+        intento.control = { tacos: Math.floor(r.tacos) };
+        avisoVerde(`${icono("control")} ${t("controlGuardado")}`);
+        vibrate(20);
+      },
+      alChocar: () => { if (intento) intento.chocado = true; vibrate([60, 30, 60]); },
+      alMeta: (r) => { tacosThisRun = r.tacos; distance = n.largo; completarNivel(); },
+      alPillado: (r) => {
+        tacosThisRun = r.tacos; distance = r.x;
+        if (intento) intento.chocado = true;
+        gameState = "gameover";
+        vibrate([80, 40, 80]);
+        mostrarChoqueNivel();
+      },
+      alPausa: () => pausar(),
+    },
+    crearPersonaje: () => { const c = createCharacter(getSave().equipped, lider); aplicarTienda(c); return c; },
+  });
+  // (lo de cada carrera, como en resetRun)
+  callarVoces();
+  distance = desde;
+  tacosThisRun = desde && intento && intento.control ? intento.control.tacos : 0;
+  lastTacoShown = Math.floor(tacosThisRun);
+  jefesCarrera = 0; paseContado = false; pausado = false; cuenta = 0;
+  if (!desde) misiones.empezarPartida();
+  gameState = "esqui";
+  for (const id of ["mapaGira", "startScreen", "choqueNivel", "gameOverScreen", "nivelFin", "pausaOverlay", "hud", "cuentaAtras",
+    "shopOverlay", "paseOverlay", "leaderboardOverlay", "sinFinOverlay", "settingsOverlay", "cuentaOverlay", "bannerNivel", "tramoBanner"]) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+  }
+  esqui.empezar(desde, Math.floor(tacosThisRun));
+}
+
 // Lo que dura todo un intento de un nivel (aunque se siga desde el punto de
 // control): si se ha chocado alguna vez, las chapas y cuantas veces se ha
 // pagado por seguir.
@@ -3702,6 +3775,13 @@ function seguirAqui() {
   if (!pagar(precioSeguir())) return;
   if (!intento) intento = nuevoIntento();
   intento.pagos++;
+  if (enEsqui() && esqui) {
+    gameState = "esqui";
+    for (const id of ["choqueNivel", "gameOverScreen"]) document.getElementById(id).classList.add("hidden");
+    esqui.seguir(Math.floor(tacosThisRun));
+    sndPoint();
+    return;
+  }
   for (const o of world.obstacles) if (!o.smashed && o.z > -6 && o.z < 4) world.smash(o);
   character.setSlidePose(false);
   invulnerable = INVULNERABLE;
@@ -3720,7 +3800,12 @@ function seguirAqui() {
 
 // ---- Pausa (27/10/2026): boton arriba a la derecha, y sola al salir de la app ----
 function pausar() {
-  if (gameState !== "playing" || pausado) return;
+  if ((gameState !== "playing" && gameState !== "esqui") || pausado) return;
+  if (gameState === "esqui") {
+    esqui.pausa(true);
+    const e = esqui.estado();
+    distance = e.x; tacosThisRun = e.tacos;
+  }
   pausado = true;
   sirena(false);
   cuenta = 0;
@@ -3735,6 +3820,13 @@ function pausar() {
 }
 function reanudar() {
   if (!pausado) return;
+  if (gameState === "esqui") {
+    pausado = false;
+    document.getElementById("pausaOverlay").classList.add("hidden");
+    pausarMusica(false);
+    esqui.pausa(false);
+    return;
+  }
   if ((tramoMostrado && tramoMostrado.tipo === "persecucion") || persigueLeft > 0) sirena(true);
   document.getElementById("pausaOverlay").classList.add("hidden");
   pausarMusica(false);
@@ -3754,6 +3846,7 @@ document.getElementById("pausaRepetir").addEventListener("click", () => {
   pausarMusica(false);
   cerrarCarrera();
   if (nivelActual) intento = nuevoIntento();
+  if (enEsqui()) { pausado = false; empezarEsqui(nivelActual); return; }
   resetRun();
   arrancar();
 });
@@ -3798,6 +3891,7 @@ document.getElementById("choqueSeguirAqui").addEventListener("click", seguirAqui
 document.getElementById("seguirSinFin").addEventListener("click", seguirAqui);
 document.getElementById("choqueControl").addEventListener("click", () => {
   if (!intento.control) return;
+  if (enEsqui()) { empezarEsqui(nivelActual, nivelActual.control); return; }
   resetRun(salidaControl(nivelActual));
   arrancar();
   avisoVerde(`${icono("control")} ${t("controlGuardado")}`);
@@ -3805,6 +3899,7 @@ document.getElementById("choqueControl").addEventListener("click", () => {
 document.getElementById("choqueRepetir").addEventListener("click", () => {
   cerrarCarrera();
   intento = nuevoIntento();
+  if (enEsqui()) { empezarEsqui(nivelActual); return; }
   resetRun();
   arrancar();
 });
@@ -3820,6 +3915,8 @@ let firstFrame = true;
 
 function tick() {
   requestAnimationFrame(tick);
+  // (mientras se esquia, la calle no se dibuja: el esqui lleva su propio lienzo)
+  if (esqui && esqui.visible() && !firstFrame) { clock.getDelta(); return; }
   frame();
 }
 
@@ -4654,6 +4751,7 @@ function marcarIdioma() {
   document.getElementById("settingsLangEn").classList.toggle("equippedBtn", en);
 }
 function volverAlMenu() {
+  if (esqui) esqui.parar();
   gameState = "menu";
   apagarSirenas();
   document.getElementById("rafagaAviso").classList.add("hidden"); rafaga.avisada = false;
@@ -4700,6 +4798,7 @@ document.getElementById("nivelFinSiguiente").addEventListener("click", () => {
 });
 document.getElementById("nivelFinRepetir").addEventListener("click", () => {
   intento = nuevoIntento();
+  if (enEsqui()) { empezarEsqui(nivelActual); return; }
   resetRun();
   arrancar();
 });
