@@ -2907,3 +2907,29 @@ Probado con el piloto automático en tamaño móvil:
 - Coge 6-8 de los 10 esquís y 0-1 de las 3 chapas.
 
 Falta el veredicto de Isidro, en un móvil de verdad.
+
+## 25/11/2026 (2): el Esquí pasa a contenido desbloqueable (v78)
+
+Isidro, tras la v77: «Denver está bien; el nivel al estilo Ski Safari,
+prefiero que quede en el contenido desbloqueable». Así queda:
+
+- **Denver (nivel 29)** vuelve a ser la calle de siempre: el 16th Street Mall,
+  de 3.300 m, con el punto de control a 1.870 m. Lleva todo lo de antes: las
+  bolas de nieve, el eslalon y el Toro.
+- **El modo Esquí** es un botón nuevo en el menú, entre «Sin fin» y «Tienda».
+  - Tiene candado hasta superar Denver, como el Sin fin con el nivel 1. Al
+    superarlo, la pantalla de victoria avisa: «¡Modo Esquí desbloqueado!».
+  - Es la misma bajada de la v77: 2.400 m de las Rocosas al Capitolio, siempre
+    la misma ladera, con los 10 esquís y las 3 chapas.
+  - No tiene punto de control ni «seguir aquí».
+  - Los premios son de cada bajada.
+  - Los tacos que se cogen van a la hucha (con el finde x2) y cuentan para el
+    pase y las misiones. No cuentan para el ranking del Sin fin.
+- **El final** lo pone el propio esquí. Sale «¡AL CAPITOLIO!» o «¡Te pilló la
+  bola!», con los tacos, los esquís, las chapas y el récord de ese móvil (los
+  metros, o las llegadas y lo mejor cogido). Debajo, los botones OTRA VEZ y
+  SALIR.
+- **La pausa** es la del juego: Seguir, Repetir o Salir.
+- El código para jugar un nivel esquiando (`modo: "esqui"`) se queda en
+  main.js por si otro nivel lo usa más adelante, pero ahora ningún nivel lo
+  lleva.

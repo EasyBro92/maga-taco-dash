@@ -1799,13 +1799,13 @@ const CALLES = [
     // pista de esqui de las Rocosas con las puertas del eslalon (tacos por
     // puerta, oro cada cinco seguidas). Pasa el Toro y hay pancartas de
     // Espana: COLORADO = ROJO.
-    // 24/11/2026: Isidro: «bien, mételo». Ya no se corre por la calle: se
-    // baja esquiando, de lado, de las Rocosas al Capitolio (esqui2d.js, con
-    // `modo: "esqui"`): 2.400 m con el punto de control a la mitad. Lo de la
-    // calle se queda aqui por si se quiere volver a ella.
-    id: "denver", nombre: "16th Street Mall", lugar: "Denver, Colorado", listo: true, modo: "esqui",
+    // 24/11/2026: se paso a jugar esquiando (v77); el 25/11 Isidro: «Denver
+    // esta bien; el esqui, prefiero que quede en el contenido desbloqueable».
+    // Vuelve la calle, y la bajada al Capitolio es el modo «Esqui» del menu,
+    // que se abre al superar este nivel (ESQUI, mas abajo).
+    id: "denver", nombre: "16th Street Mall", lugar: "Denver, Colorado", listo: true,
     zona: "city", carpeta: "denver", luz: "invierno", semilla: 1832,
-    largo: 2400, linea: 11.5, velMax: 25,
+    largo: 3300, linea: 11.5, velMax: 25,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     kit: { minPlantas: 3, maxPlantas: 7, estilo: "denver" },
     horizonte: "denver",
@@ -1834,7 +1834,7 @@ const CALLES = [
       [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
       [3140, 3290, "sprint", { titulo: "sprint_capitolio_co" }],
     ],
-    control: 1200, caja: 1990,
+    control: 1870, caja: 1990,
     interior: { rango: [1412, 1828], tipo: "esqui", aire: true, sinEdificios: [1400, 1840] },
     sinEdificios: [3260, 4000],
     chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
@@ -3249,6 +3249,16 @@ export function nivelAbierto(n, superados) {
 // El Sin fin se abre al superar el primer nivel.
 export function sinFinAbierto(superados) {
   return !!superados[NIVELES[0].id];
+}
+
+// 25/11/2026: el modo Esqui (esqui2d.js): la bajada de las Rocosas al
+// Capitolio de Colorado, de lado, como contenido que se desbloquea al
+// superar Denver. Siempre la misma ladera (la semilla de Denver), sin punto
+// de control; los tacos que se cogen van a la hucha.
+export const ESQUI = { nivel: "denver", largo: 2400, semilla: 1832, objeto: "esquis",
+  metaNombre: { es: "el Capitolio de Colorado", en: "the Colorado Capitol" } };
+export function esquiAbierto(superados) {
+  return !!superados[ESQUI.nivel];
 }
 
 export function nivelPorId(id) {

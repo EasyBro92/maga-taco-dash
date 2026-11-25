@@ -72,6 +72,13 @@ const TEXTOS = {
     instrNivel: "Baja de las Rocosas hasta {m}. Por el camino, los 10 esquís de Denver y las 3 chapas.",
     finTexto: "Has bajado <b>{d} m</b><br>{t} tacos · {v} volteretas · combo x{c}<br>Récord: {r} m",
     pausa: "Pausa",
+    salir: "SALIR",
+    instrExtra: "Baja de las Rocosas hasta {m}. Por el camino, los 10 esquís y las 3 chapas; los tacos que cojas van a tu hucha.",
+    finExtra: "Has bajado <b>{d} de {l} m</b><br>{t} tacos para la hucha · {v} volteretas · combo x{c}",
+    finExtraMeta: "<b>{t} tacos</b> para la hucha<br>{v} volteretas · combo x{c}",
+    premiosExtra: "Esquís: {o}/10 · chapas: {c}/3",
+    recordExtra: "Récord: {r} m",
+    recordExtraMeta: "Llegadas al Capitolio: {n} · lo mejor: {o}/10 esquís y {c}/3 chapas",
   },
   en: {
     tortazo: "WIPEOUT!", sueltaVerde: "Let go when the skis turn GREEN", tocaSaltar: "TAP to jump",
@@ -89,6 +96,13 @@ const TEXTOS = {
     instrNivel: "Ski down the Rockies to {m}. On the way: Denver's 10 skis and the 3 badges.",
     finTexto: "You skied <b>{d} m</b><br>{t} tacos · {v} flips · combo x{c}<br>Best: {r} m",
     pausa: "Pause",
+    salir: "EXIT",
+    instrExtra: "Ski down the Rockies to {m}. On the way: the 10 skis and the 3 badges; the tacos you grab go to your piggy bank.",
+    finExtra: "You skied <b>{d} of {l} m</b><br>{t} tacos to your piggy bank · {v} flips · combo x{c}",
+    finExtraMeta: "<b>{t} tacos</b> to your piggy bank<br>{v} flips · combo x{c}",
+    premiosExtra: "Skis: {o}/10 · badges: {c}/3",
+    recordExtra: "Best: {r} m",
+    recordExtraMeta: "Capitol finishes: {n} · best: {o}/10 skis and {c}/3 badges",
   },
 };
 const tx = (k, vars = {}) => {
@@ -102,7 +116,14 @@ const tx = (k, vars = {}) => {
 // NIV: lo que manda main.js (largo, semilla, punto de control, objeto, textos
 // y los avisos de vuelta: alObjeto, alChapa, alControl, alChocar, alMeta,
 // alPillado, alPausa). Sin NIV, la bajada sin fin de prueba.
+// 25/11/2026: con NIV.extra es el modo Esquí del menú (contenido que se
+// desbloquea): la misma bajada al Capitolio, pero los premios son de cada
+// bajada, el final lo pone esto mismo (OTRA VEZ / SALIR, con su récord) y a
+// main.js solo se le avisa: alTerminar (los tacos), alOtraVez y alSalir.
 let NIV = null;
+const esExtra = () => !!(NIV && NIV.extra);
+const tengoObjeto = (i) => (esExtra() ? E.objs.has(i) : !!(NIV && NIV.yaObjeto && NIV.yaObjeto(i)));
+const tengoChapa = (i) => (esExtra() ? E.chps.has(i) : !!(NIV && ((NIV.yaChapa && NIV.yaChapa(i)) || (NIV.chapasAntes && NIV.chapasAntes[i]))));
 
 // ---------------------------------------------------------------- la ladera
 // La altura del suelo en cada x: una bajada empinada (tramos más y menos
@@ -175,6 +196,7 @@ const ESTILO = `
 .esqCapa h1 { margin: 0 0 6px; font-size: 34px; color: #ffd84a; text-shadow: 0 3px 0 #1c2a4a; }
 .esqCapa p { margin: 7px 0; font-size: 18px; line-height: 1.35; }
 .esqBoton { margin-top: 14px; background: #c8302a; border-radius: 18px; padding: 10px 26px; font-size: 23px; font-weight: 700; box-shadow: 0 4px 0 #7a1a16; }
+.esqSalir { background: rgba(255,255,255,0.92); color: #1c2a4a; box-shadow: 0 4px 0 rgba(28,42,74,0.4); font-size: 19px; padding: 8px 22px; }
 .esqVerde { color: #5af07a; }
 .esqOculto { display: none !important; }
 .esqPausa { position: absolute; right: 12px; top: calc(8px + env(safe-area-inset-top)); width: 42px; height: 42px; border-radius: 50%; border: 0;
@@ -205,7 +227,7 @@ cont.innerHTML = `
   <div class="esqHud esqBola"></div>
   <div class="esqHud esqMsg"></div>
   <button class="esqPausa" type="button" aria-label="Pausa">❚❚</button>
-  <div class="esqCapa esqOculto"><h1></h1><div class="esqTexto"></div><div class="esqBoton"></div></div>`;
+  <div class="esqCapa esqOculto"><h1></h1><div class="esqTexto"></div><div class="esqBoton"></div><div class="esqBoton esqSalir esqOculto"></div></div>`;
 const $ = (c) => cont.querySelector("." + c);
 
 const renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 2, powerPreference: "high-performance" });
@@ -466,7 +488,7 @@ function ponerCosas(x0) {
     const sitios = [];
     for (let i = 12; i < Math.min(pts.length, 190); i += 20) if (pts[i].y > suelo(pts[i].x) + 1.6) sitios.push(pts[i]);
     sitios.forEach((p, k) => {
-      if (NIV && f.objeto !== undefined && k === Math.min(2, sitios.length - 1) && !(NIV.yaObjeto && NIV.yaObjeto(f.objeto))) ponerPremio(p.x, p.y + 1.4, "objeto", f.objeto);
+      if (NIV && f.objeto !== undefined && k === Math.min(2, sitios.length - 1) && !tengoObjeto(f.objeto)) ponerPremio(p.x, p.y + 1.4, "objeto", f.objeto);
       // (la chapa, a casi un segundo de vuelo: solo llega quien va a buena velocidad)
       else if (NIV && f.chapa !== undefined && k === Math.min(4, sitios.length - 1) && k > 2) ponerPremio(p.x, p.y + 1.4, "chapa", f.chapa);
       else ponerTaco(p.x, p.y + 1.4, "trampolin");
@@ -676,6 +698,7 @@ function reiniciar(desde = 0, tacosIni = 0) {
     tacos: tacosIni, vueltasTot: 0, choques: 0, perfectos: 0, combo: 0, comboMax: 0, t: desde ? 60 : 0,
     bx: x0 - BOLA_HUECO, bv: BOLA_V0, camX: x0 + 7.5, camY: suelo(x0) - 11, camD: 0, rastro: 0, rastroBola: 0, aterriza: null,
     ayudaSalto: !!desde, ayudaVuelta: !!desde, controlHecho: !!desde, finT: 0, avisado: false,
+    objs: new Set(), chps: new Set(),
   });
   premiosPintados = "";
 }
@@ -689,6 +712,7 @@ function mostrarCapa(titulo, lineas, boton) {
   capa.querySelector("h1").textContent = titulo;
   $("esqTexto").innerHTML = lineas.map((l) => `<p>${l}</p>`).join("");
   $("esqBoton").textContent = boton;
+  $("esqSalir").classList.add("esqOculto");
   capa.classList.remove("esqOculto");
 }
 const ocultarCapa = () => capa.classList.add("esqOculto");
@@ -797,8 +821,8 @@ function paso(dt) {
     if (Math.hypot(t.x - E.x, t.y - (E.y + 1.4)) < (t.premio ? 1.5 : 1.3)) {
       t.cogido = true; t.pop = 0.001;
       if (!t.premio) { E.tacos++; sndPoint(); }
-      else if (t.premio === "objeto") { if (NIV.alObjeto) NIV.alObjeto(t.i); }
-      else if (NIV.alChapa) NIV.alChapa(t.i);
+      else if (t.premio === "objeto") { if (esExtra()) E.objs.add(t.i); if (NIV.alObjeto) NIV.alObjeto(t.i); }
+      else { if (esExtra()) E.chps.add(t.i); if (NIV.alChapa) NIV.alChapa(t.i); }
     }
   }
   // El punto de control, a la mitad.
@@ -840,7 +864,8 @@ function pasoMeta(dt) {
   }
   if (E.metaT > 3 && !E.avisado) {
     E.avisado = true;
-    if (NIV && NIV.alMeta) NIV.alMeta({ x: E.x, tacos: E.tacos });
+    if (esExtra()) acabarExtra(true);
+    else if (NIV && NIV.alMeta) NIV.alMeta({ x: E.x, tacos: E.tacos });
   }
 }
 // Te pilla la bola: en la prueba, la pantalla de fin; en el nivel, la del juego.
@@ -858,6 +883,7 @@ function pasoPillado(dt) {
   if (E.finT > 0.15) esquiador.visible = false;
   if (E.finT > 1.1 && !E.avisado) {
     E.avisado = true;
+    if (esExtra()) { acabarExtra(false); return; }
     activo = false;
     if (NIV.alPillado) NIV.alPillado({ x: E.x, tacos: E.tacos });
   }
@@ -868,9 +894,9 @@ const elDist = $("esqDist"), elTacos = $("esqTacos").querySelector("span"), elBo
 let reloj = 0, premiosPintados = "", faltaPintada = -1;
 function pintarPremios() {
   if (!NIV) return;
-  const chapas = CHAPAS_EN.map((_, i) => !!((NIV.yaChapa && NIV.yaChapa(i)) || (NIV.chapasAntes && NIV.chapasAntes[i])));
+  const chapas = CHAPAS_EN.map((_, i) => tengoChapa(i));
   let n = 0;
-  for (let i = 0; i < OBJETOS; i++) if (NIV.yaObjeto && NIV.yaObjeto(i)) n++;
+  for (let i = 0; i < OBJETOS; i++) if (tengoObjeto(i)) n++;
   const clave = chapas.join() + "/" + n;
   if (clave === premiosPintados) return;
   premiosPintados = clave;
@@ -1017,19 +1043,41 @@ function acabarLibre() {
   if (d > record) { record = d; try { localStorage.setItem("esqui_record", String(d)); } catch (e) { /* sin guardar */ } }
   mostrarCapa(tx("pillado"), [tx("finTexto", { d, t: E.tacos, v: E.vueltasTot, c: E.comboMax, r: record })], tx("otraVez"));
 }
+// El final del modo Esquí: el récord (en este móvil), los tacos a la hucha
+// y OTRA VEZ / SALIR.
+const recordExtra = { m: 0, llegadas: 0, o: 0, c: 0 };
+try { Object.assign(recordExtra, JSON.parse(localStorage.getItem("esqui_extra") || "{}")); } catch (e) { /* sin guardar */ }
+function acabarExtra(meta) {
+  E.fase = "fin"; finDesde = performance.now();
+  const d = Math.min(NIV.largo, Math.floor(E.x)), o = E.objs.size, c = E.chps.size;
+  const r = recordExtra;
+  r.m = Math.max(r.m, d);
+  if (meta) { r.llegadas++; if (o + c > r.o + r.c || (o + c === r.o + r.c && c > r.c)) { r.o = o; r.c = c; } }
+  try { localStorage.setItem("esqui_extra", JSON.stringify(r)); } catch (e) { /* sin guardar */ }
+  const v = { d, l: NIV.largo, t: E.tacos, v: E.vueltasTot, c: E.comboMax };
+  const lineas = [meta ? tx("finExtraMeta", v) : tx("finExtra", v), tx("premiosExtra", { o, c }),
+    r.llegadas ? tx("recordExtraMeta", { n: r.llegadas, o: r.o, c: r.c }) : tx("recordExtra", { r: r.m })];
+  mostrarCapa(meta ? tx("meta") : tx("pillado"), lineas, tx("otraVez"));
+  $("esqSalir").textContent = tx("salir");
+  $("esqSalir").classList.remove("esqOculto");
+  if (NIV.alTerminar) NIV.alTerminar({ x: d, tacos: E.tacos, meta, objetos: o, chapas: c });
+}
 function instrucciones() {
   const l = [...tx("instr")];
-  if (NIV) l.unshift(tx("instrNivel", { m: NIV.metaNombre || "" }));
+  if (esExtra()) l.unshift(tx("instrExtra", { m: NIV.metaNombre || "" }));
+  else if (NIV) l.unshift(tx("instrNivel", { m: NIV.metaNombre || "" }));
   return l;
 }
 function dedoAbajo(e) {
   if (cont.style.display !== "block") return;
-  if (e && e.target && e.target.closest && e.target.closest(".esqPausa")) return;
+  if (e && e.target && e.target.closest && e.target.closest(".esqPausa, .esqSalir")) return;
   if (e && e.cancelable) e.preventDefault();
   unlockAudio();
   if (E.fase === "espera") { E.fase = "juego"; ocultarCapa(); antes = performance.now(); return; }
   if (E.fase === "fin") {
-    if (performance.now() - finDesde > 700) { reiniciar(); E.fase = "juego"; ocultarCapa(); }
+    if (performance.now() - finDesde < 700) return;
+    if (esExtra()) { if (NIV.alOtraVez) NIV.alOtraVez(); }
+    else { reiniciar(); E.fase = "juego"; ocultarCapa(); }
     return;
   }
   if (E.fase !== "juego") return;
@@ -1043,6 +1091,7 @@ window.addEventListener("pointercancel", dedoArriba);
 window.addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat && cont.style.display === "block") dedoAbajo(e); });
 window.addEventListener("keyup", (e) => { if (e.code === "Space") dedoArriba(); });
 $("esqPausa").addEventListener("click", () => { if (NIV && NIV.alPausa && E.fase === "juego") NIV.alPausa(); });
+$("esqSalir").addEventListener("click", () => { if (esExtra() && E.fase === "fin" && NIV.alSalir) NIV.alSalir(); });
 
 let activo = false, antes = 0, sinDibujar = false;
 function arrancarBucle() {
@@ -1094,14 +1143,15 @@ export async function montarEsqui(padre, opciones = {}) {
 }
 const controlador = {
   // Empieza (o vuelve a empezar desde el punto de control) y espera un toque.
-  empezar(desde = 0, tacosIni = 0) {
+  // (breve: sin las instrucciones, para OTRA VEZ)
+  empezar(desde = 0, tacosIni = 0, breve = false) {
     cont.style.display = "block";
     medir();
     reiniciar(desde, tacosIni);
     faltaPintada = -1;
     elMsg.style.opacity = 0; msgHasta = 0;
     if (desde) mostrarCapa(tx("titulo"), [], tx("seguir"));
-    else mostrarCapa(tx("titulo"), instrucciones(), tx("empezar"));
+    else mostrarCapa(tx("titulo"), breve ? [] : instrucciones(), tx("empezar"));
     arrancarBucle();
   },
   // Pagado «seguir aquí»: la bola atrás, de pie y a esperar un toque.

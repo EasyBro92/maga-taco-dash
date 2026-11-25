@@ -10,7 +10,7 @@ import {
 import { getSave, addTacos, spendTacos, reportRunScore, getSettings, updateSettings, resetProgress, getNiveles, guardarNivel, estrellasDe, persistSave } from "./save.js";
 import { FORMAS, CENTROS } from "./mapa-eeuu.js";
 import { ACTOS, PROLOGO, TOTAL_VOTOS, PARA_GANAR, nombreEstado, votosGanados, postDe } from "./historia.js";
-import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, usaKit, hitosDeNivel, salidaControl, OBJETOS_POR_NIVEL, PREMIO_OBJETOS } from "./levels.js";
+import { NIVELES, piezasDeNivel, nivelAbierto, sinFinAbierto, esquiAbierto, ESQUI, usaKit, hitosDeNivel, salidaControl, OBJETOS_POR_NIVEL, PREMIO_OBJETOS } from "./levels.js";
 import { icono, pintarIconos } from "./iconos.js";
 import { lienzo as lienzoPegatina, urlPegatina } from "./pegatinas.js";
 import { abrirTienda, aplicarTienda } from "./tienda.js";
@@ -643,14 +643,14 @@ async function empezarNivel(n, boton = document.getElementById("mapaJugar")) {
   resetRun();
   arrancar();
 }
-// ---- 24/11/2026: Denver se juega esquiando, de lado (esqui2d.js) ----
-// Isidro, tras probar la pagina de prueba: «bien, mételo». El nivel 29 ya no
-// es la calle: es la bajada de las Rocosas hasta el Capitolio de Colorado,
-// con su propio lienzo encima del de la calle (que mientras no se dibuja).
-// Los premios, el voto del estado, las estrellas, las chapas, los esquis de
-// Denver, el punto de control, la pausa y la pantalla de choque son los de
-// siempre.
-let esqui = null;
+// ---- 24/11/2026: niveles que se juegan esquiando, de lado (esqui2d.js) ----
+// Un nivel con `modo: "esqui"` es la bajada con su propio lienzo encima del
+// de la calle (que mientras no se dibuja), con los premios, el voto, las
+// estrellas, las chapas, el punto de control, la pausa y la pantalla de
+// choque de siempre. (Denver lo fue en la v77; el 25/11 Isidro prefirio que
+// el esqui fuera contenido desbloqueable: ahora es el modo Esqui del menu,
+// empezarEsquiExtra, mas abajo, y ningun nivel lleva ya ese modo.)
+let esqui = null, esquiExtra = false;
 const enEsqui = () => !!(nivelActual && nivelActual.modo === "esqui");
 async function empezarEsqui(n, desde = 0) {
   const { montarEsqui } = await import("./esqui2d.js");
@@ -687,10 +687,15 @@ async function empezarEsqui(n, desde = 0) {
     },
     crearPersonaje: () => { const c = createCharacter(getSave().equipped, lider); aplicarTienda(c); return c; },
   });
-  // (lo de cada carrera, como en resetRun)
+  esquiExtra = false;
+  prepararEsqui(desde, desde && intento && intento.control ? intento.control.tacos : 0);
+  esqui.empezar(desde, Math.floor(tacosThisRun));
+}
+// (lo de cada carrera, como en resetRun, y fuera los menus)
+function prepararEsqui(desde, tacos) {
   callarVoces();
   distance = desde;
-  tacosThisRun = desde && intento && intento.control ? intento.control.tacos : 0;
+  tacosThisRun = tacos;
   lastTacoShown = Math.floor(tacosThisRun);
   jefesCarrera = 0; paseContado = false; pausado = false; cuenta = 0;
   if (!desde) misiones.empezarPartida();
@@ -700,7 +705,44 @@ async function empezarEsqui(n, desde = 0) {
     const el = document.getElementById(id);
     if (el) el.classList.add("hidden");
   }
-  esqui.empezar(desde, Math.floor(tacosThisRun));
+}
+
+// ---- 25/11/2026: el modo Esqui, contenido desbloqueable ----
+// Isidro: «Denver esta bien; el nivel al estilo Ski Safari, prefiero que
+// quede en el contenido desbloqueable». Boton «Esqui» en el menu, con
+// candado hasta superar Denver (como el Sin fin con el nivel 1). Es la misma
+// bajada de 2.400 m de las Rocosas al Capitolio, sin punto de control ni
+// «seguir aqui»: los esquis y las chapas son de cada bajada, los tacos van a
+// la hucha (con el finde x2) y cuenta para el pase y las misiones, pero no
+// para el ranking del Sin fin. El final (OTRA VEZ / SALIR) lo pone esqui2d.js.
+async function empezarEsquiExtra(otraVez = false) {
+  const { montarEsqui } = await import("./esqui2d.js");
+  esqui = await montarEsqui(document.getElementById("stage"), {
+    nivel: {
+      extra: true, largo: ESQUI.largo, semilla: ESQUI.semilla, objeto: ESQUI.objeto, lang: getLang(),
+      titulo: t("esquiTitulo"), metaNombre: ESQUI.metaNombre[getLang()] || ESQUI.metaNombre.es,
+      alObjeto: () => { sndChapa(); vibrate(15); },
+      alChapa: () => { sndChapa(); vibrate([20, 30, 20]); },
+      alChocar: () => vibrate([60, 30, 60]),
+      alTerminar: (r) => { vibrate(r.meta ? [20, 30, 20] : [80, 40, 80]); cerrarEsquiExtra(r); },
+      alOtraVez: () => empezarEsquiExtra(true),
+      alSalir: () => volverAlMenu(),
+      alPausa: () => pausar(),
+    },
+    crearPersonaje: () => { const c = createCharacter(getSave().equipped, lider); aplicarTienda(c); return c; },
+  });
+  nivelActual = null; intento = null; esquiExtra = true;
+  prepararEsqui(0, 0);
+  esqui.empezar(0, 0, otraVez);
+}
+// Los tacos a la hucha, el pase y las misiones (como cerrarCarrera, sin el ranking).
+function cerrarEsquiExtra(r) {
+  if (gameState !== "esqui") return;
+  tacosThisRun = r.tacos; distance = r.x;
+  addTacos(conBonus(tacosThisRun));
+  finCarreraPase(!!r.meta);
+  avisarMisiones([...misiones.evento("tacos", tacosThisRun), ...misiones.evento("distancia", distance)]);
+  gameState = "cerrada";
 }
 
 // Lo que dura todo un intento de un nivel (aunque se siga desde el punto de
@@ -1137,6 +1179,7 @@ function completarNivel() {
   const antes = getNiveles();
   const abiertosAntes = NIVELES.filter((x) => nivelAbierto(x, antes)).map((x) => x.id);
   const sinFinAntes = sinFinAbierto(antes);
+  const esquiAntes = esquiAbierto(antes);
   const votosAntes = votosGanados(NIVELES, antes);
   const estadoNuevo = !antes[n.id];   // (antes es el mismo objeto que se guarda: mirarlo ya)
   const cobrados = conBonus(tacos);   // (13/11: con la Recaudacion y el finde x2)
@@ -1182,6 +1225,7 @@ function completarNivel() {
   const nuevos = NIVELES.filter((x) => nivelAbierto(x, ahora) && !abiertosAntes.includes(x.id));
   const avisos = nuevos.map((x) => t("nivelDesbloqueado").replace("{n}", x.nombre));
   if (!sinFinAntes && sinFinAbierto(ahora)) avisos.push(t("sinFinDesbloqueado"));
+  if (!esquiAntes && esquiAbierto(ahora)) avisos.push(t("esquiDesbloqueado"));
   const des = document.getElementById("nivelFinDesbloqueo");
   des.innerHTML = avisos.map((a) => `<div>${icono("candado").replace("#9aa4b8", "#2fa84f").replace("#9aa4b8", "#2fa84f")} ${a}</div>`).join("");
   des.classList.toggle("hidden", !avisos.length);
@@ -3812,6 +3856,7 @@ function pausar() {
   document.getElementById("cuentaAtras").classList.add("hidden");
   const info = nivelActual
     ? `${t("nivel")} ${nivelActual.numero} · ${nivelActual.nombre}<br>${t("faltanM").replace("{n}", Math.max(0, Math.round(nivelActual.largo - distance)))}`
+    : esquiExtra ? `${t("esquiTitulo")}<br>${t("faltanM").replace("{n}", Math.max(0, Math.round(ESQUI.largo - distance)))}`
     : `${Math.floor(distance)} m`;
   document.getElementById("pausaInfo").innerHTML = info;
   pintarBotonesSonido();
@@ -3844,6 +3889,7 @@ document.getElementById("pausaSeguir").addEventListener("click", reanudar);
 document.getElementById("pausaRepetir").addEventListener("click", () => {
   document.getElementById("pausaOverlay").classList.add("hidden");
   pausarMusica(false);
+  if (esquiExtra) { pausado = false; cerrarEsquiExtra(esqui.estado()); empezarEsquiExtra(true); return; }
   cerrarCarrera();
   if (nivelActual) intento = nuevoIntento();
   if (enEsqui()) { pausado = false; empezarEsqui(nivelActual); return; }
@@ -3854,6 +3900,7 @@ document.getElementById("pausaSalir").addEventListener("click", () => {
   document.getElementById("pausaOverlay").classList.add("hidden");
   pausarMusica(false);
   pausado = false;
+  if (esquiExtra) { cerrarEsquiExtra(esqui.estado()); volverAlMenu(); return; }
   cerrarCarrera();
   const habiaNivel = !!nivelActual;
   volverAlMenu();
@@ -4726,7 +4773,29 @@ function pintarSinFin() {
   const b = document.getElementById("sinFinBtn");
   b.innerHTML = `${icono(abierto ? "infinito" : "candado")}<span>${t("sinFin")}</span>`;
   b.classList.toggle("cerrado", !abierto);
+  // (25/11: y el del Esqui, que se abre al superar Denver)
+  const ea = esquiAbierto(getNiveles());
+  const e = document.getElementById("esquiBtn");
+  e.innerHTML = `${icono(ea ? "esqui" : "candado")}<span>${t("esquiBoton")}</span>`;
+  e.classList.toggle("cerrado", !ea);
 }
+let entrandoEsqui = false;
+document.getElementById("esquiBtn").addEventListener("click", async () => {
+  unlockAudio();
+  if (!esquiAbierto(getNiveles()) && !PRUEBA) {
+    const d = NIVELES.find((x) => x.id === ESQUI.nivel);
+    avisoMenu(t("esquiCerrado").replace("{n}", d ? d.numero : ""));
+    return;
+  }
+  if (entrandoEsqui) return;
+  entrandoEsqui = true;
+  const yo = ++cargaNivel;
+  document.body.classList.add("cargandoNivel");
+  const texto = document.getElementById("esquiBtn").querySelector("span:last-child");
+  if (texto) texto.textContent = "…";
+  try { await empezarEsquiExtra(); startMusic(ESQUI.nivel); }
+  finally { entrandoEsqui = false; if (yo === cargaNivel) document.body.classList.remove("cargandoNivel"); pintarSinFin(); }
+});
 document.getElementById("sinFinBtn").addEventListener("click", () => {
   unlockAudio();
   if (!sinFinAbierto(getNiveles()) && !PRUEBA) { avisoMenu(t("sinFinCerrado")); return; }
@@ -4752,6 +4821,7 @@ function marcarIdioma() {
 }
 function volverAlMenu() {
   if (esqui) esqui.parar();
+  esquiExtra = false;
   gameState = "menu";
   apagarSirenas();
   document.getElementById("rafagaAviso").classList.add("hidden"); rafaga.avisada = false;
