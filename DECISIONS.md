@@ -2933,3 +2933,46 @@ prefiero que quede en el contenido desbloqueable». Así queda:
 - El código para jugar un nivel esquiando (`modo: "esqui"`) se queda en
   main.js por si otro nivel lo usa más adelante, pero ahora ningún nivel lo
   lleva.
+
+## 25/11/2026 (3): el modo Esquí, mejorado (v79)
+
+Isidro: «igualmente mejoremos ese nivel». Lo recomendado, sin preguntarle (ver
+la memoria «aplicar lo recomendado»):
+
+- **La moto de nieve.**
+  - En la bajada al Capitolio hay tres (a 671, 1.227 y 1.979 m). Sin fin, una
+    cada 550 m o así.
+  - Siempre está en un tramo largo de nieve, 16 m antes del trampolín
+    siguiente, y sin montones en los 40 m de antes. Así nunca se pasa volando
+    por encima de ella.
+  - Se monta pasando por ella y dura 15 s, con una barra que lo dice.
+  - No baja de 22 m/s, pero no corre más que lo más rápido esquiando: con más,
+    los saltos caían tan lejos que se volaba por encima de todo.
+  - Rompe montones, rocas y trineos («¡PUM!», +3 tacos). Detrás de cada moto
+    hay cosas para romper, donde se cae yendo en moto. Si has perdido la moto,
+    hay que saltarlas.
+  - Si aterrizas mal, se rompe ella («¡ADIÓS, MOTO!») y sigues sin tortazo.
+  - Al acabarse la gasolina, sigue sola un momento y se va.
+  - La moto está hecha con piezas sencillas en el código (roja con franja
+    blanca), y sus patines se ponen en VERDE como los esquís.
+- **Las piruetas tienen nombre:**
+  - 1 vuelta: «¡VOLTERETA!».
+  - 2 vueltas: «¡DOBLE TRUMP!».
+  - 3 vueltas: «¡TRIPLE MAGA!».
+  - 4 vueltas: «¡CUÁDRUPLE CASA BLANCA!».
+  - 5 o más: «¡DESPACHO OVAL x5!».
+  - Aterrizar recto añade «¡y clavado!» (+3 tacos). Escapar con la bola cerca
+    añade «¡por los pelos!».
+- **Su voz de verdad,** con las frases de dominio público que ya había y el
+  texto debajo:
+  - en las piruetas grandes, «TREMENDOUS!», «IT'S INCREDIBLE!» o «WINNING LIKE
+    NEVER BEFORE!»;
+  - al coger la moto, «AMERICA FIRST!»;
+  - en la meta, «GOD BLESS AMERICA!»;
+  - si te pilla la bola, «IT'S A VERY SAD THING.».
+  - Con otro líder, solo sale el texto.
+- **Tres estrellas por bajada:** llegar al Capitolio, los 10 esquís y las
+  3 chapas.
+  - Salen al empezar (las que ya tienes) y al acabar.
+  - Cada una da 100 tacos la primera vez.
+  - Se guardan en ese móvil, como el récord.

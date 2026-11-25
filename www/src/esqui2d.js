@@ -22,6 +22,13 @@
 // estado y la pantalla de choque son los del juego. Sin nivel (esqui.html)
 // sigue siendo la bajada sin fin de prueba.
 //
+// 25/11/2026 (2): «Denver está bien; el nivel al estilo Ski Safari, prefiero
+// que quede en el contenido desbloqueable» (el modo Esquí del menú) y luego
+// «igualmente mejoremos ese nivel». Lo recomendado: la moto de nieve (tres en
+// la bajada: más rápida, rompe montones, rocas y trineos y, si aterrizas mal,
+// se rompe ella en vez de darte el tortazo), las piruetas con nombre (con su
+// voz de verdad en las grandes) y tres estrellas por bajada.
+//
 // Nada que maree (ver la memoria «juegos sin mareo»): la cámara nunca gira,
 // solo se desliza suave detrás del esquiador; nada parpadea.
 
@@ -29,7 +36,8 @@ import * as THREE from "../vendor/three.module.min.js";
 import { cargarPersonaje, cargarCarpeta, modeloConContorno, hayModelo } from "./models.js";
 import { createCharacter } from "./character.js";
 import { lienzo, urlPegatina } from "./pegatinas.js";
-import { sndJump, sndHit, sndPoint, sndFanfarria, unlockAudio } from "./audio.js";
+import { sndJump, sndHit, sndPoint, sndFanfarria, sndPum, unlockAudio, decir, precargarVoces } from "./audio.js";
+import { traduccion } from "./frases.js";
 import { crearHorizonte } from "./horizonte.js";
 
 // ---------------------------------------------------------------- ajustes
@@ -53,6 +61,13 @@ const velBola = (t) => Math.min(21, BOLA_V0 + 6 * Math.min(1, t / 50) + 0.02 * M
 const V_TACOS = 25;        // la velocidad de un salto bueno (lo normal al llegar al trampolín)
 const OBJETOS = 10;        // los esquís de Denver (como el objeto de cada ciudad del juego)
 const CHAPAS_EN = [0.27, 0.55, 0.8];
+// La moto de nieve: lo que dura, su velocidad y dónde está (en la bajada al
+// Capitolio, tres sitios fijos; sin fin, una cada 550 m).
+// (no corre más que lo más rápido esquiando: con más, los saltos caían tan
+// lejos que se pasaba volando por encima de todo)
+const MOTO_T = 15, MOTO_VMIN = 22, MOTO_VMAX = 30;
+const MOTO_EN = [430, 1180, 1880];
+const ESTRELLA_PREMIO = 100;   // tacos por cada estrella conseguida la primera vez
 
 // ---------------------------------------------------------------- textos
 const TEXTOS = {
@@ -73,6 +88,12 @@ const TEXTOS = {
     finTexto: "Has bajado <b>{d} m</b><br>{t} tacos · {v} volteretas · combo x{c}<br>Récord: {r} m",
     pausa: "Pausa",
     salir: "SALIR",
+    trucos: ["", "¡VOLTERETA!", "¡DOBLE TRUMP!", "¡TRIPLE MAGA!", "¡CUÁDRUPLE CASA BLANCA!"], trucoMas: "¡DESPACHO OVAL x{n}!",
+    clavado: "¡y clavado!", porLosPelos: "¡por los pelos!",
+    moto: "¡MOTO DE NIEVE!", motoSub: "rompe montones, rocas y trineos", motoHud: "MOTO DE NIEVE · {n} s",
+    motoFin: "SE ACABÓ LA GASOLINA", motoFinSub: "a esquiar otra vez", motoRota: "¡ADIÓS, MOTO!", motoRotaSub: "se ha llevado ella el golpe",
+    pum: "¡PUM!",
+    est: ["Al Capitolio", "Los 10 esquís", "Las 3 chapas"], estNueva: "¡Estrella nueva! +{n} tacos", estTuyas: "Tus estrellas:",
     instrExtra: "Baja de las Rocosas hasta {m}. Por el camino, los 10 esquís y las 3 chapas; los tacos que cojas van a tu hucha.",
     finExtra: "Has bajado <b>{d} de {l} m</b><br>{t} tacos para la hucha · {v} volteretas · combo x{c}",
     finExtraMeta: "<b>{t} tacos</b> para la hucha<br>{v} volteretas · combo x{c}",
@@ -97,6 +118,12 @@ const TEXTOS = {
     finTexto: "You skied <b>{d} m</b><br>{t} tacos · {v} flips · combo x{c}<br>Best: {r} m",
     pausa: "Pause",
     salir: "EXIT",
+    trucos: ["", "FLIP!", "DOUBLE TRUMP!", "TRIPLE MAGA!", "QUADRUPLE WHITE HOUSE!"], trucoMas: "OVAL OFFICE x{n}!",
+    clavado: "and nailed it!", porLosPelos: "close call!",
+    moto: "SNOWMOBILE!", motoSub: "smash snow piles, rocks and sleds", motoHud: "SNOWMOBILE · {n} s",
+    motoFin: "OUT OF GAS", motoFinSub: "back to skiing", motoRota: "BYE, SNOWMOBILE!", motoRotaSub: "it took the hit for you",
+    pum: "BOOM!",
+    est: ["To the Capitol", "All 10 skis", "All 3 badges"], estNueva: "New star! +{n} tacos", estTuyas: "Your stars:",
     instrExtra: "Ski down the Rockies to {m}. On the way: the 10 skis and the 3 badges; the tacos you grab go to your piggy bank.",
     finExtra: "You skied <b>{d} of {l} m</b><br>{t} tacos to your piggy bank · {v} flips · combo x{c}",
     finExtraMeta: "<b>{t} tacos</b> to your piggy bank<br>{v} flips · combo x{c}",
@@ -214,6 +241,18 @@ const ESTILO = `
 .esqPremios img.si { opacity: 1; }
 .esqPremios b { margin-left: 8px; display: flex; align-items: center; gap: 3px; }
 .esqConNivel .esqBola { top: calc(116px + env(safe-area-inset-top)); }
+.esqMoto { left: 50%; top: calc(104px + env(safe-area-inset-top)); transform: translateX(-50%); white-space: nowrap; font-size: 16px; font-weight: 700;
+  background: rgba(28,42,74,0.75); padding: 5px 12px 7px; border-radius: 14px; text-shadow: none; display: none; text-align: center; }
+.esqMoto i { display: block; height: 5px; margin-top: 4px; border-radius: 3px; background: #ffd84a; transform-origin: left center; }
+.esqConNivel .esqMoto { top: calc(156px + env(safe-area-inset-top)); }
+.esqVoz { left: 16px; right: 16px; bottom: calc(22px + env(safe-area-inset-bottom)); text-align: center; font-size: 19px; font-weight: 700; color: #fff;
+  opacity: 0; transition: opacity 0.25s; }
+.esqVoz small { display: block; font-size: 15px; color: #ffd84a; margin-top: 2px; }
+.esqEstrellas { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 2px; }
+.esqEstrellas span { background: rgba(255,255,255,0.14); border-radius: 12px; padding: 4px 9px; font-size: 15px; color: #c8d2e4; }
+.esqEstrellas span b { color: #7d8aa3; margin-right: 3px; }
+.esqEstrellas span.si { background: rgba(255,216,74,0.22); color: #fff; }
+.esqEstrellas span.si b { color: #ffd84a; }
 `;
 const cont = document.createElement("div");
 cont.className = "esqJuego";
@@ -226,6 +265,8 @@ cont.innerHTML = `
   <div class="esqHud esqPremios"></div>
   <div class="esqHud esqBola"></div>
   <div class="esqHud esqMsg"></div>
+  <div class="esqHud esqMoto"><span></span><i></i></div>
+  <div class="esqHud esqVoz"></div>
   <button class="esqPausa" type="button" aria-label="Pausa">❚❚</button>
   <div class="esqCapa esqOculto"><h1></h1><div class="esqTexto"></div><div class="esqBoton"></div><div class="esqBoton esqSalir esqOculto"></div></div>`;
 const $ = (c) => cont.querySelector("." + c);
@@ -408,7 +449,112 @@ function quitarTrozo(i) {
 const texTaco = new THREE.CanvasTexture(lienzo("taco"));
 texTaco.colorSpace = THREE.SRGBColorSpace;
 const matTaco = new THREE.SpriteMaterial({ map: texTaco });
-let tacos = [], obstaculos = [];
+let tacos = [], obstaculos = [], motos = [];
+// ---- la moto de nieve (piezas sencillas: se ve pequeña, de lado) ----
+const matMotoRojo = new THREE.MeshLambertMaterial({ color: 0xc8302a });
+const matMotoBlanco = new THREE.MeshLambertMaterial({ color: 0xf4f6fa });
+const matMotoNegro = new THREE.MeshLambertMaterial({ color: 0x23262e });
+const matMotoMetal = new THREE.MeshLambertMaterial({ color: 0xb8c0cc });
+const matMotoCristal = new THREE.MeshLambertMaterial({ color: 0xa8dcff, transparent: true, opacity: 0.75 });
+const matMotoLuz = new THREE.MeshBasicMaterial({ color: 0xfff3b0 });
+// (patines: el material de los patines de delante; montada, son los esquís
+// que se ponen en VERDE cuando conviene soltar)
+function hacerMoto(patines = matMotoMetal) {
+  const g = new THREE.Group();
+  const caja = (w, h, d, mat, x, y, z = 0, rz = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z); m.rotation.z = rz; g.add(m); return m;
+  };
+  caja(1.25, 0.28, 0.52, matMotoNegro, -0.4, 0.2);                 // la oruga
+  for (const xr of [-0.9, -0.4, 0.1]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.56, 12), matMotoMetal); r.rotation.x = Math.PI / 2; r.position.set(xr, 0.2, 0); g.add(r); }
+  for (const z of [-0.3, 0.3]) {                                    // los patines de delante
+    caja(1.0, 0.06, 0.12, patines, 0.75, 0.03, z);
+    caja(0.28, 0.06, 0.12, patines, 1.33, 0.1, z, 0.55);
+    caja(0.06, 0.36, 0.06, matMotoMetal, 0.7, 0.2, z);
+  }
+  caja(1.75, 0.34, 0.64, matMotoRojo, 0.1, 0.48);                   // la carrocería
+  caja(0.62, 0.3, 0.6, matMotoRojo, 0.86, 0.42, 0, -0.42);           // el morro
+  caja(1.78, 0.07, 0.66, matMotoBlanco, 0.1, 0.36);                 // la franja blanca
+  caja(0.95, 0.14, 0.5, matMotoNegro, -0.36, 0.71);                 // el asiento
+  caja(0.07, 0.36, 0.5, matMotoCristal, 0.56, 0.84, 0, -0.5);       // el parabrisas
+  caja(0.06, 0.06, 0.74, matMotoMetal, 0.42, 0.86);                 // el manillar
+  caja(0.05, 0.12, 0.22, matMotoLuz, 1.1, 0.5, 0, -0.42);           // el faro
+  return g;
+}
+const motoMontada = hacerMoto(null);   // (los patines se ponen al montar el esquiador)
+motoMontada.visible = false;
+// Dónde están: lejos de los trampolines y de su vuelo.
+let motoSitios = [];
+function sitioMoto(k) {
+  if (motoSitios[k] !== undefined) return motoSitios[k];
+  let x = NIV ? (k < MOTO_EN.length ? MOTO_EN[k] : Infinity) : 350 + 550 * k;
+  if (NIV && x > NIV.largo - 160) x = Infinity;
+  // (en la nieve, nunca donde se pasa volando: en el primer tramo largo entre
+  // donde cae un salto y el trampolín siguiente, 16 m antes de este; los
+  // vuelos miden 75-95 m, y yendo muy rápido se cae algo más lejos)
+  // (se mira solo hasta 500 m más allá: si no hay un tramo de 45 m, el más
+  // largo que haya)
+  if (x !== Infinity) {
+    const base = x;
+    prepararRasgos(base + 900);
+    let mejor = null;
+    const n = rasgos.length;
+    for (let i = 0; i < n && rasgos[i].x0 < base + 500; i++) {
+      const sig = rasgos[i + 1], desde = finVuelo(rasgos[i]);
+      const hasta = sig ? sig.x0 - sig.largo : NIV ? NIV.largo - 160 : desde + 200;
+      if (hasta - 16 < base) continue;
+      if (hasta - desde >= 45) { mejor = hasta; break; }
+      if (!mejor || hasta - desde > mejor.hueco) mejor = { hasta, hueco: hasta - desde };
+    }
+    x = mejor === null ? (NIV ? Infinity : base) : typeof mejor === "number" ? mejor - 16 : mejor.hasta - 16;
+  }
+  return (motoSitios[k] = x);
+}
+// (lo que viene detrás de cada moto, hasta donde dura, es suyo: ahí no van
+// los montones de siempre sino cosas para romper)
+// (y en los 40 m de antes, nada que obligue a saltar: se pasaría por encima)
+const MOTO_TRAMO = 380;
+function cercaDeMoto(x) {
+  for (let k = 0; ; k++) { const m = sitioMoto(k); if (m === Infinity || m > x + 40) return false; if (x > m - 40 && x < m + MOTO_TRAMO) return true; }
+}
+// Dónde cae un trampolín yendo a v (lo más rápido, para la moto).
+function finVueloV(f, v) {
+  const k = "fin" + v;
+  if (f[k] === undefined) {
+    const a = Math.atan(pendiente(f.x0 - 0.12));
+    const pts = arco(f.x0, suelo(f.x0), v * Math.cos(a), v * Math.sin(a), f.x0 + 250);
+    f[k] = pts.length ? pts[pts.length - 1].x : f.x0 + 40;
+  }
+  return f[k];
+}
+// Dónde van las cosas para romper: en la nieve entre los saltos (pasado de
+// donde se cae yendo en moto a todo lo que da), cada 10-14 m.
+let rompibles = [];
+function sitiosRompibles(k) {
+  if (rompibles[k]) return rompibles[k];
+  const m = sitioMoto(k), xs = [];
+  if (m !== Infinity) {
+    const tramos = [];
+    // (solo los trampolines de su tramo: sin fin, la lista crece al mirarla)
+    const n = rasgos.length;
+    for (let i = 0; i < n && rasgos[i].x0 < m + MOTO_TRAMO; i++) {
+      const sig = rasgos[i + 1];
+      const a = finVueloV(rasgos[i], MOTO_VMAX) + 6, b = sig ? sig.x0 - sig.largo - 4 : NIV ? NIV.largo - 120 : a + 120;
+      if (b > m + 6 && a < m + MOTO_TRAMO) tramos.push([Math.max(a, m + 30), Math.min(b, m + MOTO_TRAMO)]);
+    }
+    const r = rngDe(semillaCosas * 31 + k * 977);
+    for (const [a, b] of tramos) for (let x = a + 2 + r() * 4; x < b; x += 10 + r() * 4) xs.push(x);
+  }
+  return (rompibles[k] = xs);
+}
+function ponerMoto(x) {
+  const m = hacerMoto();
+  m.scale.setScalar(ESCALA);
+  m.position.set(x, suelo(x), 0);
+  m.rotation.z = Math.atan(pendiente(x));
+  scene.add(m);
+  motos.push({ x, m, cogida: false });
+}
 function ponerTaco(x, y, de = "") {
   const s = new THREE.Sprite(matTaco);
   s.scale.setScalar(1.3);
@@ -494,25 +640,21 @@ function ponerCosas(x0) {
       else ponerTaco(p.x, p.y + 1.4, "trampolin");
     });
   }
+  // La moto de nieve, si toca en este trozo.
+  for (let k = 0; ; k++) {
+    const m = sitioMoto(k);
+    if (m === Infinity || m >= x0 + TROZO) break;
+    if (m >= x0) ponerMoto(m);
+  }
   const hasta = NIV ? Math.min(x0 + TROZO, NIV.largo - 110) : x0 + TROZO;
   let x = x0 + 6 + rnd() * 8;
   while (x < hasta) {
-    if (!cercaDeTrampolin(x)) {
+    if (!cercaDeTrampolin(x) && !cercaDeMoto(x)) {
       const r = rnd();
       if (r < 0.7) {
         // (lo de la calle de Denver: el montón de nieve, el trineo y la roca)
         const tipo = r < 0.2 ? "roca" : r < 0.34 ? "trineo" : "monton";
-        let m = null;
-        if (tipo === "roca") m = hacerRoca();
-        else if (tipo === "trineo") m = plantar("obstaculos/trineo", 1.0, 0, 0, 0, 2.0, 0);
-        if (!m && hayModelo("obstaculos/monton_nieve")) { m = modeloConContorno("obstaculos/monton_nieve"); m.scale.setScalar(1.3); }
-        if (m) {
-          if (tipo === "trineo") { m.position.x += x; m.position.y += suelo(x) - 0.05; }
-          else m.position.set(x, suelo(x) - 0.05, 0);
-          m.rotation.z = Math.atan(pendiente(x));
-          scene.add(m);
-          const ob = { x, alto: tipo === "roca" ? 1.2 : tipo === "trineo" ? 1.0 : 1.05, m, tocado: false };
-          obstaculos.push(ob);
+        if (ponerObstaculo(x, tipo)) {
           // (el vuelo de un salto dado 0,3 s antes del montón)
           const xj = x - 0.3 * V_TACOS * Math.cos(Math.atan(pendiente(x))), aj = Math.atan(pendiente(xj));
           const pts = arco(xj, suelo(xj), V_TACOS * Math.cos(aj) - IMPULSO * Math.sin(aj), V_TACOS * Math.sin(aj) + IMPULSO * Math.cos(aj), x + 6);
@@ -524,6 +666,30 @@ function ponerCosas(x0) {
     }
     x += 11 + rnd() * 13;
   }
+  // Detrás de cada moto, cosas para romper (si la has perdido, se saltan).
+  for (let k = 0; ; k++) {
+    const m = sitioMoto(k);
+    if (m === Infinity || m > x0 + TROZO) break;
+    for (const xr of sitiosRompibles(k)) {
+      if (xr < x0 || xr >= x0 + TROZO || (NIV && xr > NIV.largo - 110)) continue;
+      const r = rnd();
+      ponerObstaculo(xr, r < 0.3 ? "roca" : r < 0.55 ? "trineo" : "monton");
+    }
+  }
+}
+function ponerObstaculo(x, tipo) {
+  let m = null;
+  if (tipo === "roca") m = hacerRoca();
+  else if (tipo === "trineo") m = plantar("obstaculos/trineo", 1.0, 0, 0, 0, 2.0, 0);
+  if (!m && hayModelo("obstaculos/monton_nieve")) { m = modeloConContorno("obstaculos/monton_nieve"); m.scale.setScalar(1.3); tipo = "monton"; }
+  if (!m) return null;
+  if (tipo === "trineo") { m.position.x += x; m.position.y += suelo(x) - 0.05; }
+  else m.position.set(x, suelo(x) - 0.05, 0);
+  m.rotation.z = Math.atan(pendiente(x));
+  scene.add(m);
+  const ob = { x, alto: tipo === "roca" ? 1.2 : tipo === "trineo" ? 1.0 : 1.05, m, tocado: false };
+  obstaculos.push(ob);
+  return ob;
 }
 
 // ---------------------------------------------------------------- la meta
@@ -600,6 +766,7 @@ scene.add(esquiador);
 let personaje = null;
 const matEsqui = new THREE.MeshLambertMaterial({ color: 0xc8302a });
 const ROJO = new THREE.Color(0xc8302a), VERDE = new THREE.Color(0x2ac84a), NARANJA = new THREE.Color(0xe88a2a);
+const esquis = [];
 for (const z of [-0.17, 0.17]) {
   const e = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.07, 0.13), matEsqui);
   e.position.set(0.1, 0.035, z);
@@ -607,7 +774,21 @@ for (const z of [-0.17, 0.17]) {
   const punta = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.07, 0.13), matEsqui);
   punta.position.set(1.1, 0.1, z); punta.rotation.z = 0.5;
   esquiador.add(punta);
+  esquis.push(e, punta);
 }
+// La moto montada, bajo el esquiador (sus patines, con el color de los esquís).
+motoMontada.traverse((o) => { if (o.isMesh && !o.material) o.material = matEsqui; });
+esquiador.add(motoMontada);
+function ponerEnMoto(si) {
+  motoMontada.visible = si;
+  for (const e of esquis) e.visible = !si;
+  if (personaje) personaje.object3D.position.set(si ? -0.3 : 0, si ? 0.34 : 0, 0);
+}
+// La que se suelta al acabarse (sigue sola un momento) o al romperse (da vueltas).
+const motoSuelta = hacerMoto();
+motoSuelta.scale.setScalar(ESCALA);
+motoSuelta.visible = false;
+scene.add(motoSuelta);
 // (en el juego, el muñeco que lleves: el líder y la ropa de la tienda)
 function vestir(crear) {
   if (personaje) esquiador.remove(personaje.object3D);
@@ -698,8 +879,12 @@ function reiniciar(desde = 0, tacosIni = 0) {
     tacos: tacosIni, vueltasTot: 0, choques: 0, perfectos: 0, combo: 0, comboMax: 0, t: desde ? 60 : 0,
     bx: x0 - BOLA_HUECO, bv: BOLA_V0, camX: x0 + 7.5, camY: suelo(x0) - 11, camD: 0, rastro: 0, rastroBola: 0, aterriza: null,
     ayudaSalto: !!desde, ayudaVuelta: !!desde, controlHecho: !!desde, finT: 0, avisado: false,
-    objs: new Set(), chps: new Set(),
+    objs: new Set(), chps: new Set(), moto: 0, suelta: null,
   });
+  for (const m of motos) scene.remove(m.m);
+  motos = []; motoSitios = []; rompibles = [];
+  ponerEnMoto(false);
+  motoSuelta.visible = false;
   premiosPintados = "";
 }
 
@@ -707,6 +892,19 @@ function reiniciar(desde = 0, tacosIni = 0) {
 const elMsg = $("esqMsg");
 let msgHasta = 0;
 function aviso(texto, sub = "", ms = 1100) { elMsg.innerHTML = texto + (sub ? `<small>${sub}</small>` : ""); elMsg.style.opacity = 1; msgHasta = performance.now() + ms; }
+// Su voz de verdad (las frases de frases.js, de grabaciones de dominio
+// público) con el texto abajo; con otro líder, solo el texto. Las de ánimo
+// (prioridad 0) se quedan sin decir si ya está hablando.
+const elVoz = $("esqVoz");
+let vozHasta = 0;
+function voz(frase, prio = 0) {
+  decir(frase, prio, (dura) => {
+    const sub = traduccion(frase, (NIV && NIV.lang) || "es");
+    elVoz.innerHTML = `«${frase}»` + (sub ? `<small>${sub}</small>` : "");
+    elVoz.style.opacity = 1;
+    vozHasta = performance.now() + dura * 1000;
+  }, 1600);
+}
 const capa = $("esqCapa");
 function mostrarCapa(titulo, lineas, boton) {
   capa.querySelector("h1").textContent = titulo;
@@ -753,22 +951,32 @@ function aterrizar() {
   const desvio = Math.abs(envolver(E.ang - a));
   const vueltas = Math.round(E.giroAcum / (Math.PI * 2));
   const rapidez = Math.hypot(E.vx, E.vy), aLo = E.vx * Math.cos(a) + E.vy * Math.sin(a);
-  E.s = Math.min(V_MAX, Math.max(V_MIN, 0.6 * rapidez + 0.4 * aLo));
+  E.s = Math.min(vMax(), Math.max(V_MIN, 0.6 * rapidez + 0.4 * aLo));
   E.suelo = true; E.y = suelo(E.x); E.ang = a;
   nubeNieve(E.x, E.y + 0.2, E.salto > 0.6 ? 12 : 5, 3, 1.0);
-  if (desvio > TOLERANCIA) { chocar(vueltas > 0 ? `${tx("tortazo")}<small>${tx("sueltaVerde")}</small>` : tx("tortazo")); return; }
+  if (desvio > TOLERANCIA) {
+    // (en moto, se rompe ella y sigues esquiando)
+    if (E.moto > 0) { bajarMoto(true); E.s = Math.max(V_MIN, E.s * 0.8); E.intocable = 1; E.combo = 0; aviso(tx("motoRota"), tx("motoRotaSub"), 1400); return; }
+    chocar(vueltas > 0 ? `${tx("tortazo")}<small>${tx("sueltaVerde")}</small>` : tx("tortazo")); return;
+  }
   if (vueltas > 0) {
     E.combo++; E.comboMax = Math.max(E.comboMax, E.combo);
-    const n = 5 * vueltas * E.combo;
+    const clavado = desvio < PERFECTO;
+    const n = 5 * vueltas * E.combo + (clavado ? 3 : 0);
     E.tacos += n; E.vueltasTot += vueltas;
-    E.s = Math.min(V_MAX, E.s + 4 * vueltas);
+    if (clavado) E.perfectos++;
+    E.s = Math.min(vMax(), E.s + 4 * vueltas);
     // (y la bola se queda atrás: las volteretas son la forma de escaparse)
+    const cerca = E.x - E.bx < 9;
     const atras = Math.min(8 * vueltas, BOLA_HUECO - (E.x - E.bx));
     if (atras > 0) E.bx -= atras;
-    const titulo = vueltas === 1 ? tx("voltereta") : tx("volteretas", { n: vueltas });
+    const T = tx("trucos");
+    const titulo = (vueltas < T.length ? T[vueltas] : tx("trucoMas", { n: vueltas })) + (clavado ? `<br>${tx("clavado")}` : "");
     aviso(E.combo > 1 ? `${titulo}<br>${tx("combo", { n: E.combo })}` : titulo,
-      tx("masTacos", { n }) + (atras >= 1 ? " · " + tx("bolaAtras", { n: Math.round(atras) }) : ""));
+      tx("masTacos", { n }) + (cerca ? " · " + tx("porLosPelos") : atras >= 1 ? " · " + tx("bolaAtras", { n: Math.round(atras) }) : ""), 1300);
     sndFanfarria(true);
+    // (las grandes, con su voz)
+    if (vueltas >= 2 || E.combo >= 3) voz(["TREMENDOUS!", "IT'S INCREDIBLE!", "WINNING LIKE NEVER BEFORE!"][Math.floor(Math.random() * 3)], 0);
   } else if (desvio < PERFECTO && E.salto > 0.5) {
     E.tacos += 2; E.perfectos++; E.s = Math.min(V_MAX, E.s + 1.5);
     aviso(tx("perfecto"), tx("masTacos", { n: 2 }));
@@ -776,8 +984,46 @@ function aterrizar() {
   }
   if (E.buffer > 0) { E.buffer = 0; saltar(); }
 }
+const vMax = () => (E.moto > 0 ? MOTO_VMAX : V_MAX);
+function montarMoto(mo) {
+  mo.cogida = true; mo.m.visible = false;
+  E.moto = MOTO_T;
+  E.s = Math.max(E.s, MOTO_VMIN);
+  ponerEnMoto(true);
+  nubeNieve(E.x, E.y + 0.6, 14, 3, 1.2);
+  aviso(tx("moto"), tx("motoSub"), 1600);
+  sndFanfarria(true);
+  voz("AMERICA FIRST!", 1);
+}
+// Se acaba la gasolina (sigue sola un poco y se va) o se rompe (da vueltas).
+function bajarMoto(rota) {
+  E.moto = 0;
+  ponerEnMoto(false);
+  motoSuelta.visible = true;
+  E.suelta = { x: E.x + (rota ? 0 : 0.6), y: E.y, v: rota ? E.s * 0.6 : E.s + 5, t: 0, rota, giro: E.ang };
+  if (rota) { sndHit(); nubeNieve(E.x, E.y + 0.6, 22, 5, 1.8); }
+  else { nubeNieve(E.x, E.y + 0.3, 10, 3, 1.1); aviso(tx("motoFin"), tx("motoFinSub"), 1300); }
+}
+function pasoSuelta(dt) {
+  const u = E.suelta;
+  if (!u) return;
+  u.t += dt; u.x += u.v * dt;
+  u.y = u.rota ? Math.max(suelo(u.x), u.y + (3 - 12 * u.t) * dt) : suelo(u.x);
+  u.giro = u.rota ? u.giro - 7 * dt : Math.atan(pendiente(u.x));
+  if (u.t > (u.rota ? 0.9 : 1.4)) { nubeNieve(u.x, u.y + 0.5, 16, 4, 1.5); motoSuelta.visible = false; E.suelta = null; }
+}
+// En moto, los montones, las rocas y los trineos saltan por los aires.
+function romper(m) {
+  m.m.visible = false;
+  nubeNieve(m.x, suelo(m.x) + 0.8, 20, 5, 1.6);
+  E.tacos += 3;
+  aviso(tx("pum"), tx("masTacos", { n: 3 }), 600);
+  sndPum();
+}
 function paso(dt) {
   E.t += dt;
+  if (E.moto > 0) { E.moto -= dt; if (E.moto <= 0) bajarMoto(false); }
+  pasoSuelta(dt);
   E.intocable = Math.max(0, E.intocable - dt);
   E.buffer = Math.max(0, E.buffer - dt);
   if (E.suelo) {
@@ -788,7 +1034,9 @@ function paso(dt) {
     const tx_ = 1 / n, ty = p / n;
     if (E.tumbo > 0) { E.tumbo -= dt; E.s = Math.max(V_MIN * 0.7, E.s - 4 * dt); }
     else E.s += (G * 0.75 * (-ty) - 0.4 - 0.014 * E.s * E.s) * dt;
-    E.s = Math.min(V_MAX, Math.max(E.tumbo > 0 ? 4 : V_MIN, E.s));
+    // (la moto tira: nunca baja de su velocidad y sube algo más)
+    if (E.moto > 0 && E.tumbo <= 0) E.s = Math.max(MOTO_VMIN, E.s + 6 * dt);
+    E.s = Math.min(vMax(), Math.max(E.tumbo > 0 ? 4 : V_MIN, E.s));
     const nx = E.x + E.s * tx_ * dt, yBal = E.y + E.s * ty * dt, yS = suelo(nx);
     E.x = nx;
     if (yBal - yS > 0.09 && E.tumbo <= 0) {
@@ -809,9 +1057,17 @@ function paso(dt) {
     if (E.y <= suelo(E.x)) aterrizar();
   }
   // Montones, rocas y trineos: por el suelo, tortazo (saltándolos, nada).
-  if (E.intocable <= 0) for (const m of obstaculos) {
+  if (E.intocable <= 0 || E.moto > 0) for (const m of obstaculos) {
     if (m.tocado || Math.abs(m.x - E.x) > 0.9) continue;
-    if (E.y - suelo(m.x) < m.alto * 0.8) { m.tocado = true; chocar(`${tx("tortazo")}<small>${tx("tocaSaltar")}</small>`); }
+    if (E.y - suelo(m.x) < m.alto * 0.8) {
+      m.tocado = true;
+      if (E.moto > 0) romper(m); else chocar(`${tx("tortazo")}<small>${tx("tocaSaltar")}</small>`);
+    }
+  }
+  // La moto de nieve: se monta pasando por ella (por encima, en un salto alto, no).
+  for (const mo of motos) {
+    if (mo.cogida || Math.abs(mo.x - E.x) > 1.4) continue;
+    if (E.y - suelo(mo.x) < 2.2) montarMoto(mo);
   }
   // Los tacos y los premios (quietos: hay que pasar por ellos).
   for (const t of tacos) {
@@ -841,8 +1097,10 @@ function paso(dt) {
 // En la plaza: frena, la bola se para antes de llegar y se deshace.
 function llegar() {
   E.fase = "meta"; E.metaT = 0; E.dedo = false;
+  if (E.moto > 0) bajarMoto(false);
   aviso(tx("meta"), tx("metaSub"), 2600);
   sndFanfarria();
+  voz("GOD BLESS AMERICA!", 3);
 }
 function pasoMeta(dt) {
   E.metaT += dt;
@@ -862,6 +1120,7 @@ function pasoMeta(dt) {
     E.bx = Math.min(E.bx + E.bv * dt, E.x - 8);
     if (E.bv <= 0) { bola.visible = false; nubeNieve(E.bx, suelo(E.bx) + BOLA_R, 30, 6, 2.4); sndHit(); }
   }
+  pasoSuelta(dt);
   if (E.metaT > 3 && !E.avisado) {
     E.avisado = true;
     if (esExtra()) acabarExtra(true);
@@ -872,8 +1131,10 @@ function pasoMeta(dt) {
 function pillar() {
   if (E.fase !== "juego") return;
   E.dedo = false;
+  if (E.moto > 0) { E.moto = 0; ponerEnMoto(false); }
   nubeNieve(E.x, E.y + 1, 24, 5, 2);
   sndHit();
+  voz("IT'S A VERY SAD THING.", 2);
   if (!NIV) { acabarLibre(); return; }
   E.fase = "pillado"; E.finT = 0;
 }
@@ -911,6 +1172,8 @@ function dibujar(dt) {
   for (const i of [...trozos.keys()]) if (i < i0 - 1) quitarTrozo(i);
   tacos = tacos.filter((t) => { if (t.x < E.x - 60) { scene.remove(t.s); return false; } return true; });
   obstaculos = obstaculos.filter((m) => { if (m.x < E.x - 60) { scene.remove(m.m); return false; } return true; });
+  motos = motos.filter((m) => { if (m.x < E.x - 60) { scene.remove(m.m); return false; } return true; });
+  if (E.suelta) { motoSuelta.position.set(E.suelta.x, E.suelta.y, 0); motoSuelta.rotation.z = E.suelta.giro; }
   // Los tacos están quietos (16/11: nada de moverse sin motivo); los cogidos
   // crecen y se deshacen.
   for (const t of tacos) {
@@ -1025,6 +1288,15 @@ function dibujar(dt) {
     pintarPremios();
   } else elDist.innerHTML = `${dm} m<small>${tx("record", { n: Math.max(record, dm) })}</small>`;
   elTacos.textContent = E.tacos;
+  // (lo que le queda a la moto)
+  const elMoto = $("esqMoto");
+  if (E.moto > 0 && E.fase === "juego") {
+    elMoto.style.display = "block";
+    const n = Math.ceil(E.moto);
+    if (elMoto.dataset.n !== String(n)) { elMoto.dataset.n = String(n); elMoto.firstChild.textContent = tx("motoHud", { n }); }
+    elMoto.lastChild.style.transform = `scaleX(${(E.moto / MOTO_T).toFixed(3)})`;
+  } else elMoto.style.display = "none";
+  if (vozHasta && performance.now() > vozHasta) { elVoz.style.opacity = 0; vozHasta = 0; }
   const hueco = E.x - E.bx;
   if (hueco > 14 && E.fase === "juego") { elBola.style.display = "block"; elBola.textContent = tx("laBola", { n: Math.floor(hueco) }); }
   else elBola.style.display = "none";
@@ -1045,26 +1317,37 @@ function acabarLibre() {
 }
 // El final del modo Esquí: el récord (en este móvil), los tacos a la hucha
 // y OTRA VEZ / SALIR.
-const recordExtra = { m: 0, llegadas: 0, o: 0, c: 0 };
+const recordExtra = { m: 0, llegadas: 0, o: 0, c: 0, est: [false, false, false] };
 try { Object.assign(recordExtra, JSON.parse(localStorage.getItem("esqui_extra") || "{}")); } catch (e) { /* sin guardar */ }
 function acabarExtra(meta) {
   E.fase = "fin"; finDesde = performance.now();
   const d = Math.min(NIV.largo, Math.floor(E.x)), o = E.objs.size, c = E.chps.size;
   const r = recordExtra;
   r.m = Math.max(r.m, d);
+  // Tres estrellas: llegar, los 10 esquís y las 3 chapas (cada una, la
+  // primera vez, con premio).
+  const est = [meta, o >= OBJETOS, c >= CHAPAS_EN.length];
+  if (!Array.isArray(r.est)) r.est = [false, false, false];
+  const nuevas = est.filter((si, i) => si && !r.est[i]).length;
+  r.est = r.est.map((si, i) => si || est[i]);
+  if (nuevas) E.tacos += nuevas * ESTRELLA_PREMIO;
   if (meta) { r.llegadas++; if (o + c > r.o + r.c || (o + c === r.o + r.c && c > r.c)) { r.o = o; r.c = c; } }
   try { localStorage.setItem("esqui_extra", JSON.stringify(r)); } catch (e) { /* sin guardar */ }
   const v = { d, l: NIV.largo, t: E.tacos, v: E.vueltasTot, c: E.comboMax };
-  const lineas = [meta ? tx("finExtraMeta", v) : tx("finExtra", v), tx("premiosExtra", { o, c }),
+  const lineas = [estrellas(est), meta ? tx("finExtraMeta", v) : tx("finExtra", v), tx("premiosExtra", { o, c }),
     r.llegadas ? tx("recordExtraMeta", { n: r.llegadas, o: r.o, c: r.c }) : tx("recordExtra", { r: r.m })];
+  if (nuevas) lineas.splice(1, 0, `<b class="esqVerde">${tx("estNueva", { n: nuevas * ESTRELLA_PREMIO })}</b>`);
   mostrarCapa(meta ? tx("meta") : tx("pillado"), lineas, tx("otraVez"));
   $("esqSalir").textContent = tx("salir");
   $("esqSalir").classList.remove("esqOculto");
   if (NIV.alTerminar) NIV.alTerminar({ x: d, tacos: E.tacos, meta, objetos: o, chapas: c });
 }
+function estrellas(est) {
+  return `<span class="esqEstrellas">${tx("est").map((t, i) => `<span class="${est[i] ? "si" : ""}"><b>${est[i] ? "★" : "☆"}</b>${t}</span>`).join("")}</span>`;
+}
 function instrucciones() {
   const l = [...tx("instr")];
-  if (esExtra()) l.unshift(tx("instrExtra", { m: NIV.metaNombre || "" }));
+  if (esExtra()) l.unshift(tx("instrExtra", { m: NIV.metaNombre || "" }), tx("estTuyas") + estrellas(recordExtra.est || []));
   else if (NIV) l.unshift(tx("instrNivel", { m: NIV.metaNombre || "" }));
   return l;
 }
@@ -1139,6 +1422,8 @@ export async function montarEsqui(padre, opciones = {}) {
   $("esqTacos").querySelector("img").src = urlPegatina("taco");
   if (NIV) { $("esqNivel").textContent = NIV.titulo || ""; $("esqYo").src = urlPegatina("taco"); $("esqPausa").setAttribute("aria-label", tx("pausa")); }
   vestir(opciones.crearPersonaje);
+  ponerEnMoto(false);
+  precargarVoces().catch(() => {});
   return controlador;
 }
 const controlador = {
@@ -1151,12 +1436,12 @@ const controlador = {
     faltaPintada = -1;
     elMsg.style.opacity = 0; msgHasta = 0;
     if (desde) mostrarCapa(tx("titulo"), [], tx("seguir"));
-    else mostrarCapa(tx("titulo"), breve ? [] : instrucciones(), tx("empezar"));
+    else mostrarCapa(tx("titulo"), breve ? (esExtra() ? [tx("estTuyas") + estrellas(recordExtra.est || [])] : []) : instrucciones(), tx("empezar"));
     arrancarBucle();
   },
   // Pagado «seguir aquí»: la bola atrás, de pie y a esperar un toque.
   seguir(tacosAhora) {
-    Object.assign(E, { fase: "espera", tacos: tacosAhora, bx: E.x - BOLA_HUECO, tumbo: 0, intocable: 2, dedo: false, avisado: false,
+    Object.assign(E, { fase: "espera", tacos: tacosAhora, bx: E.x - BOLA_HUECO, tumbo: 0, intocable: 2, dedo: false, avisado: false, moto: 0,
       suelo: true, y: suelo(E.x), ang: Math.atan(pendiente(E.x)), s: Math.max(E.s, 16) });
     esquiador.visible = true;
     mostrarCapa(tx("titulo"), [], tx("seguir"));
@@ -1188,5 +1473,6 @@ window.__esqui = {
   sinDibujar: (v) => { sinDibujar = v; }, dibujar: (dt = 1 / 60) => dibujar(dt), suelo, pendiente, rasgos: () => rasgos, montones: () => obstaculos,
   verde: () => matEsqui.color.getHex() === VERDE.getHex(),
   tacos: () => tacos, nivel: () => NIV,
+  moto: () => E.moto, motos: () => motos.map((m) => ({ x: Math.round(m.x), cogida: m.cogida })), sitiosMoto: () => [0, 1, 2, 3].map(sitioMoto),
   irA: (x) => { Object.assign(E, { x, y: suelo(x), suelo: true, ang: Math.atan(pendiente(x)), bx: x - BOLA_HUECO, camX: x + 7.5, camY: suelo(x) - 11 }); },
 };
