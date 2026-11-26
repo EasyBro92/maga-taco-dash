@@ -267,6 +267,38 @@ def clydesdale_pata():
     esfera(b, 0, 0, -1.07, 0.13, 2, esc=(1.0, 1.0, 1.1))                  # las plumas
     cil(negro(), 0, 0, -1.25, 0.1, 0.11, 12, r2=0.09)
 
+# ---------------------------------------------------------------- el perro
+# 26/11/2026: Isidro: «las aceras no tienen mucha vida». La gente pasea al
+# perro por la acera: un golden con collar rojo. Sin patas (perro_pata).
+# Mira a +x; caderas a 0,42 m (world.js, ANDAR.perro).
+def perro():
+    p = pelo('pelo_perro', 0xd9a35a, 0xcc9650)
+    c = pelo('pelo_perro_claro', 0xeccb92, 0xe2bf86)
+    esfera(p, 0, 0, 0.52, 0.2, 3, esc=(1.85, 0.92, 0.92))                 # el tronco
+    esfera(p, 0.27, 0, 0.55, 0.19, 3, esc=(1.0, 0.95, 1.05))              # el pecho
+    esfera(c, 0.33, 0, 0.47, 0.13, 2, esc=(0.9, 0.85, 1.0))               # el pecho claro
+    esfera(p, -0.27, 0, 0.54, 0.17, 3)                                    # la grupa
+    rama(p, (0.32, 0, 0.6), (0.46, 0, 0.8), 0.11, 0.085, 10)              # el cuello
+    esfera(p, 0.5, 0, 0.86, 0.12, 3, esc=(1.15, 0.95, 0.95))              # la cabeza
+    rama(c, (0.56, 0, 0.82), (0.69, 0, 0.79), 0.07, 0.05, 10)             # el hocico
+    esfera(negro(), 0.7, 0, 0.805, 0.03, 1)                               # la nariz
+    for s in (-1, 1):
+        ojo(0.6, s * 0.065, 0.9, 0.022, s)
+        o = esfera(mat('oreja_perro', 0xb57c3c, 0.8), 0.47, s * 0.12, 0.84, 0.075, 2, esc=(0.8, 0.3, 1.35))
+        girar(o, rx=s * 0.25)
+    esfera(mat('collar_perro', 0xc8282c, 0.5), 0.4, 0, 0.71, 0.1, 2, esc=(0.45, 1.05, 1.0))
+    esfera(oro_perro(), 0.45, 0, 0.64, 0.03, 1)                           # la chapa
+    rama(p, (-0.42, 0, 0.62), (-0.6, 0, 0.84), 0.05, 0.025, 8)            # la cola, alegre
+
+def oro_perro(): return mat('chapa_perro', 0xf2c230, 0.3)
+
+def perro_pata():
+    p = pelo('pelo_perro', 0xd9a35a, 0xcc9650)
+    rama(p, (0, 0, 0.03), (0, 0, -0.24), 0.055, 0.04, 8)
+    esfera(p, 0, 0, -0.24, 0.04, 2)
+    rama(p, (0, 0, -0.24), (0.01, 0, -0.38), 0.035, 0.03, 8)
+    esfera(mat('mano_perro', 0xc08a48, 0.8), 0.025, 0, -0.395, 0.042, 2, esc=(1.35, 1.0, 0.6))
+
 # ---------------------------------------------------------------- micrófono
 def microfono():
     """Micrófono de mano de verdad: rejilla de malla de metal oscuro, el anillo
@@ -298,6 +330,8 @@ PIEZAS = {
     'pavo_pata':       (pavo_pata,       'obstaculos', dict(lado=64, bisel=0.0, suelo=False)),
     'caballo_pata':    (caballo_pata,    'obstaculos', dict(lado=128, bisel=0.0, suelo=False)),
     'clydesdale_pata': (clydesdale_pata, 'obstaculos', dict(lado=128, bisel=0.0, suelo=False)),
+    'perro':           (perro,           'obstaculos', dict(lado=256, bisel=0.0)),
+    'perro_pata':      (perro_pata,      'obstaculos', dict(lado=64, bisel=0.0, suelo=False)),
     'microfono':       (microfono,       'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),
 }
 

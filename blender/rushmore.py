@@ -323,10 +323,19 @@ def bisonte():
         esfera(negro(), s * 0.32, -1.5, 1.08, 0.07, 1)                  # los ojos
         rama(mat('cuerno', 0xe8e0cc, 0.4), (s * 0.45, -1.1, 1.3), (s * 0.75, -1.15, 1.55), 0.09, 0.05, 6)
         rama(mat('cuerno', 0xe8e0cc, 0.4), (s * 0.75, -1.15, 1.55), (s * 0.68, -1.25, 1.78), 0.05, 0.02, 5)
-    for (x, y) in ((-0.42, -0.6), (0.42, -0.6), (-0.4, 0.95), (0.4, 0.95)):
-        cil(oscuro, x, y, 0, 0.14, 0.75, 8, r2=0.17)
-        cil(negro(), x, y, 0, 0.15, 0.1, 8)
+    # 26/11/2026: sin patas: van aparte (bisonte_pata) y el juego las mueve
+    # al andar y al galopar (antes eran cuatro palitos y el bisonte botaba).
     rama(oscuro, (0, 1.55, 1.3), (0, 1.75, 0.8), 0.06, 0.04, 5)          # la cola
+
+def bisonte_pata():
+    """Una pata del bisonte (origen en la cadera, a 0,9 m): el muslo peludo,
+    la caña y la pezuña negra."""
+    oscuro = mat('bisonte_oscuro', 0x3a2a1e, 0.9)
+    pelo = mat('bisonte_pelo', 0x6a4a2e, 0.95)
+    rama(pelo, (0, 0, 0.08), (0, 0.02, -0.42), 0.21, 0.15, 10)
+    esfera(oscuro, 0, 0.02, -0.44, 0.13, 2)
+    rama(oscuro, (0, 0.02, -0.44), (0, 0, -0.78), 0.11, 0.09, 8)
+    cil(negro(), 0, 0, -0.9, 0.12, 0.13, 10, r2=0.1)
 
 def perrito_pradera():
     """El perrito de la pradera, de pie y alerta (el juego lo hace asomar y
@@ -381,6 +390,7 @@ PIEZAS = {
     'avenida_banderas':   (avenida_banderas,   'rushmore', dict(lado=512, bisel=0.0)),
     'monte_rushmore':     (monte_rushmore,     'rushmore', dict(lado=2048, bisel=0.0)),
     'bisonte':            (bisonte,            'obstaculos', dict(lado=256, bisel=0.0)),
+    'bisonte_pata':       (bisonte_pata,       'obstaculos', dict(lado=128, bisel=0.0, suelo=False)),
     'perrito_pradera':    (perrito_pradera,    'obstaculos', dict(lado=256, bisel=0.0)),
     'madriguera':         (madriguera,         'obstaculos', dict(lado=256, bisel=0.0)),
     'roca_caida':         (roca_caida,         'obstaculos', dict(lado=256, bisel=0.0)),

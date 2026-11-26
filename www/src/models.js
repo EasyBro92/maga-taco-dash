@@ -24,6 +24,8 @@ const LISTA = {
     "rayo", "cohete", "barril", "chile", "jefe",
     // 08/11 (2): las patas de los animales (blender/animales.py) y el microfono
     "corte_der", "corte_izq", "vaca_pata", "cerdo_pata", "ciervo_pata", "alce_pata", "pavo_pata", "caballo_pata", "clydesdale_pata", "microfono",
+    // 26/11: patas del bisonte y del jabali, y el perro que pasean por la acera
+    "bisonte_pata", "jabali_pata", "perro", "perro_pata",
     // 27/10: los de cada ciudad (blender/obstaculos2.py)
     "taxi", "alcantarilla", "andamio", "contenedor", "paca", "tractor", "carroza", "guirnalda",
     "valla_metal", "protesta", "agentes", "suv",

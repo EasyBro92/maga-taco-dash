@@ -3155,6 +3155,30 @@ export const NIVELES = PARADAS.map(({ jefe, ...p }) => {
   return calle ? { ...calle, ...p, esJefe: jefe, objeto: OBJETOS[p.id] } : { ...p, esJefe: jefe, listo: false };
 });
 
+// 26/11/2026: Isidro: «hay muchos niveles muy repetitivos, falta dinamismo».
+// Casi todos los niveles seguian la misma plantilla y el tramo «mixto» sin
+// nada propio (el de despues de la alfombra) era igual en todas partes. Ahora,
+// en cada ciudad, ese tramo es uno con movimiento, distinto del de la ciudad
+// anterior (sale de su semilla: en cada partida es el mismo): el camion que
+// pierde la carga (nuevo), las obras con los carriles cortados, la policia que
+// viene de frente, los repartidores en bici o la comitiva de coches oficiales.
+const DINAMICOS = ["mudanza", "obras", "persecucion", "repartidores", "comitiva"];
+{
+  let previo = null;
+  for (const nv of NIVELES) {
+    if (!nv.tramos || nv.id === "nueva_york" || nv.id === "washington") continue;
+    const az = azarConSemilla(nv.semilla * 31 + 5);
+    const libres = nv.tramos.filter(([a, b, tipo, o]) => tipo === "mixto" && !(o && (o.momento || o.titulo)) && b - a >= 120);
+    for (const tr of libres.slice(0, 2)) {
+      const opciones = DINAMICOS.filter((x) => x !== previo);
+      const tipo = opciones[Math.floor(az() * opciones.length)];
+      tr[2] = tipo;
+      tr[3] = { ...(tr[3] || {}), titulo: tipo };
+      previo = tipo;
+    }
+  }
+}
+
 // Ancho de cada pieza a lo largo de la calle (el de su fachada, sin contar lo
 // que sobresale la cornisa: asi los tramos encajan sin pisarse).
 export const ANCHO = {

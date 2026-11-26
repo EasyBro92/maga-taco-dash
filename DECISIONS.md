@@ -2976,3 +2976,56 @@ la memoria «aplicar lo recomendado»):
   - Salen al empezar (las que ya tienes) y al acabar.
   - Cada una da 100 tacos la primera vez.
   - Se guardan en ese móvil, como el récord.
+
+## 26/11/2026: animales, choques, aceras, estadios y variedad (v80)
+
+Isidro: «necesito mejorar las animaciones, los animales se mueven extraños,
+hay objetos que chocan y se traspasan, las aceras no tienen mucha vida, hay
+muchos niveles muy repetitivos, falta dinamismo, hay partes del mapa como
+estadios y cosas que están partidos como si la carretera pasara por el medio».
+Se aplicó lo recomendado sin preguntarle.
+
+- **Que nada se atraviese** (world.js, «que nada se atraviese»). Una prueba
+  automática recorrió los 50 niveles midiendo la caja de verdad de cada objeto
+  (sin sombras ni halos). Había tres clases de fallo:
+  - Los carriles miden 2,2 m y los carteles de cada ciudad medían 2,64; los
+    camiones, el autobús, la autocaravana o los tranvías, de 2,5 a 2,9. Se
+    metían en el carril de al lado. Ahora lo que mide entre 2,2 y 3,3 m se
+    estrecha (solo de ancho) a 2,06 m. Lo más ancho (sombrillas, tablas de
+    surf) ocupa varios carriles a propósito y no se toca.
+  - Lo que salía dentro de otra cosa (la vaca dentro del camión de ganado):
+    en su primer fotograma, si algo normal se mete dentro de otra cosa, no se
+    pone. Lo de los momentos y lo que va en grupo (rampas, vagones) no se quita.
+  - Lo que se mueve: lo que viene de frente frena detrás de lo que tiene
+    delante; el que cambia de carril espera a tener sitio; la vaca que cruza se
+    da la vuelta si topa con algo. Las ondas, las olas y lo que vuela pasan
+    por encima a propósito.
+- **Animales.**
+  - Las patas ya no tienen tope de 4 m/s (a más velocidad patinaban): zancadas
+    más largas y galope de verdad a más de 6 m/s.
+  - El bisonte y el jabalí tienen patas aparte (blender/rushmore.py y
+    littlerock.py: bisonte_pata y jabali_pata). Antes avanzaban botando como un
+    muelle. El bisonte pasta quieto y embiste al galope; el jabalí trota mirando
+    hacia donde va y se da la vuelta en cada punta (antes corría de lado).
+  - La vaca ya no da media vuelta en un fotograma: frena, gira en 1,3 s dando
+    pasitos y anda hasta su carril (antes se deslizaba de lado).
+- **Aceras con vida.** Casi el doble de paseantes (hasta 20). Hay gente que
+  pasea al perro (un golden con correa, blender/animales.py: perro y
+  perro_pata), gente que sale a correr, parejas que van juntas y se miran, y
+  gente sentada en los bancos. Cada sentido va por su mitad de la acera y se
+  apartan para no atravesarse.
+- **Estadios y salas enteros** (world.js, «los estadios y las salas,
+  enteros»). Los 14 sitios del momento estrella hechos como un pasillo de
+  420 m se veían cortados al llegar y al salir. Ahora tienen una fachada con
+  su nombre y un túnel de entrada; al fondo, las gradas con gente cierran el
+  estadio, con el marcador y el túnel de salida (en las salas, la pared con la
+  puerta de salida). Son: Frontier Park, el óvalo de Charlotte, Churchill
+  Downs, el Basque Block, el recuento de Atlanta, el casino de Atlantic City,
+  Sloss, la Casa de la Moneda, el hangar de Houston, el plató de Los Ángeles,
+  el debate, Mar-a-Lago, el Opry y el Public Market. El tamaño sale del modelo.
+- **Variedad.** El tramo «mixto» sin nada propio era igual en todas las
+  ciudades. Ahora es uno con movimiento, distinto del de la ciudad anterior
+  (sale de su semilla): las obras, la policía de frente, los repartidores en
+  bici, la comitiva o el nuevo «¡El camión pierde la carga!». En este, el
+  camión va 40 m por delante y se le caen cajas que ruedan hacia ti.
+- Boston (sesión aparte, sin publicar) tendrá que traer esto y usar la v81.

@@ -149,9 +149,14 @@ def jabali():
     for k in range(9):                                   # la cresta
         y = -0.6 + k * 0.16
         cil(oscuro, 0, y, 1.15 - abs(k - 3) * 0.03, 0.07, 0.25, 4, r2=0.0)
-    for (x, y) in ((-0.28, -0.45), (0.28, -0.45), (-0.28, 0.75), (0.28, 0.75)):
-        cil(oscuro, x, y, 0, 0.09, 0.42, 6)
+    # 26/11/2026: sin patas: van aparte (jabali_pata) y el juego las mueve al trotar.
     rama(oscuro, (0, 1.05, 0.85), (0, 1.25, 0.6), 0.04, 0.02, 4)
+
+def jabali_pata():
+    """Una pata del jabalí (origen en la cadera, a 0,5 m) con su pezuña."""
+    oscuro = mat('jabali_oscuro', 0x4a1a14, 0.9)
+    rama(oscuro, (0, 0, 0.04), (0, 0.01, -0.36), 0.1, 0.065, 8)
+    cil(negro(), 0, 0, -0.5, 0.06, 0.14, 8, r2=0.05)
 
 def brillo_diamante():
     """El brillo del diamante en el suelo: un montoncito de tierra y el
@@ -207,6 +212,7 @@ PIEZAS = {
     'river_market':    (river_market,    'littlerock', dict(lado=1024, bisel=0.0)),
     'mina':            (mina,            'littlerock', dict(lado=2048, bisel=0.0, suelo=False)),
     'jabali':          (jabali,          'obstaculos', dict(lado=256, bisel=0.0)),
+    'jabali_pata':     (jabali_pata,     'obstaculos', dict(lado=64, bisel=0.0, suelo=False)),
     'brillo_diamante': (brillo_diamante, 'obstaculos', dict(lado=256, bisel=0.0)),
     'vagoneta_mina':   (vagoneta_mina,   'obstaculos', dict(lado=256, bisel=0.0)),
     'puntal':          (puntal,          'obstaculos', dict(lado=256, bisel=0.0, suelo=False)),

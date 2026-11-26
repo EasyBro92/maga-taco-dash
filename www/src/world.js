@@ -1889,6 +1889,219 @@ export function createWorld(scene) {
     soltarEdificio(mesh);
     if (mesh.userData.muro) { mesh.userData.muro.forEach(soltarEdificio); mesh.userData.muro = null; }
   }
+  // ---- 26/11/2026: los estadios y las salas, enteros ----
+  // Isidro: «hay partes del mapa como estadios y cosas que estan partidos como
+  // si la carretera pasara por el medio». Los sitios del momento estrella (la
+  // arena del rodeo, el ovalo, el hipodromo, el Opry, el recuento...) eran un
+  // pasillo de 420 m con las gradas o las paredes cortadas de golpe al
+  // principio y al final: desde fuera se veia el corte, como si la calle
+  // partiera el estadio. Ahora se llega a su fachada y se entra por un tunel;
+  // dentro, al fondo, las gradas (o la pared) cierran el sitio, con el tunel
+  // de salida en medio y el marcador encima. El tamaño sale del propio modelo.
+  const CIERRES = {
+    arena_rodeo: { tipo: "estadio", nombre: "FRONTIER PARK", color: 0x8a3a2a },
+    speedway: { tipo: "estadio", nombre: "CHARLOTTE MOTOR SPEEDWAY", color: 0x24448a },
+    hipodromo: { tipo: "estadio", nombre: "CHURCHILL DOWNS", color: 0x2e5a3a },
+    plaza_aizkolari: { tipo: "estadio", nombre: "BASQUE BLOCK", color: 0xa8282c },
+    recuento: { tipo: "sala", nombre: "STATE FARM ARENA", color: 0x8a2a2a },
+    casino_floor: { tipo: "sala", nombre: "BOARDWALK CASINO", color: 0x6a2a6a },
+    fundicion: { tipo: "sala", nombre: "SLOSS FURNACES", color: 0x5a3a2a },
+    casa_moneda_int: { tipo: "sala", nombre: "UNITED STATES MINT", color: 0x5a5e68 },
+    hangar_luna: { tipo: "sala", nombre: "SPACE CENTER", color: 0x2a3a6a },
+    plato_cine: { tipo: "sala", nombre: "STAGE 7", color: 0x3a3a44 },
+    estudio_debate: { tipo: "sala", nombre: "DEBATE NIGHT", color: 0x1a2a5a },
+    bano_dorado: { tipo: "sala", nombre: "MAR-A-LAGO", color: 0xb8902e },
+    opry: { tipo: "sala", nombre: "GRAND OLE OPRY", color: 0x6a1a2a },
+    mercado_pescado: { tipo: "sala", nombre: "PUBLIC MARKET", color: 0x8a2a24 },
+  };
+  const HUECO = 7.4, HUECO_ALTO = 6.8;          // el tunel: 14,8 m de ancho (calle y aceras) y 6,8 de alto
+  function cierresDeNivel(nv) {
+    const r = [];
+    nv.__sinCierres = [];
+    for (const f of nv.fondo || []) {
+      const c = f.cruza && CIERRES[f.pieza];
+      const m = c && medidas(`${nv.carpeta}/${f.pieza}`);
+      if (!m || !m.geometry) continue;
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      const b = m.geometry.boundingBox;
+      const W = Math.min(42, Math.max(-b.min.x, b.max.x) + 0.5), H = Math.min(26, Math.max(9, b.max.y + 0.5));
+      const L = ANCHO[f.pieza] || 420, fondo = c.tipo === "estadio" ? Math.min(24, H * 1.15) : 4;
+      r.push({ cierre: "entrada", d: f.d - 3.2, conf: c, W, H, fondo: 3.2, ancho: 3.2 });
+      r.push({ cierre: "salida", d: f.d + L, conf: c, W, H, fondo, ancho: fondo });
+      // (los edificios de la calle no empiezan dentro de las gradas del fondo)
+      nv.__sinCierres.push([f.d + L - 2, f.d + L + fondo + 6]);
+    }
+    return r;
+  }
+  const cierreMats = {}, cierresHechos = new Map();
+  function matCierre(color, opts) {
+    const k = color + JSON.stringify(opts || {});
+    return cierreMats[k] || (cierreMats[k] = toon(color, opts));
+  }
+  function texturaLetrero(texto, fondo) {
+    const c = document.createElement("canvas");
+    c.width = 1024; c.height = 160;
+    const x = c.getContext("2d");
+    x.fillStyle = "#" + new THREE.Color(fondo).getHexString(); x.fillRect(0, 0, 1024, 160);
+    x.strokeStyle = "#f4f0e6"; x.lineWidth = 8; x.strokeRect(10, 10, 1004, 140);
+    x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle";
+    let t = 96;
+    do { x.font = `900 ${t}px Arial, sans-serif`; t -= 4; } while (x.measureText(texto).width > 940 && t > 30);
+    x.fillText(texto, 512, 84);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+  // La gente de las gradas: filas de camisetas de colores y cabezas.
+  let texGrada = null;
+  function texturaGrada() {
+    if (texGrada) return texGrada;
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 256;
+    const x = c.getContext("2d");
+    x.fillStyle = "#3a3e48"; x.fillRect(0, 0, 512, 256);
+    const camisas = ["#d8322e", "#f4f0e8", "#2a5ab8", "#f2c230", "#3f8a4a", "#e87a2a", "#1c2a4a", "#c8282c"];
+    const pieles = ["#f0c8a0", "#d8a478", "#a8744a", "#6a4a32", "#f6d8b8"];
+    let a = 7;
+    const rnd = () => { a = (a * 16807) % 2147483647; return a / 2147483647; };
+    for (let fila = 0; fila < 8; fila++) {
+      const y = fila * 32;
+      x.fillStyle = "#565a64"; x.fillRect(0, y + 26, 512, 6);                 // el escalon
+      for (let i = 0; i < 32; i++) {
+        if (rnd() < 0.08) continue;                                            // algun asiento vacio
+        const cx = i * 16 + 8 + (rnd() - 0.5) * 3;
+        x.fillStyle = camisas[Math.floor(rnd() * camisas.length)];
+        x.fillRect(cx - 6, y + 13, 12, 13);
+        x.fillStyle = pieles[Math.floor(rnd() * pieles.length)];
+        x.beginPath(); x.arc(cx, y + 9, 4.6, 0, Math.PI * 2); x.fill();
+      }
+    }
+    texGrada = new THREE.CanvasTexture(c);
+    texGrada.colorSpace = THREE.SRGBColorSpace;
+    texGrada.wrapS = texGrada.wrapT = THREE.RepeatWrapping;
+    return texGrada;
+  }
+  // Una caja de x0 a x1, de y0 a y1 y de z0 a z1 (z negativa: mas lejos).
+  function cajaCierre(g, mat, x0, x1, y0, y1, z0, z1) {
+    if (x1 - x0 < 0.01 || y1 - y0 < 0.01 || Math.abs(z1 - z0) < 0.01) return null;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, Math.abs(z1 - z0)), mat);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    g.add(m);
+    return m;
+  }
+  // Una pared con el hueco del tunel en medio (de lado a lado, de 0 a H).
+  function paredConHueco(g, mat, W, H, z0, z1) {
+    cajaCierre(g, mat, -W, -HUECO, 0, H, z0, z1);
+    cajaCierre(g, mat, HUECO, W, 0, H, z0, z1);
+    cajaCierre(g, mat, -HUECO, HUECO, HUECO_ALTO, H, z0, z1);
+  }
+  function construirCierre(p) {
+    const { conf, W, H, fondo } = p, g = new THREE.Group();
+    const hormigon = matCierre(0xd6d0c4), oscuro = matCierre(0x2a2c32), acento = matCierre(conf.color);
+    const tunel = matCierre(0x3a3c42);
+    if (p.cierre === "entrada") {
+      // La fachada (se ve desde fuera, al llegar): pilares, franja de color
+      // arriba, el cartel con el nombre sobre el tunel, banderas y focos.
+      const pared = conf.tipo === "estadio" ? hormigon : matCierre(0xcbbfa8);
+      paredConHueco(g, pared, W, H, 0, -fondo);
+      cajaCierre(g, tunel, -HUECO, -HUECO + 0.3, 0, HUECO_ALTO, 0, -fondo);          // el tunel por dentro
+      cajaCierre(g, tunel, HUECO - 0.3, HUECO, 0, HUECO_ALTO, 0, -fondo);
+      cajaCierre(g, oscuro, -HUECO, HUECO, HUECO_ALTO - 0.3, HUECO_ALTO, 0, -fondo);
+      for (let x = -W + 3; x < W - 2; x += 6) {
+        if (Math.abs(x) < HUECO + 1.2) continue;
+        cajaCierre(g, matCierre(0xece6da), x - 0.7, x + 0.7, 0, H, 0.6, 0);         // los pilares
+        if (conf.tipo === "sala") cajaCierre(g, matCierre(0x2a3a4a), x + 1.4, x + 4.6, H * 0.45, H * 0.8, 0.05, 0);   // ventanales
+      }
+      cajaCierre(g, acento, -W, W, H - 1.6, H, 0.7, -0.2);                           // la franja de arriba
+      // el marco del tunel
+      cajaCierre(g, acento, -HUECO - 1.2, -HUECO, 0, HUECO_ALTO + 1.2, 0.5, 0.05);
+      cajaCierre(g, acento, HUECO, HUECO + 1.2, 0, HUECO_ALTO + 1.2, 0.5, 0.05);
+      cajaCierre(g, acento, -HUECO, HUECO, HUECO_ALTO, HUECO_ALTO + 1.2, 0.5, 0.05);
+      const cartel = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(2 * HUECO + 6, 2 * W - 2), 2.6),
+        new THREE.MeshBasicMaterial({ map: texturaLetrero(conf.nombre, conf.color) }));
+      cartel.position.set(0, Math.min(H - 2.2, HUECO_ALTO + 2.4), 0.72);
+      g.add(cartel);
+      const mastil = matCierre(0xd8dde3);
+      for (const x of [-W + 2, -W / 2, W / 2, W - 2]) {
+        const pm = cajaCierre(g, mastil, x - 0.06, x + 0.06, H, H + 4.5, 0.06, -0.06);
+        const fl = new THREE.Mesh(banderaGeo, banderaMat);
+        fl.scale.setScalar(2.2); fl.position.set(x + 1.05, H + 3.7, 0);
+        g.add(fl);
+        g.userData.banderas = (g.userData.banderas || []).concat(fl);
+        if (pm) pm.userData.x = x;
+      }
+      if (conf.tipo === "estadio") {
+        // Las torres de focos de las esquinas.
+        for (const x of [-W + 1, W - 1]) {
+          cajaCierre(g, matCierre(0x9aa0a8), x - 0.3, x + 0.3, H, H + 9, 0, -0.6);
+          cajaCierre(g, new THREE.MeshBasicMaterial({ color: 0xfff6d8 }), x - 2.2, x + 2.2, H + 8.6, H + 10.6, 0.2, -0.6);
+        }
+      }
+    } else if (conf.tipo === "estadio") {
+      // El fondo del estadio (se ve desde dentro): la grada que sube hacia
+      // atras, con la gente, el muro con anuncios abajo, el tunel de salida en
+      // medio y el marcador arriba.
+      const tex = texturaGrada();
+      const largoRampa = Math.hypot(H - 1.4, fondo - 1);
+      const ang = Math.atan2(H - 1.4, fondo - 1);
+      for (const [x0, x1] of [[-W, -HUECO - 1], [HUECO + 1, W]]) {
+        const mat = new THREE.MeshLambertMaterial({ map: tex.clone() });
+        mat.map.needsUpdate = true;
+        mat.map.repeat.set((x1 - x0) / 8, largoRampa / 7.2);
+        const pl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, largoRampa), mat);
+        pl.rotation.x = -(Math.PI / 2 - ang);
+        pl.position.set((x0 + x1) / 2, 1.4 + (H - 1.4) / 2, -0.5 - (fondo - 1) / 2);
+        g.add(pl);
+      }
+      // Encima del tunel, la grada sigue (mas corta).
+      {
+        const y0 = HUECO_ALTO + 0.6, z0 = -0.5 - (fondo - 1) * ((y0 - 1.4) / (H - 1.4));
+        const largo = Math.hypot(H - y0, -0.5 - (fondo - 1) - z0);
+        const mat = new THREE.MeshLambertMaterial({ map: tex.clone() });
+        mat.map.needsUpdate = true;
+        mat.map.repeat.set((2 * HUECO + 2) / 8, largo / 7.2);
+        const pl = new THREE.Mesh(new THREE.PlaneGeometry(2 * HUECO + 2, largo), mat);
+        pl.rotation.x = -(Math.PI / 2 - ang);
+        pl.position.set(0, (y0 + H) / 2, (z0 + (-0.5 - (fondo - 1))) / 2);
+        g.add(pl);
+      }
+      // El macizo de hormigon de debajo (que no se vea a traves) y la pared de detras.
+      cajaCierre(g, hormigon, -W, -HUECO - 1, 0, 1.4, -0.5, -fondo);
+      cajaCierre(g, hormigon, HUECO + 1, W, 0, 1.4, -0.5, -fondo);
+      cajaCierre(g, hormigon, -W, W, 0, H + 1.2, -fondo, -fondo - 0.6);
+      // El muro de abajo con los anuncios de colores.
+      const anuncios = [conf.color, 0xf4f0e8, 0x2a5ab8, 0xf2c230];
+      for (let x = -W, k = 0; x < W; x += 6, k++) {
+        const x1 = Math.min(W, x + 6);
+        if (x1 > -HUECO - 1 && x < HUECO + 1) continue;
+        cajaCierre(g, matCierre(anuncios[k % 4]), Math.max(x, -W), x1 - 0.15, 0, 1.4, 0, -0.5);
+      }
+      // El tunel de salida, por debajo de la grada.
+      cajaCierre(g, tunel, -HUECO - 1, -HUECO, 0, HUECO_ALTO + 0.6, 0, -fondo);
+      cajaCierre(g, tunel, HUECO, HUECO + 1, 0, HUECO_ALTO + 0.6, 0, -fondo);
+      cajaCierre(g, oscuro, -HUECO - 1, HUECO + 1, HUECO_ALTO, HUECO_ALTO + 0.6, 0, -fondo);
+      cajaCierre(g, acento, -HUECO - 1, HUECO + 1, HUECO_ALTO, HUECO_ALTO + 0.9, 0.3, 0);
+      // El marcador: arriba, en medio.
+      const marcador = new THREE.Mesh(new THREE.PlaneGeometry(16, 4.2),
+        new THREE.MeshBasicMaterial({ map: texturaLetrero("★ " + conf.nombre + " ★", 0x14161c) }));
+      marcador.position.set(0, H + 4.2, -fondo + 0.4);
+      g.add(marcador);
+      cajaCierre(g, oscuro, -8.4, 8.4, H + 1.6, H + 6.6, -fondo + 0.35, -fondo - 0.3);
+      for (const x of [-6, 6]) cajaCierre(g, matCierre(0x9aa0a8), x - 0.25, x + 0.25, H, H + 1.7, -fondo + 0.2, -fondo - 0.3);
+    } else {
+      // El fondo de la sala: la pared con la puerta de salida y el letrero verde.
+      paredConHueco(g, matCierre(0x8a8278), W, H, 0, -fondo);
+      cajaCierre(g, acento, -W, W, 0, 1.2, 0.2, 0);                                  // el zocalo
+      cajaCierre(g, acento, -HUECO - 0.8, -HUECO, 0, HUECO_ALTO + 0.8, 0.3, 0.02);
+      cajaCierre(g, acento, HUECO, HUECO + 0.8, 0, HUECO_ALTO + 0.8, 0.3, 0.02);
+      cajaCierre(g, acento, -HUECO, HUECO, HUECO_ALTO, HUECO_ALTO + 0.8, 0.3, 0.02);
+      const salida = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.3),
+        new THREE.MeshBasicMaterial({ map: texturaLetrero(getLang() === "es" ? "SALIDA" : "EXIT", 0x1f8a3a) }));
+      salida.position.set(0, HUECO_ALTO + 1.6, 0.34);
+      g.add(salida);
+    }
+    return g;
+  }
   function prepararCalle() {
     if (haloMat) haloMat.uniforms.fuerza.value = fuerzaHalos();
     for (const p of calleViva) quitarPieza(p.mesh);
@@ -1896,7 +2109,7 @@ export function createWorld(scene) {
     for (const car of cochesCruce) group.remove(car);
     cochesCruce.length = 0; cruces.length = 0; giroPendiente = null; puertasAuto.length = 0;
     casaBlanca = null;
-    calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
+    calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel), ...cierresDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
     siguientePieza = 0;
     // Siguiendo desde el punto de control: lo que ya quedo atras no se pone.
     while (siguientePieza < calle.length && calle[siguientePieza].d + (calle[siguientePieza].ancho || 10) < totalScrolled - 15) siguientePieza++;
@@ -1931,6 +2144,16 @@ export function createWorld(scene) {
         calleViva.push({ mesh: m, fin: p.tipo === "cruce" ? 14 : 10 });
         continue;
       }
+      if (p.cierre) {
+        // 26/11: la fachada de un estadio (o sala) o sus gradas del fondo.
+        const k = `${nivel.id}:${p.cierre}:${p.d}`;
+        const m = cierresHechos.get(k) || construirCierre(p);
+        cierresHechos.set(k, m);
+        m.position.set(0, 0, -(p.d - totalScrolled));
+        group.add(m);
+        calleViva.push({ mesh: m, fin: p.fondo + 30 });
+        continue;
+      }
       if (p.arco) {
         // El arco del punto de control, de lado a lado de la calle.
         const a = construirArco();
@@ -1945,7 +2168,7 @@ export function createWorld(scene) {
       const si = nivel.interior && nivel.interior.sinEdificios;
       // (Y los dos a la vez: el puente de Detroit y su final.)
       // (11/11: `sinEdificios` puede ser un tramo o varios: [[a, b], [c, d]].)
-      const rs = [Array.isArray(si) ? si : si && nivel.interior.rango, ...rangosSin(nivel.sinEdificios)].filter(Boolean);
+      const rs = [Array.isArray(si) ? si : si && nivel.interior.rango, ...rangosSin(nivel.sinEdificios), ...(nivel.__sinCierres || [])].filter(Boolean);
       if (!p.cruza && !p.centro && rs.some((r) => p.d < r[1] && p.d + (p.ancho || 20) > r[0])) continue;
       const clave = `${nivel.carpeta}/${p.pieza}`;
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
@@ -2036,6 +2259,7 @@ export function createWorld(scene) {
         mesh.visible = true;
         mesh.rotation.set(0, side < 0 ? 0 : Math.PI, 0);
         mesh.position.set(side * 7.6, 0, z - k * (OUTER_SPACING / 2));
+        if (/banco/.test(nivel.acera[idx])) sentarEnBanco(mesh);
         if (!mesh.parent) group.add(mesh);
         outerProps.push({ mesh, biome: "nivel_" + nivel.id, poolIndex: idx });
       }
@@ -3279,7 +3503,19 @@ export function createWorld(scene) {
     // 14/11: los caballos del Derby de Louisville, al galope.
     caballo_derby: { pata: "derby_pata", eje: "x", zancada: 1.7, amp: 0.6, fases: [0, 0.6, Math.PI, Math.PI + 0.6],
       patas: [[-0.2, 0.75, 1.15], [0.2, 0.75, 1.15], [-0.2, -0.7, 1.15], [0.2, -0.7, 1.15]] },
+    // 26/11/2026: Isidro: «los animales se mueven extraños». El bisonte y el
+    // jabali eran de una pieza con cuatro palitos y avanzaban botando como un
+    // muelle; ahora llevan sus patas (blender/rushmore.py y littlerock.py) y
+    // galopan o trotan. El perro es el que pasean por la acera.
+    //   galope: a mas de 6 m/s las de delante van casi juntas y las de detras
+    //   tambien (como galopa de verdad); bote: cuanto sube el cuerpo en cada paso.
+    bisonte: { pata: "bisonte_pata", eje: "x", zancada: 1.6, amp: 0.42, fases: CUATRO, galope: true, bote: 0.07,
+      patas: [[-0.42, -0.6, 0.9], [0.42, -0.6, 0.9], [-0.4, 0.95, 0.9], [0.4, 0.95, 0.9]] },
+    jabali: { pata: "jabali_pata", eje: "x", zancada: 0.8, amp: 0.5, fases: CUATRO, bote: 0.045,
+      patas: [[-0.28, -0.45, 0.5], [0.28, -0.45, 0.5], [-0.28, 0.75, 0.5], [0.28, 0.75, 0.5]] },
+    perro: { pata: "perro_pata", eje: "z", zancada: 0.5, amp: 0.5, fases: CUATRO, bote: 0.02, patas: cuatroPatas(0.26, -0.26, 0.09, 0.42) },
   };
+  const GALOPE = [0, 0.5, Math.PI, Math.PI + 0.5];
   ANDAR.caballo_derby_azul = ANDAR.caballo_derby;
   ANDAR.calesa_tour = ANDAR.carruaje;     // (14/11: la calesa de Charleston: el mismo caballo)
   function ponerPatas(g, nombre) {
@@ -3295,28 +3531,38 @@ export function createWorld(scene) {
     g.userData.andar = { fase: 0, v: 0, px: null, pz: null };
   }
   // Mueve las patas al paso de `v` (m/s); devuelve cuanto anda (0 parado, 1 andando).
+  // 26/11: sin tope de velocidad: antes, a mas de 4 m/s las patas seguian a
+  // paso de 4 y el animal patinaba (el caballo del Derby, el bisonte que embiste).
+  // A mas velocidad, zancadas mas largas y algo mas abiertas.
   function moverPatas(m, nombre, dt, v) {
     const an = ANDAR[nombre], u = m.userData.andar;
     u.v += (v - u.v) * Math.min(1, dt * 6);
     const k = Math.min(1, u.v / 0.9);
-    u.fase += (dt * Math.min(u.v, 4) * 2 * Math.PI) / an.zancada;
-    const amp = an.amp * k;
+    const zancada = an.zancada * (1 + Math.max(0, u.v - 2.5) * 0.16);
+    u.fase += (dt * u.v * 2 * Math.PI) / zancada;
+    const amp = an.amp * k * Math.min(1.3, 1 + Math.max(0, u.v - 3) * 0.04);
+    const galope = an.galope && u.v > 6;
     m.userData.patas.forEach((p, i) => {
-      const a = Math.sin(u.fase + an.fases[i]) * amp;
+      const a = Math.sin(u.fase + (galope ? GALOPE[i] : an.fases[i])) * amp;
       if (an.eje === "x") p.rotation.x = a; else p.rotation.z = a;
     });
     return k;
   }
   // Lo que anda sobre la calle un obstaculo con patas (sin contar lo que se
   // mueve la calle hacia el jugador).
+  // (26/11: tambien al darse la vuelta en el sitio mueve las patas, y el
+  // cuerpo sube un poco en cada paso segun el animal.)
   function andarObstaculo(o, dt, dz) {
     const m = o.mesh, u = m.userData.andar;
     if (!(dt > 0)) return;
     const vx = u.px === null ? 0 : (m.position.x - u.px) / dt;
     const vz = u.pz === null ? 0 : (o.z - u.pz - dz) / dt;
-    u.px = m.position.x; u.pz = o.z;
-    const k = moverPatas(m, o.pool, dt, Math.min(10, Math.hypot(vx, vz)));
-    if (ANDAR[o.pool].eje === "z" && k > 0.05) m.position.y = Math.abs(Math.sin(u.fase)) * 0.03 * k;
+    const w = u.ry === undefined || u.px === null ? 0 : Math.abs(m.rotation.y - u.ry) / dt;
+    u.px = m.position.x; u.pz = o.z; u.ry = m.rotation.y;
+    const an = ANDAR[o.pool];
+    const k = moverPatas(m, o.pool, dt, Math.min(16, Math.max(Math.hypot(vx, vz), w * 0.7)));
+    const bote = an.bote ?? (an.eje === "z" ? 0.03 : 0);
+    if (bote && k > 0.05) m.position.y = Math.abs(Math.sin(u.fase)) * bote * k;
   }
 
   function construirObstaculo(nombre) {
@@ -4165,8 +4411,19 @@ export function createWorld(scene) {
       o.carga = true; o.mueve = 11;
       if (alAvisoMapa) alAvisoMapa("bisonte");
     }
-    if (o.carga) { m.rotation.x = 0.16; m.rotation.y = 0; m.position.y = Math.abs(Math.sin(t * 13)) * 0.14; }
-    else { m.rotation.x = 0.05 + Math.sin(t * 0.8) * 0.06; m.rotation.y = Math.sin(t * 0.5) * 0.15; m.position.y = 0; }
+    // 26/11: antes se mecia sin parar como un juguete y al embestir botaba;
+    // ahora pasta quieto (cada uno algo girado) y embiste al galope, con la
+    // cabeza baja, girandose hacia ti.
+    if (o.bisGiro === undefined) o.bisGiro = (Math.random() - 0.5) * 0.6;
+    if (o.carga) {
+      m.rotation.x += (0.1 - m.rotation.x) * Math.min(1, dt * 6);
+      m.rotation.y += (0 - m.rotation.y) * Math.min(1, dt * 8);
+      if (!m.userData.patas) m.position.y = Math.abs(Math.sin(t * 13)) * 0.14;
+    } else {
+      m.rotation.x = 0.03 + Math.sin(t * 0.7) * 0.01;
+      m.rotation.y = o.bisGiro;
+      if (!m.userData.patas) m.position.y = 0;
+    }
   }
   // El perrito de la pradera asoma y se esconde (unos 2,2 s cada vez); solo
   // estorba cuando esta fuera.
@@ -4295,9 +4552,14 @@ export function createWorld(scene) {
     z.t += dt;
     const s = (Math.sin(z.t * 2.2) + 1) / 2, k = s * s * (3 - 2 * s);
     const x = LANE_X[z.a] + (LANE_X[z.b] - LANE_X[z.a]) * k;
+    // 26/11: iba de lado a lado mirandote (corria de lado, como un cangrejo)
+    // y botando; ahora trota mirando hacia donde va y en cada punta se da la
+    // vuelta (mirandote un momento).
+    const vx = dt > 0 ? (x - m.position.x) / dt : 0;
     m.position.x = x;
-    m.rotation.y = Math.cos(z.t * 2.2) * 0.35 * Math.sign(LANE_X[z.b] - LANE_X[z.a]);
-    m.position.y = Math.abs(Math.sin(z.t * 14)) * 0.06;
+    const rumbo = Math.abs(vx) > 0.35 ? Math.sign(vx) * Math.PI / 2 : m.rotation.y * 0.9;
+    m.rotation.y += (rumbo - m.rotation.y) * Math.min(1, dt * 7);
+    if (!m.userData.patas) m.position.y = Math.abs(Math.sin(z.t * 14)) * 0.06;
     o.lane = Math.abs(x - LANE_X[z.a]) < Math.abs(x - LANE_X[z.b]) ? z.a : z.b;
   }
   // Deslizandose sobre un brillo se desentierra un diamante (main.js da los tacos).
@@ -5185,13 +5447,13 @@ export function createWorld(scene) {
     const r = o.rana, m = o.mesh;
     if (r.hinchada) {
       const t = animClock + o.phase;
-      m.scale.set(1, 1 + Math.sin(t * 2.2) * 0.03, 1);
+      m.scale.set(m.userData.anchoX || 1, 1 + Math.sin(t * 2.2) * 0.03, 1);
       m.rotation.z = Math.sin(t * 1.6) * 0.05;
       return;
     }
     r.t += dt;
     const f = Math.min(1, r.t / 0.45), sm = f * f * (3 - 2 * f);
-    m.scale.set(1 + 0.35 * sm, 1 - 0.88 * sm, 1 + 0.35 * sm);
+    m.scale.set((m.userData.anchoX || 1) * (1 + 0.35 * sm), 1 - 0.88 * sm, 1 + 0.35 * sm);
     m.rotation.z *= 1 - sm;
   }
   function desinflar(o) {
@@ -5435,12 +5697,14 @@ export function createWorld(scene) {
     // (Echan a correr a 60 m: si corrieran desde lejos llegarian 70 m antes
     // que su fila, encima de lo del tramo de antes.)
     if (!e && !o.estampida.corre && o.z > -60) { o.estampida.corre = true; o.mueve = 7; }
-    if (!e) { m.rotation.set(0.16, 0, 0); m.position.y = Math.abs(Math.sin(t * 13)) * 0.14; return; }
+    // (26/11: al galope con sus patas: antes botaba entero.)
+    const pataBote = m.userData.patas ? 0 : 1;
+    if (!e) { m.rotation.set(o.estampida.corre ? 0.08 : 0.03, 0, 0); if (pataBote) m.position.y = Math.abs(Math.sin(t * 13)) * 0.14; return; }
     e.t += dt;
     const f = Math.min(1, Math.max(0, (e.t - 0.15) / 0.75)), sm = f * f * (3 - 2 * f);
     m.position.x = e.x0 + e.lado * sm * 6.5;
-    m.position.y = Math.abs(Math.sin(t * 13)) * 0.14 * (1 - sm);
-    m.rotation.set(0.16 * (1 - sm), -e.lado * sm * 1.1, e.lado * sm * 0.2);
+    if (pataBote) m.position.y = Math.abs(Math.sin(t * 13)) * 0.14 * (1 - sm);
+    m.rotation.set(0.08 * (1 - sm), -e.lado * sm * 1.1, e.lado * sm * 0.12);
   }
   // El lazo: main.js llama a echarLazo al tocar la pantalla en la estampida.
   // Engancha al bisonte mas cercano de tu carril (de 3 a 32 m) y la cuerda
@@ -6087,22 +6351,179 @@ export function createWorld(scene) {
     });
   }
 
+  // 26/11: Isidro: «los animales se mueven extraños». La vaca cruzaba de lado
+  // a lado y en cada punta se daba la vuelta de golpe (media vuelta en un
+  // fotograma); al acercarse se deslizaba de lado hasta su carril. Ahora frena
+  // antes del bordillo, se da la vuelta poco a poco (dando pasitos) y vuelve;
+  // y al pararse anda hacia delante hasta el carril que tiene delante.
   function moverVaca(o, dt) {
     const m = o.mesh;
-    if (o.cruza && o.z < -26) {
-      m.position.x += o.cruza * dt;
-      if (Math.abs(m.position.x) > LANE_X[2]) { o.cruza = -o.cruza; m.rotation.y = o.cruza > 0 ? 0 : Math.PI; m.position.x = Math.sign(m.position.x) * LANE_X[2]; }
-      m.position.y = Math.abs(Math.sin(animClock * 6 + o.phase)) * 0.04;
+    const c = o.vacaPaso || (o.vacaPaso = { gira: 0, desde: 0, sentido: 1 });
+    if (c.gira > 0) {
+      c.gira = Math.max(0, c.gira - dt / 1.3);
+      const f = 1 - c.gira, s = f * f * (3 - 2 * f);
+      m.rotation.y = c.desde + Math.PI * c.sentido * s;
+    } else if (o.cruza && o.z < -26) {
+      const dir = Math.sign(o.cruza), queda = LANE_X[2] - dir * m.position.x;
+      // (si el paso la mete en algo -el autobus de al lado-, se da la vuelta)
+      const antes = USAR_BLENDER ? metidoEn(o) : null, x0 = m.position.x;
+      m.position.x += dir * Math.abs(o.cruza) * Math.min(1, Math.max(0.15, queda / 1.4)) * dt;
+      const topa = antes && chocaNuevo(o, antes);
+      if (topa) m.position.x = x0;
+      if (queda < 0.06 || topa) {
+        o.cruza = -o.cruza;
+        c.gira = 1; c.desde = m.rotation.y; c.sentido = Math.random() < 0.5 ? 1 : -1;
+      }
     } else {
-      if (o.cruza) o.cruza = 0;
-      m.position.x += (LANE_X[o.lane] - m.position.x) * Math.min(1, dt * 6);
-      m.position.y = 0;
+      if (o.cruza) {
+        // Se queda en el primer carril que tiene delante.
+        const dir = Math.sign(o.cruza), x = m.position.x;
+        const delante = LANES.filter((l) => dir * (LANE_X[l] - x) > -0.3);
+        o.vacaPara = delante.length ? (dir > 0 ? Math.min(...delante) : Math.max(...delante)) : o.lane;
+        o.cruza = 0;
+      }
+      const meta = LANE_X[o.vacaPara ?? o.lane], dx = meta - m.position.x;
+      const antes = USAR_BLENDER && dx ? metidoEn(o) : null, x0 = m.position.x;
+      m.position.x += Math.sign(dx) * Math.min(Math.abs(dx), 2.4 * dt);
+      if (antes && chocaNuevo(o, antes)) m.position.x = x0;
     }
+    if (!m.userData.patas) m.position.y = 0;
     // El carril para los choques: el mas cercano a donde esta.
     let mejor = 0;
     for (const l of LANES) if (Math.abs(LANE_X[l] - m.position.x) < Math.abs(LANE_X[mejor] - m.position.x)) mejor = l;
     o.lane = mejor;
   }
+
+  // ---- 26/11/2026: que nada se atraviese ----
+  // Isidro: «hay objetos que chocan y se traspasan». Una prueba automatica
+  // recorrio los 50 niveles y encontro cientos de casos de tres clases:
+  //  · Lo mas ancho que el carril (2,2 m): los carteles de cada ciudad, los
+  //    camiones, el autobus, la autocaravana... se metian en el carril de al
+  //    lado y atravesaban lo que hubiera alli. Ahora se estrechan (solo de
+  //    ancho) para caber en su carril.
+  //  · Lo que salia dentro de otra cosa (los vehiculos largos tapaban lo que
+  //    venia detras en su carril; la vaca dentro del camion de ganado): en su
+  //    primer fotograma, si se mete dentro de otra cosa, no se pone.
+  //  · Lo que se mueve (coches que te vienen de frente, el indycar, los que
+  //    cambian de carril) pasaba a traves de lo que tenia delante: ahora frena
+  //    y se queda detras, y el que cambia de carril espera a tener sitio.
+  // La huella de cada modelo es su caja de verdad (sin sombras ni halos).
+  const ANCHO_CARRIL = LANE_WIDTH - 0.14;
+  // (las rampas van juntas a proposito, y lo que ocupa varios carriles no se toca)
+  const NO_ESTRECHAR = new Set(["rampa_salto", "coche_metro", "vagon", "hamaca", "dormilon", "sombrilla"]);
+  // (las tablas de surf median 4 m de punta a punta: con 2 m siguen siendo tablas de surf)
+  const ESTRECHAR_SIEMPRE = new Set(["tablas_surf"]);
+  const JUNTOS = new Set(["rampa_salto", "coche_metro", "vagon"]);
+  const huellas = {}, estrechos = {};
+  const _hCaja = new THREE.Box3(), _hInv = new THREE.Matrix4(), _hRel = new THREE.Matrix4();
+  function huellaLocal(o) {
+    if (o.pool in huellas) return huellas[o.pool];
+    const m = o.mesh, x = m.position.x, y = m.position.y, z = m.position.z, ry = m.rotation.y, sc = m.scale.x;
+    m.position.set(0, 0, 0); m.rotation.y = 0; m.scale.x = m.userData.escala0 ?? m.scale.x;
+    m.updateMatrixWorld(true);
+    _hInv.copy(m.matrixWorld).invert();
+    const b = new THREE.Box3();
+    m.traverse((c) => {
+      if (!c.isMesh || c.isSprite || !c.geometry || !c.visible) return;
+      const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+      if (mat && (mat.depthWrite === false || mat.blending === THREE.AdditiveBlending)) return;   // sombras, halos, brillos
+      if (!c.geometry.boundingBox) c.geometry.computeBoundingBox();
+      _hRel.multiplyMatrices(_hInv, c.matrixWorld);
+      b.union(_hCaja.copy(c.geometry.boundingBox).applyMatrix4(_hRel));
+    });
+    m.position.set(x, y, z); m.rotation.y = ry; m.scale.x = sc;
+    m.updateMatrixWorld(true);
+    huellas[o.pool] = b.isEmpty() ? null : { x0: b.min.x, x1: b.max.x, y0: b.min.y, y1: b.max.y, z0: b.min.z, z1: b.max.z };
+    return huellas[o.pool];
+  }
+  // La caja que ocupa en la calle (en x, y, z), donde esta o donde estaria.
+  function huellaMundo(o, out, x = o.mesh.position.x, z = o.z) {
+    const h = huellaLocal(o);
+    if (!h) return null;
+    const m = o.mesh, sx = m.scale.x, sz = m.scale.z, c = Math.cos(m.rotation.y), sn = Math.sin(m.rotation.y);
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    for (const lx of [h.x0 * sx, h.x1 * sx]) for (const lz of [h.z0 * sz, h.z1 * sz]) {
+      const wx = lx * c + lz * sn, wz = -lx * sn + lz * c;
+      if (wx < x0) x0 = wx; if (wx > x1) x1 = wx; if (wz < z0) z0 = wz; if (wz > z1) z1 = wz;
+    }
+    out.x0 = x + x0; out.x1 = x + x1; out.z0 = z + z0; out.z1 = z + z1;
+    out.y0 = m.position.y + h.y0 * m.scale.y; out.y1 = m.position.y + h.y1 * m.scale.y;
+    return out;
+  }
+  const _hA = {}, _hB = {};
+  const solapan = (a, b, mg = 0.12) => a.x0 < b.x1 - mg && b.x0 < a.x1 - mg && a.z0 < b.z1 - mg && b.z0 < a.z1 - mg && a.y0 < b.y1 - 0.05 && b.y0 < a.y1 - 0.05;
+  const solido = (o) => !o.smashed && !o.quitado && !o.cae && o.mesh.visible && o.type !== "nada";
+  const pareja = (a, b) => (a.lados && a.lados.includes(b)) || (b.lados && b.lados.includes(a)) || (a.pool === b.pool && JUNTOS.has(a.pool));
+  // Lo que se pone en un tramo normal (sin nada propio de un momento o de su ciudad).
+  const BASE_OBST = new Set(["mesh", "lane", "type", "pool", "z", "phase", "medio", "centro", "alto", "mueve", "smashed",
+    "techo", "rampa", "largo", "puedeCambiar", "barrera", "bota", "rueda", "revisado"]);
+  const normal = (o) => Object.keys(o).every((k) => BASE_OBST.has(k));
+  // Mas ancho que su carril: se estrecha (hasta 3,3 m; lo mas ancho ocupa varios carriles a proposito).
+  function estrechar(o) {
+    const m = o.mesh, k = o.pool;
+    if (m.userData.escala0 === undefined) m.userData.escala0 = m.scale.x;
+    if (!(k in estrechos)) {
+      const h = huellaLocal(o), t = TIPOS[k] || {};
+      const w = h ? (h.x1 - h.x0) * m.userData.escala0 : 0;
+      estrechos[k] = h && !NO_ESTRECHAR.has(k) && !ANDAR[k] && !t.cruza && o.type !== "rampa" && w > ANCHO_CARRIL && (w <= 3.3 || ESTRECHAR_SIEMPRE.has(k)) ? ANCHO_CARRIL / w : 1;
+    }
+    m.scale.x = m.userData.escala0 * estrechos[k];
+    m.userData.anchoX = m.scale.x;   // (lo que cambia de tamaño, como la rana, lo respeta)
+  }
+  function quitarObstaculo(o) { o.quitado = true; o.type = "nada"; o.fuera = true; o.mesh.visible = false; }
+  // En su primer fotograma: si sale dentro de otra cosa, se quita (el normal; si los dos lo son, el nuevo;
+  // nunca el autobus ni la rampa).
+  function revisarObstaculo(o) {
+    o.revisado = true;
+    if (!solido(o) || !huellaMundo(o, _hA)) return;
+    for (const q of obstacles) {
+      if (q === o || !q.revisado || !solido(q) || pareja(o, q) || !huellaMundo(q, _hB) || !solapan(_hA, _hB)) continue;
+      // (el autobus y las rampas nunca: llevan tacos encima)
+      const puede = (x) => normal(x) && x.type !== "bus" && x.type !== "rampa";
+      // (lo de delante solo si aun esta lejos: lo que se pone cerca, como el
+      // vehiculo que se aparca para montarse, quita lo que tapa a mas de 45 m)
+      const quitar = puede(o) ? o : puede(q) && q.z < -45 ? q : null;
+      if (!quitar) continue;
+      quitarObstaculo(quitar);
+      if (PRUEBA_SOLAPES) PRUEBA_SOLAPES.quitados++;
+      if (quitar === o) return;
+    }
+  }
+  // Lo que anda hacia algo que tiene delante (en su carril): frena y va detras.
+  // (no frenan las ondas, los trazos, las olas ni lo que vuela: pasan por encima a proposito)
+  const SIN_FRENAR = /onda|trazo|ola|bola_fuego|chorro|vapor|papeleta|carpeta|pez_helado|capote|grafico/;
+  function frenarObstaculo(o, dt) {
+    if (!o.mueve || !solido(o) || o.onda !== undefined || o.ola || SIN_FRENAR.test(o.pool) || !huellaMundo(o, _hA)) return;
+    const s = Math.sign(o.mueve);
+    for (const q of obstacles) {
+      if (q === o || !solido(q) || pareja(o, q) || !huellaMundo(q, _hB)) continue;
+      if (_hA.x0 >= _hB.x1 - 0.1 || _hB.x0 >= _hA.x1 - 0.1 || _hA.y0 >= _hB.y1 || _hB.y0 >= _hA.y1) continue;
+      const hueco = s > 0 ? _hB.z0 - _hA.z1 : _hA.z0 - _hB.z1;
+      if (hueco < -0.05 || hueco > 12) continue;               // ya estaban juntos, o lo tiene detras o lejos
+      if (hueco - s * (o.mueve - q.mueve) * dt < 0.4) {
+        o.mueve = s * q.mueve > 0 ? q.mueve : 0;
+        if (PRUEBA_SOLAPES) PRUEBA_SOLAPES.frenados++;
+        return;
+      }
+    }
+  }
+  // ¿Se ha metido en algo en lo que antes no estaba? (para deshacer el paso)
+  function chocaNuevo(o, antes) {
+    if (!huellaMundo(o, _hA)) return false;
+    for (const q of obstacles) {
+      if (q === o || !solido(q) || pareja(o, q) || antes.includes(q) || !huellaMundo(q, _hB)) continue;
+      if (solapan(_hA, _hB)) return true;
+    }
+    return false;
+  }
+  function metidoEn(o) {
+    const r = [];
+    if (!huellaMundo(o, _hA)) return r;
+    for (const q of obstacles) if (q !== o && solido(q) && huellaMundo(q, _hB) && solapan(_hA, _hB)) r.push(q);
+    return r;
+  }
+  // (para las pruebas: cuantos se quitan y cuantos frenan)
+  const PRUEBA_SOLAPES = typeof location !== "undefined" && /prueba/.test(location.search) ? (window.__solapes = { quitados: 0, frenados: 0, esperas: 0 }) : null;
 
   function spawnObstacle(lane, type, z, nombre) {
     const pool = USAR_BLENDER ? (nombre || DE_TIPO[type][Math.floor(Math.random() * DE_TIPO[type].length)]) : type;
@@ -6117,6 +6538,7 @@ export function createWorld(scene) {
       medio: t.medio || 0.7, centro: t.centro || 0, alto: t.alto, mueve: t.mueve || 0, smashed: null,
       // (07/11: los vagones del metro son mas altos y largos que el autobus.)
       techo: t.techo || BUS_TECHO, rampa: t.rampa ?? BUS_RAMPA, largo: t.largo || BUS_LARGO };
+    if (USAR_BLENDER) estrechar(o);
     obstacles.push(o);
     prepararMovimiento(o, t);
     return o;
@@ -6244,6 +6666,9 @@ export function createWorld(scene) {
       const ints = m.userData.intermitentes;
       if (ints) ints.forEach((h, i) => { h.material.opacity = c.t < 1 && (i === 0) === (dir < 0) ? 0.35 + 0.35 * Math.sin(animClock * 8) : 0; });
       if (c.t < 1 && (c.t > 0 || o.z > inicioCambio(o))) {
+        // (26/11: si el paso le metiera dentro de algo, se deshace y espera)
+        const antes = USAR_BLENDER ? metidoEn(o) : null;
+        const guarda = antes && [c.t, o.z, m.position.x, m.rotation.y, o.lane];
         c.t = Math.min(1, c.t + dt / CAMBIO_T);
         // Arranca, avanza y frena; el paso de carril va en medio, cuando ya anda.
         const v = CAMBIO_V * Math.sin(Math.PI * c.t);
@@ -6257,6 +6682,12 @@ export function createWorld(scene) {
         m.position.x = c.desde + salto * suave(w) + (s > 0 ? 1.5 : 0.4) * o.medio * Math.sin(giro);
         if (w > 0.5) o.lane = c.a;
         if (c.t === 1) { o.lane = c.a; m.rotation.y = 0; m.position.x = LANE_X[c.a]; }
+        // (si ya habia empezado a pasarse, no se queda a medias mas de medio segundo)
+        if (guarda && (guarda[0] === 0 || (c.espera || 0) < 0.5) && chocaNuevo(o, antes)) {
+          [c.t, o.z, m.position.x, m.rotation.y, o.lane] = guarda;
+          if (c.t > 0) c.espera = (c.espera || 0) + dt;
+          if (PRUEBA_SOLAPES) PRUEBA_SOLAPES.esperas++;
+        }
         // Pasa por encima de los tacos que pilla (como los coches que arrancan).
         for (const t of tacos) {
           if (!t.collected && t.obj === undefined && Math.abs(t.mesh.position.x - m.position.x) < 1.1 && t.z < o.z + 0.4 && t.z > o.z - 2 * o.medio - 0.4) { t.collected = true; t.atropellado = true; }
@@ -6279,7 +6710,11 @@ export function createWorld(scene) {
         const falta = destino - m.position.x;
         const tiempo = Math.max(0.2, (-o.z - 32) / Math.max(8, ritmo));
         const v = Math.min(9, Math.max(1.6, Math.abs(falta) / tiempo));
+        // (26/11: si el paso le mete dentro de otro -dos pinguinos a la vez-,
+        // espera un momento; si sigue tapado mas de 0,8 s, pasa igualmente)
+        const antes = USAR_BLENDER && (c.espera || 0) < 0.8 ? metidoEn(o) : null, x0 = m.position.x;
         m.position.x += Math.sign(falta) * Math.min(Math.abs(falta), v * dt);
+        if (antes && chocaNuevo(o, antes)) { m.position.x = x0; c.espera = (c.espera || 0) + dt; }
         m.position.y = Math.abs(Math.sin(animClock * 7 + o.phase)) * 0.03;
         if (Math.abs(destino - m.position.x) < 0.01) c.fase = 2;
       } else if (c.fase === 2) {
@@ -7681,6 +8116,15 @@ export function createWorld(scene) {
         const otros = LANES.filter((x) => x !== l);
         if (Math.random() < 0.5) obst(elegirDe(otros), "low", z, d);
       } else obst(Math.floor(Math.random() * 3), "low", z, d);
+    },
+    // 26/11/2026: el camion que pierde la carga (para cualquier ciudad): va
+    // delante por el carril del medio y las cajas se le caen por los lados y
+    // por detras y ruedan hacia ti (se saltan o se esquivan). Lo mueve
+    // moverMudanza; aqui solo hay tacos.
+    mudanza(z, d, t, k) {
+      mudanza.tramo = t;
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k > 1 && k < n - 2 && k % 2 === 0) tacosEn(SERPIENTE[k % SERPIENTE.length], z, 3);
     },
     // Findlay (31/10): vacas sueltas que cruzan la calle; se paran en un carril
     // antes de llegar al jugador, asi que siempre se ve donde se quedan.
@@ -9771,6 +10215,37 @@ export function createWorld(scene) {
     s.visible = true;
   }
 
+  // -- 26/11/2026: la mudanza: el camion va unos 40 m por delante (a tu paso)
+  // y cada segundo, mas o menos, se le cae una caja a un carril (nunca dos
+  // seguidas al mismo); cae, bota y rueda hacia ti. Al acabar el tramo se va. --
+  const mudanza = { tramo: null, mesh: null, z: -260, reloj: 0, ultimo: -1 };
+  function moverMudanza(dt) {
+    const t = mudanza.tramo;
+    if (!t) return;
+    if (!mudanza.mesh) {
+      if (!hayModelo("obstaculos/camion")) { mudanza.tramo = null; return; }
+      mudanza.mesh = modelo("obstaculos/camion");
+      group.add(mudanza.mesh);
+    }
+    const m = mudanza.mesh, d = totalScrolled;
+    if (d > t.hasta + 30 || d < t.desde - 300) { m.visible = false; if (d > t.hasta + 30) mudanza.tramo = null; mudanza.z = -260; return; }
+    // (llega antes de empezar el tramo, para que tire cajas en todo el tramo)
+    const dentro = d > t.desde - 110 && d < t.hasta - 25;
+    mudanza.z += ((dentro ? -40 : -260) - mudanza.z) * Math.min(1, dt * (dentro ? 1.6 : 0.5));
+    m.visible = mudanza.z > -240;
+    m.position.set(LANE_X[1], Math.abs(Math.sin(animClock * 9)) * 0.015, mudanza.z);
+    if (!dentro || d < t.desde + 4 || d > t.hasta - 45 || mudanza.z < -46 || !obstaclePools.caja_arancel) return;
+    mudanza.reloj -= dt;
+    if (mudanza.reloj > 0) return;
+    mudanza.reloj = 0.7 + Math.random() * 0.5;
+    const l = elegirDe(LANES.filter((x) => x !== mudanza.ultimo));
+    mudanza.ultimo = l;
+    const o = spawnObstacle(l, "low", mudanza.z + 4.6, "caja_arancel");
+    o.cae = { vy: 3.5 };
+    o.mudanza = true;
+    o.mesh.position.y = 2.1;
+  }
+
   // -- El avion presidencial: pasa por encima y se aleja calle abajo. --
   const avion = { mesh: null, t: -1 };
   function lanzarAvion() {
@@ -10319,17 +10794,131 @@ export function createWorld(scene) {
   }
 
   // -- Gente andando por las aceras (detras del publico, junto a las fachadas) --
+  // 26/11/2026: Isidro: «las aceras no tienen mucha vida». Casi el doble de
+  // gente y de mas tipos: quien pasea al perro, quien sale a correr, parejas
+  // que van juntas, y gente sentada en los bancos (aceraNivel). Cada sentido
+  // va por su mitad de la acera y, si se cruzan o alguien alcanza a otro, se
+  // apartan: antes podian atravesarse.
   const paseantes = [];
+  const correaMat = toon(0x24242a);
+  const correaGeo = new THREE.CylinderGeometry(0.012, 0.012, 1, 4).rotateX(Math.PI / 2);
+  function ponerPerro(p, side, dir) {
+    if (!hayModelo("obstaculos/perro")) return;
+    const u = p.userData, perro = modelo("obstaculos/perro");
+    ponerPatas(perro, "perro");
+    // Del lado de la calzada y un poco por delante, con la correa en la mano de ese lado.
+    const dx = -side * dir * 0.55;
+    perro.position.set(dx, 0, 0.95);
+    perro.rotation.y = -Math.PI / 2;
+    p.add(perro);
+    const brazo = dx > 0 ? u.brazoD : u.brazoI;
+    const mano = new THREE.Vector3(brazo.position.x + Math.sign(dx) * 0.03, brazo.position.y - 0.55, 0.28);
+    const collar = new THREE.Vector3(dx, 0.7, 0.95 + 0.4);
+    const c = new THREE.Mesh(correaGeo, correaMat);
+    c.position.copy(mano).add(collar).multiplyScalar(0.5);
+    c.scale.z = mano.distanceTo(collar);
+    c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), collar.clone().sub(mano).normalize());
+    p.add(c);
+    u.perro = perro; u.brazoCorrea = brazo; u.ancho = 1.1;
+  }
   function ponerPaseante(z) {
     const side = Math.random() < 0.5 ? -1 : 1;
-    const p = personaPixar(nivel && nivel.publico && nivel.publico.personas);
     const dir = Math.random() < 0.5 ? -1 : 1;              // 1: viene hacia la camara
-    p.position.set(side * (8.9 + Math.random() * 0.9), 0, z);
-    p.rotation.y = dir > 0 ? 0 : Math.PI;
-    p.userData.dir = dir;
-    p.userData.vel = 1.1 + Math.random() * 0.5;
-    group.add(p);
-    paseantes.push(p);
+    const r = Math.random();
+    const tipo = r < 0.17 ? "perro" : r < 0.3 ? "corre" : r < 0.47 ? "pareja" : "anda";
+    const lista = nivel && nivel.publico && nivel.publico.personas;
+    const uno = (dx, quien) => {
+      const p = personaPixar(quien || lista);
+      // (los que vienen, por la mitad de la calzada; los que van, junto a las fachadas)
+      const x0 = (dir > 0 ? 9.0 : 9.7) + dx;
+      p.position.set(side * x0, 0, z);
+      p.rotation.y = dir > 0 ? 0 : Math.PI;
+      Object.assign(p.userData, { dir, side, x0, vel: 1.1 + Math.random() * 0.4, ancho: 0.55, paso: Math.random() * 6 });
+      group.add(p);
+      paseantes.push(p);
+      return p;
+    };
+    if (tipo === "corre") {
+      const p = uno(0, ["deportista", "estudiante", "chico"]);
+      p.userData.vel = 2.9 + Math.random() * 0.6; p.userData.corre = true;
+    } else if (tipo === "pareja") {
+      const a = uno(-0.3), b = uno(0.3);
+      b.userData.vel = a.userData.vel; b.position.z += (Math.random() - 0.5) * 0.3;
+      a.userData.junto = b; b.userData.junto = a;
+    } else if (tipo === "perro") {
+      const p = uno(0);
+      p.userData.vel = 1.0 + Math.random() * 0.3;
+      ponerPerro(p, side, dir);
+    } else uno(0);
+  }
+  // Anda (o corre) un paseante y se aparta de los que tiene cerca en su acera.
+  function andarPaseante(p, dt) {
+    const u = p.userData;
+    const ciclo = u.corre ? 2.3 : 1.35;                     // metros por cada dos pasos
+    u.paso += (dt * u.vel * 2 * Math.PI) / ciclo;
+    const ida = Math.sin(u.paso);
+    if (u.corre) {
+      p.position.y = Math.abs(Math.cos(u.paso)) * 0.07;
+      p.rotation.x = 0.13 * u.dir;
+      u.piernaD.rotation.x = ida * 0.85;
+      u.piernaI.rotation.x = -ida * 0.85;
+      u.brazoD.rotation.set(-0.35 - ida * 0.6, 0, 0.12);
+      u.brazoI.rotation.set(-0.35 + ida * 0.6, 0, -0.12);
+    } else {
+      p.position.y = Math.abs(Math.cos(u.paso)) * 0.025;
+      p.rotation.x = 0;
+      u.piernaD.rotation.x = ida * 0.42;
+      u.piernaI.rotation.x = -ida * 0.42;
+      u.brazoD.rotation.set(-ida * 0.32, 0, 0.05);
+      u.brazoI.rotation.set(ida * 0.32, 0, -0.05);
+      // (la pareja: se miran de vez en cuando, como si charlaran)
+      if (u.junto) p.rotation.y = (u.dir > 0 ? 0 : Math.PI) + (0.5 + 0.5 * Math.sin(animClock * 0.7 + u.phase)) * 0.3 * Math.sign(u.junto.position.x - p.position.x) * u.dir;
+    }
+    if (u.perro) {
+      u.brazoCorrea.rotation.set(-0.5, 0, 0);
+      moverPatas(u.perro, "perro", dt, u.vel);
+      u.perro.position.y = Math.abs(Math.sin(u.perro.userData.andar.fase)) * 0.02;
+    }
+    // Apartarse: de los que vienen de frente o van mas despacio delante.
+    const ax = Math.abs(p.position.x);
+    let aparta = 0;
+    for (const q of paseantes) {
+      const w = q.userData;
+      if (q === p || w.side !== u.side || q === u.junto || w.sentado) continue;
+      const dzq = (q.position.z - p.position.z) * u.dir;   // > 0: lo tiene delante
+      if (dzq < -0.6 || dzq > 2.6) continue;
+      const dxq = Math.abs(q.position.x) - ax;
+      if (Math.abs(dxq) > (u.ancho + w.ancho) / 2 + 0.25) continue;
+      const vienen = w.dir !== u.dir || w.vel < u.vel - 0.2;
+      if (!vienen && dzq > 0.9) continue;
+      aparta -= (Math.sign(dxq) || (u.dir > 0 ? -1 : 1)) * 0.75 * (1 - Math.max(0, dzq) / 2.6);
+    }
+    const meta = Math.max(8.35, Math.min(10.0, u.x0 + aparta));
+    p.position.x += (u.side * meta - p.position.x) * Math.min(1, dt * 3.5);
+  }
+  // Gente sentada en los bancos de la acera (uno o dos, o ninguno).
+  function sentarEnBanco(b) {
+    if (!PUBLICO_PIXAR) return;
+    const u = b.userData;
+    if (!u.sentados) {
+      u.sentados = [-0.33, 0.35].map((x) => {
+        const p = personaPixar(nivel && nivel.publico && nivel.publico.personas), w = p.userData;
+        const cadera = w.piernaD.position.y;
+        p.position.set(x, 0.5 - cadera, 0.03);
+        w.piernaD.rotation.x = w.piernaI.rotation.x = -1.3;
+        w.brazoD.rotation.set(-0.5, 0, 0.1);
+        w.brazoI.rotation.set(-0.5, 0, -0.1);
+        w.sentado = true;
+        b.add(p);
+        return p;
+      });
+    }
+    const n = Math.random();
+    u.sentados[0].visible = n < 0.6;
+    u.sentados[1].visible = n < 0.25 || (n >= 0.6 && n < 0.75);
+    // (el de la derecha mira al otro si estan los dos)
+    u.sentados[0].rotation.y = u.sentados[1].visible ? 0.3 : 0;
+    u.sentados[1].rotation.y = u.sentados[0].visible ? -0.3 : 0;
   }
 
   // -- Coches que cruzan por los cruces, siempre lejos (nunca cerca del jugador) --
@@ -10553,19 +11142,15 @@ export function createWorld(scene) {
     // gente andando (solo en los niveles: en el sin fin las fachadas van mas cerca)
     if (nivel && PUBLICO_PIXAR) {
       paseoReloj -= dz;
-      if (paseoReloj <= 0 && paseantes.length < 12) { ponerPaseante(-90 - Math.random() * 90); paseoReloj = 14 + Math.random() * 16; }
+      // (26/11: casi el doble que antes: uno cada 8-16 m, hasta 20 a la vez)
+      if (paseoReloj <= 0 && paseantes.length < 20) { ponerPaseante(-90 - Math.random() * 90); paseoReloj = 8 + Math.random() * 8; }
       for (let i = paseantes.length - 1; i >= 0; i--) {
         const p = paseantes[i], u = p.userData;
         p.position.z += dz + u.dir * u.vel * dt;
         // 09/11: andar de verdad: cada pierna adelante y atras, y el brazo
         // contrario con ella; el cuerpo sube un pelin en cada paso.
-        const paso = animClock * 4.8 * u.vel + u.phase, ida = Math.sin(paso);
-        p.position.y = Math.abs(Math.cos(paso)) * 0.025;
         p.rotation.z = 0;
-        u.piernaD.rotation.x = ida * 0.42;
-        u.piernaI.rotation.x = -ida * 0.42;
-        u.brazoD.rotation.set(-ida * 0.32, 0, 0.05);
-        u.brazoI.rotation.set(ida * 0.32, 0, -0.05);
+        andarPaseante(p, dt);
         // (09/11: en los interiores no: andaban por el hielo del lago de Minneapolis.)
         p.visible = !metroEn(totalScrolled - p.position.z);
         if (p.position.z > DESPAWN_Z || p.position.z < SPAWN_Z) { group.remove(p); paseantes.splice(i, 1); }
@@ -10663,6 +11248,7 @@ export function createWorld(scene) {
     for (const b of bandadas) for (const a of b.aves) group.remove(a);
     bandadas.length = 0;
     paseoReloj = 0; bandadaReloj = 60;
+    mudanza.tramo = null; mudanza.z = -260; if (mudanza.mesh) mudanza.mesh.visible = false;
     heli.fase = "fuera";
     heli.proximo = totalScrolled > 0 ? totalScrolled : 0;
     if (heli.mesh) { heli.mesh.visible = false; heli.haz.visible = false; }
@@ -10813,6 +11399,7 @@ export function createWorld(scene) {
     moverCheque(dt);
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
+      if (USAR_BLENDER) { if (!o.revisado) revisarObstaculo(o); frenarObstaculo(o, dt); }
       o.z += dz + o.mueve * dt;
       if (o.cae && !o.smashed) {
         // Barril del jefe: cae desde su mano hasta la pista.
@@ -11004,6 +11591,7 @@ export function createWorld(scene) {
     }
     actualizarCameo(dt);
     moverAvion(dt);
+    moverMudanza(dt);
     // (08/11: en Chicago las nubes corren mas: es la ciudad del viento.)
     if (horizonte) horizonte.animar(dt * (nivel && nivel.horizonte === "chicago" ? 4 : 1));
     for (let i = powerups.length - 1; i >= 0; i--) {
