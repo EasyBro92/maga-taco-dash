@@ -3029,3 +3029,27 @@ Se aplicó lo recomendado sin preguntarle.
   bici, la comitiva o el nuevo «¡El camión pierde la carga!». En este, el
   camión va 40 m por delante y se le caen cajas que ruedan hacia ti.
 - Boston (sesión aparte, sin publicar) tendrá que traer esto y usar la v81.
+
+## 26/11/2026 (tarde): el final de los mapas (v81)
+
+Isidro: «en casi todos los mapas, cuando llega justo al final, el mapa se ve
+como el suelo cargando, queda cutre».
+
+- La causa: al alargar los niveles a 3,3 km (05/11) no se alargaron las listas
+  de edificios. En 36 niveles los edificios se acababan entre 300 y 600 m
+  antes de la meta, y lo último era una explanada gris y vacía.
+- Ahora cada lado se completa solo hasta la plaza del edificio final
+  (levels.js), con lo mismo que llevaba al final: manzanas del kit con su calle
+  cada cuatro, o la avenida de banderas en Rushmore. Los cruces nuevos no se
+  usan para desvíos: los giros y los tramos de los 50 niveles quedan igual
+  (comprobado uno a uno).
+- Las farolas, los árboles, el público y las banderas llegan hasta 4 m de la
+  fachada del edificio final (`finAcera`, que se mide del modelo). Antes se
+  acababan 10-15 m antes de la meta.
+- La llegada (`ponerLlegada`): en la plaza del final, público de la ciudad a
+  los dos lados, detrás de su valla, con banderas, que aplaude y salta al
+  verte llegar. Solo en los niveles que acaban en «parada» (todos menos Nueva
+  York, Findlay, Boston y Washington, que tienen su final propio).
+- Mientras el presidente celebra en la meta ya no se congela todo: el público,
+  las banderas y los coches siguen moviéndose.
+- Boston (sesión aparte, sin publicar) pasa a la v82.

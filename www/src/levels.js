@@ -3476,6 +3476,7 @@ function aplicarGiros(nivel) {
     const vale = cruces.filter((c) => {
       // (11/11: 65 m: con 45 la chapa del carril quedaba justo en la curva)
       if (Math.abs(c.d - objetivo) > nivel.largo * 0.2 || lejos.some((x) => Math.abs(x - c.d) < 65)) return false;
+      if (nivel.__crucesAntes && !nivel.__crucesAntes.includes(c.d)) return false;
       if (giros.some((g) => Math.abs(g.d - c.d) < 300)) return false;
       const t = nivel.tramos.find(([a, b]) => c.d >= a && c.d < b);
       // (los momentos pequeños, el reto y las gorras, se acaban en el desvio)
@@ -3510,6 +3511,38 @@ export function piezasDeNivel(nivel) {
 }
 export function usaKit(nivel) {
   return [nivel.izquierda, nivel.derecha].some((lado) => lado.some((it) => Array.isArray(it) && it[0] === "kit"));
+}
+
+// 26/11/2026 (2): Isidro: «en casi todos los mapas, cuando llega justo al
+// final, el mapa se ve como el suelo cargando, queda cutre». Al alargar los
+// niveles a 3,3 km (05/11) las listas de edificios no se alargaron: en 36
+// niveles los edificios se acababan 300-600 m antes de la meta y el final era
+// una explanada gris y vacia. Ahora cada lado se completa hasta la plaza del
+// edificio final con lo mismo que llevaba al final (manzanas del kit con su
+// calle cada cuatro, o la avenida de banderas en Rushmore).
+for (const nv of NIVELES) {
+  if (!nv.izquierda || !nv.derecha) continue;
+  const fin = (nv.fondo || []).find((f) => f.centro);
+  let objetivo = Math.min(nv.largo + 15, fin ? fin.d - 15 : 1e9);
+  for (const [a, b] of rangosSin(nv.sinEdificios)) if (a < objetivo && b >= objetivo) objetivo = a;
+  const anchoDe = (k) => ANCHO[k] || 20;
+  // (Los cruces del relleno no se usan para los desvios: el nivel se juega igual.)
+  nv.__crucesAntes = crucesDeNivel(nv).cruces.map((c) => c.d);
+  delete nv._cruces;
+  for (const [lista, lado] of [[nv.izquierda, -1], [nv.derecha, 1]]) {
+    const relleno = [...lista].reverse().find((x) => Array.isArray(x) && (x[0] === "kit" || x[1] >= 2));
+    if (!relleno) continue;
+    let seguidos = 0;
+    for (let i = lista.length - 1; i >= 0 && Array.isArray(lista[i]); i--) seguidos += lista[i][1];
+    for (let vueltas = 0; vueltas < 60; vueltas++) {
+      if (recorrerLado(nv, lista, lado, anchoDe, () => {}) >= objetivo - 12) break;
+      if (relleno[0] === "kit" && seguidos >= 4) { lista.push(14); seguidos = 0; continue; }
+      lista.push(relleno[2] ? [relleno[0], 1, relleno[2]] : [relleno[0], 1]);
+      seguidos++;
+      // El ultimo no se mete en la plaza del final.
+      if (recorrerLado(nv, lista, lado, anchoDe, () => {}) > objetivo + 4) { lista.pop(); break; }
+    }
+  }
 }
 
 // 08/11 (2): los desvios de cada nivel (aqui, cuando ya existe ANCHO).

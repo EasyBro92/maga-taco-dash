@@ -1075,7 +1075,9 @@ function finalCamion(dt, flat, zParadaDada) {
     if (ymca) bailarYMCA(fin.t); else character.setIdlePose(fin.t + 1);
     if (fin.t > (ymca ? YMCA_T0 + 8 * YMCA_PASO + 0.25 : 2.8)) { fin.fase = 5; quitarYMCA(); completarNivel(); }
   }
-  if (dz) world.update(dz);
+  // 26/11/2026 (2): tambien parado: si no, mientras celebra se congelaba todo
+  // (el publico, las banderas, los coches).
+  world.update(dz);
   py = 0;
   character.object3D.position.set(playerX, 0, 0);
   shadowBlob.position.set(playerX, 0.06, 0);

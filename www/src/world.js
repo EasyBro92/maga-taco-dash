@@ -2109,7 +2109,8 @@ export function createWorld(scene) {
     for (const car of cochesCruce) group.remove(car);
     cochesCruce.length = 0; cruces.length = 0; giroPendiente = null; puertasAuto.length = 0;
     casaBlanca = null;
-    calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel), ...cierresDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
+    llegadaGente.length = 0;
+    calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel), ...cierresDeNivel(nivel), ...llegadaDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
     siguientePieza = 0;
     // Siguiendo desde el punto de control: lo que ya quedo atras no se pone.
     while (siguientePieza < calle.length && calle[siguientePieza].d + (calle[siguientePieza].ancho || 10) < totalScrolled - 15) siguientePieza++;
@@ -2154,6 +2155,7 @@ export function createWorld(scene) {
         calleViva.push({ mesh: m, fin: p.fondo + 30 });
         continue;
       }
+      if (p.llegada) { ponerLlegada(p); continue; }
       if (p.arco) {
         // El arco del punto de control, de lado a lado de la calle.
         const a = construirArco();
@@ -2230,10 +2232,84 @@ export function createWorld(scene) {
       calleViva.push({ mesh, fin: p.ancho + 40 });
     }
   }
+  // 26/11/2026 (2): Isidro: «cuando llega justo al final, el mapa se ve como el
+  // suelo cargando». Las farolas, los arboles, el publico y las banderas se
+  // acababan 10-15 m antes de la meta y la plaza del edificio final quedaba
+  // pelada. Ahora llegan hasta 4 m de su fachada (que se mide del modelo).
+  let finAceraNv = null, finAceraD = 0;
+  function finAcera() {
+    if (!nivel) return 1e9;
+    if (finAceraNv === nivel) return finAceraD;
+    let v = nivel.largo - 15;
+    const c = (nivel.fondo || []).find((f) => f.centro);
+    const m = c && modelo(`${nivel.carpeta}/${c.pieza}`);
+    if (c && !m) return v;   // (aun sin cargar: se vuelve a mirar luego)
+    if (m) v = Math.max(v, c.d - new THREE.Box3().setFromObject(m).max.z - 4);
+    finAceraNv = nivel; finAceraD = v;
+    return v;
+  }
+  // ---- 26/11/2026 (2): la llegada ----
+  // La plaza del edificio final era una explanada vacia. Ahora, a los dos
+  // lados, el publico de la ciudad detras de su valla, que aplaude y salta al
+  // verte llegar, con banderas: se nota que has llegado a la meta.
+  const llegadaGente = [];
+  function llegadaDeNivel(nv) {
+    if (nv.final !== "parada" || !(nv.fondo || []).some((f) => f.centro)) return [];
+    let d = nv.largo - 50;
+    for (const [a, b] of rangosSin(nv.sinEdificios)) if (a < nv.largo && b > nv.largo) d = a + 2;
+    return [{ llegada: true, d }];
+  }
+  function ponerLlegada(p) {
+    const hasta = finAcera();
+    const conf = nivel.publico ? { ...nivel.publico, valla: VALLAS[nivel.publico.valla] } : PUBLICO_ZONA.city;
+    const valla = conf.valla !== undefined ? conf.valla : "valla_policia";
+    const poner = (m, d) => {
+      m.position.z = -(d - totalScrolled);
+      group.add(m);
+      calleViva.push({ mesh: m, fin: 12 });
+    };
+    let largoValla = 0;
+    if (valla && hayModelo("publico/" + valla)) largoValla = Math.max(1, new THREE.Box3().setFromObject(modelo("publico/" + valla)).getSize(new THREE.Vector3()).x);
+    for (const side of [-1, 1]) {
+      if (largoValla) for (let d = p.d; d < hasta - 1; d += largoValla) {
+        const v = modelo("publico/" + valla);
+        v.position.x = side * 4.35;
+        v.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        poner(v, d);
+      }
+      let k = 0;
+      for (let d = p.d + 0.6; d < hasta; d += 1.3 + Math.random() * 0.5, k++) {
+        const g = makePerson(conf.personas);
+        g.position.x = side * (4.95 + (k % 2) * 0.6 + Math.random() * 0.15);
+        g.rotation.y = side < 0 ? 0.7 + Math.random() * 0.4 : -0.7 - Math.random() * 0.4;
+        // Aqui todos celebran: nadie mira el movil ni se queda quieto.
+        g.userData.ocio = "nada";
+        if (g.userData.rol === "mira" || g.userData.rol === "foto") g.userData.rol = Math.random() < 0.5 ? "aplaude" : "salta";
+        poner(g, d);
+        llegadaGente.push(g);
+      }
+      for (let d = p.d + 3; d < hasta; d += 12) {
+        const f = makeFlagPole();
+        f.position.x = side * 6.7;
+        f.rotation.y = side > 0 ? Math.PI : 0;
+        poner(f, d);
+        llegadaGente.push(f);
+      }
+    }
+  }
+  function animarLlegada() {
+    for (let i = llegadaGente.length - 1; i >= 0; i--) {
+      const g = llegadaGente[i];
+      if (!g.parent) { llegadaGente.splice(i, 1); continue; }
+      if (g.userData.kind === "flag") { g.userData.flagMesh.rotation.y = Math.sin(animClock * 3 + g.userData.phase) * 0.3; continue; }
+      const z = g.position.z;
+      if (g.userData.brazoD) animarPersona(g, THREE.MathUtils.smoothstep(z > 0 ? 14 - z * 1.75 : 26 + z, 0, 14));
+    }
+  }
   // Farolas y arboles de la acera, alternos (estos si se repiten: es mobiliario).
   const acerasNivel = {};
   function aceraNivel(z) {
-    if (totalScrolled - z > nivel.largo - 15) return;
+    if (totalScrolled - z > finAcera()) return;
     // 12/11: tramos sin farolas ni arboles de acera (el bosque de Rushmore).
     if (nivel.sinAcera && nivel.sinAcera.some(([a, b]) => totalScrolled - z > a && totalScrolled - z < b)) return;
     if (!acerasNivel[nivel.id]) {
@@ -11367,7 +11443,7 @@ export function createWorld(scene) {
       d.position.z += dz; if (d.position.z > 6) d.position.z -= Math.abs(SPAWN_Z);
       d.scale.setScalar(Math.max(0.001, edgeFade(d.position.z, 6, 5)));
       const dd = totalScrolled - d.position.z, lado = Math.sign(d.position.x);
-      d.visible = !(nivel && dd > nivel.largo - 10) && !metroEn(dd) &&
+      d.visible = !(nivel && dd > finAcera()) && !metroEn(dd) &&
         // 12/11: tramos sin publico (el bosque de Rushmore)
         !(nivel && nivel.sinPublico && nivel.sinPublico.some(([a, b]) => dd > a && dd < b)) &&
         // 09/11: nadie de pie en medio de una calle lateral (ni su valla)
@@ -11384,12 +11460,13 @@ export function createWorld(scene) {
     for (const b of bunting) {
       b.position.z += dz; if (b.position.z > 4) b.position.z -= Math.abs(SPAWN_Z);
       b.scale.setScalar(Math.max(0.001, edgeFade(b.position.z, 4, 4)));
-      b.visible = !(nivel && totalScrolled - b.position.z > nivel.largo - 10) && !metroEn(totalScrolled - b.position.z);
+      b.visible = !(nivel && totalScrolled - b.position.z > finAcera()) && !metroEn(totalScrolled - b.position.z);
       b.rotation.z = Math.sin(animClock * 2.2 + b.userData.phase) * 0.22;
     }
 
     if (dt > 0) ritmo += (dz / dt - ritmo) * Math.min(1, dt * 2);
     actualizarCalle(dz);
+    animarLlegada();
     actualizarJefe(dt);
     moverNave();
     actualizarDisparos(dt);
