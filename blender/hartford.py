@@ -281,7 +281,291 @@ def cartel_ct():
     texto(blanco(), 'LEE LA', 0.15, -0.035, 2.2, tam=0.24, prof=0.02)
     texto(amarillo(), 'LETRA PEQUEÑA', 0.15, -0.035, 1.8, tam=0.18, prof=0.02)
 
+# ================================================================ Main Street de verdad
+# 26/11/2026: Isidro: «más que añadir edificios sin sentido quiero que sean los
+# reales». Los edificios de Main Street en su orden de verdad (de norte a sur,
+# por la acera este: G. Fox, el Cheney Building, el antiguo Capitolio, la torre
+# de los seguros, el Atheneum, el ayuntamiento, la biblioteca y la casa
+# Butler-McCook; enfrente, Center Church y su cementerio de 1640), y al final,
+# frente al Capitolio, el teatro Bushnell y el parque.
+
+def arco_medio(m, x, y, z, w, h, prof=0.1):
+    """Hueco de medio punto: rectángulo de alto h y medio círculo encima."""
+    caja(m, x, y, z, w, prof, h)
+    cil(m, x, y, z + h, w / 2, prof, 16, eje='Y')
+
+def g_fox():
+    """Los almacenes G. Fox & Co. (1918; fachada art déco de 1938): once
+    plantas de piedra clara con franjas negras y doradas de arriba abajo,
+    escaparates y el rótulo grande sobre la marquesina."""
+    W, D, H = 26.0, 18.0, 40.0
+    Y = 1 + D / 2; yf = Y - D / 2
+    caja(mat('piedra_fox_hfd', 0xe6dcc6, 0.5), 0, Y, 0, W, D, H)
+    caja(negro(), 0, Y, H, W + 0.4, D + 0.4, 1.2)
+    for k in range(7):
+        x = -9 + k * 3
+        caja(negro(), x, yf - 0.15, 6, 1.4, 0.3, H - 6)
+        caja(oro(), x, yf - 0.31, 6, 0.28, 0.04, H - 6)
+    for k in range(6):
+        for z in range(8, int(H) - 2, 3):
+            caja(cristal(), -7.5 + k * 3, yf - 0.05, z, 1.3, 0.1, 2.0)
+    for x in (-9.5, -3.2, 3.2, 9.5):
+        caja(cristal(), x, yf - 0.05, 0.5, 5.0, 0.1, 3.3)
+    caja(negro(), 0, yf - 0.8, 4.2, W, 1.6, 0.4)
+    caja(oro(), 0, yf - 0.4, 4.8, 15, 0.1, 1.4)
+    texto(negro(), 'G. FOX & CO.', 0, yf - 0.47, 5.5, tam=1.0, prof=0.05)
+
+def cheney_building():
+    """El Cheney Building (1876, H. H. Richardson): arenisca roja y parda,
+    arcos de medio punto que abarcan tres plantas, arcada abajo y tejado
+    a dos aguas."""
+    W, D, H = 26.0, 16.0, 21.0
+    Y = 1 + D / 2; yf = Y - D / 2
+    roja = mat_bloques('arenisca_cheney_hfd', 0xa4553c, 0x7a3c2a, ancho=1.0, alto=0.5, grosor=0.01)
+    parda = mat('parda_cheney_hfd', 0x6a4636, 0.7)
+    caja(roja, 0, Y, 0, W, D, H)
+    caja(parda, 0, Y, H, W + 0.6, D + 0.6, 0.9)
+    tejado(mat('tejado_cheney_hfd', 0x3a3a42, 0.6), 0, Y - D / 2, Y + D / 2, H + 0.9, W, 4.0, cumbrera='x')
+    caja(parda, 0, yf - 0.1, 0, W + 0.2, 0.3, 4.6)
+    for k in range(5):
+        x = -10 + k * 5
+        arco_medio(cristal(), x, yf - 0.3, 0.4, 3.4, 2.6)
+        arco_medio(parda, x, yf - 0.12, 5.2, 4.2, 8.6, 0.12)
+        arco_medio(cristal(), x, yf - 0.2, 5.6, 3.4, 8.2)
+        for z in (8.2, 11.4):
+            caja(parda, x, yf - 0.24, z, 3.6, 0.12, 0.35)
+        for dx in (-1.0, 1.0):
+            arco_medio(cristal(), x + dx, yf - 0.05, 17.0, 1.1, 1.6)
+    caja(blanco(), 0, yf - 0.3, 4.75, 7.5, 0.06, 0.7)
+    texto(parda, 'CHENEY BUILDING', 0, yf - 0.35, 5.1, tam=0.45, prof=0.02)
+
+def center_church():
+    """Center Church (First Church of Christ, 1807): ladrillo, pórtico blanco
+    de cuatro columnas con frontón y el campanario blanco de pisos con la
+    aguja; la congregación es de 1632, la de los fundadores de Hartford."""
+    W, D, H = 18.0, 26.0, 12.0
+    Y = 6 + D / 2; yf = Y - D / 2
+    caja(ladrillo(), 0, Y, 0, W, D, H)
+    tejado(mat('tejado_cc_hfd', 0x4a4a52, 0.6), 0, yf, Y + D / 2, H, W, 4.5)
+    fronton(ladrillo(), 0, yf, H, W, 4.5, 0.2)
+    caja(blanco(), 0, yf - 2.6, 0, 13, 5.2, 0.5)
+    escalinata(blanco(), 0, yf - 5.2, 0, 13, 3, huella=0.3, tabica=0.17)
+    columnata(blanco(), -4.5, 4.5, 4, yf - 4.4, 0.5, 0.42, 8.5)
+    caja(blanco(), 0, yf - 2.4, 9.0, 12.6, 4.8, 1.1)
+    fronton(blanco(), 0, yf - 4.8, 10.1, 12.8, 3.0, 4.8)
+    puerta(0, 0.5, 2.0, 4.0, y=yf, color=0x24344e, marco=blanco())
+    for x in (-4.5, 4.5):
+        puerta(x, 0.5, 1.4, 3.2, y=yf, color=0x24344e, marco=blanco())
+    for s in (-1, 1):
+        for k in range(5):
+            caja(cristal(), s * (W / 2 + 0.03), yf + 3 + k * 4.6, 2.0, 0.08, 1.6, 6.5)
+    T = yf + 2.5
+    caja(blanco(), 0, T, H, 5.2, 5.2, 6)
+    cil(oro(), 0, T - 2.62, H + 3.2, 1.0, 0.08, 20, eje='Y')
+    caja(blanco(), 0, T, H + 6, 4.2, 4.2, 4)
+    for x in (-1.2, 1.2):
+        arco_medio(negro(), x, T - 2.12, H + 6.8, 0.8, 1.8)
+    cil(blanco(), 0, T, H + 10, 1.9, 3.5, 8)
+    cil(blanco(), 0, T, H + 13.5, 1.6, 9.5, 8, r2=0.06)
+    esfera(oro(), 0, T, H + 23.2, 0.32, 1)
+
+def cementerio_antiguo():
+    """El Ancient Burying Ground (1640), junto a Center Church: césped,
+    lápidas de pizarra torcidas, la verja de hierro y árboles viejos."""
+    import random
+    W, D = 24.0, 22.0
+    Y = 1 + D / 2; yf = Y - D / 2
+    caja(cesped(), 0, Y, 0, W, D, 0.08)
+    for k in range(23):
+        cil(hierro(), -11 + k, yf + 0.2, 0, 0.05, 1.6, 6)
+    caja(hierro(), 0, yf + 0.2, 1.45, W - 2, 0.06, 0.08)
+    caja(hierro(), 0, yf + 0.2, 0.25, W - 2, 0.06, 0.08)
+    pizarra = mat('pizarra_hfd', 0x4a4e56, 0.8)
+    r = random.Random(1640)
+    for fila in range(4):
+        for k in range(6):
+            x = -9 + k * 3.4 + r.uniform(-0.5, 0.5)
+            y = yf + 4 + fila * 3.6 + r.uniform(-0.4, 0.4)
+            caja(pizarra, x, y, 0, 0.9, 0.12, 1.0 + r.uniform(0, 0.4), giro=r.uniform(-0.15, 0.15), inclina=r.uniform(-0.12, 0.12))
+            esfera(pizarra, x, y, 1.05, 0.45, 1, esc=(1, 0.14, 0.5))
+    tronco = mat('tronco_hfd', 0x5a4232, 0.9)
+    hoja = mat('hoja_otono_hfd', 0xc8782a, 0.8)
+    for (x, y) in ((-8, yf + 15), (6, yf + 9), (9, yf + 18)):
+        cil(tronco, x, y, 0, 0.45, 6, 8, r2=0.3)
+        for (dx, dy, dz, rr) in ((0, 0, 7.2, 3.2), (1.6, 0.6, 6.0, 2.2), (-1.5, -0.4, 6.2, 2.3)):
+            esfera(hoja, x + dx, y + dy, dz, rr, 2)
+    caja(madera_o(), 9.5, yf - 0.1, 0, 0.15, 0.15, 2.2)
+    caja(blanco(), 9.5, yf - 0.2, 1.4, 3.6, 0.08, 0.9)
+    texto(negro(), 'ANCIENT BURYING', 9.5, yf - 0.25, 2.0, tam=0.28, prof=0.02)
+    texto(negro(), 'GROUND  1640', 9.5, yf - 0.25, 1.62, tam=0.28, prof=0.02)
+
+def atheneum():
+    """El Wadsworth Atheneum (1844): el castillo gótico de granito gris, el
+    museo de arte público más antiguo del país; dos torres almenadas a los
+    lados de la entrada en ojiva y almenas por todo el borde."""
+    W, D, H = 32.0, 20.0, 14.0
+    Y = 2 + D / 2; yf = Y - D / 2
+    g = granito()
+    caja(g, 0, Y, 0, W, D, H)
+    for k in range(16):
+        caja(g, -15 + k * 2, yf + 0.4, H, 1.0, 0.8, 1.2)
+    for s in (-1, 1):
+        caja(g, s * 5, yf - 0.6, 0, 5, 5.2, H + 6)
+        for (dx, dy) in ((-2, -2), (2, -2), (-2, 2), (2, 2), (0, -2), (-2, 0), (2, 0)):
+            caja(g, s * 5 + dx, yf - 0.6 + dy, H + 6, 1.0, 1.0, 1.2)
+        for z in (3, 8, 13.5):
+            ventana_ojiva(s * 5, z, 0.9, 2.0, yf - 3.25, g)
+    caja(g, 0, yf - 0.8, 0, 5, 1.6, 10)
+    for k in range(5):
+        caja(g, -2 + k, yf - 1.0, 10, 0.6, 1.2, 0.9)
+    ventana_ojiva(0, 0.2, 3.0, 5.8, yf - 1.65, g)
+    for x in (-13, -10, 10, 13):
+        for z in (2.0, 7.6):
+            ventana_ojiva(x, z, 1.3, 3.0, yf - 0.05, g)
+    caja(blanco(), 0, yf - 1.65, 8.4, 4.4, 0.06, 0.9)
+    texto(negro(), 'WADSWORTH', 0, yf - 1.7, 9.05, tam=0.38, prof=0.02)
+    texto(negro(), 'ATHENEUM', 0, yf - 1.7, 8.62, tam=0.38, prof=0.02)
+
+def ayuntamiento_hfd():
+    """El Municipal Building (1915), el ayuntamiento: Beaux-Arts de granito
+    claro, la planta baja almohadillada con tres arcos, columnas en las dos
+    plantas de en medio y la cornisa."""
+    W, D, H = 36.0, 22.0, 19.0
+    Y = 2 + D / 2; yf = Y - D / 2
+    g = granito()
+    base = mat_bloques('almohadillado_hfd', 0xd8d2c4, 0xa8a294, ancho=1.6, alto=0.7, grosor=0.03)
+    caja(base, 0, Y, 0, W, D, 5.5)
+    caja(g, 0, Y, 5.5, W, D, H - 5.5)
+    caja(marmol_l(), 0, Y, H, W + 0.8, D + 0.8, 1.0)
+    caja(marmol_l(), 0, Y, 5.5, W + 0.3, D + 0.3, 0.5)
+    for x in (-5, 0, 5):
+        arco_medio(cristal(), x, yf - 0.05, 0.3, 2.8, 3.2)
+    escalinata(marmol_l(), 0, yf - 0.1, 0, 16, 3, huella=0.32, tabica=0.12)
+    columnata(marmol_l(), -14, 14, 10, yf - 0.7, 6.0, 0.45, 9.0)
+    caja(marmol_l(), 0, yf - 0.6, 15.0, W - 4, 1.0, 0.8)
+    for k in range(9):
+        x = -12.4 + k * 3.1
+        for z in (7.0, 11.0):
+            caja(cristal(), x, yf - 0.05, z, 1.5, 0.1, 2.6)
+        caja(cristal(), x, yf - 0.05, 16.3, 1.2, 0.1, 1.4)
+    for x in (-15, -9, 9, 15):
+        caja(cristal(), x, yf - 0.05, 1.3, 1.5, 0.1, 2.4)
+    texto(negro(), 'MUNICIPAL BUILDING', 0, yf - 1.12, 15.4, tam=0.55, prof=0.03)
+
+def biblioteca_hfd():
+    """La biblioteca pública de Hartford (500 Main Street): el edificio de
+    1957 envuelto en 2007 por una fachada de cristal, con base de piedra."""
+    W, D, H = 30.0, 22.0, 14.0
+    Y = 2 + D / 2; yf = Y - D / 2
+    caja(mat('piedra_bib_hfd', 0xc8c0b0, 0.5), 0, Y, 0, W, D, 1.0)
+    caja(mat('cristal_bib_hfd', 0x6a96b4, 0.12), 0, Y, 1.0, W, D, H - 1.0)
+    for k in range(21):
+        caja(gris(), -15 + k * 1.5, yf - 0.06, 1.0, 0.12, 0.12, H - 1.0)
+    for z in (5.0, 9.5):
+        caja(gris(), 0, yf - 0.08, z, W, 0.16, 0.25)
+    caja(blanco(), 0, Y, H, W + 0.6, D + 0.6, 0.7)
+    caja(blanco(), 0, yf - 2.0, 3.6, 10, 4.0, 0.3)
+    for x in (-4.6, 4.6):
+        cil(blanco(), x, yf - 3.8, 0, 0.15, 3.6, 8)
+    caja(negro(), 0, yf - 0.12, 1.0, 4, 0.06, 2.6)
+    texto(mat('azul_bib_hfd', 0x1c3a6a, 0.4), 'HARTFORD PUBLIC LIBRARY', 0, yf - 0.2, 4.4, tam=0.6, prof=0.03)
+
+def butler_mccook():
+    """La casa Butler-McCook (1782): la casa más antigua de Main Street, de
+    tablas de madera, contraventanas, tejado a dos aguas y su jardín
+    con la valla de estacas."""
+    W, D, H = 14.0, 11.0, 7.0
+    Y = 8 + D / 2; yf = Y - D / 2
+    caja(cesped(), 0, 4, 0, 24, 8, 0.06)
+    caja(mat('camino_bm_hfd', 0xc8b89a, 0.9), 0, 4, 0.03, 1.6, 8, 0.06)
+    tablas = mat_franjas('tablas_bm_hfd', 0x8a6a4e, 0x6a4e3a, 30, eje='Z', z0=0, alto=H)
+    caja(tablas, 0, Y, 0, W, D, H)
+    tejado(mat('tejado_bm_hfd', 0x3e3a38, 0.7), 0, Y - D / 2, Y + D / 2, H, W, 3.6, cumbrera='x')
+    for x in (-4, 4):
+        caja(ladrillo(), x, Y + 1, H, 1.2, 1.2, 5)
+    contra = mat('contra_bm_hfd', 0x2e4a3a, 0.6)
+    for x in (-5, -2.5, 2.5, 5):
+        for z in (1.2, 4.3):
+            ventana(x, z, 1.0, 1.7, y=yf, marco=blanco(), cristal=cristal(), persiana=contra)
+    ventana(0, 4.3, 1.0, 1.7, y=yf, marco=blanco(), cristal=cristal(), persiana=contra)
+    puerta(0, 0.2, 1.3, 2.4, y=yf, color=0x2e4a3a, marco=blanco())
+    fronton(blanco(), 0, yf - 0.15, 2.75, 2.0, 0.5, 0.2)
+    for k in range(23):
+        x = -11.5 + k * 1.0
+        if abs(x) < 1.0:
+            continue
+        caja(blanco(), x, 0.3, 0, 0.1, 0.06, 1.0)
+    for z in (0.3, 0.8):
+        caja(blanco(), -6.5, 0.32, z, 10.2, 0.04, 0.08)
+        caja(blanco(), 6.5, 0.32, z, 10.2, 0.04, 0.08)
+    flor = mat('flores_bm_hfd', 0xd8546a, 0.7)
+    for x in (-9, -6, 6, 9):
+        esfera(flor, x, 1.4, 0.4, 0.7, 1, esc=(1.4, 1, 0.6))
+    caja(blanco(), 7.5, -0.2, 1.1, 3.4, 0.06, 0.8)
+    texto(negro(), 'BUTLER-McCOOK', 7.5, -0.24, 1.65, tam=0.26, prof=0.02)
+    texto(negro(), 'HOUSE  1782', 7.5, -0.24, 1.3, tam=0.26, prof=0.02)
+
+def bushnell_teatro():
+    """El teatro The Bushnell (1930), frente al Capitolio: ladrillo rojo de
+    estilo georgiano, el pórtico blanco de columnas con frontón y la
+    torrecilla blanca de la cúpula dorada."""
+    W, D, H = 36.0, 24.0, 15.0
+    Y = 4 + D / 2; yf = Y - D / 2
+    caja(ladrillo(), 0, Y, 0, W, D, H)
+    caja(blanco(), 0, Y, H, W + 0.6, D + 0.6, 1.0)
+    caja(blanco(), 0, yf - 2.2, 0, 16, 4.4, 0.6)
+    escalinata(blanco(), 0, yf - 4.4, 0, 16, 3, huella=0.3, tabica=0.2)
+    columnata(blanco(), -6, 6, 4, yf - 3.6, 0.6, 0.6, 11.0)
+    caja(blanco(), 0, yf - 2.0, 11.6, 15, 4.2, 1.2)
+    fronton(blanco(), 0, yf - 4.1, 12.8, 15.2, 3.2, 4.2)
+    for x in (-3, 0, 3):
+        puerta(x, 0.6, 1.8, 3.4, y=yf, color=0x2a1e18, marco=blanco())
+        arco_medio(cristal(), x, yf - 0.05, 5.0, 1.6, 3.0)
+    for s in (-1, 1):
+        for k in range(3):
+            x = s * (10 + k * 3)
+            for z in (2.0, 8.0):
+                ventana(x, z, 1.4, 2.6, y=yf, marco=blanco(), cristal=cristal(), remate='cornisa')
+    cil(blanco(), 0, Y, H + 1.0, 3.2, 4.0, 8)
+    cil(blanco(), 0, Y, H + 5.0, 2.4, 3.0, 8)
+    cupula(oro(), 0, Y, H + 8.0, 2.3, 2.6, 16, 6)
+    esfera(oro(), 0, Y, H + 11.0, 0.35, 1)
+    texto(rojo(), 'THE BUSHNELL', 0, yf - 4.15, 12.0, tam=0.9, prof=0.04)
+
+def parque_bushnell():
+    """Un trozo del parque Bushnell (1854, el primer parque público pagado
+    por una ciudad en Estados Unidos): césped, olmos viejos, un camino, una
+    farola y un banco."""
+    W, D = 24.0, 30.0
+    Y = 1 + D / 2; yf = Y - D / 2
+    caja(cesped(), 0, Y, 0, W, D, 0.07)
+    caja(mat('camino_pq_hfd', 0xc8bca4, 0.9), 0, yf + 3, 0.04, W, 2.0, 0.06)
+    tronco = mat('tronco_pq_hfd', 0x5a4232, 0.9)
+    hojas = [mat('hoja_pq1_hfd', 0xd07a2a, 0.8), mat('hoja_pq2_hfd', 0xb8462a, 0.8), mat('hoja_pq3_hfd', 0xd8a830, 0.8)]
+    for i, (x, y) in enumerate(((-7, yf + 8), (5, yf + 11), (-2, yf + 20), (8, yf + 24))):
+        cil(tronco, x, y, 0, 0.5, 7, 8, r2=0.32)
+        h = hojas[i % 3]
+        for (dx, dy, dz, rr) in ((0, 0, 8.4, 3.6), (1.9, 0.8, 7.0, 2.5), (-1.8, -0.6, 7.2, 2.6), (0.4, -1.6, 9.4, 2.2)):
+            esfera(h, x + dx, y + dy, dz, rr, 2)
+    cil(hierro(), 9, yf + 1.6, 0, 0.09, 4, 8)
+    esfera(bombilla(), 9, yf + 1.6, 4.2, 0.35, 1)
+    caja(madera(), -3, yf + 4.6, 0.45, 2.2, 0.5, 0.08)
+    caja(madera(), -3, yf + 4.85, 0.5, 2.2, 0.08, 0.5)
+    for x in (-3.9, -2.1):
+        caja(hierro(), x, yf + 4.6, 0, 0.08, 0.5, 0.45)
+
+
 PIEZAS = {
+    'g_fox':             (g_fox,             'hartford',   dict(lado=1024, bisel=0.0)),
+    'cheney_building':   (cheney_building,   'hartford',   dict(lado=1024, bisel=0.0)),
+    'center_church':     (center_church,     'hartford',   dict(lado=1024, bisel=0.0)),
+    'cementerio_antiguo':(cementerio_antiguo,'hartford',   dict(lado=1024, bisel=0.0)),
+    'atheneum':          (atheneum,          'hartford',   dict(lado=1024, bisel=0.0)),
+    'ayuntamiento_hfd':  (ayuntamiento_hfd,  'hartford',   dict(lado=1024, bisel=0.0)),
+    'biblioteca_hfd':    (biblioteca_hfd,    'hartford',   dict(lado=1024, bisel=0.0)),
+    'butler_mccook':     (butler_mccook,     'hartford',   dict(lado=1024, bisel=0.0)),
+    'bushnell_teatro':   (bushnell_teatro,   'hartford',   dict(lado=1024, bisel=0.0)),
+    'parque_bushnell':   (parque_bushnell,   'hartford',   dict(lado=512, bisel=0.0)),
     'capitolio_ct':      (capitolio_ct,      'hartford',   dict(lado=2048, bisel=0.0)),
     'torre_seguros':     (torre_seguros,     'hartford',   dict(lado=1024, bisel=0.0)),
     'casa_mark_twain':   (casa_mark_twain,   'hartford',   dict(lado=1024, bisel=0.0)),

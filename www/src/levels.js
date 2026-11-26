@@ -2778,16 +2778,26 @@ const CALLES = [
     interior: { rango: [1412, 1828], tipo: "carrusel", aire: true, sinEdificios: [1400, 1840] },
     sinEdificios: [3260, 4000],
     chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
-    hitos: ["torre_seguros", "casa_mark_twain", "old_state_house"],
+    hitos: ["old_state_house", "atheneum", "bushnell_teatro"],
     meta: "capitolio_ct", metaNombre: { es: "el Capitolio de Connecticut", en: "the Connecticut Capitol" },
+    // 26/11/2026: Isidro: «quiero que sean los edificios reales». Main Street
+    // de norte a sur en su orden de verdad, cada edificio una vez: por la acera
+    // este (izquierda) G. Fox, el Cheney Building, el antiguo Capitolio, la
+    // torre de los seguros, el Atheneum, el ayuntamiento, la biblioteca y la
+    // casa Butler-McCook; por la oeste, Center Church y su cementerio de 1640
+    // frente a la torre. Tras el desvio a la derecha, el parque Bushnell a la
+    // izquierda (con el tiovivo y el arco) y, frente al Capitolio, el teatro.
     izquierda: [
-      40, ["kit", 2], 14, ["torre_seguros", 1], 14, ...cuadras(3), ["casa_mark_twain", 1], 14, ...cuadras(5), ["old_state_house", 1], 14, ...cuadras(14),
+      40, ["g_fox", 1], ["cheney_building", 1], 14, ["kit", 3], ["old_state_house", 1], 14, ["kit", 3], ["torre_seguros", 1], ["atheneum", 1], 14,
+      ["kit", 2], ["ayuntamiento_hfd", 1], ["biblioteca_hfd", 1], 14, ...cuadras(2), ["kit", 2], ["butler_mccook", 1], 14,
+      ["kit", 5], 20, ["parque_bushnell", 46], 14, ...cuadras(6),
     ],
     derecha: [
-      40, ["kit", 3], 14, ...cuadras(2), ["old_state_house", 1], 14, ...cuadras(4), ["casa_mark_twain", 1], 14, ...cuadras(5), ["torre_seguros", 1], 14, ...cuadras(12),
+      40, ["kit", 3], 14, ["kit", 4], 14, ["kit", 2], ["center_church", 1], ["cementerio_antiguo", 1], 14, ...cuadras(4),
+      ...cuadras(13), ["casa_mark_twain", 1], 14, ...cuadras(6), ["kit", 2], ["bushnell_teatro", 1], 14,
     ],
     fondo: [{ pieza: "capitolio_ct", d: 3330, centro: true },
-      { pieza: "arco_soldados", d: 120, cruza: true }, { pieza: "arco_soldados", d: 2470, cruza: true },
+      { pieza: "arco_soldados", d: 2470, cruza: true },
       { pieza: "carrusel_bushnell", d: 1410, cruza: true }],
     final: "parada", parada: 6,
     camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
@@ -3224,6 +3234,8 @@ export const ANCHO = {
   faro_portland: 90, observatorio_portland: 12, almacen_old_port: 26, casa_langostas: 14, arco_old_port: 2, costa_niebla: 420,
   casino_arruinado: 80, boardwalk_hall: 46, steel_pier: 18, lucy_elefanta: 30, arco_boardwalk: 2, casino_floor: 420,
   capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 420,
+  g_fox: 28, cheney_building: 28, center_church: 20, cementerio_antiguo: 26, atheneum: 34, ayuntamiento_hfd: 38,
+  biblioteca_hfd: 32, butler_mccook: 26, bushnell_teatro: 38, parque_bushnell: 24,
   estacion_wilmington: 80, opera_wilmington: 24, heladeria: 16, casa_mecedoras: 18, arco_first_state: 2, paseo_rehoboth: 420,
   salon_independencia: 80, ayuntamiento_philly: 42, museo_arte: 40, freiduria: 16, arco_philly: 2, casa_moneda_int: 420,
   capitolio_va: 90, estacion_main_st: 38, departamento_guerra: 36, teatro_byrd: 20, arco_desfile: 2, desfile_monument: 420,

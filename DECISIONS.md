@@ -3053,3 +3053,40 @@ como el suelo cargando, queda cutre».
 - Mientras el presidente celebra en la meta ya no se congela todo: el público,
   las banderas y los coches siguen moviéndose.
 - Boston (sesión aparte, sin publicar) pasa a la v82.
+
+## 26/11/2026 (noche): el helicóptero y Hartford de verdad (v82)
+
+Isidro: «más que añadir edificios sin sentido quiero que sean los reales, con
+momentos reales también» y «el helicóptero sale y a veces choca con un
+edificio y desaparece».
+
+- El helicóptero de la tele grababa quieto a 8,6 m sobre la calle y se le
+  echaban encima la manzana que cierra cada desvío, las fachadas de los
+  estadios, los puentes y los interiores. Además entraba por x = 12, donde
+  empiezan los edificios de la derecha. Ahora:
+  - entra por encima de la acera;
+  - mira lo que viene (`techoEntre`): sube si es bajo y, si es alto o tiene
+    techo, se va antes subiendo;
+  - sus dos momentos por nivel se eligen donde no haya nada de eso en los
+    360 m que dura (o 150 m como mínimo). Los niveles que lo traen fijado
+    (Nueva York) lo mueven un poco si ahí chocaba.
+  - Comprobado nivel a nivel: sale dos veces y no se mete en nada.
+- Hartford, nivel piloto de «los edificios reales»: Main Street de norte a
+  sur, en su orden de verdad y cada edificio una sola vez (antes la torre, la
+  casa de Mark Twain y el antiguo Capitolio salían repetidos a los dos lados).
+  - Acera este (izquierda): G. Fox, Cheney Building, Old State House, torre
+    Travelers, Wadsworth Atheneum, ayuntamiento, biblioteca y casa
+    Butler-McCook.
+  - Acera oeste (derecha): Center Church y su cementerio de 1640, frente a la
+    torre.
+  - Tras el desvío a la derecha (el mismo sitio de antes), el parque Bushnell
+    a la izquierda, con el tiovivo y el arco de los soldados (solo uno: el de
+    la salida no estaba en Main Street). Al final, el teatro Bushnell frente
+    al Capitolio.
+  - Nuevos en blender/hartford.py: g_fox, cheney_building, center_church,
+    cementerio_antiguo, atheneum, ayuntamiento_hfd, biblioteca_hfd,
+    butler_mccook, bushnell_teatro y parque_bushnell.
+  - La casa de Mark Twain sigue (una vez) porque el tramo de la valla de Tom
+    Sawyer la nombra; en realidad está en Farmington Avenue. Se decide con
+    los momentos reales.
+- Boston (sesión aparte, sin publicar) pasa a la v83.

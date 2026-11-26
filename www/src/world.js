@@ -11106,7 +11106,7 @@ export function createWorld(scene) {
   // -- El helicoptero de la tele de las Fake News --
   // Viene por detras, se queda un rato delante a la derecha grabandote (con
   // el foco encendido si es de noche) y se va. Dos veces por nivel.
-  const heli = { mesh: null, rotor: null, cola: null, haz: null, fase: "fuera", t: 0, sitio: new THREE.Vector3(), proximo: 0 };
+  const heli = { mesh: null, rotor: null, cola: null, haz: null, fase: "fuera", t: 0, sitio: new THREE.Vector3(), proximo: 0, alto: 0, desde: null };
   let alEventoHeli = null;
   function onHelicoptero(fn) { alEventoHeli = fn; }
   function texturaRotor() {
@@ -11149,14 +11149,68 @@ export function createWorld(scene) {
     return true;
   }
   // Dos veces por nivel, nunca durante el jefe, el tutorial ni el sprint final.
+  // (26/11 (3): y donde no tenga nada alto delante en los 330 m que dura: ni
+  // desvios, ni estadios, ni interiores. Se mira una vez por nivel.)
+  let heliDe = null, heliLista = null;
   function momentosHeli() {
     if (!nivel) return null;
-    if (nivel.helicoptero) return nivel.helicoptero;
-    const libre = (d) => !(nivel.tramos || []).some(([a, b, tipo]) => d >= a && d < b && ["jefe", "tutorial", "sprint"].includes(tipo));
-    return [0.3, 0.68, 0.8].map((k) => Math.round(nivel.largo * k)).filter(libre).slice(0, 2);
+    if (heliDe === nivel && heliLista) return heliLista;
+    const lista = [];
+    // (los que trae el nivel, en su sitio o un poco antes o despues si ahi choca)
+    if (nivel.helicoptero) {
+      const libre = (d) => techoEntre(d - 10, d + 150) <= 18;
+      for (const base of nivel.helicoptero) {
+        const d = [0, -60, 60, -120, 120, -180, 180, 240].map((x) => base + x).find((x) => x > 60 && libre(x));
+        if (d !== undefined) lista.push(d);
+      }
+      heliLista = lista; heliDe = nivel;
+      return heliLista;
+    }
+    // (primero donde quepa entero; si no hay, donde quepan al menos 150 m: se ira antes)
+    for (const largo of [360, 150]) {
+      const libre = (d) => !(nivel.tramos || []).some(([a, b, tipo]) => d >= a && d < b && ["jefe", "tutorial", "sprint"].includes(tipo)) &&
+        techoEntre(d - 10, d + largo) <= 18;
+      for (const k of [0.3, 0.68, 0.8, 0.22, 0.4, 0.5, 0.6, 0.74, 0.15]) {
+        if (lista.length === 2) break;
+        const base = Math.round(nivel.largo * k);
+        // (si justo ahi no cabe, un poco antes o despues)
+        const d = [0, -60, 60, -120, 120].map((x) => base + x).find(libre);
+        if (d !== undefined && lista.every((x) => Math.abs(x - d) > 450)) lista.push(d);
+      }
+    }
+    heliLista = lista.sort((a, b) => a - b); heliDe = nivel;
+    return heliLista;
   }
   const ENTRA = 2.6, GRABA = 14, SALE = 3;
-  const DESDE = new THREE.Vector3(12, 20, 12), PUESTO = new THREE.Vector3(3.2, 8.6, -26), HACIA = new THREE.Vector3(-4, 30, -170);
+  // 26/11/2026 (3): Isidro: «el helicoptero sale y a veces choca con un
+  // edificio y desaparece». Entraba por x = 12 (donde empiezan los edificios
+  // de la derecha) y, quieto a 8,6 m sobre la calle, se le echaban encima las
+  // fachadas de los estadios, los puentes y los interiores. Ahora entra por
+  // encima de la acera, sube si viene algo alto y, si es muy alto o un sitio
+  // con techo, se va antes subiendo (y no viene si lo tiene justo delante).
+  const DESDE = new THREE.Vector3(5.5, 20, 14), PUESTO = new THREE.Vector3(3.2, 8.6, -26), HACIA = new THREE.Vector3(-4, 46, -150);
+  const altoCruza = {};
+  // Lo mas alto que tapa la calle entre d0 y d1 (99: un interior con techo).
+  function techoEntre(d0, d1) {
+    if (!nivel) return 0;
+    const ri = nivel.interior && nivel.interior.rango;
+    if (ri && d1 > ri[0] - 6 && d0 < ri[1] + 6) return 99;
+    let h = 0;
+    for (const p of calle) {
+      if (p.d > d1) break;
+      // (el desvio: la manzana de enfrente cierra la calle unos 9 m despues del cruce)
+      if (p.tipo === "cruce" && p.giro) { if (p.d + 14 >= d0) return 99; continue; }
+      if (p.d + (p.ancho || 0) < d0) continue;
+      if (p.cierre) h = Math.max(h, p.H + (p.cierre === "salida" ? 6 : 2));
+      else if (p.arco) h = Math.max(h, 6.5);
+      else if (p.cruza) {
+        const clave = `${nivel.carpeta}/${p.pieza}`;
+        if (altoCruza[clave] === undefined) { const mc = modelo(clave); if (!mc) continue; altoCruza[clave] = new THREE.Box3().setFromObject(mc).max.y; }
+        h = Math.max(h, altoCruza[clave]);
+      }
+    }
+    return h;
+  }
   const _foco = new THREE.Vector3(), _dir = new THREE.Vector3(), _abajo = new THREE.Vector3(0, -1, 0);
   function moverHeli(dt) {
     // ¿Toca que venga? (en el sin fin, cada 1.400 m)
@@ -11166,25 +11220,38 @@ export function createWorld(scene) {
         : (totalScrolled > 700 && totalScrolled >= heli.proximo ? totalScrolled : null);
       if (toca === undefined || toca === null) return;
       if (jefeActivo() || cielo || !montarHeli()) { if (!momentos) heli.proximo = totalScrolled + 150; return; }
+      // (con algo muy alto o con techo justo delante, espera: en este tramo no viene)
+      if (techoEntre(totalScrolled - 10, totalScrolled + 120) > 18) return;
       heli.proximo = momentos ? toca : totalScrolled + 1400;
-      heli.fase = "entra"; heli.t = 0;
+      heli.fase = "entra"; heli.t = 0; heli.alto = 0;
       heli.mesh.visible = true;
       if (alEventoHeli) alEventoHeli("llega");
     }
     const m = heli.mesh;
     heli.t += dt;
+    // Lo que se le viene encima: sube por encima (hasta 18 m) o se va antes.
+    if (heli.fase !== "sale") {
+      const dh = totalScrolled - heli.sitio.z;
+      const techo = techoEntre(dh - 8, dh + 55);
+      if (techo > 18) { heli.fase = "sale"; heli.t = 0; heli.desde = heli.sitio.clone(); }
+      const quiere = techo > 0 ? Math.max(0, techo + 4 - PUESTO.y) : 0;
+      heli.alto += (quiere - heli.alto) * Math.min(1, dt * 1.6);
+    }
     if (heli.fase === "entra") {
       const k = Math.min(1, heli.t / ENTRA), e = 1 - Math.pow(1 - k, 3);
       heli.sitio.lerpVectors(DESDE, PUESTO, e);
+      heli.sitio.y += heli.alto * e;
       if (k >= 1) { heli.fase = "graba"; heli.t = 0; }
     } else if (heli.fase === "graba") {
       heli.sitio.copy(PUESTO);
-      heli.sitio.y += Math.sin(heli.t * 0.9) * 0.4;
+      heli.sitio.y += heli.alto + Math.sin(heli.t * 0.9) * 0.4;
       heli.sitio.x += Math.sin(heli.t * 0.5) * 0.6;
-      if (heli.t > GRABA || jefeActivo()) { heli.fase = "sale"; heli.t = 0; }
+      if (heli.t > GRABA || jefeActivo()) { heli.fase = "sale"; heli.t = 0; heli.desde = heli.sitio.clone(); }
     } else if (heli.fase === "sale") {
-      const k = Math.min(1, heli.t / SALE), e = k * k;
-      heli.sitio.lerpVectors(PUESTO, HACIA, e);
+      // Primero sube y luego se aleja (antes subia despacio y se metia en lo que viniera).
+      const k = Math.min(1, heli.t / SALE), e = k * k, sube = 1 - (1 - k) * (1 - k);
+      const de = heli.desde || PUESTO;
+      heli.sitio.set(de.x + (HACIA.x - de.x) * e, de.y + (HACIA.y - de.y) * sube, de.z + (HACIA.z - de.z) * e);
       if (k >= 1) { heli.fase = "fuera"; m.visible = false; heli.haz.visible = false; return; }
     }
     m.position.copy(heli.sitio);
