@@ -3090,3 +3090,58 @@ edificio y desaparece».
     Sawyer la nombra; en realidad está en Farmington Avenue. Se decide con
     los momentos reales.
 - Boston (sesión aparte, sin publicar) pasa a la v83.
+
+## 27/11/2026: giros de verdad, un 15 % más rápido y Hartford con el mapa (v83)
+
+Isidro: «quiero mejorar de una vez los giros en las calles, no quiero que salga
+un cartel en grande, puede salir arriba en pequeño, solo quiero que el
+personaje gire por ellas sin hacer una transición»; «más frenético, que vaya
+aumentando de velocidad un poco más que ahora, como un 15 %»; «más riguroso
+con el realismo de las calles, dónde está cada cosa».
+
+- **Los giros, de verdad** (world.js, `doblarMundo`). Antes la calle de
+  enfrente la cerraba una manzana y, con la pantalla tapada por el cartel
+  verde, se quitaba: se seguía recto. Ahora:
+  - Lo que viene después del cruce se dibuja girado un cuarto de vuelta sobre
+    el centro del cruce: es la calle de al lado, y se ve al acercarse.
+  - Al pasar por el cruce todo gira sobre ese centro, de 9 m antes a 9 m
+    después, con arranque y frenada suaves (smoothstep). El jugador y la
+    cámara no se mueven; el horizonte y las nubes giran con la calle.
+  - Lo que va con el jugador (el jefe, el helicóptero, el que te persigue) no
+    gira: se nota porque no se mueve con la calle.
+  - El suelo de siempre (calzada, aceras, suelo) se queda con la calle vieja y
+    la nueva lleva una copia; mientras dura, en vez de correr su textura se
+    mueven ellas. Con el cruce 45 m por detrás se quita la copia: medido, el
+    cambio es igual que entre dos fotogramas normales.
+  - La calle nueva es como la de siempre, de fachada a fachada 2 × (línea +
+    0,5): en el lado del giro se abre ese hueco (levels.js, `abrirGiros`: los
+    del kit se recortan y los modelados se apartan). En el otro lado, lo que
+    llega a la esquina de enfrente se queda con la calle vieja (`preGiro`).
+  - Esquina: asfalto en la boca de la calle nueva, bordillos que doblan,
+    cebras, semáforo y el letrero con su nombre. Si es una T, una manzana
+    cierra la calle vieja; si la calle vieja sigue (`sigue`), se ven sus
+    manzanas más allá.
+  - Arriba sale pequeña la placa «Ahora vas por → Calle». Ya no hay cartel
+    de «Desvío», ni flechas, ni vallas para ir a un carril: se gira solo.
+  - Un giro cada vez; si el siguiente llega antes de acabar, espera.
+  - Comprobado en los 46 niveles con giros: los dos giros se hacen, se
+    acaban limpios y sin errores.
+- **Velocidad**: sale igual y va subiendo hasta un 15 % más que antes al final
+  (`ACELERA_MAS` en main.js; también en el modo sin fin).
+- **Hartford con el mapa de verdad** (OpenStreetMap, metro a metro, 3,5 km):
+  - De la casa de Mark Twain por Farmington Avenue (la catedral de San José a
+    la izquierda y, enfrente, la sede de Aetna, de 1931) y Asylum Street hasta
+    Main Street.
+  - Giro a la derecha en la T de Asylum St con Main St (metro 2.459). Por Main
+    Street: a la izquierda el antiguo Capitolio, la torre Travelers, el
+    Atheneum, el ayuntamiento y la biblioteca; a la derecha el cementerio de
+    1640 y Center Church, frente a la torre.
+  - Giro a la derecha a Elm Street (metro 2.989; Main Street sigue recta), con
+    el parque Bushnell a la derecha y el tiovivo; al final, el Capitolio.
+  - Las 22 calles que cruzan están en su metro, salen por el lado por el que
+    salen y llevan su nombre en el letrero (`nombresCruces`).
+  - Nuevos en blender/hartford.py: catedral_san_jose y aetna. Salen de la
+    ruta (no están en ella): G. Fox, Cheney, Butler-McCook, el teatro
+    Bushnell y el arco de los soldados.
+  - El nivel pasa de 3.300 a 3.630 m (lo que mide de verdad).
+- Boston (sesión aparte, sin publicar) pasa a la v84.

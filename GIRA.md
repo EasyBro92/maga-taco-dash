@@ -30,7 +30,7 @@ La elegida es la que sale primero; entre paréntesis, la otra opción.
 | Carolina del Norte | Charlotte (capital: Raleigh) | la más grande (hecho el 14/11: Tryon Street, el rebufo detrás de los coches de carreras y el accidente en cadena del óvalo de noche) |
 | Carolina del Sur | Charleston (capital: Columbia) | la más famosa (hecho el 14/11: East Bay Street, las calesas que dejan «regalitos», el campo de golf persiguiendo la bola y la fuente de la piña) |
 | Colorado | Denver | capital y la más famosa (hecho el 14/11: el 16th Street Mall, las bolas de nieve que crecen y el eslalon de las Rocosas; superarlo abre el modo Esquí del menú) |
-| Connecticut | Hartford | capital (hecho el 16/11: la valla de Tom Sawyer que se pinta y las anillas del tiovivo) |
+| Connecticut | Hartford | capital (hecho el 16/11: la valla de Tom Sawyer que se pinta y las anillas del tiovivo; 27/11: el recorrido de verdad, de la casa de Mark Twain al Capitolio) |
 | Dakota del Norte | Fargo (capital: Bismarck) | la más conocida (hecho el 12/11: Broadway hasta el teatro, con el Rey Pingüino) |
 | Dakota del Sur | Rapid City y el Monte Rushmore (capital: Pierre) | los presidentes en la montaña (hecho el 12/11: Rapid City, las Black Hills y el monte) |
 | Delaware | Wilmington (capital: Dover) | la más grande (hecho el 15/11: las gallinas azules que se apartan y la torre de helado que se tambalea) |

@@ -2744,9 +2744,20 @@ const CALLES = [
     // segun lo pintado) y el momento estrella, el tiovivo del parque Bushnell
     // (en el caballito, que sube y baja, tocar cuando pasa la anilla dorada a
     // la altura de la mano). Pancarta: LEE LA LETRA PEQUEÑA.
-    id: "hartford", nombre: "Main Street", lugar: "Hartford, Connecticut", listo: true,
+    id: "hartford", nombre: "Farmington Ave · Main St", lugar: "Hartford, Connecticut", listo: true,
     zona: "city", carpeta: "hartford", luz: "otono", semilla: 1848,
-    largo: 3300, linea: 11.5, velMax: 25,
+    // 27/11/2026: Isidro: «más riguroso con el realismo de las calles, dónde
+    // está cada cosa». El recorrido de verdad, medido en OpenStreetMap, metro a
+    // metro (3,5 km): de la casa de Mark Twain por Farmington Avenue (la
+    // catedral de San José a la izquierda y, enfrente, la sede de Aetna) y
+    // Asylum Street hasta Main Street; giro a la derecha en el antiguo
+    // Capitolio (la T de Asylum St) y por Main Street, en su acera este el
+    // antiguo Capitolio, la torre Travelers, el Atheneum, el ayuntamiento y la
+    // biblioteca; en la oeste, el cementerio de 1640 y Center Church frente a
+    // la torre. Giro a la derecha a Elm Street (Main Street sigue recta), con
+    // el parque Bushnell a la derecha (alli, el tiovivo), hasta el Capitolio.
+    // Cada calle que cruza esta en su sitio y con su nombre.
+    largo: 3630, linea: 11.5, velMax: 25,
     potenciadores: ["magnet", "shield", "boost", "mega", "botas"],
     kit: { minPlantas: 2, maxPlantas: 6, estilo: "hartford" },
     horizonte: "hartford",
@@ -2754,51 +2765,70 @@ const CALLES = [
       full: ["furgon_seguros", "pickup", "furgoneta", "autocaravana"] },
     publico: { personas: ["turista", "fan", "chico", "senora", "abuelo"], valla: "banderas", cada: 2 },
     tramos: [
-      [0, 70, "calma", { titulo: "hartford" }],
-      [70, 250, "mixto", { densidad: 0.45, titulo: "main_hfd" }],
+      [0, 70, "calma", { titulo: "twain" }],
+      [70, 250, "mixto", { densidad: 0.45, titulo: "hartford" }],
       [250, 610, "valla", { titulo: "valla" }],
-      [610, 690, "calma", { titulo: "torre_seguros" }],
-      [690, 850, "slalom", { full: ["furgon_seguros", "pickup", "furgoneta"], titulo: "seguros" }],
-      [850, 930, "calma"],
-      [930, 1090, "vallas", { low: ["cubo_volcado", "valla_metal"], high: ["cartel_ct"], titulo: "letra_pequena" }],
-      [1090, 1170, "calma"],
-      [1170, 1330, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
-      [1330, 1410, "calma", { titulo: "entrada_carrusel" }],
-      [1410, 1830, "carrusel", { momento: "vehiculo", vehiculo: "caballito", titulo: "carrusel" }],
-      [1830, 1910, "calma", { titulo: "carrusel_fin" }],
-      [1910, 2070, "premios", { titulo: "premios" }],
-      [2070, 2430, "valla", { titulo: "valla2" }],
-      [2430, 2510, "calma", { titulo: "twain" }],
-      [2510, 2650, "mixto", { densidad: 0.5 }],
-      [2650, 2810, "rampa", { titulo: "rampa" }],
-      [2810, 3140, "mixto", { densidad: 0.55, titulo: "" }],
-      [3140, 3290, "sprint", { titulo: "sprint_capitolio_ct" }],
+      [610, 790, "mixto", { densidad: 0.5 }],
+      [790, 880, "calma", { titulo: "catedral_sj" }],
+      [880, 1210, "slalom", { full: ["furgon_seguros", "pickup", "furgoneta"], titulo: "seguros" }],
+      [1210, 1290, "calma", { titulo: "main_hfd" }],
+      [1290, 1450, "vallas", { low: ["cubo_volcado", "valla_metal"], high: ["cartel_ct"], titulo: "letra_pequena" }],
+      [1450, 1530, "calma"],
+      [1530, 1690, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
+      [1690, 1770, "calma"],
+      [1770, 1930, "premios", { titulo: "premios" }],
+      [1930, 2290, "valla", { titulo: "valla2" }],
+      [2290, 2600, "mixto", { densidad: 0.5 }],
+      [2600, 2690, "calma", { titulo: "torre_seguros" }],
+      [2690, 2850, "rampa", { titulo: "rampa" }],
+      [2850, 2900, "mixto", { densidad: 0.5 }],
+      [2900, 3070, "calma", { titulo: "entrada_carrusel" }],
+      [3070, 3490, "carrusel", { momento: "vehiculo", vehiculo: "caballito", titulo: "carrusel" }],
+      [3490, 3530, "calma", { titulo: "carrusel_fin" }],
+      [3530, 3625, "sprint", { titulo: "sprint_capitolio_ct" }],
     ],
-    control: 1870, caja: 1990,
-    interior: { rango: [1412, 1828], tipo: "carrusel", aire: true, sinEdificios: [1400, 1840] },
-    sinEdificios: [3260, 4000],
-    chapas: [[150, "carril"], [1250, "carril"], [2950, "arco"]],
-    hitos: ["old_state_house", "atheneum", "bushnell_teatro"],
+    control: 1730, caja: 1850,
+    interior: { rango: [3072, 3488], tipo: "carrusel", aire: true, sinEdificios: [3060, 3500] },
+    sinEdificios: [3590, 4000],
+    chapas: [[150, "carril"], [1600, "carril"], [2870, "arco"]],
+    hitos: ["catedral_san_jose", "old_state_house", "torre_seguros"],
     meta: "capitolio_ct", metaNombre: { es: "el Capitolio de Connecticut", en: "the Connecticut Capitol" },
-    // 26/11/2026: Isidro: «quiero que sean los edificios reales». Main Street
-    // de norte a sur en su orden de verdad, cada edificio una vez: por la acera
-    // este (izquierda) G. Fox, el Cheney Building, el antiguo Capitolio, la
-    // torre de los seguros, el Atheneum, el ayuntamiento, la biblioteca y la
-    // casa Butler-McCook; por la oeste, Center Church y su cementerio de 1640
-    // frente a la torre. Tras el desvio a la derecha, el parque Bushnell a la
-    // izquierda (con el tiovivo y el arco) y, frente al Capitolio, el teatro.
+    girosReales: [{ d: 2459, lado: 1, calle: "Main St" }, { d: 2989, lado: 1, calle: "Elm St", sigue: true }],
+    nombresCruces: {"176":"Gillett St","217":"Forest St","326":"Marshall St","436":"Laurel St","580":"Imlay St","722":"Sigourney St","1198":"Flower St","1363":"Broad St","1490":"Asylum Ave","1530":"Garden St","1679":"Spruce St","1750":"Union Pl","1846":["High St","Ford St"],"2046":"Ann Uccello St","2133":"Haynes St","2244":"Trumbull St","2459":"Main St","2540":["Central Row","Pearl St"],"2733":"Gold St","2907":["Arch St","Wells St"],"2989":["Sheldon St","Elm St"],"3545":"Trinity St"},
     izquierda: [
-      40, ["g_fox", 1], ["cheney_building", 1], 14, ["kit", 3], ["old_state_house", 1], 14, ["kit", 3], ["torre_seguros", 1], ["atheneum", 1], 14,
-      ["kit", 2], ["ayuntamiento_hfd", 1], ["biblioteca_hfd", 1], 14, ...cuadras(2), ["kit", 2], ["butler_mccook", 1], 14,
-      ["kit", 5], 20, ["parque_bushnell", 46], 14, ...cuadras(6),
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 11 }], 14, ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 28 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 14 }], 14, ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 32 }], 14, ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1,{ ancho: 34 }], ["catedral_san_jose", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 41 }],
+      14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 29 }], 14, ["kit", 1], ["kit", 1,{ ancho: 8 }], 14, ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 27 }], 14, ["kit", 1], ["kit", 1,{ ancho: 17 }], 14, ["kit", 1], ["kit", 1],
+      ["kit", 1,{ ancho: 18 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 26 }], 14,
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 28 }], 14, ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 15 }], 14, ["kit", 1,{ ancho: 19 }],
+      ["old_state_house", 1], ["kit", 1,{ ancho: 22 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 9 }],
+      ["torre_seguros", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 20 }], ["atheneum", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1,{ ancho: 11 }], ["ayuntamiento_hfd", 1], 1, 14, ["kit", 1], ["kit", 1,{ ancho: 9 }], ["biblioteca_hfd", 1], 7, 19, ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 15 }], 14,
     ],
     derecha: [
-      40, ["kit", 3], 14, ["kit", 4], 14, ["kit", 2], ["center_church", 1], ["cementerio_antiguo", 1], 14, ...cuadras(4),
-      ...cuadras(13), ["casa_mark_twain", 1], 14, ...cuadras(6), ["kit", 2], ["bushnell_teatro", 1], 14,
+      ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 17 }], ["casa_mark_twain", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1,{ ancho: 9 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 13 }], 14,
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 22 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1,{ ancho: 10 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1,{ ancho: 22 }], ["aetna", 1], ["kit", 1], ["kit", 1,{ ancho: 12 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 17 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1,{ ancho: 25 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1,{ ancho: 29 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 13 }], 14, ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 39 }], 14, ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 29 }], 14, ["kit", 1], ["kit", 1], ["kit", 1],
+      ["kit", 1], ["kit", 1,{ ancho: 14 }], ["cementerio_antiguo", 1], ["center_church", 1], ["kit", 1], ["kit", 1,{ ancho: 9 }], 14, ["kit", 1],
+      ["kit", 1], ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 22 }], 14, ["kit", 1], ["kit", 1], ["kit", 1,{ ancho: 10 }], 14, 5,
+      ["parque_bushnell", 25],
     ],
-    fondo: [{ pieza: "capitolio_ct", d: 3330, centro: true },
-      { pieza: "arco_soldados", d: 2470, cruza: true },
-      { pieza: "carrusel_bushnell", d: 1410, cruza: true }],
+    fondo: [{ pieza: "capitolio_ct", d: 3660, centro: true },
+      { pieza: "carrusel_bushnell", d: 3070, cruza: true }],
     final: "parada", parada: 6,
     camaraFinal: { pos: [5, 3, 12], mira: [0, 14, -40] },
     acera: ["hartford/cubo_pintura", "ciudad/farola_ciudad", "ciudad/arbol_ciudad", "ciudad/farola_ciudad"],
@@ -3233,7 +3263,7 @@ export const ANCHO = {
   iglesia_unitaria: 90, ayuntamiento_btv: 28, heladeria_vaca: 14, granero_rojo: 26, puente_cubierto: 12, senador_manoplas: 2, causeway_champlain: 420,
   faro_portland: 90, observatorio_portland: 12, almacen_old_port: 26, casa_langostas: 14, arco_old_port: 2, costa_niebla: 420,
   casino_arruinado: 80, boardwalk_hall: 46, steel_pier: 18, lucy_elefanta: 30, arco_boardwalk: 2, casino_floor: 420,
-  capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 420,
+  capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, catedral_san_jose: 60, aetna: 148, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 420,
   g_fox: 28, cheney_building: 28, center_church: 20, cementerio_antiguo: 26, atheneum: 34, ayuntamiento_hfd: 38,
   biblioteca_hfd: 32, butler_mccook: 26, bushnell_teatro: 38, parque_bushnell: 24,
   estacion_wilmington: 80, opera_wilmington: 24, heladeria: 16, casa_mecedoras: 18, arco_first_state: 2, paseo_rehoboth: 420,
@@ -3313,7 +3343,8 @@ function recorrerLado(nivel, lista, lado, anchoDe, alEdificio, alCruce) {
         // Edificio unico: su ancho y su semilla salen del sitio que ocupa.
         const semilla = nivel.semilla * 7919 + (lado > 0 ? 500000 : 0) + Math.round(d);
         const a = azarConSemilla(semilla);
-        const ancho = [18, 20, 22, 24, 26, 40][Math.floor(a() * 6)];
+        // (27/11: `ancho` en las opciones: para que los de verdad caigan en su metro)
+        const ancho = (opciones && opciones.ancho) || [18, 20, 22, 24, 26, 40][Math.floor(a() * 6)];
         alEdificio({ pieza, d, lado, ancho, semilla, opciones });
         d += ancho;
         continue;
@@ -3328,11 +3359,48 @@ function recorrerLado(nivel, lista, lado, anchoDe, alEdificio, alCruce) {
 
 // Pasa las listas de cada lado a posiciones: { pieza, d (donde empieza a lo
 // largo de la calle), lado }. Necesita el ancho de cada pieza (medidas).
+// 27/11/2026: Isidro: «quiero mejorar de una vez los giros en las calles; solo
+// quiero que el personaje gire por ellas sin hacer una transicion». En el
+// desvio se gira de verdad (world.js, doblarMundo) a una calle como la de
+// siempre: de fachada a fachada, 2 x (linea + 0,5). En el lado del giro se abre
+// ese hueco: los del kit se recortan y los modelados se apartan (empujando a
+// los de al lado). En el otro lado, los que llegan a la esquina de enfrente se
+// quedan con la calle vieja (`preGiro`: no giran con la calle nueva).
+function abrirGiros(nivel, salida) {
+  const W = (nivel.linea || 11.5) + 0.5;
+  for (const g of nivel.giros || []) {
+    const a = g.d - W, b = g.d + W;
+    for (const lado of [-1, 1]) {
+      const fila = salida.filter((e) => e.lado === lado && !e.cruza && !e.centro && !e.arco).sort((x, y) => x.d - y.d);
+      if (lado !== g.lado) {
+        for (const e of fila) if (e.d < b - 0.5 && e.d + e.ancho > g.d) { e.preGiro = g.d; g.finPre = Math.max(g.finPre || 0, e.d + e.ancho); }
+        continue;
+      }
+      let tope = a;
+      for (const e of fila.filter((x) => x.d < g.d).reverse()) {
+        if (e.d + e.ancho <= tope) break;
+        if (e.pieza !== "kit") { e.d = tope - e.ancho; tope = e.d; continue; }
+        if (e.d <= tope - 8) { e.ancho = tope - e.d; break; }
+        e.quitar = true;
+      }
+      tope = b;
+      for (const e of fila.filter((x) => x.d >= g.d)) {
+        if (e.d >= tope) break;
+        if (e.pieza !== "kit") { e.d = tope; tope = e.d + e.ancho; continue; }
+        const fin = e.d + e.ancho;
+        if (fin >= tope + 8) { e.d = tope; e.ancho = fin - tope; break; }
+        e.quitar = true;
+      }
+    }
+  }
+  for (let i = salida.length - 1; i >= 0; i--) if (salida[i].quitar) salida.splice(i, 1);
+}
 export function colocarNivel(nivel, anchoDe) {
   const salida = [];
   const { quitar } = crucesDeNivel(nivel);
   recorrerLado(nivel, nivel.izquierda, -1, anchoDe, (e) => salida.push(e));
   recorrerLado(nivel, nivel.derecha, 1, anchoDe, (e) => { if (!(e.pieza === "kit" && quitar.has(e.d))) salida.push(e); });
+  abrirGiros(nivel, salida);
   // (`cruza`: de lado a lado de la calle, como el puente o las pasarelas de Des Moines)
   for (const f of nivel.fondo || []) salida.push({ pieza: f.pieza, d: f.d, lado: f.lado || 0, centro: !!f.centro, cruza: !!f.cruza, x: f.x || 0, giro: !!f.giro, ancho: anchoDe(f.pieza) });
   // El arco del punto de control, de lado a lado de la calle.
@@ -3370,7 +3438,10 @@ export function sueloDeNivel(nivel) {
   const salida = [];
   // 08/11 (2): cada calle lateral es un cruce de verdad (ver crucesDeNivel).
   for (const c of crucesDeNivel(nivel).cruces) {
-    salida.push({ tipo: "cruce", d: c.d, lados: c.lados, cuatro: c.cuatro, n: c.n, giro: (nivel.giros || []).find((g) => g.d === c.d) || null });
+    // (27/11: `nombresCruces`: el nombre de verdad de cada calle, { metro: "Laurel St" },
+    // o [la de la izquierda, la de la derecha] si cambia de nombre al cruzar)
+    const nombre = Object.entries(nivel.nombresCruces || {}).find(([d]) => Math.abs(d - c.d) < 4);
+    salida.push({ tipo: "cruce", d: c.d, lados: c.lados, cuatro: c.cuatro, n: c.n, nombre: nombre && nombre[1], giro: (nivel.giros || []).find((g) => g.d === c.d) || null });
   }
   const azar = azarConSemilla(nivel.semilla + 7);
   for (let x = 30; x < nivel.largo - 40; x += 45 + azar() * 25) {
@@ -3446,7 +3517,8 @@ export function crucesDeNivel(nivel, anchoDe = (k) => ANCHO[k] || 20) {
     if (!libre(c)) continue;
     const otro = huecos[1].find(([x, y]) => Math.min(b, y) - Math.max(a, x) >= 11);
     if (otro) { cruces.push({ d: (Math.max(a, otro[0]) + Math.min(b, otro[1])) / 2, lados: [-1, 1], cuatro: true }); continue; }
-    if (n++ % 2 === 0) {
+    // (27/11: no en los niveles hechos con el mapa: cada calle sale por donde sale)
+    if (!nivel.nombresCruces && n++ % 2 === 0) {
       const tapan = edif[1].filter((e) => e.d < c + 6.5 && e.d + e.ancho > c - 6.5);
       if (tapan.length && tapan.every((e) => e.pieza === "kit")) {
         tapan.forEach((e) => quitar.add(e.d));
@@ -3483,7 +3555,17 @@ function aplicarGiros(nivel) {
   const { cruces } = crucesDeNivel(nivel);
   const lejos = [nivel.control, nivel.caja, ...(nivel.chapas || []).map(([d]) => d)].filter((x) => x != null);
   const giros = [];
-  for (const [f, pref] of [[0.35, 1], [0.7, -1]]) {
+  // 27/11/2026: los niveles hechos con el mapa de verdad (Hartford) traen sus
+  // giros en sus esquinas: `girosReales: [{ d, lado, calle, muro, sigue }]`
+  // (`muro`: el edificio que cierra la T, si es uno de verdad; `sigue`: no es
+  // una T, la calle vieja sigue recta). Tienen que caer en un cruce (un hueco
+  // de 12 m o mas en el lado del giro).
+  for (const r of nivel.girosReales || []) {
+    const c = cruces.find((x) => Math.abs(x.d - r.d) < 1 && x.lados.includes(r.lado));
+    if (!c) { console.warn("giro sin cruce", nivel.id, r.d); continue; }
+    giros.push({ d: c.d, lado: r.lado, n: giros.length, calle: r.calle, muro: r.muro, sigue: r.sigue });
+  }
+  for (const [f, pref] of nivel.girosReales ? [] : [[0.35, 1], [0.7, -1]]) {
     const objetivo = nivel.largo * f;
     const vale = cruces.filter((c) => {
       // (11/11: 65 m: con 45 la chapa del carril quedaba justo en la curva)
@@ -3505,7 +3587,7 @@ function aplicarGiros(nivel) {
     const [a, b, tipo, op] = nivel.tramos[i];
     const { titulo, momento, ...resto } = op || {};
     nivel.tramos.splice(i, 1, [a, g.d - 60, tipo, op],
-      [g.d - 60, g.d + 25, "giro", { lado: g.lado, cruce: g.d, titulo: g.lado > 0 ? "giro_der" : "giro_izq" }],
+      [g.d - 60, g.d + 25, "giro", { lado: g.lado, cruce: g.d }],   // (27/11: sin cartel: se gira solo)
       [g.d + 25, b, tipo, resto]);
   }
   nivel.giros = giros;

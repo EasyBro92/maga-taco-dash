@@ -1174,15 +1174,23 @@ export function crearHorizonte(scene) {
   c.width = ANCHO; c.height = ALTO;
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.repeat.x = -1;                 // se ve por dentro: sin esto saldria al reves
+  // 27/11/2026: con los giros de verdad (world.js, doblarMundo) el horizonte
+  // gira con la calle, asi que da la vuelta entera: dos veces el dibujo (cada
+  // una media vuelta, antes era un poco menos) y en espejo, para que no haya
+  // corte donde se juntan. La mitad de delante queda como antes.
+  tex.wrapS = THREE.MirroredRepeatWrapping;
+  tex.repeat.x = -Math.round((Math.PI * 2) / ARCO);   // (negativo: se ve por dentro)
+  tex.offset.x = 1.5;   // (la mitad de delante, de 1 a 0: sin espejo, como antes)
   tex.anisotropy = 4;
-  const geo = new THREE.CylinderGeometry(R, R, ALTO_BANDA, 72, 1, true, Math.PI - ARCO / 2, ARCO);
+  const geo = new THREE.CylinderGeometry(R, R, ALTO_BANDA, 144, 1, true, 0, Math.PI * 2);
   const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false, transparent: true, depthWrite: false });
   const banda = new THREE.Mesh(geo, mat);
   banda.position.set(0, BAJO + ALTO_BANDA / 2, 9.8);
   banda.renderOrder = -2;
   scene.add(banda);
+  const cielo = new THREE.Group();   // las nubes, que tambien giran
+  cielo.position.set(0, 0, 9.8);
+  scene.add(cielo);
 
   // Nubes: sprites grandes y blancos, altos y lejanos, que van muy despacio.
   const texNube = (() => {
@@ -1201,15 +1209,20 @@ export function crearHorizonte(scene) {
   })();
   const nubes = [];
   const rn = azar(77);
+  // (27/11: el mismo cielo de nubes a los cuatro lados, para cuando se gira)
+  const cuartos = [0, 1, 2, 3].map((k) => { const q = new THREE.Group(); q.rotation.y = (k * Math.PI) / 2; cielo.add(q); return q; });
+  const nubeMat = new THREE.SpriteMaterial({ map: texNube, fog: false, transparent: true, depthWrite: false, opacity: 0.95 });
   for (let i = 0; i < 9; i++) {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texNube, fog: false, transparent: true, depthWrite: false, opacity: 0.95 }));
-    const w = 70 + rn() * 70;
-    s.scale.set(w, w / 2, 1);
-    s.position.set(-170 + i * 42 + rn() * 20, 52 + rn() * 34, -210 - rn() * 50);
-    s.renderOrder = -1;
-    s.userData.v = 0.6 + rn() * 0.8;
-    scene.add(s);
-    nubes.push(s);
+    const w = 70 + rn() * 70, x = -170 + i * 42 + rn() * 20, y = 52 + rn() * 34, z = -210 - rn() * 50 - 9.8, v = 0.6 + rn() * 0.8;
+    for (const q of cuartos) {
+      const s = new THREE.Sprite(nubeMat);
+      s.scale.set(w, w / 2, 1);
+      s.position.set(x, y, z);
+      s.renderOrder = -1;
+      s.userData.v = v;
+      q.add(s);
+      nubes.push(s);
+    }
   }
 
   let pintado = "";
@@ -1229,14 +1242,16 @@ export function crearHorizonte(scene) {
       x.fillStyle = g; x.fillRect(0, SUELO - 2, ANCHO, ALTO - SUELO + 2);
       tex.needsUpdate = true;
       const blanco = sitio === "desierto" || sitio === "phoenix" ? 0xfff2e0 : sitio === "vegas" ? 0xffc8e4 : 0xffffff;
-      for (const n of nubes) n.material.color.set(blanco);
+      nubeMat.color.set(blanco);
     },
     // 07/11: dentro del metro no se ve el horizonte.
     mostrar(v) {
       if (banda.visible === v) return;
       banda.visible = v;
-      for (const n of nubes) n.visible = v;
+      cielo.visible = v;
     },
+    // 27/11: lo que se ha girado por las calles (world.js, doblarMundo).
+    girar(yaw) { banda.rotation.y = yaw; cielo.rotation.y = yaw; },
     animar(dt) {
       for (const n of nubes) {
         n.position.x += n.userData.v * dt;

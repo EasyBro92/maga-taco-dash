@@ -36,6 +36,7 @@ initErrorReporting();
 const BASE_SPEED = 13;
 const MAX_SPEED = 25;
 const ACCEL = 0.12;
+const ACELERA_MAS = 0.15;   // 27/11: al final de la subida, un 15 % mas rapido
 const JUMP_DURATION = 0.62;   // 26/10: mas rato en el aire (habia que estar muy encima para saltar)
 const JUMP_HEIGHT = 1.7;
 const SLIDE_DURATION = 0.5;
@@ -868,6 +869,7 @@ const NOMBRE_HITO = {
     ayuntamiento_philly: "El ayuntamiento de William Penn", museo_arte: "El museo de las escaleras", freiduria: "La freiduría",
     boardwalk_hall: "El gran salón del Boardwalk", steel_pier: "El muelle de la noria", lucy_elefanta: "Lucy, la elefanta",
     torre_seguros: "La torre de los seguros", casa_mark_twain: "La casa de Mark Twain", old_state_house: "El antiguo Capitolio",
+    catedral_san_jose: "La catedral de San José", aetna: "La sede de Aetna",
     g_fox: "Los almacenes G. Fox", cheney_building: "El Cheney Building", center_church: "Center Church", cementerio_antiguo: "El cementerio de 1640",
     atheneum: "El museo Wadsworth Atheneum", ayuntamiento_hfd: "El ayuntamiento de Hartford", biblioteca_hfd: "La biblioteca de Hartford",
     butler_mccook: "La casa Butler-McCook", bushnell_teatro: "El teatro Bushnell", parque_bushnell: "El parque Bushnell",
@@ -935,6 +937,7 @@ const NOMBRE_HITO = {
     ayuntamiento_philly: "City Hall and William Penn", museo_arte: "The art museum steps", freiduria: "The fry shop",
     boardwalk_hall: "Boardwalk Hall", steel_pier: "The Steel Pier", lucy_elefanta: "Lucy the Elephant",
     torre_seguros: "The insurance tower", casa_mark_twain: "Mark Twain's house", old_state_house: "The Old State House",
+    catedral_san_jose: "St. Joseph Cathedral", aetna: "Aetna headquarters",
     g_fox: "G. Fox & Co.", cheney_building: "The Cheney Building", center_church: "Center Church", cementerio_antiguo: "The 1640 burying ground",
     atheneum: "The Wadsworth Atheneum", ayuntamiento_hfd: "Hartford City Hall", biblioteca_hfd: "Hartford Public Library",
     butler_mccook: "The Butler-McCook House", bushnell_teatro: "The Bushnell theater", parque_bushnell: "Bushnell Park",
@@ -1284,23 +1287,19 @@ function pintarBarraJefe(vida) {
 world.onHelicoptero(() => {
   setTimeout(() => { if (gameState === "playing") showBubble((FRASES[getLang()] || FRASES.es).furgoneta, 1600); }, 1200);
 });
-// 08/11/2026 (2): el desvio (levels.js, aplicarGiros). Al llegar al cruce, el
-// cartel verde con la calle nueva pasa tapando la pantalla y, tapada, se quita
-// la manzana que cerraba la calle de enfrente: ya vas por la otra calle.
-world.onGiro((lado, calle, quitarMuro) => {
+// 08/11/2026 (2): el desvio (levels.js, aplicarGiros). 27/11: Isidro: «no
+// quiero que salga un cartel en grande, puede salir arriba en pequeño; solo
+// quiero que el personaje gire por ellas». Se gira de verdad por la calle
+// (world.js, doblarMundo) y arriba sale, pequeña, la placa de la calle nueva.
+let giroReloj = 0;
+world.onGiro((lado, calle) => {
   const el = document.getElementById("giroCalle");
   el.querySelector("small").textContent = t("ahoraPor");
-  el.querySelector(".placa").textContent = lado > 0 ? `${calle.toUpperCase()} →` : `← ${calle.toUpperCase()}`;
-  el.getAnimations().forEach((a) => a.cancel());
+  el.querySelector(".placa").textContent = lado > 0 ? `${calle} →` : `← ${calle}`;
   el.classList.remove("hidden");
-  el.animate([{ transform: `translateX(${lado * 105}%)` }, { transform: "translateX(0)" }], { duration: 260, easing: "ease-out", fill: "forwards" });
-  // (Con temporizadores y no al acabar la animacion: si la pagina no se ve,
-  // las animaciones no avanzan y la manzana se quedaba puesta.)
-  setTimeout(() => { quitarMuro(); vibrate(20); }, 270);
-  setTimeout(() => {
-    el.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-lado * 105}%)` }], { duration: 260, easing: "ease-in", fill: "forwards" });
-    setTimeout(() => el.classList.add("hidden"), 280);
-  }, 620);
+  el.classList.remove("fuera");
+  clearTimeout(giroReloj);
+  giroReloj = setTimeout(() => { el.classList.add("fuera"); giroReloj = setTimeout(() => el.classList.add("hidden"), 400); }, 3200);
 });
 world.onJefe((evento, vida) => {
   const barra = document.getElementById("bossBar");
@@ -3661,7 +3660,9 @@ function velNivel(d) {
   // 06/11 (2): en los primeros 350 m hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
   const ARRANQUE = 350, L = nivelActual.largo;
   const k = d < ARRANQUE ? 0.45 * (d / ARRANQUE) : 0.45 + 0.55 * Math.min(1, (d - ARRANQUE) / Math.max(1, L - ARRANQUE));
-  return BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k;
+  // 27/11: Isidro: «mas frenetico: que vaya aumentando de velocidad un poco mas
+  // que ahora, como un 15 %». Sale igual y al final va un 15 % mas rapido.
+  return (BASE_SPEED + ((nivelActual.velMax || MAX_SPEED) - BASE_SPEED) * k) * (1 + ACELERA_MAS * k);
 }
 world.setVelEn((d) => (nivelActual ? velNivel(d) : null));
 function empezarMomento(tr) {
@@ -4301,7 +4302,10 @@ function frame(dtFijo) {
       // hace casi la mitad de la subida, y el resto poco a poco hasta la meta.
       speed = velNivel(distance);
       if (tramoMostrado && tramoMostrado.tipo === "sprint") speed *= SPRINT_EXTRA;
-    } else speed = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);
+    } else {
+      const v = Math.min(MAX_SPEED, BASE_SPEED + elapsed * ACCEL);
+      speed = v * (1 + ACELERA_MAS * (v - BASE_SPEED) / (MAX_SPEED - BASE_SPEED));   // (27/11: un 15 % mas al final)
+    }
     if (invulnerable > 0) {
       invulnerable = Math.max(0, invulnerable - dt);
       character.object3D.visible = invulnerable === 0 || Math.floor(invulnerable * 12) % 2 === 0;

@@ -510,8 +510,10 @@ export function createWorld(scene) {
   sidewalkMat.polygonOffsetFactor = -1;
   sidewalkMat.polygonOffsetUnits = -2;
   const curbMat = cortable(toon(0xfff6e0));
+  const aceras = [], bordillos = [];   // (27/11: para el giro de verdad, ver doblarMundo)
   for (const side of [-1, 1]) {
     const sidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 400), sidewalkMat);
+    aceras.push(sidewalk);
     sidewalk.rotation.x = -Math.PI / 2;
     sidewalk.position.set(side * 6, 0.025, -150);
     sidewalk.receiveShadow = true;
@@ -520,6 +522,7 @@ export function createWorld(scene) {
     const curb = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 400), curbMat);
     curb.position.set(side * 3.95, 0.06, -150);
     group.add(curb);
+    bordillos.push(curb);
   }
 
   // Antes siempre roja (alfombra de mitin) en las 4 zonas. Ahora asfalto/
@@ -561,8 +564,9 @@ export function createWorld(scene) {
   // desierto para que la pista siga teniendo un borde legible. Sin ningun
   // borde, la pista y la arena se funden y se pierde la nocion de carril.
   const dirtBerms = [];
+  const bermMat = cortable(toon(0x7d5433));
   for (const side of [-1, 1]) {
-    const berm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 400), cortable(toon(0x7d5433)));
+    const berm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 400), bermMat);
     berm.position.set(side * (LANE_WIDTH * 1.5 + 0.22), 0.05, -150);
     berm.visible = false;
     group.add(berm);
@@ -2107,7 +2111,8 @@ export function createWorld(scene) {
     for (const p of calleViva) quitarPieza(p.mesh);
     calleViva.length = 0;
     for (const car of cochesCruce) group.remove(car);
-    cochesCruce.length = 0; cruces.length = 0; giroPendiente = null; puertasAuto.length = 0;
+    cochesCruce.length = 0; cruces.length = 0; puertasAuto.length = 0;
+    acabarGiro(false); yawFondo = 0; if (horizonte) horizonte.girar(0);
     casaBlanca = null;
     llegadaGente.length = 0;
     calle = nivel ? [...colocarNivel(nivel, (k) => ANCHO[k] || 20), ...sueloDeNivel(nivel), ...cierresDeNivel(nivel), ...llegadaDeNivel(nivel)].sort((a, b) => a.d - b.d) : [];
@@ -2142,7 +2147,9 @@ export function createWorld(scene) {
         const m = p.tipo === "cruce" ? hacerCruce(p) : p.tipo === "cebra" ? hacerCebra() : p.tipo === "tapa" ? hacerTapa() : hacerMarca(p);
         m.position.set(p.x || 0, 0, -(p.d - totalScrolled));
         group.add(m);
-        calleViva.push({ mesh: m, fin: p.tipo === "cruce" ? 14 : 10 });
+        // (27/11: el cruce del giro se queda hasta que se acaba el giro)
+        calleViva.push({ mesh: m, fin: p.tipo === "cruce" ? (p.giro ? 60 : 14) : 10 });
+        if (p.tipo === "cruce" && p.giro) { m.userData.__fijo = p.d; empezarGiro(m, p); }
         continue;
       }
       if (p.cierre) {
@@ -2176,6 +2183,7 @@ export function createWorld(scene) {
       // Edificio unico del kit (su semilla sale del sitio que ocupa) o pieza modelada.
       const mesh = p.pieza === "kit" ? construirEdificio(azarConSemilla(p.semilla), p.ancho, { ...nivel.kit, ...p.opciones }) : modelo(clave);
       if (!mesh) continue;
+      mesh.userData.__fijo = p.preGiro;   // (27/11: la esquina de enfrente del giro va con la calle vieja)
       const m = p.pieza === "kit" ? { frente: mesh.userData.frente } : medidas(clave);
       if (p.cruza) {
         // De lado a lado de la calle (el puente, las pasarelas de Des Moines):
@@ -2464,6 +2472,8 @@ export function createWorld(scene) {
         g.fillStyle = "#1f6b3a"; g.fillRect(0, 0, w, h);
         g.strokeStyle = "#ffffff"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8);
         g.fillStyle = "#ffffff"; g.font = "bold 38px Arial"; g.textAlign = "center"; g.textBaseline = "middle";
+        // (27/11: los nombres de verdad son largos: «Ann Uccello St»; que quepan)
+        for (let f = 36; g.measureText(nombre).width > w - 18 && f >= 18; f -= 2) g.font = `bold ${f}px Arial`;
         g.fillText(nombre, w / 2, h / 2 + 2);
       });
       placasCalle[nombre] = [toon(0x1f6b3a), toon(0x1f6b3a), toon(0x1f6b3a), toon(0x1f6b3a),
@@ -2518,10 +2528,10 @@ export function createWorld(scene) {
     g.add(p);
     return g;
   }
-  function hacerCruce(p) {
-    const g = new THREE.Group();
+  // La calle lateral de un cruce, del lado s.
+  function lateralCruce(g, s, p) {
     const mat = materialLateral();
-    for (const s of p.lados) {
+    {
       const calleL = new THREE.Mesh(lateralGeo, mat);
       calleL.position.set(s * (LATERAL_X0 + LATERAL_LARGO / 2), 0.036, 0);
       calleL.receiveShadow = true;
@@ -2549,10 +2559,16 @@ export function createWorld(scene) {
         sem.rotation.y = s < 0 ? 0 : Math.PI;
         g.add(sem);
       }
-      const letrero = letreroCalle(`${ORDINAL(p.n || 1)} St`);
+      const nombre = Array.isArray(p.nombre) ? p.nombre[s < 0 ? 0 : 1] : p.nombre;
+      const letrero = letreroCalle(nombre || `${ORDINAL(p.n || 1)} St`);
       letrero.position.set(s * 8.4, 0, -6.4);
       g.add(letrero);
     }
+  }
+  function hacerCruce(p) {
+    if (p.giro) return hacerCruceGiro(p);
+    const g = new THREE.Group();
+    for (const s of p.lados) lateralCruce(g, s, p);
     // Las cebras de la calle grande, a los dos lados del cruce.
     const cerca = hacerCebra();
     cerca.position.z = 7.2;
@@ -2563,26 +2579,7 @@ export function createWorld(scene) {
       lejos.rotation.y = Math.PI;
       g.add(lejos);
     }
-    if (p.giro) {
-      // El desvio: la manzana de enfrente cierra la calle (se quita al girar).
-      const s = p.giro.lado, muro = [];
-      for (const x of [-12, 12]) {
-        const b = construirEdificio(azarConSemilla(nivel.semilla * 31 + Math.round(p.d) + x), 24, { ...nivel.kit });
-        b.position.set(x, 0, -LATERAL_ANCHO / 2 - 1.2 - (b.userData.frente || 1.3));
-        g.add(b);
-        muro.push(b);
-      }
-      g.userData.muro = muro;
-      for (const dz of [26, 46]) {
-        const f = flechaSuelo(s);
-        f.position.set(LANE_X[s > 0 ? 2 : 0], 0.075, dz);
-        g.add(f);
-      }
-      const cartel = cartelDesvio(s);
-      cartel.position.set(s * 5.3, 0, 40);
-      g.add(cartel);
-      giroPendiente = { g, lado: s, calle: p.giro.calle, hecho: false };
-    } else if (p.cuatro) {
+    if (p.cuatro) {
       cruces.push({ g, hecho: false });
       // A veces hay un coche esperando en el stop de una de las calles.
       const vale = COCHES_CRUCE.filter((k) => hayModelo(k));
@@ -2596,24 +2593,267 @@ export function createWorld(scene) {
     }
     return g;
   }
-  // El desvio: al llegar al cruce, main.js tapa la pantalla con el cartel de
-  // la calle nueva y entonces se quita la manzana de enfrente.
-  let giroPendiente = null, alGiro = null;
+  // ---- 27/11/2026: los giros de verdad ----
+  // Isidro: «quiero mejorar de una vez los giros en las calles, no quiero que
+  // salga un cartel en grande; solo quiero que el personaje gire por ellas sin
+  // hacer una transicion». Antes la calle de enfrente la cerraba una manzana y,
+  // con la pantalla tapada por el cartel verde, se quitaba: se seguia recto.
+  // Ahora la calle nueva esta de verdad a un lado y se gira por ella:
+  //  - Lo que viene despues del cruce (edificios, aceras, tacos, obstaculos) se
+  //    dibuja girado un cuarto de vuelta sobre el centro del cruce: es la calle
+  //    de al lado. La manzana de enfrente cierra la calle vieja (una T).
+  //  - Al pasar por el cruce, todo gira sobre ese centro (de 9 m antes a 9 m
+  //    despues) y lo de despues queda delante, recto. El jugador y la camara no
+  //    se mueven: es el mundo el que gira, como cuando se dobla una esquina.
+  //  - Lo que va con el jugador (el jefe, el helicoptero, el que te persigue)
+  //    no gira: se nota porque no se mueve con la calle.
+  //  - El suelo de siempre (calzada, aceras, suelo) se queda con la calle vieja
+  //    y la nueva lleva una copia. Mientras dura, en vez de correr su textura
+  //    se mueven ellas (asi valen en cualquier direccion). Con el cruce 45 m por
+  //    detras ya no se ve nada de la calle vieja: la copia se quita y todo
+  //    vuelve a ser como siempre, sin que se note.
+  // La calle nueva es como la de siempre: calzada, aceras y fachadas a
+  // linea + 0,5 (levels.js, abrirGiros, abre ese hueco en el lado del giro).
+  const GIRO_RAMPA = 9, GIRO_FIN = 45, GIRO_EXTRA = 400;
+  const BASE = [ground, carpet, ...aceras, ...bordillos, ...goldTrims, ...dirtBerms, ...stripes];
+  const MATS_CALZADA = [carpetMat, sidewalkMat, curbMat, goldMat, bermMat, stripeMat];
+  const dobla = { activo: false, g: null, d: 0, lado: 1, calle: "", ts0: 0, avisado: false, id: 0, ancho: 12, copias: [], mats: new Map(), z0: new Map(), cola: [] };
+  const mA = new THREE.Matrix4(), mB = new THREE.Matrix4(), mH = new THREE.Matrix4().makeTranslation(0, -1000, 0);
+  const _mt = new THREE.Matrix4(), _mr = new THREE.Matrix4(), _mw = new THREE.Matrix4(), _nv = new THREE.Vector3();
+  const SIEMPRE = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1e6);   // (corta todo: con clipIntersection, solo cuenta el otro)
+  const planoA = new THREE.Plane(), planoB = new THREE.Plane(), planoBs = new THREE.Plane(), planoI = new THREE.Plane();
+  // (la copia de la calle nueva: se queda con lo que esta entre la esquina y
+  // la entrada del interior que venga, si hay: el tiovivo de Hartford)
+  const CORTE_A = [planoA, SIEMPRE], CORTE_B = [planoB, planoI], CORTE_BS = [planoBs, planoI];
+  let yawFondo = 0, alGiro = null;
   function onGiro(fn) { alGiro = fn; }
-  function quitarMuro(g = giroPendiente && giroPendiente.g) {
-    if (!g || !g.userData.muro) return;
-    for (const b of g.userData.muro) { g.remove(b); soltarEdificio(b); }
-    g.userData.muro = null;
+  function quitarMuro() {}   // (lo usaba el cartel verde de antes)
+  // Sustituye a updateMatrix en lo que cuelga del mundo: la matriz de siempre
+  // y, si hay giro, la del lado del cruce en que esta.
+  function matrizDoblada() {
+    this.matrix.compose(this.position, this.quaternion, this.scale);
+    if (this.userData.__dobla) this.matrix.premultiply(this.userData.__dobla);
+    this.matrixWorldNeedsUpdate = true;
   }
-  function vigilarGiro() {
-    const gp = giroPendiente;
-    if (!gp || gp.hecho) return;
-    if (!gp.g.parent) { giroPendiente = null; return; }
-    if (gp.g.position.z > -7.5) {
-      gp.hecho = true;
-      const g = gp.g;
-      if (alGiro) alGiro(gp.lado, gp.calle, () => quitarMuro(g)); else quitarMuro(g);
+  function girarSobre(m, cz, ang) {
+    m.makeTranslation(0, 0, cz).multiply(_mr.makeRotationY(ang)).multiply(_mt.makeTranslation(0, 0, -cz));
+  }
+  // La copia larga de una pieza del suelo: 400 m mas por delante y con la
+  // textura en las mismas coordenadas que la pieza en lo que tienen en comun.
+  function copiaLarga(m) {
+    const gp = m.geometry.parameters, E = GIRO_EXTRA;
+    let geo, desplaza = -E / 2;
+    if (stripes.includes(m)) { geo = m.geometry; desplaza = 0; }
+    else if (m.geometry.type === "PlaneGeometry") {
+      geo = new THREE.PlaneGeometry(gp.width, gp.height + E);
+      const uv = geo.attributes.uv, f = (gp.height + E) / gp.height;
+      for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * f);
+    } else geo = new THREE.BoxGeometry(gp.width, gp.height, gp.depth + E);
+    let mat = dobla.mats.get(m.material);
+    if (!mat) {
+      mat = m.material.clone();
+      mat.clippingPlanes = m === ground ? CORTE_BS : CORTE_B;
+      mat.clipIntersection = false;
+      dobla.mats.set(m.material, mat);
     }
+    const c = new THREE.Mesh(geo, mat);
+    c.rotation.copy(m.rotation); c.position.copy(m.position); c.scale.copy(m.scale);
+    c.receiveShadow = m.receiveShadow;
+    c.userData.__base = true; c.userData.__dobla = mB; c.updateMatrix = matrizDoblada;
+    group.add(c);
+    dobla.copias.push({ m, c, desplaza, propia: geo !== m.geometry });
+  }
+  function empezarGiro(g, p) {
+    if (dobla.activo) { dobla.cola.push({ g, p }); return; }
+    Object.assign(dobla, { activo: true, g, d: p.d, lado: p.giro.lado, calle: p.giro.calle, sigue: !!p.giro.sigue, ts0: totalScrolled, avisado: false, id: dobla.id + 1, ancho: (nivel ? nivel.linea : 11.5) + 0.5 });
+    for (const m of BASE) { dobla.z0.set(m, m.position.z); m.userData.__base = true; m.userData.__dobla = mA; m.updateMatrix = matrizDoblada; }
+    for (const mat of MATS_CALZADA) mat.clippingPlanes = CORTE_A;
+    for (const m of BASE) copiaLarga(m);
+    doblarMundo(0);
+  }
+  function acabarGiro(seguir = true) {
+    if (!dobla.activo) return;
+    const D = totalScrolled - dobla.ts0;
+    for (const m of BASE) { m.position.z = dobla.z0.get(m); m.userData.__dobla = null; }
+    // Lo que se han movido las piezas lo corre ahora su textura (es lo mismo).
+    for (const tex of texturasSuelo) if (tex) tex.offset.y = (((tex.offset.y + (D * tex.repeat.y) / 400) % 1) + 1) % 1;
+    for (const mat of MATS_CALZADA) mat.clippingPlanes = CORTE;
+    for (const k of dobla.copias) { group.remove(k.c); if (k.propia) k.c.geometry.dispose(); }
+    for (const mat of dobla.mats.values()) mat.dispose();
+    dobla.copias.length = 0; dobla.mats.clear();
+    for (const c of group.children) c.userData.__dobla = null;
+    if (seguir) yawFondo += dobla.lado * Math.PI / 2;
+    if (horizonte) horizonte.girar(yawFondo);
+    dobla.activo = false; dobla.g = null;
+    if (!seguir) { dobla.cola.length = 0; return; }
+    while (dobla.cola.length) { const n = dobla.cola.shift(); if (n.g.parent) { empezarGiro(n.g, n.p); break; } }
+  }
+  // Cada fotograma, al final de update: de que lado del cruce esta cada cosa.
+  function doblarMundo(dz) {
+    if (!dobla.activo) return;
+    const cz = totalScrolled - dobla.d, s = dobla.lado, W = dobla.ancho;
+    if (cz > GIRO_FIN) { acabarGiro(); return; }
+    const a = THREE.MathUtils.smoothstep(cz, -GIRO_RAMPA, GIRO_RAMPA) * Math.PI / 2;
+    girarSobre(mA, cz, s * a);
+    girarSobre(mB, cz, s * (a - Math.PI / 2));
+    if (horizonte) horizonte.girar(yawFondo + s * a);
+    if (!dobla.avisado && cz > -40) { dobla.avisado = true; if (alGiro) alGiro(s, dobla.calle); }
+    const D = totalScrolled - dobla.ts0;
+    for (const m of BASE) m.position.z = dobla.z0.get(m) + D;
+    for (const k of dobla.copias) {
+      k.c.position.set(k.m.position.x, k.m.position.y, k.m.position.z + k.desplaza);
+      k.c.visible = k.m.visible;
+      if (!k.propia) k.c.scale.z = Math.max(0.01, nivel ? k.c.position.z - (totalScrolled - nivel.largo) : k.m.scale.z + GIRO_EXTRA);
+    }
+    for (const [src, mat] of dobla.mats) {
+      mat.color.copy(src.color);
+      if (mat.map !== src.map) { mat.map = src.map; mat.needsUpdate = true; }
+    }
+    for (const [base, mat] of parches) mat.color.copy(base.color);
+    // Los cortes del suelo: la calle vieja se acaba en el bordillo de enfrente,
+    // y la nueva empieza donde se acaban las aceras de la vieja (su suelo, a
+    // 30 m, donde se acaba el de la vieja: asi no se pisan).
+    _mw.multiplyMatrices(group.matrixWorld, mA);
+    planoA.set(_nv.set(0, 0, 1), dobla.sigue ? 1e6 : -(cz - 3.95)).applyMatrix4(_mw);
+    _mw.multiplyMatrices(group.matrixWorld, mB);
+    planoB.set(_nv.set(0, 0, -1), cz - 8.1).applyMatrix4(_mw);
+    planoBs.set(_nv.set(0, 0, -1), cz - 30).applyMatrix4(_mw);
+    const ri = nivel && nivel.interior && nivel.interior.rango;
+    if (ri && ri[0] > dobla.d) planoI.set(_nv.set(0, 0, 1), -(totalScrolled - ri[0])).applyMatrix4(_mw);
+    else planoI.set(_nv.set(0, 1, 0), 1e6);
+    const mueve = dz > 0.001;
+    for (const c of group.children) {
+      const u = c.userData;
+      if (u.__base) continue;
+      if (c.updateMatrix !== matrizDoblada) c.updateMatrix = matrizDoblada;
+      if (u.__dId !== dobla.id) { u.__dId = dobla.id; u.__zp = c.position.z; u.__mundo = false; u.__quieto = 0; }
+      else if (mueve) {
+        const mv = c.position.z - u.__zp;
+        u.__zp = c.position.z;
+        if (Math.abs(mv) > 0.35 * dz) u.__mundo = true; else if (!u.__mundo) u.__quieto++;
+      }
+      let m = null;
+      if (u.__fijo === dobla.d) m = mA;                 // el cruce y la esquina de enfrente: con la calle vieja
+      else if (u.__mundo || (u.__quieto < 3 && Math.abs(c.position.z) > 40)) {
+        const z = c.position.z;
+        // Lo de la acera del lado del giro que cae en la calle nueva, fuera.
+        if (c.position.x * s > 3.95 && Math.abs(z - cz) < W) m = mH;
+        else m = z > cz ? mA : mB;
+      }
+      u.__dobla = m;
+    }
+  }
+  // Los trozos de suelo de la esquina: con la textura quieta (el cruce ya se
+  // mueve) y a la misma escala que la calle.
+  const parches = new Map();   // material de la calle -> material del trozo (para el color)
+  const parchesHechos = {};
+  function matParche(base, anchoBase, w, l) {
+    const clave = `${base.uuid}:${w}:${l}`;
+    let m = parchesHechos[clave];
+    if (!m || m.userData.base !== base.map) {
+      m = toon(base.color.getHex(), { shininess: 14 });
+      m.polygonOffset = true; m.polygonOffsetFactor = base === carpetMat ? -2 : -1; m.polygonOffsetUnits = base === carpetMat ? -4 : -2;
+      if (base.map) {
+        const tex = base.map.clone();
+        tex.needsUpdate = true;
+        tex.offset.set(0, 0);
+        tex.repeat.set((base.map.repeat.x * w) / anchoBase, (base.map.repeat.y * l) / 400);
+        m.map = tex;
+      }
+      m.userData.base = base.map;
+      parchesHechos[clave] = m;
+      parches.set(base, m);
+    }
+    m.color.copy(base.color);
+    return m;
+  }
+  const curbParcheMat = toon(0xfff6e0);
+  function hacerCruceGiro(p) {
+    const g = new THREE.Group();
+    const s = p.giro.lado, L = nivel ? nivel.linea : 11.5;
+    // El asfalto de la boca de la calle nueva: tapa la acera de este lado y su bordillo.
+    const asfMat = matParche(carpetMat, LANE_WIDTH * 3, 4.75, 7.9);
+    const asf = new THREE.Mesh(new THREE.PlaneGeometry(4.75, 7.9).rotateX(-Math.PI / 2), asfMat);
+    asf.position.set(s * (3.35 + 4.75 / 2), 0.036, 0);
+    asf.receiveShadow = true;
+    g.add(asf);
+    const borde = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.16, 7.9), asfMat);
+    borde.position.set(s * 3.95, 0.08, 0);
+    g.add(borde);
+    const sigue = !!p.giro.sigue;
+    // La acera de enfrente, donde se acaba la calle vieja (es la de la nueva).
+    if (!sigue) {
+    const acera = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 16.2).rotateX(-Math.PI / 2).rotateY(Math.PI / 2), matParche(sidewalkMat, 4.2, 4.2, 16.2));
+    acera.position.set(0, 0.025, -6.0);
+    acera.receiveShadow = true;
+    g.add(acera);
+    }
+    // Los bordillos que doblan la esquina (el de enfrente y el de este lado).
+    // (Si la calle vieja sigue, el de enfrente es solo el de la esquina.)
+    const lejos = new THREE.Mesh(new THREE.BoxGeometry(sigue ? 4.15 : 12.05, 0.12, 0.22), curbParcheMat);
+    lejos.position.set(s * (sigue ? 6.025 : 2.075), 0.06, -3.95);
+    g.add(lejos);
+    const cerca = new THREE.Mesh(new THREE.BoxGeometry(4.15, 0.12, 0.22), curbParcheMat);
+    cerca.position.set(s * 6.025, 0.06, 3.95);
+    g.add(cerca);
+    // La cebra para cruzar la calle nueva y la de la calle grande, antes del cruce.
+    for (let k = 0; k < 7; k++) {
+      const b = new THREE.Mesh(rayaLateralGeo, cebraMat);
+      b.rotation.y = Math.PI / 2;
+      b.position.set(s * 6.1, 0.06, -3.9 + k * 1.3);
+      g.add(b);
+    }
+    const cebra = hacerCebra();
+    cebra.position.z = 6.0;
+    g.add(cebra);
+    // En la esquina, el semaforo y el letrero con el nombre de la calle nueva.
+    if (hayModelo("ciudad/semaforo")) {
+      const sem = modelo("ciudad/semaforo");
+      sem.position.set(s * 7.4, 0, 5.0);
+      sem.rotation.y = s < 0 ? 0 : Math.PI;
+      g.add(sem);
+    }
+    const letrero = letreroCalle(p.giro.calle);
+    letrero.position.set(s * 7.6, 0, 7.4);
+    g.add(letrero);
+    // Si al otro lado tambien sale una calle, esa sigue como en los demas cruces.
+    if (p.lados.includes(-s)) lateralCruce(g, -s, p);
+    // Si la calle vieja sigue recta (Main Street en Hartford), sus manzanas
+    // de mas alla del cruce: van con ella, no con la nueva.
+    if (sigue) {
+      // (del lado del giro, desde la esquina de enfrente; del otro, desde donde
+      // acaba lo que ya iba con la calle vieja: levels.js, abrirGiros)
+      for (const lado of [s, -s]) {
+        let z = -(lado === s ? L + 0.5 : Math.max(L + 0.5, (p.giro.finPre || 0) - p.d + 0.5));
+        for (let k = 0; z > -190 && k < 7; k++) {
+          const a = azarConSemilla(nivel.semilla * 53 + Math.round(p.d) * 3 + k * 2 + (lado > 0 ? 1 : 0));
+          const ancho = [26, 30, 34, 40][Math.floor(a() * 4)];
+          const b = construirEdificio(a, ancho, { ...nivel.kit });
+          const ret = Math.max(0, (b.userData.frente || 1.3) - 3);
+          b.position.set(lado * (L + ret), 0, z - ancho / 2);
+          b.rotation.y = lado < 0 ? Math.PI / 2 : -Math.PI / 2;
+          g.add(b);
+          (g.userData.muro || (g.userData.muro = [])).push(b);
+          z -= ancho + (k % 3 === 2 ? 14 : 0);
+        }
+      }
+      return g;
+    }
+    // La manzana de enfrente cierra la calle vieja, con su fachada en la
+    // linea de las de la calle nueva.
+    // (Si es uno de verdad, `muro` en el giro: la biblioteca al final de Elm St en Hartford.)
+    const clave = p.giro.muro && `${nivel.carpeta}/${p.giro.muro}`;
+    if (clave && hayModelo(clave)) {
+      const m = modelo(clave), md = medidas(clave);
+      m.position.set(0, 0, -(L + Math.max(0, md.frente - 3)));
+      g.add(m);
+      return g;
+    }
+    const b = construirEdificio(azarConSemilla(nivel.semilla * 31 + Math.round(p.d)), Math.round(2 * L), { ...nivel.kit });
+    b.position.set(0, 0, -(L + Math.max(0, (b.userData.frente || 1.3) - 3)));
+    g.add(b);
+    g.userData.muro = [b];
+    return g;
   }
   const tapaGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 18);
   const tapaMat = sobreCalzada(toon(0x4a4c52));
@@ -8056,17 +8296,12 @@ export function createWorld(scene) {
       else if (k > 2 && ![7, 9, 16, 18, 25, 27, 33, 35].includes(k)) tacosEn(1, z, 4);
     },
     suave(z, d, t) { filaMixta(z, d, t.densidad || 0.4); },
-    // 08/11 (2): el desvio (levels.js, aplicarGiros): tacos que llevan al
-    // carril del giro y, 12 m antes del cruce, la valla de obras en los otros dos.
-    // Como en las obras de verdad, los carriles se cierran de uno en uno: a
-    // 36 m del cruce el mas lejano y a 12 m tambien el del medio.
+    // 08/11 (2): el desvio (levels.js, aplicarGiros). 27/11: ya no hay que
+    // ponerse en ningun carril (se gira solo, por la calle de verdad): una fila
+    // de tacos por el centro hasta la esquina y otra al salir a la calle nueva.
+    // En el cruce, nada (mientras se gira no puede haber nada en medio).
     giro(z, d, t) {
-      const carril = t.lado > 0 ? 2 : 0, lejos = 2 - carril;
-      const pieza = obstaclePools[t.lado > 0 ? "corte_der" : "corte_izq"] ? (t.lado > 0 ? "corte_der" : "corte_izq") : undefined;
-      if (Math.abs(d - (t.cruce - 36)) <= ROW_SPACING / 2) spawnObstacle(lejos, "full", z, pieza);
-      if (Math.abs(d - (t.cruce - 12)) <= ROW_SPACING / 2) {
-        for (const l of LANES) if (l !== carril) spawnObstacle(l, "full", z, pieza);
-      } else if (d < t.cruce - 20 && d > t.desde + 10) tacosEn(carril, z, 3);
+      if ((d > t.desde + 10 && d < t.cruce - 16) || d > t.cruce + 14) tacosEn(1, z, 3);
     },
     mixto(z, d, t) { filaMixta(z, d, t.densidad || 0.55); },
     // Filas enteras: o se salta, o se pasa agachado (o se elige carril).
@@ -11003,7 +11238,6 @@ export function createWorld(scene) {
   const cruces = [];    // { g (el cruce), hecho }
   const cochesCruce = [];
   function moverCruces(dt) {
-    vigilarGiro();
     for (let i = cruces.length - 1; i >= 0; i--) {
       const c = cruces[i];
       const z = c.g.position.z;
@@ -11411,7 +11645,8 @@ export function createWorld(scene) {
     // El suelo avanza de verdad: calzada, aceras y suelo eran laminas quietas
     // y solo pasaban las rayas. Cada textura se desplaza lo mismo que la pista
     // (el plano mide 400 y la textura se repite repeat.y veces en el).
-    for (const tex of texturasSuelo) {
+    // (27/11: durante un giro no: se mueven las piezas, ver doblarMundo)
+    if (!dobla.activo) for (const tex of texturasSuelo) {
       if (!tex) continue;
       tex.offset.y = (tex.offset.y + (dz * tex.repeat.y) / 400) % 1;
     }
@@ -11779,6 +12014,7 @@ export function createWorld(scene) {
 
     lastRowZ += dz;
     ensureRows();
+    doblarMundo(dz);
     return curveX;
   }
 

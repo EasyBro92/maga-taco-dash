@@ -555,6 +555,107 @@ def parque_bushnell():
         caja(hierro(), x, yf + 4.6, 0, 0.08, 0.5, 0.45)
 
 
+
+# ================================================================ Farmington Avenue
+# 27/11/2026: Isidro: «más riguroso con el realismo de las calles, dónde está
+# cada cosa». El nivel es ahora el recorrido de verdad (medido en el mapa de
+# OpenStreetMap): de la casa de Mark Twain por Farmington Avenue y Asylum
+# Street hasta Main Street, y por Elm Street, junto al parque, al Capitolio.
+# Los dos grandes de Farmington Avenue: la catedral de San José (acera sur) y
+# la sede de Aetna (acera norte).
+
+def catedral_san_jose():
+    """La catedral de San José (1962, rehecha tras el incendio de 1956):
+    caliza clara, la nave larga y alta con ventanales estrechos, el gran arco
+    de la entrada con el mosaico dorado y el campanario cuadrado al lado."""
+    W, D, H = 34.0, 58.0, 28.0
+    Y = 9 + D / 2; yf = Y - D / 2
+    caliza = mat_bloques('caliza_sj_hfd', 0xe8e2d4, 0xcfc8b8, ancho=1.4, alto=0.7, grosor=0.006)
+    marco = mat('marco_sj_hfd', 0xf6f2e8, 0.5)
+    caja(caliza, 0, Y, 0, W, D, H)
+    tejado(mat('tejado_sj_hfd', 0x6a7078, 0.5), 0, yf, Y + D / 2, H, W, 6, cumbrera='y')
+    fronton(caliza, 0, yf, H, W, 6, 0.4)
+    # El gran arco de la entrada: el marco, el fondo y el mosaico dorado.
+    arco_medio(marco, 0, yf - 0.3, 0, 16, 17, 0.6)
+    arco_medio(mat('fondo_arco_sj_hfd', 0x8e8472, 0.7), 0, yf - 0.62, 0, 13, 16.2, 0.05)
+    arco_medio(oro(), 0, yf - 0.66, 9.8, 9, 4.6, 0.03)
+    caja(mat('manto_sj_hfd', 0x2a4a8a, 0.5), 0, yf - 0.69, 10.4, 1.6, 0.02, 6.4)
+    esfera(oro(), 0, yf - 0.7, 17.6, 0.9, 1, esc=(1, 0.2, 1))
+    for x in (-3.4, 0, 3.4):
+        puerta(x, 0.4, 2.6, 5.4, y=yf - 0.66, color=0x6a4a2a, marco=marco)
+    escalinata(marco, 0, yf - 0.7, 0, 20, 4, huella=0.5, tabica=0.1)
+    # Los ventanales estrechos (fachada y costados).
+    for s in (-1, 1):
+        caja(cristal(), s * 12.5, yf - 0.05, 6, 1.4, 0.1, 18)
+        for k in range(7):
+            caja(cristal(), s * (W / 2 + 0.03), yf + 6 + k * 7, 5, 0.08, 1.5, 19)
+    # El campanario, a la derecha de la fachada.
+    tx, ty = W / 2 + 6, yf + 6
+    caja(caliza, tx, ty, 0, 11, 11, 66)
+    for z in range(8, 54, 9):
+        caja(cristal(), tx, ty - 5.55, z, 1.2, 0.1, 5.5)
+    for s in (-1, 1):
+        caja(mat('rejilla_sj_hfd', 0x4a4a52, 0.6), tx + s * 2.2, ty - 5.55, 56, 1.6, 0.1, 8)
+    caja(marco, tx, ty, 66, 12, 12, 1)
+    o = cil(mat('tejado_sj_hfd', 0x6a7078, 0.5), tx, ty, 67, 8.4, 8, 4, r2=0.4)
+    o.rotation_euler = (0, 0, math.pi / 4)
+    caja(oro(), tx, ty, 75, 0.45, 0.45, 5.5)
+    caja(oro(), tx, ty, 78.6, 2.6, 0.45, 0.45)
+    # El césped de delante y el letrero de piedra junto a la acera.
+    caja(cesped(), 0, yf - 5.5, 0, W + 24, 7, 0.05)
+    caja(caliza, -11, yf - 7.2, 0, 8, 0.6, 1.6)
+    texto(negro(), 'CATHEDRAL OF ST. JOSEPH', -11, yf - 7.55, 0.75, tam=0.32, prof=0.02)
+
+def aetna():
+    """La sede de Aetna (1931), la mayor construcción de estilo colonial del
+    mundo: ladrillo rojo con piedra blanca, cinco plantas a lo largo del
+    césped, el pórtico de columnas en el centro y la torre blanca de pisos con
+    su aguja (Aetna, la aseguradora de Hartford desde 1853)."""
+    W, D, H = 140.0, 18.0, 17.0   # (de verdad, unos 250 m con las alas)
+    Y = 16 + D / 2; yf = Y - D / 2
+    lad = ladrillo()
+    caja(lad, 0, Y, 0, W, D, H)
+    caja(blanco(), 0, Y, H, W + 0.4, D + 0.4, 0.7)
+    tejado(mat('tejado_aetna_hfd', 0x3e4048, 0.55), 0, Y - D / 2, Y + D / 2, H + 0.7, W, 3.6, cumbrera='x')
+    for x in (-W / 2 + 0.4, W / 2 - 0.4):
+        caja(blanco(), x, yf - 0.1, 0, 0.8, 0.3, H)
+    # Las ventanas de guillotina con su marco blanco, cinco plantas.
+    x = -W / 2 + 3
+    while x < W / 2 - 2:
+        if abs(x) > 13:
+            for z in (1.6, 4.9, 8.2, 11.5, 14.4):
+                caja(blanco(), x, yf - 0.06, z - 0.15, 1.6, 0.1, 2.4 if z < 14 else 1.8)
+                caja(cristal(), x, yf - 0.1, z, 1.3, 0.1, 2.1 if z < 14 else 1.5)
+        x += 3.4
+    # El cuerpo central, adelantado, con el pórtico de seis columnas.
+    caja(lad, 0, yf - 2, 0, 26, 4, H + 1.5)
+    caja(blanco(), 0, yf - 2, H + 1.5, 26.4, 4.4, 0.7)
+    escalinata(blanco(), 0, yf - 8.4, 0, 18, 4, huella=0.4, tabica=0.15)
+    caja(blanco(), 0, yf - 6.2, 0, 17, 4.4, 0.6)
+    columnata(blanco(), -7, 7, 6, yf - 7.6, 0.6, 0.5, 11)
+    caja(blanco(), 0, yf - 6.2, 11.6, 16.6, 4.6, 1.3)
+    fronton(blanco(), 0, yf - 8.4, 12.9, 17.0, 3.2, 4.6)
+    for x in (-3.5, 0, 3.5):
+        puerta(x, 0.6, 1.8, 3.6, y=yf - 4.05, color=0x24344e, marco=blanco())
+        caja(cristal(), x, yf - 4.06, 6.2, 1.4, 0.08, 2.2)
+    # La torre: base de ladrillo, pisos blancos, linterna y aguja.
+    caja(lad, 0, Y - 2, H + 0.7, 9, 9, 8)
+    caja(blanco(), 0, Y - 2, H + 8.7, 9.6, 9.6, 0.6)
+    caja(blanco(), 0, Y - 2, H + 9.3, 7, 7, 6.5)
+    for s in (-1, 1):
+        arco_medio(cristal(), s * 1.6, Y - 5.55, H + 10.5, 1.4, 2.6)
+    esfera(blanco(), 0, Y - 5.6, H + 13.4, 1.3, 1, esc=(1, 0.15, 1))
+    caja(blanco(), 0, Y - 2, H + 15.8, 5.4, 5.4, 0.5)
+    cil(blanco(), 0, Y - 2, H + 16.3, 2.4, 5.5, 8)
+    cil(blanco(), 0, Y - 2, H + 21.8, 2.7, 0.5, 8)
+    cil(blanco(), 0, Y - 2, H + 22.3, 1.8, 11, 8, r2=0.12)
+    esfera(oro(), 0, Y - 2, H + 33.6, 0.35, 1)
+    caja(oro(), 0, Y - 2, H + 33.9, 0.08, 0.08, 1.8)
+    # El césped grande de delante y la piedra con el nombre.
+    caja(cesped(), 0, yf - 8, 0, W + 6, 16, 0.05)
+    caja(granito(), 30, yf - 14.6, 0, 9, 0.7, 1.5)
+    texto(negro(), 'AETNA · 1853', 30, yf - 14.98, 0.7, tam=0.55, prof=0.02)
+
 PIEZAS = {
     'g_fox':             (g_fox,             'hartford',   dict(lado=1024, bisel=0.0)),
     'cheney_building':   (cheney_building,   'hartford',   dict(lado=1024, bisel=0.0)),
@@ -566,6 +667,8 @@ PIEZAS = {
     'butler_mccook':     (butler_mccook,     'hartford',   dict(lado=1024, bisel=0.0)),
     'bushnell_teatro':   (bushnell_teatro,   'hartford',   dict(lado=1024, bisel=0.0)),
     'parque_bushnell':   (parque_bushnell,   'hartford',   dict(lado=512, bisel=0.0)),
+    'catedral_san_jose': (catedral_san_jose, 'hartford',   dict(lado=1024, bisel=0.0)),
+    'aetna':             (aetna,             'hartford',   dict(lado=2048, bisel=0.0)),
     'capitolio_ct':      (capitolio_ct,      'hartford',   dict(lado=2048, bisel=0.0)),
     'torre_seguros':     (torre_seguros,     'hartford',   dict(lado=1024, bisel=0.0)),
     'casa_mark_twain':   (casa_mark_twain,   'hartford',   dict(lado=1024, bisel=0.0)),
