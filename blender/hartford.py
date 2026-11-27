@@ -208,8 +208,9 @@ def carrusel_bushnell():
     """El tiovivo del parque Bushnell (momento estrella): la galería larga
     con el toldo a rayas, los caballitos en sus barras doradas a los lados,
     los espejos, las bombillas, el órgano y los arcos de SALIDA y META.
-    Cruza la calle: el origen en el centro."""
-    L = 420
+    Cruza la calle: el origen en el centro.
+    (27/11: de 420 a 250 m, para que quepa el maratón al final de Elm St.)"""
+    L = 250
     caja(mat_bloques('suelo_carrusel_hfd', 0x9a6a3e, 0x6a4a2a, ancho=3.0, alto=0.3, grosor=0.02), 0, 0, -0.2, 26, L, 0.2)
     for s in (-1, 1):
         caja(mat_franjas('toldo_carrusel_hfd', 0xc8202a, 0xf6f4ee, 70, eje='Y', z0=-L / 2, alto=L), s * 10, 0, 7.5, 9, L, 0.3)
@@ -656,6 +657,38 @@ def aetna():
     caja(granito(), 30, yf - 14.6, 0, 9, 0.7, 1.5)
     texto(negro(), 'AETNA · 1853', 30, yf - 14.98, 0.7, tam=0.55, prof=0.02)
 
+
+def soldado_rey():
+    """Un soldado del rey (1687, los de Andros, que venían a llevarse la Carta
+    de Connecticut): casaca roja larga con vueltas azules, calzones, medias,
+    sombrero negro de ala ancha y el mosquete al hombro. Mira al jugador (-y)."""
+    rojo_c = mat('casaca_rey_hfd', 0xb8222a, 0.6)
+    azul_c = mat('vueltas_rey_hfd', 0x24345e, 0.6)
+    piel = mat('piel_rey_hfd', 0xe8b894, 0.7)
+    for x in (-0.13, 0.13):
+        cil(mat('medias_rey_hfd', 0xe8e4da, 0.7), x, 0, 0, 0.075, 0.5, 8)
+        caja(negro(), x, -0.04, 0, 0.15, 0.26, 0.09)
+        cil(azul_c, x, 0, 0.5, 0.09, 0.35, 8)
+    caja(rojo_c, 0, 0, 0.62, 0.5, 0.3, 0.78)
+    caja(rojo_c, 0, 0.01, 0.62, 0.56, 0.32, 0.22)
+    caja(azul_c, 0, -0.16, 0.88, 0.12, 0.02, 0.5)
+    for k in range(5):
+        esfera(oro(), 0.09, -0.17, 0.95 + k * 0.1, 0.022, 0)
+    caja(mat('cinturon_rey_hfd', 0x3a2a1e, 0.7), 0, 0, 0.95, 0.52, 0.32, 0.06)
+    caja(mat('banda_rey_hfd', 0xf2efe6, 0.6), 0, -0.16, 1.15, 0.08, 0.02, 0.4, giro=0.0, inclina=0.6)
+    for s in (-1, 1):
+        cil(rojo_c, s * 0.31, 0, 0.95, 0.07, 0.42, 8)
+        cil(azul_c, s * 0.31, 0, 0.88, 0.08, 0.08, 8)
+        esfera(piel, s * 0.31, -0.02, 0.85, 0.055, 1)
+    cil(piel, 0, 0, 1.4, 0.06, 0.08, 8)
+    esfera(piel, 0, 0, 1.58, 0.15, 2)
+    esfera(mat('pelo_rey_hfd', 0x5a4a3a, 0.8), 0, 0.05, 1.6, 0.15, 1, esc=(1.05, 1, 0.9))
+    cil(negro(), 0, 0, 1.68, 0.3, 0.025, 16)
+    cil(negro(), 0, 0, 1.7, 0.14, 0.16, 12, r2=0.12)
+    # El mosquete, apoyado en el hombro derecho.
+    m = cil(madera_o(), 0.36, 0.02, 0.55, 0.035, 0.6, 6)
+    cil(hierro(), 0.36, 0.02, 1.15, 0.018, 1.0, 6)
+
 PIEZAS = {
     'g_fox':             (g_fox,             'hartford',   dict(lado=1024, bisel=0.0)),
     'cheney_building':   (cheney_building,   'hartford',   dict(lado=1024, bisel=0.0)),
@@ -677,6 +710,7 @@ PIEZAS = {
     'arco_soldados':     (arco_soldados,     'hartford',   dict(lado=1024, bisel=0.0, suelo=False)),
     'carrusel_bushnell': (carrusel_bushnell, 'hartford',   dict(lado=2048, bisel=0.0, suelo=False)),
     'caballito':         (caballito,         'obstaculos', dict(lado=256, bisel=0.0)),
+    'soldado_rey':       (soldado_rey,       'obstaculos', dict(lado=256, bisel=0.0)),
     'valla_tom':         (valla_tom,         'obstaculos', dict(lado=256, bisel=0.0)),
     'cubo_volcado':      (cubo_volcado,      'obstaculos', dict(lado=256, bisel=0.0)),
     'furgon_seguros':    (furgon_seguros,    'obstaculos', dict(lado=256, bisel=0.0)),

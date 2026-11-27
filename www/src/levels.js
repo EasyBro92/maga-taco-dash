@@ -2767,8 +2767,8 @@ const CALLES = [
     tramos: [
       [0, 70, "calma", { titulo: "twain" }],
       [70, 250, "mixto", { densidad: 0.45, titulo: "hartford" }],
-      [250, 610, "valla", { titulo: "valla" }],
-      [610, 790, "mixto", { densidad: 0.5 }],
+      [250, 610, "mixto", { densidad: 0.5 }],
+      [610, 790, "mixto", { densidad: 0.55 }],
       [790, 880, "calma", { titulo: "catedral_sj" }],
       [880, 1210, "slalom", { full: ["furgon_seguros", "pickup", "furgoneta"], titulo: "seguros" }],
       [1210, 1290, "calma", { titulo: "main_hfd" }],
@@ -2777,18 +2777,19 @@ const CALLES = [
       [1530, 1690, "mixto", { densidad: 0.5, momento: "reto", titulo: "reto" }],
       [1690, 1770, "calma"],
       [1770, 1930, "premios", { titulo: "premios" }],
-      [1930, 2290, "valla", { titulo: "valla2" }],
-      [2290, 2600, "mixto", { densidad: 0.5 }],
-      [2600, 2690, "calma", { titulo: "torre_seguros" }],
-      [2690, 2850, "rampa", { titulo: "rampa" }],
-      [2850, 2900, "mixto", { densidad: 0.5 }],
-      [2900, 3070, "calma", { titulo: "entrada_carrusel" }],
-      [3070, 3490, "carrusel", { momento: "vehiculo", vehiculo: "caballito", titulo: "carrusel" }],
-      [3490, 3530, "calma", { titulo: "carrusel_fin" }],
-      [3530, 3625, "sprint", { titulo: "sprint_capitolio_ct" }],
+      [1930, 2290, "mixto", { densidad: 0.55 }],
+      [2290, 2500, "mixto", { densidad: 0.5 }],
+      // 27/11: los momentos de verdad. La Carta del Roble (1687) por Main
+      // Street desde el antiguo Capitolio (alli estaba la casa de reuniones).
+      [2500, 2860, "carta_roble", { titulo: "carta_roble" }],
+      [2860, 3070, "calma", { titulo: "entrada_carrusel" }],
+      [3070, 3320, "carrusel", { momento: "vehiculo", vehiculo: "caballito", titulo: "carrusel" }],
+      [3320, 3360, "calma", { titulo: "carrusel_fin" }],
+      // El maraton de Hartford llega al parque Bushnell por Trinity St (3.545).
+      [3360, 3625, "maraton", { titulo: "maraton" }],
     ],
     control: 1730, caja: 1850,
-    interior: { rango: [3072, 3488], tipo: "carrusel", aire: true, sinEdificios: [3060, 3500] },
+    interior: { rango: [3072, 3318], tipo: "carrusel", aire: true, sinEdificios: [3060, 3330] },
     sinEdificios: [3590, 4000],
     chapas: [[150, "carril"], [1600, "carril"], [2870, "arco"]],
     hitos: ["catedral_san_jose", "old_state_house", "torre_seguros"],
@@ -3174,7 +3175,7 @@ export const OBJETOS_POR_NIVEL = 10, PREMIO_OBJETOS = 300;
 export function sitiosObjetos(nivel) {
   if (!OBJETOS[nivel.id] || !nivel.tramos) return [];
   // 06/11 (3): tampoco en los momentos que cambian la calle (rampa, convoy...).
-  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas", "tragaperras", "blackjack", "valla", "carrusel", "hojas", "champ", "medida", "faro", "guerra", "promesas", "mini", "examen"].includes(tipo))
+  const trozos = nivel.tramos.filter(([, , tipo]) => !["tutorial", "jefe", "festin", "sprint", "rampa", "convoy", "premios", "alfombra", "lluvia", "jefe_paso", "metro_vias", "metro_techo", "banderas", "baldosas", "circuito", "puente_canada", "giro", "viento", "basura", "hockey", "recuento", "rebufo", "ovalo", "calesas", "golf", "globos", "platillo", "bolas", "esqui", "estampida", "rodeo", "osos", "arreo", "patata", "aizkolari", "espejismo", "record", "chaparron", "pescado", "ranas", "regata", "cheque", "vuelo", "leis", "surf", "siesta", "rodaje", "carbon", "vias", "minas", "desfile", "cangrejos", "banderas", "gallinas", "helados", "freidora", "prensas", "tragaperras", "blackjack", "valla", "carrusel", "carta_roble", "maraton", "hojas", "champ", "medida", "faro", "guerra", "promesas", "mini", "examen"].includes(tipo))
     .map(([a, b]) => [a + 15, b - 15]).filter(([a, b]) => b > a);
   const total = trozos.reduce((s, [a, b]) => s + b - a, 0);
   const salida = [];
@@ -3263,7 +3264,7 @@ export const ANCHO = {
   iglesia_unitaria: 90, ayuntamiento_btv: 28, heladeria_vaca: 14, granero_rojo: 26, puente_cubierto: 12, senador_manoplas: 2, causeway_champlain: 420,
   faro_portland: 90, observatorio_portland: 12, almacen_old_port: 26, casa_langostas: 14, arco_old_port: 2, costa_niebla: 420,
   casino_arruinado: 80, boardwalk_hall: 46, steel_pier: 18, lucy_elefanta: 30, arco_boardwalk: 2, casino_floor: 420,
-  capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, catedral_san_jose: 60, aetna: 148, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 420,
+  capitolio_ct: 90, torre_seguros: 24, casa_mark_twain: 24, catedral_san_jose: 60, aetna: 148, old_state_house: 26, arco_soldados: 2, carrusel_bushnell: 250,
   g_fox: 28, cheney_building: 28, center_church: 20, cementerio_antiguo: 26, atheneum: 34, ayuntamiento_hfd: 38,
   biblioteca_hfd: 32, butler_mccook: 26, bushnell_teatro: 38, parque_bushnell: 24,
   estacion_wilmington: 80, opera_wilmington: 24, heladeria: 16, casa_mecedoras: 18, arco_first_state: 2, paseo_rehoboth: 420,
@@ -3586,9 +3587,11 @@ function aplicarGiros(nivel) {
     const i = nivel.tramos.findIndex(([a, b]) => g.d >= a && g.d < b);
     const [a, b, tipo, op] = nivel.tramos[i];
     const { titulo, momento, ...resto } = op || {};
-    nivel.tramos.splice(i, 1, [a, g.d - 60, tipo, op],
-      [g.d - 60, g.d + 25, "giro", { lado: g.lado, cruce: g.d }],   // (27/11: sin cartel: se gira solo)
-      [g.d + 25, b, tipo, resto]);
+    // (27/11: lo que quedaria de menos de 20 m a un lado, para el giro)
+    const g0 = g.d - 60 - a < 20 ? a : g.d - 60, g1 = b - (g.d + 25) < 20 ? b : g.d + 25;
+    nivel.tramos.splice(i, 1, ...[g0 > a ? [a, g0, tipo, op] : null,
+      [g0, g1, "giro", { lado: g.lado, cruce: g.d }],   // (27/11: sin cartel: se gira solo)
+      g1 < b ? [g1, b, tipo, resto] : null].filter(Boolean));
   }
   nivel.giros = giros;
 }

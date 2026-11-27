@@ -3144,4 +3144,34 @@ con el realismo de las calles, dónde está cada cosa».
     ruta (no están en ella): G. Fox, Cheney, Butler-McCook, el teatro
     Bushnell y el arco de los soldados.
   - El nivel pasa de 3.300 a 3.630 m (lo que mide de verdad).
-- Boston (sesión aparte, sin publicar) pasa a la v84.
+- Boston (sesión aparte, sin publicar) pasa a la v84 (después, a la v85: ver abajo).
+
+## 27/11/2026 (2): los momentos de verdad de Hartford (v84)
+
+Isidro aprobó lo propuesto: «Sí, hazlos». Cada momento, donde pasó de verdad.
+
+- **La Carta del Roble** (tramo `carta_roble`, Main Street, metros 2.500-2.860).
+  - El 31 de octubre de 1687 los soldados del rey (Andros) vinieron a
+    llevarse la Carta de Connecticut a la reunión, en la taberna de Sanford o
+    en la casa de reuniones que estaba donde hoy está el antiguo Capitolio. Se
+    la llevaron y la escondieron en un roble de la finca de los Wyllys, al sur
+    (por eso se lleva hacia el sur, por Main Street).
+  - Desde el antiguo Capitolio llevas la Carta en la mano. Los soldados van de
+    dos en dos y siempre queda un carril libre, que cambia de uno en uno.
+  - Llegar con ella al final: +50 tacos y confeti. Aviso corto: «Esquiva a los
+    soldados del rey».
+  - Nuevo modelo: obstaculos/soldado_rey (casaca roja, sombrero de ala ancha y
+    mosquete).
+- **El maratón de Hartford** (tramo `maraton`, Elm Street, metros 3.360-3.625).
+  - El maratón (en octubre) llega al parque Bushnell por Trinity Street, al
+    final de Elm Street.
+  - Los corredores (con dorsal) van delante, más despacio; cada uno
+    adelantado, +1 taco, y al acabar otro tanto. Nunca cierran los tres
+    carriles.
+- **El tiovivo, más sencillo**: las anillas normales se cogen solo con
+  ponerse en su carril; la de oro, saltando (el caballito da un brinco; vale
+  también tocar). Ya no hay que acertar el momento. El tiovivo pasa de 420 a
+  250 m para que quepa el maratón.
+- Se quitan las dos vallas de Tom Sawyer (sus tramos pasan a normales).
+- Los desvíos ya no dejan tramos de menos de 20 m a sus lados.
+- Boston (sesión aparte, sin publicar) pasa a la v85.

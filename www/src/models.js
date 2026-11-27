@@ -133,7 +133,7 @@ const LISTA = {
     // 15/11: Atlantic City (blender/atlanticcity.py)
     "arco_tragaperras", "pila_fichas", "ficha_gigante", "jitney", "cartel_nj",
     // 15/11: Hartford (blender/hartford.py)
-    "caballito", "valla_tom", "cubo_volcado", "furgon_seguros", "cartel_ct",
+    "caballito", "valla_tom", "cubo_volcado", "furgon_seguros", "cartel_ct", "soldado_rey",
     // 16/11: Burlington (blender/burlington.py)
     "monton_hojas", "champ", "camion_leche", "garrafa_arce", "cartel_vt",
     // 16/11: Portland, Maine (blender/portlandme.py)

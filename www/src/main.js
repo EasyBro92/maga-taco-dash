@@ -2966,12 +2966,15 @@ function actualizarValla() {
   el.querySelector(".barraLleno").style.width = `${pct * 100}%`;
   el.classList.remove("hidden");
 }
-// 15/11: Hartford: el tiovivo del parque Bushnell. El caballito sube y baja;
-// hay que tocar justo cuando pasa la anilla dorada y la mano esta a su
-// altura. (La camara no sube ni baja.)
+// 15/11: Hartford: el tiovivo del parque Bushnell. 27/11: Isidro aprobo
+// hacerlo mas sencillo: ya no hay que tocar justo a tiempo. Las anillas
+// normales se cogen solo con ponerse en su carril; la de oro, que esta mas
+// alta, saltando (el caballito da un brinco; tambien al tocar). La camara no
+// sube ni baja.
 var carrusel = null;
+const CARRUSEL_SALTO = 0.9;
 function empezarCarrusel() {
-  carrusel = { t: 0, toque: -9 };
+  carrusel = { t: 0, salto: 0, anillas: 0 };
   const el = barraJuego("carruselBar");
   el.querySelector(".rodeoTit").textContent = t("carruselHud");
   el.querySelector(".rodeoPie").textContent = t("carruselPista");
@@ -2983,28 +2986,85 @@ function quitarCarrusel() {
   const el = document.getElementById("carruselBar");
   if (el) el.classList.add("hidden");
 }
+function saltoCarrusel() {
+  if (!carrusel || !montado) return false;
+  if (carrusel.salto <= 0.15) { carrusel.salto = CARRUSEL_SALTO; sndJump(); vibrate(10); }
+  return true;
+}
 function actualizarCarrusel(dt) {
   if (!carrusel) return;
   if (!montado || gameState !== "playing") { quitarCarrusel(); return; }
   carrusel.t += dt;
-  const y = 0.6 + 0.6 * Math.sin(carrusel.t * Math.PI * 2 / 1.6);
+  carrusel.salto = Math.max(0, carrusel.salto - dt);
+  const brinco = carrusel.salto > 0 ? Math.sin(Math.PI * (1 - carrusel.salto / CARRUSEL_SALTO)) * 1.3 : 0;
+  const y = 0.6 + 0.06 * Math.sin(carrusel.t * 2.5) + brinco;
   world.setVuelo(y);
   const el = document.getElementById("carruselBar");
-  if (el) el.querySelector(".barraLleno").style.width = `${y / 1.2 * 100}%`;
-  if (PRUEBA && window.__juego) window.__juego.manoCarrusel = py + 1.5;
+  if (el) el.querySelector(".barraLleno").style.width = `${Math.min(1, carrusel.anillas / 12) * 100}%`;
+  if (PRUEBA && window.__juego) window.__juego.saltoCarrusel = carrusel.salto;
 }
 function anillaPasa() {
   if (!carrusel || gameState !== "playing") return;
   const a = world.anillaUltima();
-  if (!a) return;
-  const mano = py + 1.5;
-  if (elapsed - carrusel.toque < 0.4 && Math.abs(mano - a.y) < (a.oro ? 0.35 : 0.7)) {
-    a.cogida = true;
-    const n = (a.oro ? 15 : 5) * multiplier;
-    tacosThisRun += n;
-    textoFlotante(`${t(a.oro ? "anillaOro" : "anilla")} +${n}`); sndAnilla(); vibrate(15);
-    if (PRUEBA && window.__juego) window.__juego.anillas = (window.__juego.anillas || 0) + 1;
-  } else if (elapsed - carrusel.toque < 0.4) textoFlotante(t("casiAnilla"));
+  if (!a || a.cogida) return;
+  if (a.oro && carrusel.salto <= 0.1) { textoFlotante(t("casiAnilla")); return; }
+  a.cogida = true;
+  carrusel.anillas++;
+  const n = (a.oro ? 15 : 5) * multiplier;
+  tacosThisRun += n;
+  textoFlotante(`${t(a.oro ? "anillaOro" : "anilla")} +${n}`); sndAnilla(); vibrate(15);
+  if (PRUEBA && window.__juego) window.__juego.anillas = (window.__juego.anillas || 0) + 1;
+}
+// 27/11: Hartford: los momentos de verdad (aprobados por Isidro).
+// La Carta del Roble (31/10/1687): en la casa de reuniones (donde hoy esta el
+// antiguo Capitolio) los soldados del rey venian a llevarse la Carta de
+// Connecticut; se la llevaron y la escondieron en un roble. Por Main Street
+// se lleva en la mano esquivando a los soldados; llegar con ella da premio.
+var cartaH = null;
+function actualizarCartaRoble() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "carta_roble";
+  if (en && !cartaH) cartaH = { t: 0 };
+  if (!en && cartaH) {
+    if (gameState === "playing") {
+      const n = 50 * multiplier;
+      tacosThisRun += n;
+      showBubble(t("cartaFin"), 1800, 2);
+      avisoVerde(`+${n} ${TACO_IMG()}`);
+      spawnConfetti(24); sndPoint(); vibrate([20, 30, 40]);
+      if (PRUEBA && window.__juego) window.__juego.cartaSalvada = (window.__juego.cartaSalvada || 0) + 1;
+    }
+    cartaH = null;
+  }
+  if (world.setCarta) world.setCarta(!!cartaH, playerX, py);
+}
+// El maraton de Hartford (octubre, llega al parque Bushnell): cada corredor
+// adelantado, un taco; al acabar, otro tanto de premio.
+var maratonH = null;
+function actualizarMaraton() {
+  const en = gameState === "playing" && tramoMostrado && tramoMostrado.tipo === "maraton" && world.maratonCuenta;
+  if (en && !maratonH) { maratonH = {}; world.maratonCuenta().pasados = 0; }
+  if (!en) {
+    if (maratonH) {
+      const n = world.maratonCuenta().pasados;
+      if (gameState === "playing" && n > 0) {
+        tacosThisRun += n * multiplier;
+        showBubble(t("maratonFin").replace("{n}", n), 1800, 2);
+        avisoVerde(`+${n * multiplier} ${TACO_IMG()}`);
+        spawnConfetti(20); sndPoint();
+      }
+      if (PRUEBA && window.__juego) window.__juego.maraton = n;
+      maratonH = null;
+      const el = document.getElementById("maratonBar");
+      if (el) el.classList.add("hidden");
+    }
+    return;
+  }
+  const n = world.maratonCuenta().pasados;
+  const el = barraJuego("maratonBar");
+  el.querySelector(".rodeoTit").textContent = t("maratonHud").replace("{n}", n);
+  el.querySelector(".rodeoPie").textContent = t("maratonPista");
+  el.querySelector(".barraLleno").style.width = `${Math.min(1, n / 20) * 100}%`;
+  el.classList.remove("hidden");
 }
 // 16/11: Burlington: los montones de hojas. Al caer encima de uno se rebota
 // (y en cadena: cada rebote seguido sin tocar la calle vale mas).
@@ -3218,7 +3278,7 @@ function accionJugador(action, pos) {
   if ((action === "frase" || action === "lanzar") && pasoDesfile()) return;   // (15/11: Richmond)
   if ((action === "frase" || action === "lanzar") && world.hayTragaperras && world.hayTragaperras()) { if (world.pararRodillo()) { sndRodillo(); vibrate(8); } return; }   // (15/11: Atlantic City)
   if ((action === "frase" || action === "lanzar") && plantarse()) return;
-  if ((action === "frase" || action === "lanzar") && carrusel && montado) { carrusel.toque = elapsed; return; }   // (15/11: Hartford)
+  if ((action === "jump" || action === "frase" || action === "lanzar") && saltoCarrusel()) return;   // (15/11 y 27/11: Hartford, el tiovivo)
   if ((action === "frase" || action === "lanzar") && hacerFoto()) return;   // (16/11: Burlington: la foto a Champ)
   if ((action === "frase" || action === "lanzar") && promesasH) { promesasH.toque = elapsed; return; }   // (16/11: Manchester: devolver la promesa)
   if ((action === "frase" || action === "lanzar") && world.darNino && tramoMostrado && tramoMostrado.tipo === "guerra" && world.darNino()) { sndSwing(); return; }   // (16/11: Manchester)
@@ -4233,6 +4293,7 @@ world.onAvisoMapa((que) => {
   else if (que === "tirada") sndPoint();
   else if (que === "carta") cartaBJ();
   else if (que === "anilla") anillaPasa();
+  else if (que === "adelantado" && gameState === "playing") { tacosThisRun += multiplier; sndTic(); }   // (27/11: el maraton de Hartford)
   else if (que === "langosta") langostaCogida();   // (16/11: Portland, Maine)
   // 16/11: Manchester y Providence.
   else if (que === "tiraBola") sndSwing();
@@ -4378,6 +4439,8 @@ function frame(dtFijo) {
     actualizarBlackjack();
     actualizarValla();
     actualizarCarrusel(dt);
+    actualizarCartaRoble();
+    actualizarMaraton();
     actualizarChamp();
     actualizarMedida();
     actualizarPromesas();
@@ -4444,7 +4507,7 @@ function frame(dtFijo) {
         siesta: "siestaAviso", rodaje: "rodajeAviso", carbon: "carbonAviso", vias: "viasAviso",
         minas: "minasAviso", desfile: "desfileAviso", cangrejos: "cangrejosAviso", banderas: "banderasAviso",
         gallinas: "gallinasAviso", helados: "heladosAviso", freidora: "freidoraAviso", prensas: "prensasAviso",
-        tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso",
+        tragaperras: "tragaperrasAviso", blackjack: "blackjackAviso", valla: "vallaAviso", carrusel: "carruselAviso", carta_roble: "cartaAviso", maraton: "maratonAviso",
         hojas: "hojasAviso", champ: "champAviso", medida: "medidaAviso", faro: "faroAviso",
         guerra: "guerraAviso", promesas: "promesasAviso", mini: "miniAviso", examen: "examenAviso" };
       if (AVISOS[tramo.tipo]) setTimeout(() => { if (gameState === "playing") showBubble(t(AVISOS[tramo.tipo]), 1700, 1); }, 1200);

@@ -663,9 +663,11 @@ export function createWorld(scene) {
   // Lo que llevan en la mano derecha: con eso no aplauden, lo ondean.
   const LLEVA = { senora: "bandera", fan: "bandera", abuelo: "cartel" };
   const PUBLICO_PIXAR = PERSONAS.every((n) => hayModelo(`publico/${n}_cuerpo`) && hayModelo(`publico/${n}_pierna_i`));
-  function personaPixar(lista) {
+  function personaPixar(lista, soloEsos = false) {
     const vale = (lista || PERSONAS).filter((x) => PERSONAS.includes(x));
-    const mezcla = !vale.length || Math.random() < 0.35 ? PERSONAS_CALLE : vale;
+    // (27/11: `soloEsos`: solo los de la lista, sin mezclar: los corredores del maraton)
+    const solo = soloEsos ? lista.filter((x) => ARTIC[x] && hayModelo(`publico/${x}_cuerpo`)) : [];
+    const mezcla = solo.length ? solo : !vale.length || Math.random() < 0.35 ? PERSONAS_CALLE : vale;
     const n = mezcla[Math.floor(Math.random() * mezcla.length)];
     const A = ARTIC[n];
     const g = new THREE.Group();
@@ -4362,6 +4364,23 @@ export function createWorld(scene) {
         return g;
       });
     }
+    // 27/11: Hartford, los momentos de verdad: los soldados del rey (1687,
+    // la Carta del Roble) y los corredores del maraton (con su dorsal).
+    if (hayModelo("obstaculos/soldado_rey")) {
+      TIPOS.soldado_rey = { choque: "full", medio: 0.45, alto: 2.0 };
+      obstaclePools.soldado_rey = makePool(() => modeloConContorno("obstaculos/soldado_rey"));
+    }
+    if (PUBLICO_PIXAR) {
+      TIPOS.corredor_maraton = { choque: "full", medio: 0.4, alto: 1.8 };
+      obstaclePools.corredor_maraton = makePool(() => {
+        const p = personaPixar(["deportista", "deportista", "estudiante"], true);
+        const d = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.24), new THREE.MeshBasicMaterial({ map: texturaDorsal(), side: THREE.DoubleSide }));
+        d.position.set(0, 1.22, -0.17);
+        d.rotation.y = Math.PI;
+        p.add(d);
+        return p;
+      });
+    }
     TIPOS.anilla = { choque: "nada", medio: 0.4, alto: 0 };
     obstaclePools.anilla = makePool(() => {
       const g = new THREE.Group();
@@ -5460,6 +5479,62 @@ export function createWorld(scene) {
       a.pasada = true;
       if (o.lane === jugadorCarril) { ultimaAnilla = a; if (alAvisoMapa) alAvisoMapa("anilla"); if (a.cogida) o.mesh.visible = false; }
     }
+  }
+  // ---- 27/11: Hartford: los corredores del maraton y la Carta en la mano ----
+  const MARATON_VEL = 6.5;
+  let maratonLibre = 1;
+  const maratonCuenta = { pasados: 0 };
+  const dorsales = [];
+  function texturaDorsal() {
+    if (dorsales.length < 6) {
+      const c = document.createElement("canvas"); c.width = 128; c.height = 100;
+      const x = c.getContext("2d");
+      x.fillStyle = "#ffffff"; x.fillRect(0, 0, 128, 100);
+      x.fillStyle = "#1e4a9a"; x.fillRect(0, 0, 128, 22);
+      x.fillStyle = "#ffffff"; x.font = "bold 15px Arial"; x.textAlign = "center"; x.fillText("HARTFORD", 64, 16);
+      x.fillStyle = "#1c1c20"; x.font = "bold 50px Arial"; x.fillText(String(100 + Math.floor(Math.random() * 3800)), 64, 78);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      dorsales.push(t);
+      return t;
+    }
+    return dorsales[Math.floor(Math.random() * dorsales.length)];
+  }
+  function correrMaraton(o, dt) {
+    if (o.smashed) return;
+    const c = o.corredor, m = o.mesh, u = m.userData;
+    c.paso += (dt * MARATON_VEL * 2 * Math.PI) / 2.3;
+    const ida = Math.sin(c.paso);
+    m.position.y = Math.abs(Math.cos(c.paso)) * 0.07;
+    m.rotation.set(-0.13, Math.PI, 0);
+    if (u.piernaD) {
+      u.piernaD.rotation.x = ida * 0.85; u.piernaI.rotation.x = -ida * 0.85;
+      u.brazoD.rotation.set(-0.35 - ida * 0.6, 0, 0.12); u.brazoI.rotation.set(-0.35 + ida * 0.6, 0, -0.12);
+    }
+    if (!c.pasado && o.z > 1.2) { c.pasado = true; maratonCuenta.pasados++; if (alAvisoMapa) alAvisoMapa("adelantado"); }
+  }
+  // La Carta de Connecticut (1662) que se escondio en el roble en 1687: el
+  // rollo de pergamino con su sello, en la mano mientras se lleva.
+  const cartaVis = { g: null };
+  function setCarta(tiene, x, y) {
+    if (tiene && !cartaVis.g) {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.48, 12).rotateZ(Math.PI / 2), toon(0xf2e6c4)));
+      for (const s of [-1, 1]) {
+        const r = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 8).rotateZ(Math.PI / 2), toon(0x5a3a22));
+        r.position.x = s * 0.29; g.add(r);
+      }
+      const sello = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 12).rotateX(Math.PI / 2), toon(0xb8202a));
+      sello.position.set(0, 0, 0.075); g.add(sello);
+      group.add(g);
+      cartaVis.g = g;
+    }
+    if (!cartaVis.g) return;
+    cartaVis.g.visible = tiene;
+    if (!tiene) return;
+    const f = Math.sin(animClock * 9);
+    cartaVis.g.position.set(x + 0.5, y + 1.15 + 0.04 * f, -0.1);
+    cartaVis.g.rotation.set(0, -0.3, 0.35 + 0.06 * f);
+    cartaVis.g.scale.setScalar(1.7);
   }
   // ---- 15/11: Wilmington ----
   // La gallina azul: si la ves venir por su carril (de 14 a 6 m) da un salto
@@ -9547,6 +9622,44 @@ export function createWorld(scene) {
       }
       filaSinObjeto = true;
     },
+    // ---- 27/11: Hartford: los momentos de verdad ----
+    // La Carta del Roble (1687): por Main Street, desde donde estaba la casa
+    // de reuniones (hoy el antiguo Capitolio), los soldados del rey en
+    // parejas. Siempre queda un carril libre, que cambia de uno en uno.
+    carta_roble(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3) return;
+      const libre = [1, 0, 1, 2, 1, 0, 1, 2][Math.floor(k / 3) % 8];
+      if (k % 3 === 0) {
+        for (const l of LANES) if (l !== libre) {
+          if (obstaclePools.soldado_rey) spawnObstacle(l, "full", z, "soldado_rey"); else obst(l, "full", z, d);
+        }
+        filaSinObjeto = true;
+      } else if (k % 3 === 1) tacosEn(libre, z, 3);
+    },
+    // El maraton de Hartford (llega al parque Bushnell, por Trinity St): los
+    // corredores van delante, mas despacio, y se les adelanta por los huecos.
+    // Nunca los tres carriles a la vez. Salen algo mas cerca: mientras llegas
+    // ellos corren, y asi se les alcanza en su tramo.
+    maraton(z, d, t, k) {
+      const n = Math.floor((t.hasta - t.desde) / ROW_SPACING);
+      if (k < 2) { maratonLibre = 1; for (let i = 0; i < 5; i++) spawnTaco(1, z - i * 1.4, 0.9); return; }
+      if (k > n - 3 || !obstaclePools.corredor_maraton) return;
+      if (k % 2 === 0) {
+        const v = Math.max(MARATON_VEL + 6, ritmo || 20);
+        const zc = z * (v - MARATON_VEL) / v;
+        const cuantos = Math.random() < 0.45 ? 2 : 1;
+        // (el carril libre cambia como mucho uno de una fila a la siguiente)
+        maratonLibre = Math.max(0, Math.min(2, maratonLibre + Math.floor(Math.random() * 3) - 1));
+        const ls = LANES.filter((l) => l !== maratonLibre).sort(() => Math.random() - 0.5).slice(0, cuantos);
+        for (const l of ls) {
+          const o = spawnObstacle(l, "full", zc - Math.random() * 2, "corredor_maraton");
+          if (o) { o.corredor = { pasado: false, paso: Math.random() * 6 }; o.mueve = -MARATON_VEL; o.mesh.rotation.y = Math.PI; }
+        }
+        filaSinObjeto = true;
+      } else tacosEn(elegirDe(LANES), z, 3);
+    },
     // ---- 15/11: Wilmington ----
     // Las gallinas azules: cada 21 m una en un carril (huye si la ves venir).
     // Entre medias, cucuruchos caidos y mecedoras.
@@ -11860,6 +11973,7 @@ export function createWorld(scene) {
         else if (o.cartaBJ) moverCarta(o);
         else if (o.valla) moverValla(o, dt, dz);
         else if (o.anilla) moverAnilla(o);
+        else if (o.corredor) correrMaraton(o, dt);
         else if (o.pool === "mozo") {
           // Echa a correr (delante de ti, mas despacio) solo a 30 m: si corriera
           // desde lejos llegaria a las filas de mas adelante.
@@ -12102,5 +12216,6 @@ export function createWorld(scene) {
     darNino, bolasNieve, promesasLista: () => promesas, setDebate, promesaUltima: () => ultimaPromesa, devolverPromesa: (p) => { p.vuelta = true; },
     preguntaActual, respuestaUltima: () => ultimaRespuesta, examenBuena: (q) => EXAMEN_BUENA[q],
     setVelocidad, montonBajo, fotoChamp, langostaUltima: () => ultimaLangosta,
-    pararRodillo, hayTragaperras, cartaCogida: () => ultimaCarta, vallaCuenta: () => vallaCuenta, anillaUltima: () => ultimaAnilla };
+    pararRodillo, hayTragaperras, cartaCogida: () => ultimaCarta, vallaCuenta: () => vallaCuenta, anillaUltima: () => ultimaAnilla,
+    setCarta, maratonCuenta: () => maratonCuenta };
 }
