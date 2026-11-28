@@ -8405,10 +8405,12 @@ export function createWorld(scene) {
       }
     },
     // Dos carriles cerrados; el libre va cambiando de uno en uno.
+    // (`cada`: cada cuantas filas va una; 2 si no se dice.)
     slalom(z, d, t, k) {
-      if (k % 2 === 1) return;
+      const cada = t.cada || 2;
+      if (k % cada) return;
       const seq = [1, 1, 0, 0, 1, 2, 2, 1, 0, 1, 2, 2];
-      const libre = seq[(k / 2) % seq.length];
+      const libre = seq[(k / cada) % seq.length];
       for (const l of LANES) if (l !== libre) obst(l, "full", z, d, t.full);
       tacosEn(libre, z + 1.5, 4);
     },

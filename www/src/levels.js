@@ -283,7 +283,13 @@ const CALLES = [
     // largo del nivel no cambia.
     tramos: [
       [0, 70, "calma", { titulo: "strip" }],
-      [70, 260, "slalom", { full: ["limusina", "limusina", "descapotable"], titulo: "limusinas" }],
+      // 28/11 (prueba con jugadores): Paco, de 67 años, no pasaba de aqui. Las
+      // filas iban cada 14 m y entre limusina y limusina quedaban unos 9 m para
+      // cambiar de carril; ahora van cada 21 m (algo mas de un segundo). Y el
+      // descapotable, que se cambia de carril, se metia en el libre cuando ya
+      // estabas en el: el atasco de la entrada, solo limusinas (el descapotable
+      // tiene su momento mas adelante).
+      [70, 260, "slalom", { full: ["limusina"], cada: 3, titulo: "limusinas" }],
       [260, 380, "alfombra", { titulo: "alfombra" }],
       // 07/11: el momento estrella: dentro del casino Trump (la sala, en
       // `fondo`) y, al salir, una lluvia de fichas delante de la torre Eiffel.

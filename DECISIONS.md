@@ -3217,4 +3217,21 @@ Visto y sin tocar:
   contraseña mal) se entienden bien.
 - Paco (reacción de medio segundo) se atasca al empezar Las Vegas, en las
   limusinas; los demás pasan los primeros niveles sin problema.
-- Boston (sesión aparte, sin publicar) pasa a la v86.
+- Boston (sesión aparte, sin publicar) pasa a la v86 (y luego a la v87: ver abajo).
+
+## 28/11/2026 (tarde): las tres cosas pequeñas (v86)
+
+Isidro: «sí, arréglalas».
+- **El premio del día, después de la historia**: a un jugador nuevo ya no le
+  sale al abrir; sale al cerrar el prólogo. Al que ya lo ha visto le sale al
+  abrir, como siempre.
+- **«¡JUGAR CON ÉL!»** recarga para ponerse al líder nuevo y ahora, al
+  volver, empieza a jugar: el nivel que toca o, si venía del Sin fin, el Sin
+  fin (lo apunta en sessionStorage antes de recargar).
+- **Las limusinas al empezar Las Vegas**: a Paco no le mataban las
+  limusinas, sino dos cosas: las filas cada 14 m (unos 9 m libres entre
+  limusina y limusina) y el descapotable, que se cambia de carril y se metía
+  en el libre cuando ya estaba en él. Ahora las filas van cada 21 m (`cada: 3`
+  en el eslalon) y el atasco de la entrada es solo de limusinas; el
+  descapotable sigue en su momento, más adelante. Medido con despistes al azar.
+- Boston, sin publicar, pasa a la v87.

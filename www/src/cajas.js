@@ -130,7 +130,11 @@ export function abrirCaja(alCerrar) {
       const r = RAREZAS[lider.rareza];
       texto.innerHTML = `<span class="rareza" style="background:${r.color}">${r[getLang()] || r.es}</span> ${t("cajaLider")} <b>${nombreLider(lider)}</b>!<small>${tituloLider(lider)}</small>`;
       jugar.classList.remove("hidden");
-      jugar.onclick = () => { ponerLider(lider.id); window.dispatchEvent(new Event("antesDeRecargar")); location.reload(); };
+      jugar.onclick = () => {
+        ponerLider(lider.id);
+        try { sessionStorage.setItem("tacoJugarConLider", "nivel"); } catch (e) {}   // (main.js empieza a jugar al volver)
+        window.dispatchEvent(new Event("antesDeRecargar")); location.reload();
+      };
     } else if (repe) {
       texto.innerHTML = `${t("cajaRepetido").replace("{n}", nombreLider(repe))} <b>+${tacos.toLocaleString(getLang() === "en" ? "en" : "es")} tacos</b>`;
     } else {

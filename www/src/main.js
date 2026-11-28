@@ -602,7 +602,10 @@ function mostrarPrologo() {
     document.getElementById("prologoPuntos").innerHTML = PROLOGO.map((_, k) => `<span class="${k === i ? "on" : ""}"></span>`).join("");
     document.getElementById("prologoSigue").textContent = i < PROLOGO.length - 1 ? t("prologoSigue") : t("prologoFin");
   };
-  const cerrar = () => { ov.classList.add("hidden"); getSave().prologo = true; persistSave(); };
+  // 28/11 (prueba con jugadores): a un jugador nuevo le salia antes el premio
+  // del dia que la historia; ahora el premio espera a que acabe el prologo.
+  const primera = !getSave().prologo;
+  const cerrar = () => { ov.classList.add("hidden"); getSave().prologo = true; persistSave(); if (primera) setTimeout(mostrarDiario, 400); };
   document.getElementById("prologoSigue").onclick = () => { if (i < PROLOGO.length - 1) { i++; pintar(); } else cerrar(); };
   document.getElementById("prologoSalta").onclick = cerrar;
   pintar();
@@ -4819,7 +4822,12 @@ function frame(dtFijo) {
     if (loadingScreen) loadingScreen.classList.add("fadeOut");
     if (loadingScreen) setTimeout(() => loadingScreen.remove(), 350);
     pintarCajaBtn();
-    setTimeout(mostrarDiario, 700);
+    // 28/11: «¡JUGAR CON ÉL!» de la caja recarga para ponerse al lider nuevo y
+    // te dejaba en el menu; ahora, al volver, se empieza a jugar directamente.
+    let jugar = null;
+    try { jugar = sessionStorage.getItem("tacoJugarConLider"); sessionStorage.removeItem("tacoJugarConLider"); } catch (e) {}
+    if (jugar) setTimeout(() => document.getElementById(jugar === "sinfin" ? "sinFinCorrer" : "startBtn").click(), 400);
+    else setTimeout(mostrarDiario, 700);
   }
 }
 
@@ -4944,7 +4952,7 @@ function abrirCajasLuego(ms) {
   setTimeout(() => { if (cajasPendientes() && (gameState === "completado" || gameState === "gameover")) abrirCaja(pintarCajaBtn); }, ms);
 }
 function mostrarDiario() {
-  if (PRUEBA) return;
+  if (PRUEBA || !getSave().prologo) return;   // (al jugador nuevo, despues de la historia)
   premioDiario(() => pintarCajaBtn());
 }
 document.getElementById("mapaCerrar").addEventListener("click", volverAlMenu);
@@ -5048,7 +5056,11 @@ $c("cuentaClave").addEventListener("keydown", (e) => { if (e.key === "Enter") us
 $c("cuentaSalir").addEventListener("click", async () => { await salirCuenta(); });
 // 13/11 (auditoria): antes de recargar se guarda la carrera que acaba de
 // terminar (tacos, record, pase); si no, se perdia.
-window.addEventListener("antesDeRecargar", () => { if (gameState === "gameover") cerrarCarrera(); });
+window.addEventListener("antesDeRecargar", () => {
+  // Si se vuelve para jugar con el lider nuevo: al Sin fin si venia de ahi; si no, el nivel que toca.
+  try { if (sessionStorage.getItem("tacoJugarConLider")) sessionStorage.setItem("tacoJugarConLider", gameState !== "menu" && !nivelActual && !esquiExtra ? "sinfin" : "nivel"); } catch (e) {}
+  if (gameState === "gameover") cerrarCarrera();
+});
 arrancarCuenta(() => { if (gameState === "gameover") cerrarCarrera(); if (gameState !== "playing") location.reload(); });
 
 alCambiarInstalar(() => {
