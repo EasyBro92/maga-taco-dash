@@ -41,19 +41,35 @@ function persist() {
   if (alGuardar) alGuardar();
 }
 
-// La partida para la nube (sin los ajustes: esos son de cada movil).
+// La partida para la nube (sin los ajustes: esos son de cada movil; ni
+// `tacosNube`, que es lo que este movil sabe que hay en la nube).
 export function partidaParaNube() {
-  const { settings, ...resto } = state;
+  const { settings, tacosNube, ...resto } = state;
   return resto;
+}
+// 28/11: cuenta.js avisa de que la nube ya tiene `total` tacos de este movil
+// (se apunta sin avisar de un guardado nuevo: si no, se subiria otra vez).
+export function marcarSubido(total) {
+  state.tacosNube = total;
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* sin almacenamiento */ }
 }
 // Junta la partida de la nube con la de este movil sin perder nada: lo mejor
 // de cada nivel, todo lo comprado y los tacos y el record mas altos. De lo
 // demas (misiones, cajas...) se queda la partida que tenga mas estrellas.
-export function fundirPartida(n) {
+export function fundirPartida(n, primeraVez = false) {
   if (!n || typeof n !== "object") return false;
   const a = state;
   const estrellas = (s) => Object.values(s.niveles || {}).reduce((x, r) => x + (r.estrellas || 0), 0);
-  const antes = JSON.stringify(partidaParaNube());
+  // 28/11 (prueba con jugadores): un jugador nuevo aun no tiene niveles,
+  // lideres ni mejoras; al juntar salian vacios y parecia un cambio, asi que
+  // la primera vez que se abria el juego con cuenta se recargaba sin motivo.
+  // Se ponen antes de comparar, y se compara sin mirar el orden de las claves.
+  if (!a.niveles) a.niveles = {};
+  if (!a.lideres) a.lideres = [];
+  if (!a.mejoras) a.mejoras = {};
+  const igualar = (x) => JSON.stringify(x, (k, v) => (v && typeof v === "object" && !Array.isArray(v)
+    ? Object.fromEntries(Object.entries(v).sort(([p], [q]) => (p < q ? -1 : p > q ? 1 : 0))) : v));
+  const antes = igualar(partidaParaNube());
   // 13/11 (auditoria): si las dos saben cuando se guardaron, manda la mas
   // reciente (asi lo gastado no vuelve y lo cobrado no se cobra otra vez).
   const conHora = !!(a.guardado && n.guardado);
@@ -61,7 +77,17 @@ export function fundirPartida(n) {
     : estrellas(n) > estrellas(a) || (estrellas(n) === estrellas(a) && (n.totalTacos || 0) > (a.totalTacos || 0));
   const b = nubeMejor ? { ...defaults(), ...n } : { ...a };
   b.settings = a.settings;
-  b.totalTacos = conHora ? ((nubeMejor ? n : a).totalTacos || 0) : Math.max(a.totalTacos || 0, n.totalTacos || 0);
+  // 28/11 (prueba con jugadores): los tacos eran los de la partida mas
+  // reciente entera. Quien jugaba un poco en un movil nuevo y luego entraba
+  // en su cuenta perdia todos los de la nube (Marta: tenia 4.844, jugo un
+  // nivel sin cuenta en el otro movil y se quedo con 2.202). Ahora: lo que
+  // hay en la nube mas lo ganado (o gastado) en este movil desde la ultima vez
+  // que se junto. Un movil que entra por primera vez aporta todo lo suyo. Los
+  // que ya tenian cuenta antes de esto, la primera vez, como antes.
+  const base = typeof a.tacosNube === "number" ? a.tacosNube : primeraVez ? 0 : null;
+  b.totalTacos = base !== null ? Math.max(0, (n.totalTacos || 0) + (a.totalTacos || 0) - base)
+    : conHora ? ((nubeMejor ? n : a).totalTacos || 0) : Math.max(a.totalTacos || 0, n.totalTacos || 0);
+  b.tacosNube = n.totalTacos || 0;   // (lo que hay en la nube hasta que se suba lo nuevo)
   // El pase del mismo mes: los puntos mas altos y todo lo cobrado en los dos.
   if (a.pase && n.pase && a.pase.temporada === n.pase.temporada) {
     b.pase = { temporada: a.pase.temporada, puntos: Math.max(a.pase.puntos || 0, n.pase.puntos || 0),
@@ -99,7 +125,7 @@ export function fundirPartida(n) {
   for (const k of Object.keys(state)) delete state[k];
   Object.assign(state, b);
   localStorage.setItem(KEY, JSON.stringify(state));
-  return JSON.stringify(partidaParaNube()) !== antes;
+  return igualar(partidaParaNube()) !== antes;
 }
 
 // Para modulos que cambian la partida guardada por dentro (misiones).

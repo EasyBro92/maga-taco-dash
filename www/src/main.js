@@ -4667,6 +4667,19 @@ function frame(dtFijo) {
     if (enSuelo) {
       py = Math.max(py, world.surfaceAt(playerX));
       character.object3D.position.y = py;
+    } else if (vy <= 0 && rocketTimeLeft === 0) {
+      // 28/11 (prueba con jugadores): cayendo del techo de un camion del
+      // convoy sobre la rampa del siguiente, la rampa sube mas deprisa de lo
+      // que se cae y, en un movil a 30 imagenes por segundo, en un solo
+      // fotograma se quedaba por debajo: contaba como chocar (Las Vegas, 7
+      // veces seguidas). Si lo que tiene debajo es una rampa, aterriza en ella.
+      const s = world.surfaceAt(playerX);
+      if (py < s && py > s - 1.2 && world.obstacles.some((o) => o.type === "bus" && !o.smashed && (o.rampa ?? 2.2) > 0 &&
+        o.z >= 0 && o.z <= (o.rampa ?? 2.2) + 1 && Math.abs(playerX - LANE_X[o.lane]) <= HIT_LANE_TOLERANCE)) {
+        py = s; vy = 0; enSuelo = true; isJumping = false; superSalto = false;
+        character.setJumpPose(1);
+        character.object3D.position.y = py;
+      }
     }
     checkCollisions(frameSpeed * dt);
     if (gameState === "playing") porLosPelos();

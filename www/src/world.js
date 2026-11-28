@@ -8243,6 +8243,17 @@ export function createWorld(scene) {
   function obst(lane, type, z, d, lista) {
     if (lane === carrilOcupado || respiro) return null;
     if (reserva && lane === reserva.lane && d > reserva.desde && d <= reserva.hasta) return null;
+    // 28/11 (prueba con jugadores): dos cosas bajas en el mismo carril pueden
+    // quedar a una distancia trampa: demasiado lejos para pasar las dos de un
+    // salto y demasiado cerca para volver a saltar al caer (sale un salto de
+    // 0,62 s; se despega a unos 4-5 m de la primera). Con el 15 % mas de
+    // velocidad paso a dos filas (14 m) en Indianapolis (6 choques seguidos en
+    // el circuito) y a una fila (7 m) a 20 m/s en el Sin fin. A esa distancia,
+    // la segunda no se pone.
+    if (type === "low") {
+      const v = Math.max(13, (velEn && velEn(d)) || ritmo), unSalto = 0.565 * v - 5.7, otroSalto = 0.675 * v - 3.3;
+      if (obstacles.some((o) => o.lane === lane && o.type === "low" && !o.smashed && !o.mueve && o.z - z > unSalto && o.z - z < otroSalto)) return null;
+    }
     let nombre = USAR_BLENDER ? nombreObstaculo(type, d, lista) : undefined;
     // 06/11 (2): lo que va en la acera (la boca de riego) nunca sale en el carril del centro.
     const orilla = (n) => n && TIPOS[n] && TIPOS[n].orilla;

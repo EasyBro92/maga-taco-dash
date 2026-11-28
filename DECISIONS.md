@@ -3175,3 +3175,46 @@ Isidro aprobó lo propuesto: «Sí, hazlos». Cada momento, donde pasó de verda
 - Se quitan las dos vallas de Tom Sawyer (sus tramos pasan a normales).
 - Los desvíos ya no dejan tramos de menos de 20 m a sus lados.
 - Boston (sesión aparte, sin publicar) pasa a la v85.
+
+## 28/11/2026: prueba con jugadores inventados (v85)
+
+Isidro: «prueba el juego como si fueran usuarios de verdad, crea cuentas e
+intenta avanzar; dale realismo a las cuentas». Se probó en el ordenador con
+una nube **falsa** (las cuentas no tocan el Firebase de AlienZ): Lucía (14,
+Zaragoza), Javi «tacoking» (33, Sevilla), Paco (67, Valladolid) y Marta (27,
+Madrid, con dos móviles). Cada uno con sus reflejos, despistes, tiempo de
+reacción y paciencia; juegan pulsando lo mismo que una persona, sin ser
+inmortales y a 30 imágenes por segundo, como un móvil normal.
+
+Lo que salió y se arregló:
+- **Las Vegas, el convoy**: a 30 imágenes por segundo, caer del techo de un
+  camión a la rampa del siguiente contaba como chocar (Javi, 7 veces seguidas
+  en el mismo sitio). Ahora, si se cae sobre una rampa, se aterriza en ella
+  (main.js, después de mover la pista).
+- **Dos bajos seguidos que eran trampa**: con el 15 % más de velocidad, dos
+  cosas bajas en el mismo carril a 14 m (Indianápolis, el circuito: 6
+  choques seguidos) o a 7 m a 20 m/s (el Sin fin, a los 750 m) no se podían
+  pasar ni de un salto ni con dos. world.js (`obst`) ya no pone la segunda a
+  esa distancia. Javi pasó de 748 m a 5.980 m en el Sin fin.
+- **Los tacos con dos móviles**: mandaba la partida más reciente entera.
+  Marta tenía 4.844; jugó un nivel sin cuenta en el otro móvil, entró y se
+  quedó con 2.202. Ahora se suma lo de la nube y lo ganado (o gastado) en el
+  móvil desde que se juntó la última vez (`tacosNube`, que no se sube). Un
+  móvil que entra por primera vez aporta todo lo suyo; los que ya tenían
+  cuenta, la primera vez, como antes.
+- **Recarga sin motivo**: la primera vez que se abría el juego con cuenta se
+  recargaba solo (a un jugador nuevo le faltaban niveles, líderes y mejoras y
+  parecía un cambio). Se comparan con eso puesto y sin mirar el orden.
+- **Subir al salir**: si se cierra el juego o se cambia de app antes de 3 s,
+  la partida se sube ya.
+
+Visto y sin tocar:
+- A un jugador nuevo lo primero que le sale es el premio del día, antes que
+  el prólogo.
+- «¡JUGAR CON ÉL!» de la caja pone el líder y vuelve al menú: no empieza a
+  jugar.
+- Los avisos de la cuenta (nombre con espacio, contraseña corta, usuario o
+  contraseña mal) se entienden bien.
+- Paco (reacción de medio segundo) se atasca al empezar Las Vegas, en las
+  limusinas; los demás pasan los primeros niveles sin problema.
+- Boston (sesión aparte, sin publicar) pasa a la v86.

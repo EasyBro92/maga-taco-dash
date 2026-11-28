@@ -12,7 +12,7 @@
 // como un correo inventado (<nombre>@magatacodash.app): no se manda nada a
 // ningún sitio. Firebase se baja solo si hay sesión o se pulsa Entrar.
 
-import { onGuardar, partidaParaNube, fundirPartida, getSave } from "./save.js";
+import { onGuardar, partidaParaNube, fundirPartida, getSave, marcarSubido } from "./save.js";
 
 const CONFIG = {
   apiKey: "AIzaSyAwzbv3vb6Ju-ie3mgYPBp9C-V0QMw_ZKY",
@@ -57,16 +57,23 @@ async function subir() {
   if (!usuario) return;
   try {
     const { fs, db } = await cargar();
+    const p = partidaParaNube();
     await fs.setDoc(fs.doc(db, "tacodash", usuario.uid), {
-      nombre: usuario.nombre, partida: JSON.stringify(partidaParaNube()), fecha: fs.serverTimestamp(),
+      nombre: usuario.nombre, partida: JSON.stringify(p), fecha: fs.serverTimestamp(),
     });
+    marcarSubido(p.totalTacos || 0);   // (28/11: lo que ya tiene la nube de este movil)
     nubeRota = false;
   } catch (e) { nubeRota = true; console.warn("[cuenta] no se pudo subir", e && e.code); }
 }
 onGuardar(() => {
   if (!usuario) return;
   clearTimeout(reloj);
-  reloj = setTimeout(subir, 3000);
+  reloj = setTimeout(() => { reloj = null; subir(); }, 3000);
+});
+// 28/11 (prueba con jugadores): si se cierra el juego o se cambia de app
+// antes de esos 3 s, se sube ya (si no, en el otro movil faltaba lo ultimo).
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && reloj) { clearTimeout(reloj); reloj = null; subir(); }
 });
 export function nubeFalla() { return nubeRota; }
 
@@ -87,12 +94,12 @@ export async function leerRanking(n = 30) {
 
 // Baja la ficha de la nube y la junta con la de este móvil. Si cambia algo,
 // devuelve true (main.js recarga para que todo lo pinte de nuevo).
-async function bajarYJuntar() {
+async function bajarYJuntar(primeraVez = false) {
   const { fs, db } = await cargar();
   const d = await fs.getDoc(fs.doc(db, "tacodash", usuario.uid));
   let cambio = false;
   if (d.exists()) {
-    try { cambio = fundirPartida(JSON.parse(d.data().partida || "{}")); } catch (e) { /* ficha rota: se queda la del móvil */ }
+    try { cambio = fundirPartida(JSON.parse(d.data().partida || "{}"), primeraVez); } catch (e) { /* ficha rota: se queda la del móvil */ }
   }
   await subir();
   return cambio;
@@ -113,7 +120,7 @@ async function trasEntrar(u, nombre) {
   usuario = { uid: u.uid, nombre };
   try { localStorage.setItem(CLAVE_SESION, nombre); } catch (e) { /* sin almacenamiento */ }
   avisar();
-  try { const cambio = await bajarYJuntar(); subirRecord(getSave().bestScore); return { ok: true, cambio }; }
+  try { const cambio = await bajarYJuntar(true); subirRecord(getSave().bestScore); return { ok: true, cambio }; }
   catch (e) { nubeRota = true; return { ok: true, cambio: false, aviso: traducirError(e) }; }
 }
 
